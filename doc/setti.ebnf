@@ -4,9 +4,9 @@ block:            '{' stmt_list '}'
 stmt_list:        stmt (';' stmt)*
 stmt:             simple_stmt | compound_stmt
 simple_stmt:      small_stmt ';'
-small_stmt:       (assign_stmt | flow_stmt | cmd_stmt | inline_cmd | const_stmt | import_stmt | assert_stmt)
+small_stmt:       (assign_stmt | flow_stmt | cmd_stmt | cmd_expr | const_stmt | import_stmt | assert_stmt)
 compound_stmt:    if_stmt | while_stmt | for_stmt | try_stmt | line_func_def | decorated | async_stmt
-inline_cmd:       '$(' cmd_stmt ')'
+cmd_expr:         '$(' cmd_stmt ')'
 cmd_stmt:         cmd_and_or ('&')?
 cmd_and_or:       cmd_pipe (('&&' | '||') cmd_pipe)*
 cmd_pipe:         cmd ('|' cmd)*
@@ -61,7 +61,7 @@ subscript:        expression | [expression] ':' [expression] [sliceop]
 sliceop:          ':' [expression]
 arg_param:        arg_assign | expression
 arg_assign:       var_id '=' expression
-primary_expr:     literal | var_id | '('expression')' | inline_cmd
+primary_expr:     literal | var_id | '('expression')' | cmd_expr
 id_list:          var_type (',' var_type)*
 var_type:         (type)? var_id
 type:             [pack_scope] id
