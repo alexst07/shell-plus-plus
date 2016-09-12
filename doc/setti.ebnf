@@ -4,15 +4,19 @@ block:            '{' stmt_list '}'
 stmt_list:        stmt (';' stmt)*
 stmt:             simple_stmt | compound_stmt
 simple_stmt:      small_stmt ';'
-small_stmt:       (assign_stmt | flow_stmt | cmd_stmt | const_stmt | import_stmt | assert_stmt)
+small_stmt:       (assign_stmt | flow_stmt | cmd_stmt | inline_cmd | const_stmt | import_stmt | assert_stmt)
 compound_stmt:    if_stmt | while_stmt | for_stmt | try_stmt | line_func_def | decorated | async_stmt
+inline_cmd:       '$(' cmd_stmt ')'
 cmd_stmt:         cmd_and_or ('&')?
 cmd_and_or:       cmd_pipe (('&&' | '||') cmd_pipe)*
 cmd_pipe:         cmd ('|' cmd)*
 
 // A command is anything that not match on other rule
-// on cmd only some simbols are special, the others is part
+// on cmd only some tokens are special, the others is part
 // of the command, command is not like other bnf rule
+// All others tokens and rules are part of command, except:
+// io_redirect, cmd_pipe, cmd_and_or, cmd_stmt, '$' and ';'
+// the character scape must be used
 *cmd:             cmd_word (cmd_word | *any)? (io_redirect)*
 
 io_redirect:      INTEGER io_file
@@ -50,19 +54,18 @@ arith_expr:       term (('+'|'-') term)*
 term:             factor (('*'|'/'|'%') factor)*
 factor:           ('+'|'-'|'~') factor | post_expr
 post_expr:        post_expr '->' post_expr | post_expr '[' subscriptls ']' | scope_expr | func_call | primary_expr
-func_call:        post_expr ( '(' param_list ')' | '(' ')')
-scope_expr:       id '::' post_expr
+func_call:        (post_expr | pack_scope id) ( '(' param_list ')' | '(' ')')
 param_list:       arg_param (',' arg_param)*
 subscriptls:      subscript (',' subscript)*
 subscript:        expression | [expression] ':' [expression] [sliceop]
 sliceop:          ':' [expression]
 arg_param:        arg_assign | expression
 arg_assign:       var_id '=' expression
-primary_expr:     literal | var_id | '('expression')'
+primary_expr:     literal | var_id | '('expression')' | inline_cmd
 id_list:          var_type (',' var_type)*
 var_type:         (type)? var_id
-type:
-scope:            id ('::' id)
+type:             [pack_scope] id
+pack_scope:       (id '::')+
 literal:          STRING | INTEGER | REAL | BOOL_CONST | id | var_id
 cmd_word:         id | word | id '::' id
 word:             WORD
