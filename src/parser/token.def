@@ -1,3 +1,12 @@
+
+#ifndef KEYWORD
+#define KEYWORD(kw)
+#endif
+
+#ifndef DECL_KEYWORD
+#define DECL_KEYWORD(kw) KEYWORD(kw)
+#endif
+
 /// STMT_KEYWORD(kw)
 ///   Expands for every Setti keyword used in statement grammar.
 #ifndef STMT_KEYWORD
@@ -64,18 +73,19 @@ KEYWORD(throw)
 KEYWORD(true)
 KEYWORD(try)
 KEYWORD(throws)
+KEYWORD(__MAIN__)
 KEYWORD(__FILE__)
 KEYWORD(__LINE__)
 KEYWORD(__FUNCTION__)
 KEYWORD(__CMD__)
 
 // Punctuators.
-PUNCTUATOR(l_paren,       "(")
-PUNCTUATOR(r_paren,       ")")
-PUNCTUATOR(l_brace,       "{")
-PUNCTUATOR(r_brace,       "}")
-PUNCTUATOR(l_square,      "[")
-PUNCTUATOR(r_square,      "]")
+PUNCTUATOR(lparen,        "(")
+PUNCTUATOR(rparen,        ")")
+PUNCTUATOR(lbrace,        "{")
+PUNCTUATOR(rbrace,        "}")
+PUNCTUATOR(lsquare,       "[")
+PUNCTUATOR(rsquare,       "]")
 
 PUNCTUATOR(comma,         ",")
 PUNCTUATOR(colon,         ":")
@@ -89,12 +99,13 @@ PUNCTUATOR(assign_sar,    ">>=")
 PUNCTUATOR(assign_add,    "+=")
 PUNCTUATOR(assign_sub,    "-=")
 PUNCTUATOR(assign_mul,    "*=")
-PUNCTUATOR(assign_mul,    "/=")
+PUNCTUATOR(assign_div,    "/=")
 PUNCTUATOR(assign_mod,    "%=")
 PUNCTUATOR(at_sign,       "@")
 PUNCTUATOR(ellipsis,      "...")
-PUNCTUATOR(or,            "||")
-PUNCTUATOR(and,           "&&")
+PUNCTUATOR(or_op,         "||")
+PUNCTUATOR(and_op,        "&&")
+PUNCTUATOR(exclamation,   "!")
 PUNCTUATOR(bit_or,        "|")
 PUNCTUATOR(bit_xor,       "^")
 PUNCTUATOR(bit_and,       "&")
@@ -112,10 +123,8 @@ PUNCTUATOR(greater_than,  ">")
 PUNCTUATOR(less_eq,       "<=")
 PUNCTUATOR(greater_eq,    ">=")
 PUNCTUATOR(arrow,         "->")
-PUNCTUATOR(backtick,      "`")
-PUNCTUATOR(question,      "?")
-PUNCTUATOR(dollar,        "$(")
-PUNCTUATOR(exclamation,   "!")
+PUNCTUATOR(dollar,        "$")
+PUNCTUATOR(dollar_lparen, "$(")
 
 #undef KEYWORD
 #undef DECL_KEYWORD
