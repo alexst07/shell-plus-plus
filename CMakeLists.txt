@@ -12,22 +12,24 @@ else()
   message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
 endif()
 
+SETTI_OPTION(BUILD_UNIT_TESTS "Build unit tests" ON)
+
 #
 # Boost support
 #
 find_package(Boost 1.58 REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
+find_package (Threads REQUIRED)
 
-# TODO: Correct gtest address
-# if (BUILD_TESTS)
-#   enable_testing()
-#   include(cmake/GTest.cmake)
-#   include_directories(SYSTEM ${GTEST_INCLUDE_DIRS})
-# endif ()
+if (BUILD_UNIT_TESTS)
+  enable_testing()
+  find_package(GTest REQUIRED)
+  include_directories(${GTEST_INCLUDE_DIRS})
+endif ()
 
 include_directories(${CMAKE_SOURCE_DIR}/src/)
 
 add_subdirectory(test)
 
-SETTI_OPTION(BUILD_TESTS         "Build all tests"                             ON)
+
 

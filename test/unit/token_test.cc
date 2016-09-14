@@ -1,7 +1,13 @@
 #include <iostream>
+#include <gtest/gtest.h>
 
 #include "parser/token.h"
 
-int main() {
-  std::cout << "Test";
+TEST(SquareRootTest, PositiveNos) {
+  std::cout << "asdf";
+}
+
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
