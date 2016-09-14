@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 #include <boost/variant.hpp>
 
 namespace setti {
@@ -112,6 +113,63 @@ class Token {
   Value value_;
   uint line_;
   uint col_;
+};
+
+class TokenStream {
+ public:
+  TokenStream(): pos_(0) {}
+
+  TokenStream(const TokenStream&) = delete;
+  TokenStream& operator=(const TokenStream&) = delete;
+
+  TokenStream(TokenStream&& tok_stream)
+      : tok_vec_(std::move(tok_stream.tok_vec_))
+      , pos_(tok_stream.pos_) {
+    tok_stream.pos_ = 0;
+  }
+
+  TokenStream& operator=(TokenStream&& tok_stream) {
+    if (this == &tok_stream)
+      return *this;
+
+    tok_stream = std::move(tok_stream);
+    pos_ = tok_stream.pos_;
+    tok_stream.pos_ = 0;
+
+    return *this;
+  }
+
+  void PushToken(Token&& tok) {
+    tok_vec_.push_back(std::move(tok));
+  }
+
+  const Token& CurrentToken() const {
+    return tok_vec_.at(pos_);
+  }
+
+  Token& CurrentToken() {
+    return tok_vec_.at(pos_);
+  }
+
+  const Token& PeekAhead() const {
+    return tok_vec_.at(pos_ + 1);
+  }
+
+  Token& PeekAhead() {
+    return tok_vec_.at(pos_ + 1);
+  }
+
+  Token& NextToken() {
+    return tok_vec_.at(pos_++);
+  }
+
+  void Advance() {
+    ++pos_;
+  }
+
+ private:
+  size_t pos_;
+  std::vector<Token> tok_vec_;
 };
 
 }
