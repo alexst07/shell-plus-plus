@@ -19,9 +19,8 @@ enum class TokenKind {
   REAL_LITERAL,
   STRING_LITERAL,
 
-#define KEYWORD(X) kw_ ## X,
+#define KEYWORD(X) KW_ ## X,
 #define PUNCTUATOR(X, Y) X,
-#define POUND_KEYWORD(X) pound_ ## X,
 #include "token.def"
 
   NUM_TOKENS
@@ -34,6 +33,13 @@ class Token {
   Token(TokenKind k, Value value, bool blank_after, uint line, uint col)
       : kind_(k)
       , value_(value)
+      , blank_after_(blank_after)
+      , line_(line)
+      , col_(col) {}
+
+  Token(TokenKind k, const char* value, bool blank_after, uint line, uint col)
+      : kind_(k)
+      , value_(std::string(value))
       , blank_after_(blank_after)
       , line_(line)
       , col_(col) {}
@@ -110,6 +116,13 @@ class Token {
   friend std::ostream& operator<<(std::ostream& stream, Token& token);
 
  private:
+  struct Output : public boost::static_visitor<> {
+    std::ostream& stream_;
+    Output(std::ostream& stream): stream_(stream) {}
+    template <typename T>
+    void operator()(T t) const { stream_ << t; }
+  };
+
   TokenKind kind_;
   bool blank_after_;
   Value value_;
@@ -118,8 +131,9 @@ class Token {
 };
 
 std::ostream& operator<<(std::ostream& stream, Token& token) {
-  stream << "Type: " << static_cast<int>(token.kind_) << ", Value: "
-         << boost::get<std::string>(token.value_) << "\n";
+  stream << "Type: " << static_cast<int>(token.kind_) << ", Value: ";
+  boost::apply_visitor(Token::Output{stream}, token.value_);
+  stream << "\n";
 
   return stream;
 }
@@ -172,8 +186,16 @@ class TokenStream {
     return tok_vec_.at(pos_++);
   }
 
-  void Advance() {
+  bool Advance() {
+    if (pos_ == tok_vec_.size() - 1)
+      return false;
+
     ++pos_;
+    return true;
+  }
+
+  size_t Size() const noexcept {
+    return tok_vec_.size();
   }
 
  private:
