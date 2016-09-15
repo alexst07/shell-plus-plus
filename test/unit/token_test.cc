@@ -4,7 +4,7 @@
 #include "parser/token.h"
 
 TEST(Token, Print) {
-  using namespace setti;
+  using namespace setti::internal;
 
   Token t1(TokenKind::KW_IF, "if", true, 1, 1);
   Token t2(TokenKind::INT_LITERAL, 5, true, 1, 1);
@@ -14,7 +14,7 @@ TEST(Token, Print) {
 }
 
 TEST(Token, Comparing) {
-  using namespace setti;
+  using namespace setti::internal;
 
   Token t1(TokenKind::KW_IF, "if", true, 1, 1);
   Token t2(TokenKind::INT_LITERAL, 5, true, 1, 1);
@@ -33,7 +33,7 @@ TEST(Token, Comparing) {
 }
 
 TEST(TokenStream, Operations) {
-  using namespace setti;
+  using namespace setti::internal;
 
   Token t1(TokenKind::KW_IF, "if", true, 1, 1);
   Token t2(TokenKind::INT_LITERAL, 5, true, 1, 1);

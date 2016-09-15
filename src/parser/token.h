@@ -7,6 +7,7 @@
 #include <boost/variant.hpp>
 
 namespace setti {
+namespace internal {
 
 enum class TokenKind {
   UNKNOWN = 0,
@@ -203,6 +204,7 @@ class TokenStream {
   std::vector<Token> tok_vec_;
 };
 
+}
 }
 
 #endif  // SETTI_TOKEN_H
