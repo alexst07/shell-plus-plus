@@ -19,12 +19,36 @@ enum class TokenKind {
   BIN_LITERAL,
   REAL_LITERAL,
   STRING_LITERAL,
+  VAR_ID,
+  IDENTIFIER,
+  WORD,
 
-#define KEYWORD(X) KW_ ## X,
+#define KEYWORD(X, Y) KW_ ## X,
 #define PUNCTUATOR(X, Y) X,
 #include "token.def"
 
   NUM_TOKENS
+};
+
+static const char* token_value_str[] = {
+  "", // UNKNOWN
+  "", // EOS
+  "", // COMMENT
+  "", // INT_LITERAL
+  "", // HEX_LITERAL
+  "", // OCT_LITERAL
+  "", // BIN_LITERAL
+  "", // REAL_LITERAL
+  "", // STRING_LITERAL
+  "", // VAR_ID
+  "", // IDENTIFIER
+  "", // WORD
+
+#define KEYWORD(X, Y) Y,
+#define PUNCTUATOR(X, Y) Y,
+#include "token.def"
+
+  ""
 };
 
 class Token {
@@ -41,6 +65,13 @@ class Token {
   Token(TokenKind k, const char* value, bool blank_after, uint line, uint col)
       : kind_(k)
       , value_(std::string(value))
+      , blank_after_(blank_after)
+      , line_(line)
+      , col_(col) {}
+
+  Token(TokenKind k, bool blank_after, uint line, uint col)
+      : kind_(k)
+      , value_(std::string(token_value_str[static_cast<int>(k)]))
       , blank_after_(blank_after)
       , line_(line)
       , col_(col) {}

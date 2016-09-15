@@ -6,11 +6,12 @@
 TEST(Token, Print) {
   using namespace setti::internal;
 
-  Token t1(TokenKind::KW_IF, "if", true, 1, 1);
+  Token t1(TokenKind::KW_IF, true, 1, 1);
   Token t2(TokenKind::INT_LITERAL, 5, true, 1, 1);
   Token t3(TokenKind::REAL_LITERAL, float(2.54), true, 1, 1);
+  Token t4(TokenKind::KW_WHILE, true, 1, 1);
 
-  std::cout << t1 << t2 << t3;
+  std::cout << t1 << t2 << t3 << t4;
 }
 
 TEST(Token, Comparing) {
@@ -35,7 +36,7 @@ TEST(Token, Comparing) {
 TEST(TokenStream, Operations) {
   using namespace setti::internal;
 
-  Token t1(TokenKind::KW_IF, "if", true, 1, 1);
+  Token t1(TokenKind::KW_IF, true, 1, 1);
   Token t2(TokenKind::INT_LITERAL, 5, true, 1, 1);
   Token t3(TokenKind::REAL_LITERAL, float(2.54), true, 1, 1);
 
