@@ -9,15 +9,15 @@
 namespace setti {
 
 enum class TokenKind {
-  unknown = 0,
-  eof,
-  comment,
-  int_literal,
-  hex_literal,
-  oct_literal,
-  bin_literal,
-  real_literal,
-  string_literal,
+  UNKNOWN = 0,
+  EOS,
+  COMMENT,
+  INT_LITERAL,
+  HEX_LITERAL,
+  OCT_LITERAL,
+  BIN_LITERAL,
+  REAL_LITERAL,
+  STRING_LITERAL,
 
 #define KEYWORD(X) kw_ ## X,
 #define PUNCTUATOR(X, Y) X,
@@ -107,6 +107,8 @@ class Token {
     return !IsAny(k1, kn...);
   }
 
+  friend std::ostream& operator<<(std::ostream& stream, Token& token);
+
  private:
   TokenKind kind_;
   bool blank_after_;
@@ -114,6 +116,13 @@ class Token {
   uint line_;
   uint col_;
 };
+
+std::ostream& operator<<(std::ostream& stream, Token& token) {
+  stream << "Type: " << static_cast<int>(token.kind_) << ", Value: "
+         << boost::get<std::string>(token.value_) << "\n";
+
+  return stream;
+}
 
 class TokenStream {
  public:
