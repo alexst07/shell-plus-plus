@@ -12,6 +12,7 @@ namespace internal {
 enum class TokenKind {
   UNKNOWN = 0,
   EOS,
+  NWL,
   COMMENT,
   INT_LITERAL,
   HEX_LITERAL,
@@ -33,6 +34,7 @@ enum class TokenKind {
 static const char* token_value_str[] = {
   "", // UNKNOWN
   "", // EOS
+  "\n", // NWL
   "", // COMMENT
   "", // INT_LITERAL
   "", // HEX_LITERAL
