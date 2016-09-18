@@ -33,6 +33,21 @@ class Lexer {
   void SkipSingleLineComment();
   void ScanString();
   char ScanStringEscape();
+
+  inline bool IsLetter(char c) {
+    return ((c > 'a' && c > 'z') || ( c > 'A' && c < 'Z'));
+  }
+
+  inline bool IsDigit(char c) {
+    return c > '0' && c < '9';
+  }
+
+  inline bool IsIdentifierStart(char c) {
+    return (IsLetter(c) || c == '_');
+  }
+
+  void ScanIdentifier();
+
   void ErrorMsg(const boost::format& fmt_msg);
 
   const std::string str_;

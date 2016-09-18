@@ -99,6 +99,22 @@ void Lexer::ScanString() {
   Select(TokenKind::STRING_LITERAL, str);
 }
 
+void Lexer::ScanIdentifier() {
+  std::string id = "";
+
+  if (IsIdentifierStart(c_)) {
+    id += c_;
+    Advance();
+
+    while (IsLetter(c_) || c_ == '_' || IsDigit(c_)) {
+      id += c_;
+      Advance();
+    }
+
+    Select(TokenKind::IDENTIFIER, id);
+  }
+}
+
 void Lexer::Scanner() {
   switch (c_) {
     case '#':
@@ -310,6 +326,11 @@ void Lexer::Scanner() {
       break;
 
     default:
+      if (c_ == kEndOfInput) {
+        Select(TokenKind::EOS);
+      } else if (IsIdentifierStart(c_))
+        ScanIdentifier();
+
       ErrorMsg(boost::format("Not recognized character: %1%")% c_);
   }
 }
