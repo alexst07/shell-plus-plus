@@ -21,7 +21,8 @@ class Lexer {
       , c_(str_[0])
       , buffer_cursor_(0)
       , line_(0)
-      , line_pos_(0) {}
+      , line_pos_(0)
+      , nerror_(0) {}
 
  private:
   void Scanner();
@@ -31,7 +32,7 @@ class Lexer {
   void Select(TokenKind k, Token::Value v);
   void SkipSingleLineComment();
   void ScanString();
-  void ScanStringEscape();
+  char ScanStringEscape();
   void ErrorMsg(const std::string str_msg);
 
   const std::string str_;
@@ -40,6 +41,7 @@ class Lexer {
   uint buffer_cursor_;
   uint line_;
   uint line_pos_;
+  uint nerror_;
   TokenStream ts_;
   Messages msgs_;
 
