@@ -50,8 +50,8 @@ void Lexer::SkipSingleLineComment() {
     Advance();
 }
 
-void Lexer::ErrorMsg(const std::string str_msg) {
-  Message msg(Message::Severity::ERR, str_msg, line_, line_pos_);
+void Lexer::ErrorMsg(const boost::format& fmt_msg) {
+  Message msg(Message::Severity::ERR, fmt_msg, line_, line_pos_);
   msgs_.Push(std::move(msg));
   nerror_++;
 }
@@ -80,7 +80,7 @@ void Lexer::ScanString() {
   std::string str = "";
   while(true) {
     if (c_ == '\n' || c_ == kEndOfInput) {
-      ErrorMsg("string literal not terminated");
+      ErrorMsg(boost::format("string literal not terminated"));
       break;
     }
 
@@ -310,7 +310,7 @@ void Lexer::Scanner() {
       break;
 
     default:
-      ErrorMsg("Not recognized character");
+      ErrorMsg(boost::format("Not recognized character: %1%")% c_);
   }
 }
 

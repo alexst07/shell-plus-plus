@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <boost/format.hpp>
 
 namespace setti {
 namespace internal {
@@ -16,7 +17,7 @@ class Message {
     ERR
   };
 
-  Message(Severity severity, std::string msg, uint line, uint pos)
+  Message(Severity severity, const boost::format& msg, uint line, uint pos)
       : severity_(severity)
       , msg_(msg)
       , line_(line)
@@ -25,7 +26,7 @@ class Message {
  private:
   uint line_;
   uint pos_;
-  std::string msg_;
+  boost::format msg_;
   Severity severity_;
 };
 

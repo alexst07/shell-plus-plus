@@ -33,7 +33,7 @@ class Lexer {
   void SkipSingleLineComment();
   void ScanString();
   char ScanStringEscape();
-  void ErrorMsg(const std::string str_msg);
+  void ErrorMsg(const boost::format& fmt_msg);
 
   const std::string str_;
   uint strlen_;
