@@ -4,6 +4,8 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
+#include <tuple>
 #include <boost/variant.hpp>
 
 namespace setti {
@@ -20,7 +22,6 @@ enum class TokenKind {
   BIN_LITERAL,
   REAL_LITERAL,
   STRING_LITERAL,
-  VAR_ID,
   IDENTIFIER,
   WORD,
 
@@ -42,7 +43,6 @@ static const char* token_value_str[] = {
   "", // BIN_LITERAL
   "", // REAL_LITERAL
   "", // STRING_LITERAL
-  "", // VAR_ID
   "", // IDENTIFIER
   "", // WORD
 
@@ -101,6 +101,8 @@ class Token {
     blank_after_ = tok.blank_after_;
     line_ = tok.line_;
     col_ = tok.col_;
+
+    return *this;
   }
 
   Token& operator=(Token&& tok) noexcept {
@@ -112,6 +114,8 @@ class Token {
     blank_after_ = tok.blank_after_;
     line_ = tok.line_;
     col_ = tok.col_;
+
+    return *this;
   }
 
   bool operator==(TokenKind k) const noexcept { return Is(k); }
@@ -149,6 +153,21 @@ class Token {
 
   friend std::ostream& operator<<(std::ostream& stream, Token& token);
 
+  // TODO(alex): this method must be optimized on future
+  static std::tuple<TokenKind, bool> IsKeyWord(std::string str) {
+    static std::map<std::string, TokenKind> map = {
+#define KEYWORD(X, Y) {Y, TokenKind::KW_ ## X},
+#include "token.def"
+      {"", TokenKind::UNKNOWN}
+    };
+
+    auto it = map.find(str);
+    if (it != map.end())
+      return std::tuple<TokenKind, bool>(it->second, true);
+
+    return std::tuple<TokenKind, bool>(TokenKind::UNKNOWN, false);
+  }
+
  private:
   struct Output : public boost::static_visitor<> {
     std::ostream& stream_;
@@ -164,7 +183,7 @@ class Token {
   uint col_;
 };
 
-std::ostream& operator<<(std::ostream& stream, Token& token) {
+inline std::ostream& operator<<(std::ostream& stream, Token& token) {
   stream << "Type: " << static_cast<int>(token.kind_) << ", Value: ";
   boost::apply_visitor(Token::Output{stream}, token.value_);
   stream << "\n";
@@ -185,7 +204,7 @@ class TokenStream {
     tok_stream.pos_ = 0;
   }
 
-  TokenStream& operator=(TokenStream&& tok_stream) {
+  inline TokenStream& operator=(TokenStream&& tok_stream) {
     if (this == &tok_stream)
       return *this;
 
@@ -196,31 +215,31 @@ class TokenStream {
     return *this;
   }
 
-  void PushToken(Token&& tok) {
+  inline void PushToken(Token&& tok) {
     tok_vec_.push_back(std::move(tok));
   }
 
-  const Token& CurrentToken() const {
+  inline const Token& CurrentToken() const {
     return tok_vec_.at(pos_);
   }
 
-  Token& CurrentToken() {
+  inline Token& CurrentToken() {
     return tok_vec_.at(pos_);
   }
 
-  const Token& PeekAhead() const {
+  inline const Token& PeekAhead() const {
     return tok_vec_.at(pos_ + 1);
   }
 
-  Token& PeekAhead() {
+  inline Token& PeekAhead() {
     return tok_vec_.at(pos_ + 1);
   }
 
-  Token& NextToken() {
+  inline Token& NextToken() {
     return tok_vec_.at(pos_++);
   }
 
-  bool Advance() {
+  inline bool Advance() {
     if (pos_ == tok_vec_.size() - 1)
       return false;
 
@@ -228,7 +247,7 @@ class TokenStream {
     return true;
   }
 
-  size_t Size() const noexcept {
+  inline size_t Size() const noexcept {
     return tok_vec_.size();
   }
 

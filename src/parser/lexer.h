@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 #include "token.h"
 #include "msg.h"
@@ -24,18 +25,18 @@ class Lexer {
       , line_pos_(0)
       , nerror_(0) {}
 
- private:
-  void Scanner();
-  void Advance();
-  char PeekAhead();
-  void Select(TokenKind k);
-  void Select(TokenKind k, Token::Value v);
+  TokenStream Scanner();
+
+private:
   void SkipSingleLineComment();
-  void ScanString();
+  Token ScanString();
+  Token ScanWord(const std::string& prestr = "");
+  Token ScanNumber();
   char ScanStringEscape();
+  char ScanWordEscape();
 
   inline bool IsLetter(char c) {
-    return ((c > 'a' && c > 'z') || ( c > 'A' && c < 'Z'));
+    return ((c >= 'a' && c <= 'z') || ( c >= 'A' && c <= 'Z'));
   }
 
   inline bool IsDigit(char c) {
@@ -46,18 +47,66 @@ class Lexer {
     return (IsLetter(c) || c == '_');
   }
 
-  void ScanIdentifier();
+  inline void Advance() {
+    if (buffer_cursor_ == strlen_) {
+      c_ = kEndOfInput;
+      return;
+    }
+
+    // Check new line and ser cursor position
+    if (c_ == '\n') {
+      line_++;
+      line_pos_ = 0;
+    }
+
+    c_ = str_[++buffer_cursor_];
+
+    // Always increment line position, because the first char on line is '1'
+    line_pos_++;
+  }
+
+  inline char PeekAhead() {
+    if ((buffer_cursor_ + 1) == strlen_)
+      return kEndOfInput;
+
+    return str_[buffer_cursor_ + 1];
+  }
+
+  inline Token GetToken(TokenKind k) {
+    bool blank_after = PeekAhead() == ' ';
+    Token t(k, blank_after, line_, line_pos_);
+    return t;
+  }
+
+  inline Token GetToken(TokenKind k, Token::Value v) {
+    bool blank_after = PeekAhead() == ' ';
+    Token t(k, v, blank_after, line_, line_pos_);
+    return t;
+  }
+
+  inline Token Select(TokenKind k) {
+    Token t(GetToken(k));
+    Advance();
+    return t;
+  }
+
+  inline Token Select(TokenKind k, Token::Value v) {
+    Token t(GetToken(k, v));
+    Advance();
+    return t;
+  }
+
+  Token ScanIdentifier();
 
   void ErrorMsg(const boost::format& fmt_msg);
 
-  const std::string str_;
+  std::string str_;
   uint strlen_;
   char c_;
   uint buffer_cursor_;
   uint line_;
   uint line_pos_;
   uint nerror_;
-  TokenStream ts_;
   Messages msgs_;
 
 };
