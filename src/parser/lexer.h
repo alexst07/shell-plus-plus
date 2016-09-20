@@ -27,6 +27,18 @@ class Lexer {
 
   TokenStream Scanner();
 
+  inline uint NumErrors() noexcept {
+    return nerror_;
+  }
+
+  inline const Messages& GetMessages() const noexcept {
+    return msgs_;
+  }
+
+  inline Messages& GetMessages() noexcept {
+    return msgs_;
+  }
+
 private:
   void SkipSingleLineComment();
   Token ScanString();
@@ -48,7 +60,7 @@ private:
   }
 
   inline void Advance() {
-    if (buffer_cursor_ == strlen_) {
+    if (buffer_cursor_ == strlen_ - 1) {
       c_ = kEndOfInput;
       return;
     }

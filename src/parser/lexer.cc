@@ -6,11 +6,12 @@ namespace setti {
 namespace internal {
 
 void Lexer::SkipSingleLineComment() {
-  while (c_ != kEndOfInput && c_ != '\n')
+  Advance();
+  while (c_ != kEndOfInput && c_ != '\n'){
     Advance();
+  }
 
-  if (c_ == '\n')
-    Advance();
+  Advance();
 }
 
 void Lexer::ErrorMsg(const boost::format& fmt_msg) {
@@ -45,6 +46,7 @@ char Lexer::ScanWordEscape() {
   char c = c_;
 
   switch (c) {
+    case ' ' : c = ' '; break;
     case 'b' : c = '\b'; break;
     case 'f' : c = '\f'; break;
     case 'n' : c = '\n'; break;
@@ -57,17 +59,23 @@ char Lexer::ScanWordEscape() {
 
 Token Lexer::ScanString() {
   std::string str = "";
+  Advance();
+
   while(true) {
     if (c_ == '\n' || c_ == kEndOfInput) {
       ErrorMsg(boost::format("string literal not terminated"));
       break;
     }
 
-    if (c_ == '"')
+    if (c_ == '"') {
+      Advance();
       break;
+    }
+
 
     if (c_ == '\\') {
        str += ScanStringEscape();
+       Advance();
        continue;
     }
 
@@ -109,6 +117,7 @@ Token Lexer::ScanNumber() {
   size_t point_num = 0;
 
   if (IsDigit(c_)) {
+    str_num += c_;
     Advance();
     while (IsDigit(c_) || c_ == '.') {
       if (c_ == '.') {
@@ -128,12 +137,12 @@ Token Lexer::ScanNumber() {
     int v;
     std::istringstream ss(str_num);
     ss >> v;
-    return Select(TokenKind::INT_LITERAL, v);
+    return GetToken(TokenKind::INT_LITERAL, v);
   } else {
     float v;
     std::istringstream ss(str_num);
     ss >> v;
-    return Select(TokenKind::REAL_LITERAL, v);
+    return GetToken(TokenKind::REAL_LITERAL, v);
   }
 }
 
@@ -143,6 +152,7 @@ Token Lexer::ScanWord(const std::string& prestr) {
   while (c_ != ' ' && c_ != '\t' && c_ != '\n' && c_ != kEndOfInput) {
     if (c_ == '\\') {
       word += ScanWordEscape();
+      Advance();
       continue;
     }
 
@@ -161,8 +171,8 @@ TokenStream Lexer::Scanner() {
     Token&& token = GetToken(TokenKind::UNKNOWN);
     switch (c_) {
       case '#':
-        Advance();
         SkipSingleLineComment();
+        whitespace = true;
         break;
 
       case ' ':
@@ -248,7 +258,7 @@ TokenStream Lexer::Scanner() {
         Advance();
         if (c_ == '=') {
           token = Select(TokenKind::ASSIGN_SUB);
-        } else if (c_ == '=') {
+        } else if (c_ == '>') {
           token = Select(TokenKind::ARROW);
         } else {
           token = GetToken(TokenKind::SUB);
@@ -399,9 +409,15 @@ TokenStream Lexer::Scanner() {
         } else if (IsDigit(c_)) {
           token = ScanNumber();
         } else if (c_ == '\\') {
-          std::string c;
-          c = ScanWordEscape();
-          token = Select(TokenKind::WORD, c);
+          // Allows insert newline without insert a token
+          if (PeekAhead() == '\n'){
+            Advance();
+            whitespace = true;
+          } else {
+            std::string c;
+            c = ScanWordEscape();
+            token = Select(TokenKind::WORD, c);
+          }
         } else {
           token = ScanWord();
         }
