@@ -152,6 +152,7 @@ class Token {
   }
 
   friend std::ostream& operator<<(std::ostream& stream, Token& token);
+  friend std::ostream& operator<<(std::ostream& stream, const Token& token);
 
   // TODO(alex): this method must be optimized on future
   static std::tuple<TokenKind, bool> IsKeyWord(std::string str) {
@@ -184,6 +185,14 @@ class Token {
 };
 
 inline std::ostream& operator<<(std::ostream& stream, Token& token) {
+  stream << "Type: " << static_cast<int>(token.kind_) << ", Value: ";
+  boost::apply_visitor(Token::Output{stream}, token.value_);
+  stream << "\n";
+
+  return stream;
+}
+
+inline std::ostream& operator<<(std::ostream& stream, const Token& token) {
   stream << "Type: " << static_cast<int>(token.kind_) << ", Value: ";
   boost::apply_visitor(Token::Output{stream}, token.value_);
   stream << "\n";
@@ -236,7 +245,7 @@ class TokenStream {
   }
 
   inline Token& NextToken() {
-    return tok_vec_.at(pos_++);
+    Token& tk = tok_vec_.at(pos_++);
   }
 
   inline bool Advance() {

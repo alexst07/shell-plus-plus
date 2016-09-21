@@ -17,6 +17,8 @@ class Message {
     ERR
   };
 
+  Message() = delete;
+
   Message(Severity severity, const boost::format& msg, uint line, uint pos)
       : severity_(severity)
       , msg_(msg)

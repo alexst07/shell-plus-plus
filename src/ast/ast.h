@@ -6,7 +6,7 @@
 #include <vector>
 #include <iostream>
 
-#include "parser/rtoken.h"
+#include "parser/token.h"
 #include "msg.h"
 #include "parser/lexer.h"
 
@@ -77,21 +77,22 @@ namespace internal {
   V(SuperCallReference)         \
   V(CaseClause)                 \
   V(EmptyParentheses)           \
-  V(DoExpression)               \
-  V(RewritableExpression)
+  V(DoExpression)
 
 #define AST_NODE_LIST(V)        \
   DECLARATION_NODE_LIST(V)      \
   STATEMENT_NODE_LIST(V)        \
   EXPRESSION_NODE_LIST(V)
 
-class AstFactory {};
+class AstNodeFactory;
 
 class AstNode {
  public:
 #define DECLARE_TYPE_ENUM(type) k##type,
   enum class NodeType : uint8_t { AST_NODE_LIST(DECLARE_TYPE_ENUM) };
 #undef DECLARE_TYPE_ENUM
+
+  virtual ~AstNode() {}
 
  private:
   NodeType type_;
@@ -103,11 +104,59 @@ class AstNode {
 };
 
 class Expression: public AstNode {
+ public:
+  virtual ~Expression() {}
+
  protected:
-  Expression(NodeType type, int position)
-      : AstNode(NodeType type, int position) {}
+  Expression(NodeType type, int position): AstNode(type, position) {}
 
 
+};
+
+class BinaryOperation: public Expression {
+ public:
+  virtual ~BinaryOperation() {}
+
+ private:
+  friend class AstNodeFactory;
+
+  TokenKind token_kind_;
+  std::unique_ptr<Expression> left_;
+  std::unique_ptr<Expression> right_;
+
+  BinaryOperation(TokenKind token_kind, std::unique_ptr<Expression> left,
+                  std::unique_ptr<Expression> right, int position)
+      : Expression(NodeType::kBinaryOperation, position)
+      , token_kind_(token_kind)
+      , left_(std::move(left))
+      , right_(std::move(right)) {}
+};
+
+class Literal: public Expression {
+ public:
+  virtual ~Literal() {}
+
+ private:
+  friend class AstNodeFactory;
+
+  Token token_;
+
+  Literal(const Token& token, int position):
+    token_(token), Expression(NodeType::kLiteral, position) {}
+};
+
+class AstNodeFactory {
+ public:
+  inline std::unique_ptr<Literal> NewLiteral(const Token& token, int pos) {
+    return std::unique_ptr<Literal>(new Literal(token, pos));
+  }
+
+  inline std::unique_ptr<BinaryOperation> NewBinaryOperation(
+      TokenKind token_kind, std::unique_ptr<Expression> left,
+      std::unique_ptr<Expression> right, int position) {
+    return std::unique_ptr<BinaryOperation>(new BinaryOperation(
+        token_kind, std::move(left), std::move(right), position));
+  }
 };
 
 }

@@ -9,20 +9,26 @@
 #include "token.h"
 #include "msg.h"
 #include "lexer.h"
+#include "parser_result.h"
+#include "ast/ast.h"
 
 namespace setti {
 namespace internal {
 
-class Ast {};
-
-template<class T>
-class ParserResult {
-
-};
-
 class Parser {
  public:
-  Parser(TokenStream&& ts): ts_(std::move(ts)) {}
+  Parser() = delete;
+
+  Parser(TokenStream&& ts)
+      : ts_(std::move(ts)), nerror_(0), token_(ts_.CurrentToken()) {}
+
+  ParserResult<Expression> AstGen() {
+    return ParserSimpleExp();
+  }
+
+  inline uint nerrors() const {
+    return nerror_;
+  }
 
  private:
   inline const Token& CurrentToken() const noexcept {
@@ -35,16 +41,30 @@ class Parser {
 
   inline void Advance() noexcept {
     ts_.Advance();
+    token_ = ts_.CurrentToken();
   }
 
-  inline const Token& NextToken() noexcept {
-    return ts_.NextToken();
+  Token NextToken() noexcept {
+    Token token = ts_.NextToken();
+    token_ = ts_.CurrentToken();
+    return token;
   }
 
-  ParserResult<Ast> ParserPrimaryExpr();
-  ParserResult<Ast> ParserPostExpr();
+  void ErrorMsg(const boost::format& fmt_msg) {
+    Message msg(Message::Severity::ERR, fmt_msg, token_.Line(), token_.Col());
+    msgs_.Push(std::move(msg));
+    nerror_++;
+  }
+
+  ParserResult<Expression> ParserPrimaryExpr();
+  ParserResult<Expression> ParserTerm();
+  ParserResult<Expression> ParserSimpleExp();
 
   TokenStream ts_;
+  AstNodeFactory factory_;
+  uint nerror_;
+  Token& token_;
+  Messages msgs_;
 };
 
 }
