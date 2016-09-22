@@ -169,6 +169,14 @@ class Token {
     return std::tuple<TokenKind, bool>(TokenKind::UNKNOWN, false);
   }
 
+  operator std::string() {
+    return std::string(token_value_str[static_cast<int>(kind_)]);
+  }
+
+  static const char* name(TokenKind kind) {
+    return token_value_str[static_cast<int>(kind)];
+  }
+
  private:
   struct Output : public boost::static_visitor<> {
     std::ostream& stream_;
@@ -185,7 +193,8 @@ class Token {
 };
 
 inline std::ostream& operator<<(std::ostream& stream, Token& token) {
-  stream << "Type: " << static_cast<int>(token.kind_) << ", Value: ";
+  stream << "Type: " << token_value_str[static_cast<int>(token.kind_)]
+                     << ", Value: ";
   boost::apply_visitor(Token::Output{stream}, token.value_);
   stream << "\n";
 
@@ -193,7 +202,8 @@ inline std::ostream& operator<<(std::ostream& stream, Token& token) {
 }
 
 inline std::ostream& operator<<(std::ostream& stream, const Token& token) {
-  stream << "Type: " << static_cast<int>(token.kind_) << ", Value: ";
+  stream << "Type: " << token_value_str[static_cast<int>(token.kind_)]
+                     << ", Value: ";
   boost::apply_visitor(Token::Output{stream}, token.value_);
   stream << "\n";
 

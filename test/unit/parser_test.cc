@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "parser/parser.h"
+#include "ast/ast-traversal-visitor.h"
 
 TEST(Lexer, Check) {
   using namespace setti::internal;
@@ -14,6 +15,8 @@ TEST(Lexer, Check) {
 
   if (p.nerrors() == 0) {
     std::cout << "Correct analysis\n";
+    AstTraversalVisitor visitor;
+    visitor.Visit(res.NodePtr());
   } else {
     std::cout << "Parser error analysis\n";
   }

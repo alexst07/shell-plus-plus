@@ -38,6 +38,10 @@ class ParserResult {
     return std::move(uptr_);
   }
 
+  T* NodePtr() noexcept {
+    return uptr_.get();
+  }
+
   operator bool() const {
     if (uptr_.get() != nullptr) {
       return true;

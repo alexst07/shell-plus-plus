@@ -85,6 +85,10 @@ namespace internal {
   EXPRESSION_NODE_LIST(V)
 
 class AstNodeFactory;
+class AstVisitor;
+class Expression;
+class BinaryOperation;
+class Literal;
 
 class AstNode {
  public:
@@ -93,6 +97,12 @@ class AstNode {
 #undef DECLARE_TYPE_ENUM
 
   virtual ~AstNode() {}
+
+  NodeType type() {
+    return type_;
+  }
+
+  virtual void Accept(AstVisitor* visitor) = 0;
 
  private:
   NodeType type_;
@@ -103,9 +113,18 @@ class AstNode {
       type_(type), position_(position) {}
 };
 
+class AstVisitor {
+ public:
+  void virtual VisitBinaryOperation(BinaryOperation* bin_op) {}
+
+  void virtual VisitLiteral(Literal* lit_exp) {}
+};
+
 class Expression: public AstNode {
  public:
   virtual ~Expression() {}
+
+  virtual void Accept(AstVisitor* visitor) = 0;
 
  protected:
   Expression(NodeType type, int position): AstNode(type, position) {}
@@ -116,6 +135,16 @@ class Expression: public AstNode {
 class BinaryOperation: public Expression {
  public:
   virtual ~BinaryOperation() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    left_->Accept(visitor);
+    right_->Accept(visitor);
+    visitor->VisitBinaryOperation(this);
+  }
+
+  TokenKind token_kind() noexcept {
+    return token_kind_;
+  }
 
  private:
   friend class AstNodeFactory;
@@ -135,6 +164,14 @@ class BinaryOperation: public Expression {
 class Literal: public Expression {
  public:
   virtual ~Literal() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitLiteral(this);
+  }
+
+  const Token& token() const noexcept {
+    return token_;
+  }
 
  private:
   friend class AstNodeFactory;

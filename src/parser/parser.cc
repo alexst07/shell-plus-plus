@@ -13,13 +13,14 @@ ParserResult<Expression> Parser::ParserSimpleExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (CurrentToken().IsAny(TokenKind::ADD, TokenKind::SUB)) {
+  if (token_.IsAny(TokenKind::ADD, TokenKind::SUB)) {
+    TokenKind token_kind = token_.GetKind();
     Advance();
     rexp = std::move(ParserSimpleExp());
 
     if (rexp) {
       return ParserResult<Expression>(factory_.NewBinaryOperation(
-          CurrentToken().GetKind(), std::move(lexp.MoveAstNode()),
+          token_kind, std::move(lexp.MoveAstNode()),
           std::move(rexp.MoveAstNode()), 0));
     }
   }
@@ -36,12 +37,13 @@ ParserResult<Expression> Parser::ParserTerm() {
   }
 
   if (token_.IsAny(TokenKind::MUL, TokenKind::DIV)) {
+    TokenKind token_kind = token_.GetKind();
     Advance();
     rexp = std::move(ParserTerm());
 
     if (rexp) {
       return ParserResult<Expression>(factory_.NewBinaryOperation(
-          CurrentToken().GetKind(), std::move(lexp.MoveAstNode()),
+          token_kind, std::move(lexp.MoveAstNode()),
           std::move(rexp.MoveAstNode()), 0));
     } else {
       return ParserResult<Expression>(); // Error
