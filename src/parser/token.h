@@ -247,6 +247,9 @@ class TokenStream {
   }
 
   inline const Token& PeekAhead() const {
+    if ((pos_ + 1) >= (tok_vec_.size() - 1))
+      return tok_vec_.back();
+
     return tok_vec_.at(pos_ + 1);
   }
 
@@ -255,7 +258,10 @@ class TokenStream {
   }
 
   inline Token& NextToken() {
-    Token& tk = tok_vec_.at(pos_++);
+    if ((pos_ + 1) >= (tok_vec_.size() - 1))
+      return tok_vec_.back();
+
+    Token& tk = tok_vec_.at(++pos_);
   }
 
   inline bool Advance() {
