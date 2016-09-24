@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <functional>
 
 #include "parser/token.h"
 #include "msg.h"
@@ -85,10 +86,17 @@ namespace internal {
   EXPRESSION_NODE_LIST(V)
 
 class AstNodeFactory;
+
 class AstVisitor;
 class Expression;
 class BinaryOperation;
 class Literal;
+
+// Position of ast node on source code
+struct Position {
+  uint line;
+  uint col;
+};
 
 class AstNode {
  public:
@@ -106,10 +114,10 @@ class AstNode {
 
  private:
   NodeType type_;
-  int position_;
+  Position position_;
 
  protected:
-  AstNode(NodeType type, int position):
+  AstNode(NodeType type, Position position):
       type_(type), position_(position) {}
 };
 
@@ -127,7 +135,7 @@ class Expression: public AstNode {
   virtual void Accept(AstVisitor* visitor) = 0;
 
  protected:
-  Expression(NodeType type, int position): AstNode(type, position) {}
+  Expression(NodeType type, Position position): AstNode(type, position) {}
 
 
 };
@@ -137,13 +145,19 @@ class BinaryOperation: public Expression {
   virtual ~BinaryOperation() {}
 
   virtual void Accept(AstVisitor* visitor) {
-    left_->Accept(visitor);
-    right_->Accept(visitor);
     visitor->VisitBinaryOperation(this);
   }
 
-  TokenKind token_kind() noexcept {
+  TokenKind token_kind() const noexcept {
     return token_kind_;
+  }
+
+  Expression* left() const noexcept {
+    return left_.get();
+  }
+
+  Expression* right() const noexcept {
+    return right_.get();
   }
 
  private:
@@ -154,7 +168,7 @@ class BinaryOperation: public Expression {
   std::unique_ptr<Expression> right_;
 
   BinaryOperation(TokenKind token_kind, std::unique_ptr<Expression> left,
-                  std::unique_ptr<Expression> right, int position)
+                  std::unique_ptr<Expression> right, Position position)
       : Expression(NodeType::kBinaryOperation, position)
       , token_kind_(token_kind)
       , left_(std::move(left))
@@ -163,37 +177,50 @@ class BinaryOperation: public Expression {
 
 class Literal: public Expression {
  public:
+  enum Type {
+    kString,
+    kInteger,
+    kReal,
+    kBool
+  };
+
   virtual ~Literal() {}
 
   virtual void Accept(AstVisitor* visitor) {
     visitor->VisitLiteral(this);
   }
 
-  const Token& token() const noexcept {
-    return token_;
+  const Token::Value& value() const noexcept {
+    return value_;
   }
 
  private:
   friend class AstNodeFactory;
 
-  Token token_;
+  Token::Value value_;
 
-  Literal(const Token& token, int position):
-    token_(token), Expression(NodeType::kLiteral, position) {}
+  Literal(const Token::Value& value, Type type, Position position):
+    value_(value), Expression(NodeType::kLiteral, position) {}
 };
 
 class AstNodeFactory {
  public:
-  inline std::unique_ptr<Literal> NewLiteral(const Token& token, int pos) {
-    return std::unique_ptr<Literal>(new Literal(token, pos));
+  AstNodeFactory(const std::function<Position()> fn_pos): fn_pos_(fn_pos) {}
+
+  inline std::unique_ptr<Literal> NewLiteral(const Token::Value& value,
+                                             Literal::Type type) {
+    return std::unique_ptr<Literal>(new Literal(value, type, fn_pos_()));
   }
 
   inline std::unique_ptr<BinaryOperation> NewBinaryOperation(
       TokenKind token_kind, std::unique_ptr<Expression> left,
-      std::unique_ptr<Expression> right, int position) {
+      std::unique_ptr<Expression> right) {
     return std::unique_ptr<BinaryOperation>(new BinaryOperation(
-        token_kind, std::move(left), std::move(right), position));
+        token_kind, std::move(left), std::move(right), fn_pos_()));
   }
+
+ private:
+  std::function<Position()> fn_pos_;
 };
 
 }

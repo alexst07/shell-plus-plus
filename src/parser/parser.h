@@ -20,7 +20,10 @@ class Parser {
   Parser() = delete;
 
   Parser(TokenStream&& ts)
-      : ts_(std::move(ts)), nerror_(0), token_(ts_.CurrentToken()) {}
+      : ts_(std::move(ts))
+      , factory_(std::bind(&Parser::Pos, this))
+      , nerror_(0)
+      , token_(ts_.CurrentToken()) {}
 
   ParserResult<Expression> AstGen() {
     return ParserSimpleExp();
@@ -54,6 +57,11 @@ class Parser {
     Message msg(Message::Severity::ERR, fmt_msg, token_.Line(), token_.Col());
     msgs_.Push(std::move(msg));
     nerror_++;
+  }
+
+  inline Position Pos() {
+    Position pos = {token_.Line(), token_.Col()};
+    return pos;
   }
 
   ParserResult<Expression> ParserPrimaryExpr();

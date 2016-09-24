@@ -21,7 +21,7 @@ ParserResult<Expression> Parser::ParserSimpleExp() {
     if (rexp) {
       return ParserResult<Expression>(factory_.NewBinaryOperation(
           token_kind, std::move(lexp.MoveAstNode()),
-          std::move(rexp.MoveAstNode()), 0));
+          std::move(rexp.MoveAstNode())));
     }
   }
 
@@ -44,7 +44,7 @@ ParserResult<Expression> Parser::ParserTerm() {
     if (rexp) {
       return ParserResult<Expression>(factory_.NewBinaryOperation(
           token_kind, std::move(lexp.MoveAstNode()),
-          std::move(rexp.MoveAstNode()), 0));
+          std::move(rexp.MoveAstNode())));
     } else {
       return ParserResult<Expression>(); // Error
     }
@@ -54,19 +54,20 @@ ParserResult<Expression> Parser::ParserTerm() {
 }
 
 ParserResult<Expression> Parser::ParserPrimaryExpr() {
-  Token token(NextToken());
+  Token token(CurrentToken());
+  Advance();
   if (token.Is(TokenKind::INT_LITERAL)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token, 0));
+    return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
+                                                        Literal::kInteger));
   } else if (token.Is(TokenKind::STRING_LITERAL)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token, 0));
+    return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
+                                                        Literal::kString));
   } else if (token.Is(TokenKind::REAL_LITERAL)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token, 0));
-  } else if (token.Is(TokenKind::KW_TRUE)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token, 0));
-  } else if (token.Is(TokenKind::KW_FALSE)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token, 0));
-  } else if (token.Is(TokenKind::IDENTIFIER)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token, 0));
+    return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
+                                                        Literal::kReal));
+  } else if (token.IsAny(TokenKind::KW_TRUE, TokenKind::KW_FALSE)) {
+    return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
+                                                        Literal::kBool));
   } else {
     ErrorMsg(boost::format("primary expression expected"));
     return ParserResult<Expression>(); // Error
