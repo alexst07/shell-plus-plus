@@ -26,7 +26,7 @@ class Parser {
       , token_(ts_.CurrentToken()) {}
 
   ParserResult<Expression> AstGen() {
-    return ParserSimpleExp();
+    return ParserArithExp();
   }
 
   inline uint nerrors() const {
@@ -53,6 +53,7 @@ class Parser {
     return token;
   }
 
+  // Advance until find a valid token
   inline const Token& ValidToken() {
     while (CurrentToken() == TokenKind::NWL) {
       Advance();
@@ -75,7 +76,7 @@ class Parser {
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserPrimaryExp();
   ParserResult<Expression> ParserTerm();
-  ParserResult<Expression> ParserSimpleExp();
+  ParserResult<Expression> ParserArithExp();
 
   TokenStream ts_;
   AstNodeFactory factory_;

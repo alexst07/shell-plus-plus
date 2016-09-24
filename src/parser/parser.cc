@@ -5,7 +5,7 @@
 namespace setti {
 namespace internal {
 
-ParserResult<Expression> Parser::ParserSimpleExp() {
+ParserResult<Expression> Parser::ParserArithExp() {
   ParserResult<Expression> rexp;
   ParserResult<Expression> lexp = ParserTerm();
 
@@ -16,7 +16,7 @@ ParserResult<Expression> Parser::ParserSimpleExp() {
   if (token_.IsAny(TokenKind::ADD, TokenKind::SUB)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
-    rexp = std::move(ParserSimpleExp());
+    rexp = std::move(ParserArithExp());
 
     if (rexp) {
       return ParserResult<Expression>(factory_.NewBinaryOperation(
@@ -62,7 +62,7 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
     return res;
   } else if (token == TokenKind::LPAREN) {
     Advance(); // consume the token '('
-    ParserResult<Expression> res = ParserSimpleExp();
+    ParserResult<Expression> res = ParserArithExp();
     if (CurrentToken() != TokenKind::RPAREN) {
       ErrorMsg(boost::format("Expected ')' in the end of expression"));
       return ParserResult<Expression>(); // Error
