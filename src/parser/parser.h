@@ -53,6 +53,14 @@ class Parser {
     return token;
   }
 
+  inline const Token& ValidToken() {
+    while (CurrentToken() == TokenKind::NWL) {
+      Advance();
+    }
+
+    return token_;
+  }
+
   void ErrorMsg(const boost::format& fmt_msg) {
     Message msg(Message::Severity::ERR, fmt_msg, token_.Line(), token_.Col());
     msgs_.Push(std::move(msg));

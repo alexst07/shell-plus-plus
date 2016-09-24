@@ -54,7 +54,7 @@ ParserResult<Expression> Parser::ParserTerm() {
 }
 
 ParserResult<Expression> Parser::ParserPrimaryExp() {
-  Token token(CurrentToken());
+  Token token(ValidToken());
   if (token == TokenKind::IDENTIFIER) {
     ParserResult<Expression> res = ParserResult<Expression>(
         factory_.NewIdentifier(boost::get<std::string>(token.GetValue())));
@@ -77,7 +77,7 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
 }
 
 ParserResult<Expression> Parser::LiteralExp() {
-  Token token(CurrentToken());
+  Token token(ValidToken());
   Advance();
   if (token.Is(TokenKind::INT_LITERAL)) {
     return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
