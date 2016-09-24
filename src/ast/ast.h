@@ -66,6 +66,7 @@ namespace internal {
   V(Conditional)                \
   V(VariableProxy)              \
   V(Literal)                    \
+  V(Identifier)                 \
   V(Yield)                      \
   V(Throw)                      \
   V(CallRuntime)                \
@@ -91,6 +92,7 @@ class AstVisitor;
 class Expression;
 class BinaryOperation;
 class Literal;
+class Identifier;
 
 // Position of ast node on source code
 struct Position {
@@ -126,6 +128,8 @@ class AstVisitor {
   void virtual VisitBinaryOperation(BinaryOperation* bin_op) {}
 
   void virtual VisitLiteral(Literal* lit_exp) {}
+
+  void virtual VisitIdentifier(Identifier* id) {}
 };
 
 class Expression: public AstNode {
@@ -148,7 +152,7 @@ class BinaryOperation: public Expression {
     visitor->VisitBinaryOperation(this);
   }
 
-  TokenKind token_kind() const noexcept {
+  TokenKind kind() const noexcept {
     return token_kind_;
   }
 
@@ -173,6 +177,27 @@ class BinaryOperation: public Expression {
       , token_kind_(token_kind)
       , left_(std::move(left))
       , right_(std::move(right)) {}
+};
+
+class Identifier: public Expression {
+ public:
+  virtual ~Identifier() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitIdentifier(this);
+  }
+
+  const std::string& name() const noexcept {
+    return name_;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::string name_;
+
+  Identifier(const std::string& name, Position position):
+    name_(name), Expression(NodeType::kIdentifier, position) {}
 };
 
 class Literal: public Expression {
@@ -217,6 +242,10 @@ class AstNodeFactory {
       std::unique_ptr<Expression> right) {
     return std::unique_ptr<BinaryOperation>(new BinaryOperation(
         token_kind, std::move(left), std::move(right), fn_pos_()));
+  }
+
+  inline std::unique_ptr<Identifier> NewIdentifier(const std::string& name) {
+    return std::unique_ptr<Identifier>(new Identifier(name, fn_pos_()));
   }
 
  private:

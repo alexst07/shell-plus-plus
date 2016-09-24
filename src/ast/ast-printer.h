@@ -12,23 +12,36 @@
 namespace setti {
 namespace internal {
 
-class AstTraversalVisitor: public AstVisitor {
+class AstPrinter: public AstVisitor {
   int level_;
+
+  void Level() {
+    for (int i = 0; i < level_; i++) {
+      std::cout << " |";
+    }
+
+    std::cout << "-";
+  }
+
  public:
   void virtual VisitBinaryOperation(BinaryOperation* bin_op) {
+    Level();
+    std::cout << "<bin_op type: "
+              << Token::name(bin_op->kind()) << ">\n";
     level_++;
     bin_op->left()->Accept(this);
     bin_op->right()->Accept(this);
     level_--;
-    std::cout << "level: " << level_;
-    std::cout << "VisitBinaryOperation: "
-              << Token::name(bin_op->token_kind()) << "\n";
+  }
 
+  void virtual VisitIdentifier(Identifier* id) {
+    Level();
+    std::cout << "<identifier name: "<< id->name() << ">\n";
   }
 
   void virtual VisitLiteral(Literal* lit_exp) {
-    std::cout << "level: " << level_;
-    std::cout << "VisitLiteral: "<< lit_exp->value() << "\n";
+    Level();
+    std::cout << "<literal value: "<< lit_exp->value() << ">\n";
   }
 
   void Visit(AstNode *node) {

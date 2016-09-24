@@ -30,7 +30,7 @@ ParserResult<Expression> Parser::ParserSimpleExp() {
 
 ParserResult<Expression> Parser::ParserTerm() {
   ParserResult<Expression> rexp;
-  ParserResult<Expression> lexp = ParserPrimaryExpr();
+  ParserResult<Expression> lexp = ParserPrimaryExp();
 
   if (!lexp) {
     return ParserResult<Expression>(); // Error
@@ -53,7 +53,30 @@ ParserResult<Expression> Parser::ParserTerm() {
   return lexp;
 }
 
-ParserResult<Expression> Parser::ParserPrimaryExpr() {
+ParserResult<Expression> Parser::ParserPrimaryExp() {
+  Token token(CurrentToken());
+  if (token == TokenKind::IDENTIFIER) {
+    ParserResult<Expression> res = ParserResult<Expression>(
+        factory_.NewIdentifier(boost::get<std::string>(token.GetValue())));
+    Advance(); // Consume the token
+    return res;
+  } else if (token == TokenKind::LPAREN) {
+    Advance(); // consume the token '('
+    ParserResult<Expression> res = ParserSimpleExp();
+    if (CurrentToken() != TokenKind::RPAREN) {
+      ErrorMsg(boost::format("Expected ')' in the end of expression"));
+      return ParserResult<Expression>(); // Error
+    }
+
+    Advance(); // consume the token ')'
+    return res;
+  } else {
+    return LiteralExp();
+  }
+
+}
+
+ParserResult<Expression> Parser::LiteralExp() {
   Token token(CurrentToken());
   Advance();
   if (token.Is(TokenKind::INT_LITERAL)) {

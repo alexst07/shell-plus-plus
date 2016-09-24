@@ -64,7 +64,8 @@ class Parser {
     return pos;
   }
 
-  ParserResult<Expression> ParserPrimaryExpr();
+  ParserResult<Expression> LiteralExp();
+  ParserResult<Expression> ParserPrimaryExp();
   ParserResult<Expression> ParserTerm();
   ParserResult<Expression> ParserSimpleExp();
 
