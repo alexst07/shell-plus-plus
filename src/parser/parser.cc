@@ -94,7 +94,7 @@ ParserResult<Expression> Parser::ParserUnaryExp() {
 ParserResult<Expression> Parser::ParserPostExp() {
   ParserResult<Expression> exp = ParserPrimaryExp();
 
-  while (token_ == TokenKind::LBRACKET) {
+  while (token_.IsAny(TokenKind::LBRACKET, TokenKind::ARROW)) {
     if (token_ == TokenKind::LBRACKET) {
       Advance();
       ParserResult<Expression> index_exp = ParserArithExp();
@@ -109,6 +109,23 @@ ParserResult<Expression> Parser::ParserPostExp() {
         factory_.NewArray(
             std::move(exp.MoveAstNode()),
             std::move(index_exp.MoveAstNode())
+          )
+        )
+      );
+    } else if (token_ == TokenKind::ARROW) {
+      Advance();
+      if (token_ != TokenKind::IDENTIFIER) {
+        ErrorMsg(boost::format("Expected identifier"));
+        return ParserResult<Expression>(); // Error
+      }
+        ParserResult<Identifier> id = ParserResult<Identifier>(
+            factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
+        Advance(); // Consume the token
+
+        exp = std::move(ParserResult<Expression>(
+        factory_.NewAttribute(
+            std::move(exp.MoveAstNode()),
+            std::move(id.MoveAstNode())
           )
         )
       );

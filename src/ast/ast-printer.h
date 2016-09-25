@@ -53,6 +53,23 @@ class AstPrinter: public AstVisitor {
     std::cout << "<literal value: "<< lit_exp->value() << ">\n";
   }
 
+  void virtual VisitAttribute(Attribute* att) {
+    Level();
+    std::cout << "<attribute>\n";
+    level_++;
+    Level();
+    std::cout << "<expression>\n";
+    level_++;
+    att->exp()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "<id>\n";
+    level_++;
+    att->id()->Accept(this);
+    level_--;
+    level_--;
+  }
+
   void virtual VisitArray(Array* arr) {
     Level();
     std::cout << "<array>\n";

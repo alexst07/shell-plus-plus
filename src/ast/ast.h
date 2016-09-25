@@ -62,7 +62,7 @@ namespace internal {
   CALL_NODE_LIST(V)             \
   V(FunctionLiteral)            \
   V(ClassLiteral)               \
-  V(NativeFunctionLiteral)      \
+  V(Attribute)                  \
   V(Conditional)                \
   V(VariableProxy)              \
   V(Literal)                    \
@@ -97,6 +97,7 @@ class Identifier;
 class AssignmentStatement;
 class UnaryOperation;
 class Array;
+class Attribute;
 
 // Position of ast node on source code
 struct Position {
@@ -140,6 +141,8 @@ class AstVisitor {
   void virtual VisitUnaryOperation(UnaryOperation* un_op) {}
 
   void virtual VisitArray(Array* arr) {}
+
+  void virtual VisitAttribute(Attribute* attribute) {}
 };
 
 class Statement: public AstNode {
@@ -311,6 +314,35 @@ class Array: public Expression {
       , arr_exp_(std::move(arr_exp)) {}
 };
 
+class Attribute: public Expression {
+ public:
+  virtual ~Attribute() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitAttribute(this);
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+  Identifier* id() const noexcept {
+    return id_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> exp_;
+  std::unique_ptr<Identifier> id_;
+
+  Attribute(std::unique_ptr<Expression> exp, std::unique_ptr<Identifier> id,
+            Position position)
+      : Expression(NodeType::kAttribute, position)
+      , exp_(std::move(exp))
+      , id_(std::move(id)) {}
+};
+
 class Literal: public Expression {
  public:
   enum Type {
@@ -365,6 +397,13 @@ class AstNodeFactory {
                                          std::unique_ptr<Expression> index_exp) {
     return std::unique_ptr<Array>(new Array(std::move(arr_exp),
                                             std::move(index_exp), fn_pos_()));
+  }
+
+  inline std::unique_ptr<Attribute> NewAttribute(
+      std::unique_ptr<Expression> exp, std::unique_ptr<Identifier> id) {
+    return std::unique_ptr<Attribute>(new Attribute(std::move(exp),
+                                                    std::move(id),
+                                                    fn_pos_()));
   }
 
   inline std::unique_ptr<Identifier> NewIdentifier(const std::string& name) {
