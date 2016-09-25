@@ -25,8 +25,8 @@ class Parser {
       , nerror_(0)
       , token_(ts_.CurrentToken()) {}
 
-  ParserResult<Expression> AstGen() {
-    return ParserArithExp();
+  ParserResult<Statement> AstGen() {
+    return ParserAssignStmt();
   }
 
   inline uint nerrors() const {
@@ -77,6 +77,7 @@ class Parser {
   ParserResult<Expression> ParserPrimaryExp();
   ParserResult<Expression> ParserTerm();
   ParserResult<Expression> ParserArithExp();
+  ParserResult<Statement> ParserAssignStmt();
 
   TokenStream ts_;
   AstNodeFactory factory_;

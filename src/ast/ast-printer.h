@@ -44,6 +44,15 @@ class AstPrinter: public AstVisitor {
     std::cout << "<literal value: "<< lit_exp->value() << ">\n";
   }
 
+  void virtual VisitAssignmentStatement(AssignmentStatement* assign) {
+    Level();
+    std::cout << "<assign id: " << assign->id()->name() << " kind: "
+              << static_cast<int>(assign->assign_kind()) << ">\n";
+    level_++;
+    assign->exp()->Accept(this);
+    level_--;
+  }
+
   void Visit(AstNode *node) {
     level_ = 0;
     node->Accept(this);

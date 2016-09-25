@@ -5,6 +5,32 @@
 namespace setti {
 namespace internal {
 
+ParserResult<Statement> Parser::ParserAssignStmt() {
+  if (token_ != TokenKind::IDENTIFIER) {
+    ErrorMsg(boost::format("identifier expected"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
+      boost::get<std::string>(token_.GetValue())));
+
+  Advance(); // Consume the token
+  ValidToken(); // Avance until find a valid token
+
+  if (token_ != TokenKind::ASSIGN) {
+    ErrorMsg(boost::format("assign expected"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  TokenKind kind = token_.GetKind();
+
+  Advance();
+  ValidToken(); // Avance until find a valid token
+  ParserResult<Expression> exp = ParserArithExp();
+  return ParserResult<Statement>(factory_.NewAssignmentStatement(
+      kind, std::move(id), std::move(exp.MoveAstNode())));
+}
+
 ParserResult<Expression> Parser::ParserArithExp() {
   ParserResult<Expression> rexp;
   ParserResult<Expression> lexp = ParserTerm();

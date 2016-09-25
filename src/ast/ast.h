@@ -31,6 +31,7 @@ namespace internal {
 #define STATEMENT_NODE_LIST(V)    \
   ITERATION_NODE_LIST(V)          \
   BREAKABLE_NODE_LIST(V)          \
+  V(AssignmentStatement)          \
   V(ExpressionStatement)          \
   V(EmptyStatement)               \
   V(IfStatement)                  \
@@ -93,6 +94,7 @@ class Expression;
 class BinaryOperation;
 class Literal;
 class Identifier;
+class AssignmentStatement;
 
 // Position of ast node on source code
 struct Position {
@@ -130,6 +132,18 @@ class AstVisitor {
   void virtual VisitLiteral(Literal* lit_exp) {}
 
   void virtual VisitIdentifier(Identifier* id) {}
+
+  void virtual VisitAssignmentStatement(AssignmentStatement* assig) {}
+};
+
+class Statement: public AstNode {
+ public:
+  virtual ~Statement() {}
+
+  virtual void Accept(AstVisitor* visitor) = 0;
+
+ protected:
+  Statement(NodeType type, Position position): AstNode(type, position) {}
 };
 
 class Expression: public AstNode {
@@ -140,8 +154,41 @@ class Expression: public AstNode {
 
  protected:
   Expression(NodeType type, Position position): AstNode(type, position) {}
+};
 
+class AssignmentStatement: public Statement {
+ public:
+  virtual ~AssignmentStatement() {}
 
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitAssignmentStatement(this);
+  }
+
+  TokenKind assign_kind() const noexcept {
+    return assign_kind_;
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+  Identifier* id() const noexcept {
+    return id_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  TokenKind assign_kind_;
+  std::unique_ptr<Expression> exp_;
+  std::unique_ptr<Identifier> id_;
+
+  AssignmentStatement(TokenKind assign_kind, std::unique_ptr<Identifier> id,
+                      std::unique_ptr<Expression> exp, Position position)
+      : Statement(NodeType::kAssignmentStatement, position)
+      , assign_kind_(assign_kind)
+      , exp_(std::move(exp))
+      , id_(std::move(id)) {}
 };
 
 class BinaryOperation: public Expression {
@@ -246,6 +293,13 @@ class AstNodeFactory {
 
   inline std::unique_ptr<Identifier> NewIdentifier(const std::string& name) {
     return std::unique_ptr<Identifier>(new Identifier(name, fn_pos_()));
+  }
+
+  inline std::unique_ptr<AssignmentStatement> NewAssignmentStatement(
+      TokenKind assign_kind, std::unique_ptr<Identifier> id,
+      std::unique_ptr<Expression> exp) {
+    return std::unique_ptr<AssignmentStatement>(new AssignmentStatement(
+        assign_kind, std::move(id), std::move(exp), fn_pos_()));
   }
 
  private:
