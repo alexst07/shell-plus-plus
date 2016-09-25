@@ -45,8 +45,7 @@ namespace internal {
 
 #define LITERAL_NODE_LIST(V) \
   V(RegExpLiteral)           \
-  V(ObjectLiteral)           \
-  V(ArrayLiteral)
+  V(ObjectLiteral)
 
 #define PROPERTY_NODE_LIST(V) \
   V(Assignment)               \
@@ -67,6 +66,7 @@ namespace internal {
   V(Conditional)                \
   V(VariableProxy)              \
   V(Literal)                    \
+  V(Array)                      \
   V(Identifier)                 \
   V(Yield)                      \
   V(Throw)                      \
@@ -95,6 +95,8 @@ class BinaryOperation;
 class Literal;
 class Identifier;
 class AssignmentStatement;
+class UnaryOperation;
+class Array;
 
 // Position of ast node on source code
 struct Position {
@@ -134,6 +136,10 @@ class AstVisitor {
   void virtual VisitIdentifier(Identifier* id) {}
 
   void virtual VisitAssignmentStatement(AssignmentStatement* assig) {}
+
+  void virtual VisitUnaryOperation(UnaryOperation* un_op) {}
+
+  void virtual VisitArray(Array* arr) {}
 };
 
 class Statement: public AstNode {
@@ -247,6 +253,64 @@ class Identifier: public Expression {
     name_(name), Expression(NodeType::kIdentifier, position) {}
 };
 
+class UnaryOperation: public Expression {
+ public:
+  virtual ~UnaryOperation() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitUnaryOperation(this);
+  }
+
+  TokenKind kind() const noexcept {
+    return token_kind_;
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  TokenKind token_kind_;
+  std::unique_ptr<Expression> exp_;
+
+  UnaryOperation(TokenKind token_kind, std::unique_ptr<Expression> exp,
+                 Position position)
+      : Expression(NodeType::kUnaryOperation, position)
+      , token_kind_(token_kind)
+      , exp_(std::move(exp)) {}
+};
+
+class Array: public Expression {
+ public:
+  virtual ~Array() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitArray(this);
+  }
+
+  Expression* index_exp() const noexcept {
+    return index_exp_.get();
+  }
+
+  Expression* arr_exp() const noexcept {
+    return arr_exp_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> index_exp_;
+  std::unique_ptr<Expression> arr_exp_;
+
+  Array(std::unique_ptr<Expression> arr_exp,
+        std::unique_ptr<Expression> index_exp, Position position)
+      : Expression(NodeType::kArray, position)
+      , index_exp_(std::move(index_exp))
+      , arr_exp_(std::move(arr_exp)) {}
+};
+
 class Literal: public Expression {
  public:
   enum Type {
@@ -289,6 +353,18 @@ class AstNodeFactory {
       std::unique_ptr<Expression> right) {
     return std::unique_ptr<BinaryOperation>(new BinaryOperation(
         token_kind, std::move(left), std::move(right), fn_pos_()));
+  }
+
+  inline std::unique_ptr<UnaryOperation> NewUnaryOperation(
+      TokenKind token_kind, std::unique_ptr<Expression> exp) {
+    return std::unique_ptr<UnaryOperation>(new UnaryOperation(
+        token_kind, std::move(exp), fn_pos_()));
+  }
+
+  inline std::unique_ptr<Array> NewArray(std::unique_ptr<Expression> arr_exp,
+                                         std::unique_ptr<Expression> index_exp) {
+    return std::unique_ptr<Array>(new Array(std::move(arr_exp),
+                                            std::move(index_exp), fn_pos_()));
   }
 
   inline std::unique_ptr<Identifier> NewIdentifier(const std::string& name) {

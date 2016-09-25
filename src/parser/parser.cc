@@ -56,7 +56,7 @@ ParserResult<Expression> Parser::ParserArithExp() {
 
 ParserResult<Expression> Parser::ParserTerm() {
   ParserResult<Expression> rexp;
-  ParserResult<Expression> lexp = ParserPrimaryExp();
+  ParserResult<Expression> lexp = ParserUnaryExp();
 
   if (!lexp) {
     return ParserResult<Expression>(); // Error
@@ -77,6 +77,45 @@ ParserResult<Expression> Parser::ParserTerm() {
   }
 
   return lexp;
+}
+
+ParserResult<Expression> Parser::ParserUnaryExp() {
+  if (token_.IsAny(TokenKind::ADD, TokenKind::SUB)) {
+    TokenKind token_kind = token_.GetKind();
+    Advance(); // Consume the token
+    ParserResult<Expression> exp = ParserPostExp();
+    return ParserResult<Expression>(factory_.NewUnaryOperation(
+          token_kind, std::move(exp.MoveAstNode())));
+  }
+
+  return ParserPostExp();
+}
+
+ParserResult<Expression> Parser::ParserPostExp() {
+  ParserResult<Expression> exp = ParserPrimaryExp();
+
+  while (token_ == TokenKind::LBRACKET) {
+    if (token_ == TokenKind::LBRACKET) {
+      Advance();
+      ParserResult<Expression> index_exp = ParserArithExp();
+      ValidToken();
+      if (token_ != TokenKind::RBRACKET) {
+        ErrorMsg(boost::format("Expected ']' in the end of expression"));
+        return ParserResult<Expression>(); // Error
+      }
+      Advance();
+
+      exp = std::move(ParserResult<Expression>(
+        factory_.NewArray(
+            std::move(exp.MoveAstNode()),
+            std::move(index_exp.MoveAstNode())
+          )
+        )
+      );
+    }
+  }
+
+  return exp;
 }
 
 ParserResult<Expression> Parser::ParserPrimaryExp() {

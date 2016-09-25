@@ -75,6 +75,8 @@ class Parser {
 
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserPrimaryExp();
+  ParserResult<Expression> ParserPostExp();
+  ParserResult<Expression> ParserUnaryExp();
   ParserResult<Expression> ParserTerm();
   ParserResult<Expression> ParserArithExp();
   ParserResult<Statement> ParserAssignStmt();

@@ -34,6 +34,15 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitUnaryOperation(UnaryOperation* un_op) {
+    Level();
+    std::cout << "<un_op type: "
+              << Token::name(un_op->kind()) << ">\n";
+    level_++;
+    un_op->exp()->Accept(this);
+    level_--;
+  }
+
   void virtual VisitIdentifier(Identifier* id) {
     Level();
     std::cout << "<identifier name: "<< id->name() << ">\n";
@@ -42,6 +51,23 @@ class AstPrinter: public AstVisitor {
   void virtual VisitLiteral(Literal* lit_exp) {
     Level();
     std::cout << "<literal value: "<< lit_exp->value() << ">\n";
+  }
+
+  void virtual VisitArray(Array* arr) {
+    Level();
+    std::cout << "<array>\n";
+    level_++;
+    Level();
+    std::cout << "<expression>\n";
+    level_++;
+    arr->arr_exp()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "<index>\n";
+    level_++;
+    arr->index_exp()->Accept(this);
+    level_--;
+    level_--;
   }
 
   void virtual VisitAssignmentStatement(AssignmentStatement* assign) {
