@@ -16,11 +16,12 @@ class AstPrinter: public AstVisitor {
   int level_;
 
   void Level() {
-    for (int i = 0; i < level_; i++) {
-      std::cout << " |";
+    for (int i = 0; i < level_-1; i++) {
+      std::cout << " │";
     }
 
-    std::cout << "-";
+    std::cout << " ├";
+    std::cout << "─";
   }
 
  public:
