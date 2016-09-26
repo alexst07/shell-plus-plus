@@ -28,6 +28,10 @@ class ParserResult {
     uptr_ = std::move(pres.uptr_);
   }
 
+  ParserResult& operator=(std::unique_ptr<T>&& uptr) noexcept {
+    uptr_ = std::move(uptr);
+  }
+
   ParserResult& operator=(nullptr_t) noexcept {
     uptr_ = nullptr;
   }
