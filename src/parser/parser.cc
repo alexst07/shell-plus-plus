@@ -97,6 +97,7 @@ ParserResult<Expression> Parser::ParserPostExp() {
   while (token_.IsAny(TokenKind::LBRACKET, TokenKind::ARROW)) {
     if (token_ == TokenKind::LBRACKET) {
       Advance();
+      ValidToken();
       ParserResult<Expression> index_exp = ParserArithExp();
       ValidToken();
       if (token_ != TokenKind::RBRACKET) {
@@ -114,6 +115,7 @@ ParserResult<Expression> Parser::ParserPostExp() {
       );
     } else if (token_ == TokenKind::ARROW) {
       Advance();
+      ValidToken();
       if (token_ != TokenKind::IDENTIFIER) {
         ErrorMsg(boost::format("Expected identifier"));
         return ParserResult<Expression>(); // Error

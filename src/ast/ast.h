@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <list>
 #include <iostream>
 #include <functional>
 
@@ -74,6 +75,7 @@ namespace internal {
   V(UnaryOperation)             \
   V(BinaryOperation)            \
   V(CompareOperation)           \
+  V(ExpressionList)             \
   V(Spread)                     \
   V(ThisFunction)               \
   V(SuperPropertyReference)     \
@@ -91,6 +93,7 @@ class AstNodeFactory;
 
 class AstVisitor;
 class Expression;
+class ExpressionList;
 class BinaryOperation;
 class Literal;
 class Identifier;
@@ -130,6 +133,8 @@ class AstNode {
 
 class AstVisitor {
  public:
+  void virtual VisitExpressionList(ExpressionList *exp_list) {}
+
   void virtual VisitBinaryOperation(BinaryOperation* bin_op) {}
 
   void virtual VisitLiteral(Literal* lit_exp) {}
@@ -163,6 +168,29 @@ class Expression: public AstNode {
 
  protected:
   Expression(NodeType type, Position position): AstNode(type, position) {}
+};
+
+class ExpressionList: public AstNode {
+ public:
+  virtual ~ExpressionList() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitExpressionList(this);
+  }
+
+  std::vector<Expression*> children() noexcept;
+
+  size_t num_children() const noexcept;
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<Expression>> exps_;
+
+  ExpressionList(std::vector<std::unique_ptr<Expression>> exps,
+                 Position position)
+      : AstNode(NodeType::kExpressionList, position)
+      , exps_(std::move(exps)) {}
 };
 
 class AssignmentStatement: public Statement {
@@ -415,6 +443,12 @@ class AstNodeFactory {
       std::unique_ptr<Expression> exp) {
     return std::unique_ptr<AssignmentStatement>(new AssignmentStatement(
         assign_kind, std::move(id), std::move(exp), fn_pos_()));
+  }
+
+  inline std::unique_ptr<ExpressionList> NewExpressionList(
+      std::vector<std::unique_ptr<Expression>> exps) {
+    return std::unique_ptr<ExpressionList>(new ExpressionList(std::move(exps),
+                                                              fn_pos_()));
   }
 
  private:

@@ -20,7 +20,7 @@ class AstPrinter: public AstVisitor {
       std::cout << " |";
     }
 
-    std::cout << "-";
+    std::cout << " ├";
   }
 
  public:
