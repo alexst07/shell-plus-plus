@@ -79,6 +79,7 @@ class Parser {
   ParserResult<Expression> ParserUnaryExp();
   ParserResult<Expression> ParserTerm();
   ParserResult<Expression> ParserArithExp();
+  ParserResult<ExpressionList> ParserExpList();
   ParserResult<Statement> ParserAssignStmt();
 
   TokenStream ts_;

@@ -76,7 +76,7 @@ namespace internal {
   V(BinaryOperation)            \
   V(CompareOperation)           \
   V(ExpressionList)             \
-  V(Spread)                     \
+  V(FunctionCall)               \
   V(ThisFunction)               \
   V(SuperPropertyReference)     \
   V(SuperCallReference)         \
@@ -101,6 +101,7 @@ class AssignmentStatement;
 class UnaryOperation;
 class Array;
 class Attribute;
+class FunctionCall;
 
 // Position of ast node on source code
 struct Position {
@@ -148,6 +149,8 @@ class AstVisitor {
   void virtual VisitArray(Array* arr) {}
 
   void virtual VisitAttribute(Attribute* attribute) {}
+
+  void virtual VisitFunctionCall(FunctionCall* func) {}
 };
 
 class Statement: public AstNode {
@@ -178,9 +181,23 @@ class ExpressionList: public AstNode {
     visitor->VisitExpressionList(this);
   }
 
-  std::vector<Expression*> children() noexcept;
+  bool IsEmpty() const noexcept {
+    return exps_.empty();
+  }
 
-  size_t num_children() const noexcept;
+  std::vector<Expression*> children() noexcept {
+    std::vector<Expression*> vec;
+
+    for (auto&& p_exp: exps_) {
+      vec.push_back(p_exp.get());
+    }
+
+    return vec;
+  }
+
+  size_t num_children() const noexcept {
+    exps_.size();
+  }
 
  private:
   friend class AstNodeFactory;
@@ -371,6 +388,39 @@ class Attribute: public Expression {
       , id_(std::move(id)) {}
 };
 
+class FunctionCall: public Expression {
+ public:
+  virtual ~FunctionCall() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitFunctionCall(this);
+  }
+
+  Expression* func_exp() {
+    return func_exp_.get();
+  }
+
+  bool IsListExpEmpty() const noexcept {
+    return exp_list_->IsEmpty();
+  }
+
+  ExpressionList* exp_list() {
+    return exp_list_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> func_exp_;
+  std::unique_ptr<ExpressionList> exp_list_;
+
+  FunctionCall(std::unique_ptr<Expression> func_exp,
+               std::unique_ptr<ExpressionList> exp_list, Position position)
+      : Expression(NodeType::kFunctionCall, position)
+      , func_exp_(std::move(func_exp))
+      , exp_list_(std::move(exp_list)) {}
+};
+
 class Literal: public Expression {
  public:
   enum Type {
@@ -449,6 +499,13 @@ class AstNodeFactory {
       std::vector<std::unique_ptr<Expression>> exps) {
     return std::unique_ptr<ExpressionList>(new ExpressionList(std::move(exps),
                                                               fn_pos_()));
+  }
+
+  inline std::unique_ptr<FunctionCall> NewFunctionCall(
+      std::unique_ptr<Expression> func_exp,
+      std::unique_ptr<ExpressionList> exp_list) {
+    return std::unique_ptr<FunctionCall>(new FunctionCall(
+        std::move(func_exp), std::move(exp_list), fn_pos_()));
   }
 
  private:

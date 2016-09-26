@@ -31,6 +31,27 @@ ParserResult<Statement> Parser::ParserAssignStmt() {
       kind, std::move(id), std::move(exp.MoveAstNode())));
 }
 
+ParserResult<ExpressionList> Parser::ParserExpList() {
+  std::vector<std::unique_ptr<Expression>> vec_exp;
+
+  auto check_token = [&]() -> bool {
+    if (ValidToken().Is(TokenKind::COMMA)) {
+      Advance();
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  do {
+    ParserResult<Expression> exp = ParserArithExp();
+    vec_exp.push_back(std::move(exp.MoveAstNode()));
+  } while (check_token());
+
+  return ParserResult<ExpressionList>(factory_.NewExpressionList(
+      std::move(vec_exp)));
+}
+
 ParserResult<Expression> Parser::ParserArithExp() {
   ParserResult<Expression> rexp;
   ParserResult<Expression> lexp = ParserTerm();
@@ -94,8 +115,10 @@ ParserResult<Expression> Parser::ParserUnaryExp() {
 ParserResult<Expression> Parser::ParserPostExp() {
   ParserResult<Expression> exp = ParserPrimaryExp();
 
-  while (token_.IsAny(TokenKind::LBRACKET, TokenKind::ARROW)) {
+  while (token_.IsAny(TokenKind::LBRACKET, TokenKind::ARROW,
+         TokenKind::LPAREN)) {
     if (token_ == TokenKind::LBRACKET) {
+      // parser array
       Advance();
       ValidToken();
       ParserResult<Expression> index_exp = ParserArithExp();
@@ -114,6 +137,7 @@ ParserResult<Expression> Parser::ParserPostExp() {
         )
       );
     } else if (token_ == TokenKind::ARROW) {
+      // parser attributes
       Advance();
       ValidToken();
       if (token_ != TokenKind::IDENTIFIER) {
@@ -131,8 +155,34 @@ ParserResult<Expression> Parser::ParserPostExp() {
           )
         )
       );
-    }
-  }
+    } else if (token_ == TokenKind::LPAREN) {
+      // parser function call
+      Advance();
+      ValidToken();
+      std::vector<std::unique_ptr<Expression>> exp_list;
+
+      if (token_ == TokenKind::RPAREN) {
+        // empty expression list
+        exp = std::move(ParserResult<Expression>(
+          factory_.NewFunctionCall(
+              std::move(exp.MoveAstNode()),
+              std::move(factory_.NewExpressionList(std::move(exp_list)))
+            )
+          )
+        );
+      } else {
+        // Parser expression list separted by (,) comma
+        auto res_exp_list = ParserExpList();
+        exp = std::move(ParserResult<Expression>(
+          factory_.NewFunctionCall(
+              std::move(exp.MoveAstNode()),
+              std::move(res_exp_list.MoveAstNode())
+            )
+          )
+        );
+      } // if token_ == TokenKind::RPAREN
+    } // if token_ == TokenKind::LPAREN
+  } // while
 
   return exp;
 }

@@ -20,7 +20,7 @@ class AstPrinter: public AstVisitor {
       std::cout << " |";
     }
 
-    std::cout << " ├";
+    std::cout << "-";
   }
 
  public:
@@ -93,6 +93,42 @@ class AstPrinter: public AstVisitor {
               << static_cast<int>(assign->assign_kind()) << ">\n";
     level_++;
     assign->exp()->Accept(this);
+    level_--;
+  }
+
+  void virtual VisitExpressionList(ExpressionList* list) {
+    Level();
+    std::cout << "<expression_list>\n";
+    level_++;
+    auto vec = list->children();
+    int i = 0;
+    for (const auto c: vec) {
+      Level();
+      std::cout << "<expression i: " << i << ">\n";
+      level_++;
+      c->Accept(this);
+      level_--;
+      i++;
+    }
+    level_--;
+  }
+
+  void virtual VisitFunctionCall(FunctionCall* fn) {
+    Level();
+    std::cout << "<function_call>\n";
+    level_++;
+
+    Level();
+    std::cout << "<function_exp_caller>\n";
+    level_++;
+    fn->func_exp()->Accept(this);
+    level_--;
+
+    Level();
+    std::cout << "<function_exp_list>\n";
+    level_++;
+    fn->exp_list()->Accept(this);
+    level_--;
     level_--;
   }
 
