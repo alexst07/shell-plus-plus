@@ -102,10 +102,16 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitAssignmentStatement(AssignmentStatement* assign) {
     Level();
-    std::cout << "<assign id: " << assign->id()->name() << " kind: "
-              << static_cast<int>(assign->assign_kind()) << ">\n";
+    std::cout << "<assign>"
     level_++;
-    assign->exp()->Accept(this);
+    assign->lexp_list()->Accept(this);
+    level_--;
+
+    Level();
+    std::cout << "<kind: " << static_cast<int>(assign->assign_kind()) << ">\n";
+
+    level_++;
+    assign->rexp_list()->Accept(this);
     level_--;
   }
 

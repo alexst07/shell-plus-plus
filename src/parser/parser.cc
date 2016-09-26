@@ -31,10 +31,9 @@ ParserResult<StatementList> Parser::ParserStmtList() {
 }
 
 ParserResult<Statement> Parser::ParserAssignStmt() {
-  if (token_ != TokenKind::IDENTIFIER) {
-    ErrorMsg(boost::format("identifier expected"));
-    return ParserResult<Statement>(); // Error
-  }
+  auto lexp_list = ParserExpList();
+  exp = factory_.NewFunctionCall(exp.MoveAstNode(),
+                                       res_exp_list.MoveAstNode());
 
   std::unique_ptr<Identifier> id(factory_.NewIdentifier(
       boost::get<std::string>(token_.GetValue())));

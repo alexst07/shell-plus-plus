@@ -104,6 +104,7 @@ class Array;
 class Attribute;
 class FunctionCall;
 class StatementList;
+class ExpressionStatement;
 
 // Position of ast node on source code
 struct Position {
@@ -155,6 +156,8 @@ class AstVisitor {
   void virtual VisitFunctionCall(FunctionCall* func) {}
 
   void virtual VisitStatementList(StatementList* stmt_list) {}
+
+  void virtual VisitExpressionStatement(ExpressionStatement *exp_stmt) {}
 };
 
 class Statement: public AstNode {
@@ -167,14 +170,14 @@ class Statement: public AstNode {
   Statement(NodeType type, Position position): AstNode(type, position) {}
 };
 
-class Expression: public AstNode {
+class Expression: public Statement {
  public:
   virtual ~Expression() {}
 
   virtual void Accept(AstVisitor* visitor) = 0;
 
  protected:
-  Expression(NodeType type, Position position): AstNode(type, position) {}
+  Expression(NodeType type, Position position): Statement(type, position) {}
 };
 
 class StatementList: public AstNode {
@@ -263,27 +266,29 @@ class AssignmentStatement: public Statement {
     return assign_kind_;
   }
 
-  Expression* exp() const noexcept {
-    return exp_.get();
+  ExpressionList* lexp_list() const noexcept {
+    return lexp_.get();
   }
 
-  Identifier* id() const noexcept {
-    return id_.get();
+  ExpressionList* rexp_list() const noexcept {
+    return rexp_.get();
   }
 
  private:
   friend class AstNodeFactory;
 
   TokenKind assign_kind_;
-  std::unique_ptr<Expression> exp_;
-  std::unique_ptr<Identifier> id_;
+  std::unique_ptr<ExpressionList> lexp_;
+  std::unique_ptr<ExpressionList> rexp_;
 
-  AssignmentStatement(TokenKind assign_kind, std::unique_ptr<Identifier> id,
-                      std::unique_ptr<Expression> exp, Position position)
+  AssignmentStatement(TokenKind assign_kind,
+                      std::unique_ptr<ExpressionList> lexp,
+                      std::unique_ptr<ExpressionList> rexp_,
+                      Position position)
       : Statement(NodeType::kAssignmentStatement, position)
       , assign_kind_(assign_kind)
-      , exp_(std::move(exp))
-      , id_(std::move(id)) {}
+      , lexp_(std::move(lexp))
+      , rexp_(std::move(rexp_)) {}
 };
 
 class BinaryOperation: public Expression {
@@ -530,10 +535,10 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<AssignmentStatement> NewAssignmentStatement(
-      TokenKind assign_kind, std::unique_ptr<Identifier> id,
-      std::unique_ptr<Expression> exp) {
+      TokenKind assign_kind, std::unique_ptr<ExpressionList> lexp_list,
+      std::unique_ptr<ExpressionList> rexp_list) {
     return std::unique_ptr<AssignmentStatement>(new AssignmentStatement(
-        assign_kind, std::move(id), std::move(exp), fn_pos_()));
+        assign_kind, std::move(lexp_list), std::move(rexp_list), fn_pos_()));
   }
 
   inline std::unique_ptr<ExpressionList> NewExpressionList(
