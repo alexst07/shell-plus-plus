@@ -5,6 +5,31 @@
 namespace setti {
 namespace internal {
 
+ParserResult<StatementList> Parser::ParserStmtList() {
+  std::vector<std::unique_ptr<Statement>> stmt_list;
+
+  while (token_ != TokenKind::EOS) {
+    ValidToken();
+    ParserResult<Statement> stmt = ParserAssignStmt();
+    stmt_list.push_back(stmt.MoveAstNode());
+
+    // uses new line char as end of statement, and advance until valid
+    // a valid token
+    if (token_ == TokenKind::NWL) {
+      ValidToken();
+    } else if (token_ == TokenKind::EOS) {
+      // end of file is a valid end for statement
+      break;
+    } else {
+      ErrorMsg(boost::format("end of stmt expected"));
+      return ParserResult<StatementList>(); // Error
+    }
+  }
+
+  return ParserResult<StatementList>(factory_.NewStatementList(
+      std::move(stmt_list)));
+}
+
 ParserResult<Statement> Parser::ParserAssignStmt() {
   if (token_ != TokenKind::IDENTIFIER) {
     ErrorMsg(boost::format("identifier expected"));
@@ -156,6 +181,8 @@ ParserResult<Expression> Parser::ParserPostExp() {
         exp = factory_.NewFunctionCall(exp.MoveAstNode(),
                                        res_exp_list.MoveAstNode());
       } // if token_ == TokenKind::RPAREN
+
+      Advance(); // advance rparen ')'
     } // if token_ == TokenKind::LPAREN
   } // while
 

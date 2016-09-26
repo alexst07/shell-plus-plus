@@ -25,6 +25,18 @@ class AstPrinter: public AstVisitor {
   }
 
  public:
+  void virtual VisitStatementList(StatementList * stmt_list) {
+    auto vec = stmt_list->children();
+    int i = 0;
+    for (const auto stmt: vec) {
+      std::cout << "<stmt i: " << i << ">\n";
+      level_++;
+      stmt->Accept(this);
+      level_--;
+      i++;
+    }
+  }
+
   void virtual VisitBinaryOperation(BinaryOperation* bin_op) {
     Level();
     std::cout << "<bin_op type: "

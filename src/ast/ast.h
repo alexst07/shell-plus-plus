@@ -32,6 +32,7 @@ namespace internal {
 #define STATEMENT_NODE_LIST(V)    \
   ITERATION_NODE_LIST(V)          \
   BREAKABLE_NODE_LIST(V)          \
+  V(StatementList)                \
   V(AssignmentStatement)          \
   V(ExpressionStatement)          \
   V(EmptyStatement)               \
@@ -102,6 +103,7 @@ class UnaryOperation;
 class Array;
 class Attribute;
 class FunctionCall;
+class StatementList;
 
 // Position of ast node on source code
 struct Position {
@@ -151,6 +153,8 @@ class AstVisitor {
   void virtual VisitAttribute(Attribute* attribute) {}
 
   void virtual VisitFunctionCall(FunctionCall* func) {}
+
+  void virtual VisitStatementList(StatementList* stmt_list) {}
 };
 
 class Statement: public AstNode {
@@ -171,6 +175,43 @@ class Expression: public AstNode {
 
  protected:
   Expression(NodeType type, Position position): AstNode(type, position) {}
+};
+
+class StatementList: public AstNode {
+ public:
+  virtual ~StatementList() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitStatementList(this);
+  }
+
+  bool IsEmpty() const noexcept {
+    return stmt_list_.empty();
+  }
+
+  std::vector<Statement*> children() noexcept {
+    std::vector<Statement*> vec;
+
+    for (auto&& p_stmt: stmt_list_) {
+      vec.push_back(p_stmt.get());
+    }
+
+    return vec;
+  }
+
+  size_t num_children() const noexcept {
+    stmt_list_.size();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<Statement>> stmt_list_;
+
+  StatementList(std::vector<std::unique_ptr<Statement>> stmt_list,
+                Position position)
+      : AstNode(NodeType::kStatementList, position)
+      , stmt_list_(std::move(stmt_list)) {}
 };
 
 class ExpressionList: public AstNode {
@@ -499,6 +540,12 @@ class AstNodeFactory {
       std::vector<std::unique_ptr<Expression>> exps) {
     return std::unique_ptr<ExpressionList>(new ExpressionList(std::move(exps),
                                                               fn_pos_()));
+  }
+
+  inline std::unique_ptr<StatementList> NewStatementList(
+      std::vector<std::unique_ptr<Statement>> stmt_list) {
+    return std::unique_ptr<StatementList>(new StatementList(
+        std::move(stmt_list), fn_pos_()));
   }
 
   inline std::unique_ptr<FunctionCall> NewFunctionCall(
