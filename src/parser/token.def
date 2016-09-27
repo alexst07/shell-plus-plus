@@ -18,6 +18,16 @@
 #define PUNCTUATOR(name, str)
 #endif
 
+/// PUNCTUATOR_ASSIGN(name, str)
+#ifndef PUNCTUATOR_ASSIGN
+#define PUNCTUATOR_ASSIGN(name, str)
+#endif
+
+/// PUNCTUATOR_COMP(name, str)
+#ifndef PUNCTUATOR_COMP
+#define PUNCTUATOR_COMP(name, str)
+#endif
+
 // Keywords that start decls.
 DECL_KEYWORD(CLASS,         "class")
 DECL_KEYWORD(INTERFACE,     "interface")
@@ -80,6 +90,27 @@ KEYWORD(__LINE__,           "__LINE__")
 KEYWORD(__FUNCTION__,       "__FUNCTION__")
 KEYWORD(__CMD__,            "__CMD__")
 
+// Punctuators assign
+PUNCTUATOR_ASSIGN(ASSIGN,          "=")
+PUNCTUATOR_ASSIGN(ASSIGN_BIT_OR,   "|=")
+PUNCTUATOR_ASSIGN(ASSIGN_BIT_XOR,  "^=")
+PUNCTUATOR_ASSIGN(ASSIGN_BIT_AND,  "&=")
+PUNCTUATOR_ASSIGN(ASSIGN_SHL,      "<<=")
+PUNCTUATOR_ASSIGN(ASSIGN_SAR,      ">>=")
+PUNCTUATOR_ASSIGN(ASSIGN_ADD,      "+=")
+PUNCTUATOR_ASSIGN(ASSIGN_SUB,      "-=")
+PUNCTUATOR_ASSIGN(ASSIGN_MUL,      "*=")
+PUNCTUATOR_ASSIGN(ASSIGN_DIV,      "/=")
+PUNCTUATOR_ASSIGN(ASSIGN_MOD,      "%=")
+
+// Punctuators comparison
+PUNCTUATOR_COMP(EQUAL,           "==")
+PUNCTUATOR_COMP(NOT_EQUAL,       "!=")
+PUNCTUATOR_COMP(LESS_THAN,       "<")
+PUNCTUATOR_COMP(GREATER_THAN,    ">")
+PUNCTUATOR_COMP(LESS_EQ,         "<=")
+PUNCTUATOR_COMP(GREATER_EQ,      ">=")
+
 // Punctuators.
 PUNCTUATOR(LPAREN,          "(")
 PUNCTUATOR(RPAREN,          ")")
@@ -90,17 +121,6 @@ PUNCTUATOR(RBRACKET,        "]")
 PUNCTUATOR(COMMA,           ",")
 PUNCTUATOR(COLON,           ":")
 PUNCTUATOR(SEMI_COLON,      ";")
-PUNCTUATOR(ASSIGN,          "=")
-PUNCTUATOR(ASSIGN_BIT_OR,   "|=")
-PUNCTUATOR(ASSIGN_BIT_XOR,  "^=")
-PUNCTUATOR(ASSIGN_BIT_AND,  "&=")
-PUNCTUATOR(ASSIGN_SHL,      "<<=")
-PUNCTUATOR(ASSIGN_SAR,      ">>=")
-PUNCTUATOR(ASSIGN_ADD,      "+=")
-PUNCTUATOR(ASSIGN_SUB,      "-=")
-PUNCTUATOR(ASSIGN_MUL,      "*=")
-PUNCTUATOR(ASSIGN_DIV,      "/=")
-PUNCTUATOR(ASSIGN_MOD,      "%=")
 PUNCTUATOR(AT_SIGN,         "@")
 PUNCTUATOR(ELLIPSIS,        "...")
 PUNCTUATOR(OR,              "||")
@@ -116,12 +136,6 @@ PUNCTUATOR(SUB,             "-")
 PUNCTUATOR(MUL,             "*")
 PUNCTUATOR(DIV,             "/")
 PUNCTUATOR(MOD,             "%")
-PUNCTUATOR(EQUAL,           "==")
-PUNCTUATOR(NOT_EQUAL,       "!=")
-PUNCTUATOR(LESS_THAN,       "<")
-PUNCTUATOR(GREATER_THAN,    ">")
-PUNCTUATOR(LESS_EQ,         "<=")
-PUNCTUATOR(GREATER_EQ,      ">=")
 PUNCTUATOR(ARROW,           "->")
 PUNCTUATOR(DOLLAR,          "$")
 PUNCTUATOR(DOLLAR_LPAREN,   "$(")
@@ -131,3 +145,5 @@ PUNCTUATOR(DOLLAR_LBRACE,   "${")
 #undef DECL_KEYWORD
 #undef STMT_KEYWORD
 #undef PUNCTUATOR
+#undef PUNCTUATOR_ASSIGN
+#undef PUNCTUATOR_COMP

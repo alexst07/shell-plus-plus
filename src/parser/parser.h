@@ -89,6 +89,14 @@ class Parser {
   ParserResult<Expression> ParserUnaryExp();
   ParserResult<Expression> ParserTerm();
   ParserResult<Expression> ParserArithExp();
+  ParserResult<Expression> ParserShiftExp();
+  ParserResult<Expression> ParserBitAndExp();
+  ParserResult<Expression> ParserBitXorExp();
+  ParserResult<Expression> ParserBitOrExp();
+  ParserResult<Expression> ParserComparisonExp();
+  ParserResult<Expression> ParserNotExp();
+  ParserResult<Expression> ParserAndExp();
+  ParserResult<Expression> ParserOrExp();
   ParserResult<ExpressionList> ParserExpList();
   ParserResult<Statement> ParserStmt();
   ParserResult<StatementList> ParserStmtList();

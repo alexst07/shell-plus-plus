@@ -26,6 +26,8 @@ enum class TokenKind {
   WORD,
 
 #define KEYWORD(X, Y) KW_ ## X,
+#define PUNCTUATOR_ASSIGN(X, Y) X,
+#define PUNCTUATOR_COMP(X, Y) X,
 #define PUNCTUATOR(X, Y) X,
 #include "token.def"
 
@@ -47,6 +49,8 @@ static const char* token_value_str[] = {
   "", // WORD
 
 #define KEYWORD(X, Y) Y,
+#define PUNCTUATOR_ASSIGN(X, Y) Y,
+#define PUNCTUATOR_COMP(X, Y) Y,
 #define PUNCTUATOR(X, Y) Y,
 #include "token.def"
 
@@ -167,6 +171,32 @@ class Token {
       return std::tuple<TokenKind, bool>(it->second, true);
 
     return std::tuple<TokenKind, bool>(TokenKind::UNKNOWN, false);
+  }
+
+  static bool IsAssignToken(TokenKind k) {
+    switch (k) {
+#define PUNCTUATOR_ASSIGN(X, Y) \
+      case TokenKind::X:        \
+      return true;
+#include "token.def"
+      break;
+
+      default:
+        return false;
+    }
+  }
+
+  static bool IsComparisonToken(TokenKind k) {
+    switch (k) {
+#define PUNCTUATOR_COMP(X, Y) \
+      case TokenKind::X:      \
+      return true;
+#include "token.def"
+      break;
+
+      default:
+        return false;
+    }
   }
 
   operator std::string() {
