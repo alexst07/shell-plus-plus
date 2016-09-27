@@ -7,7 +7,7 @@
 TEST(Lexer, Check) {
   using namespace setti::internal;
 
-  Lexer l("a = 5 +4* -4+51-(\n\n\n\"oi\" - wef[6*2]->sef[es[\n5+1\n]]) /\n78+t->p(\n4*3\n,\n asd[4])\np = t[p]->f()");
+  Lexer l("z = 5 +4* -4+51-(\n\n\n\"oi\" - wef[6*2]->sef[es[\n5+1\n]]) /\n78+t->p(\n4*3,\n ad[4])\n\np[1], a = t[p]->f()");
   std::cout << "Lexer\n";
   TokenStream ts = l.Scanner();
   Parser p(std::move(ts));

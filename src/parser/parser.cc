@@ -10,7 +10,7 @@ ParserResult<StatementList> Parser::ParserStmtList() {
 
   while (token_ != TokenKind::EOS) {
     ValidToken();
-    ParserResult<Statement> stmt = ParserAssignStmt();
+    ParserResult<Statement> stmt = ParserStmt();
     stmt_list.push_back(stmt.MoveAstNode());
 
     // uses new line char as end of statement, and advance until valid
@@ -30,46 +30,63 @@ ParserResult<StatementList> Parser::ParserStmtList() {
       std::move(stmt_list)));
 }
 
-ParserResult<Statement> Parser::ParserAssignStmt() {
-  auto lexp_list = ParserExpList();
-  exp = factory_.NewFunctionCall(exp.MoveAstNode(),
-                                       res_exp_list.MoveAstNode());
+ParserResult<Statement> Parser::ParserStmt() {
+  enum Type {kErro, kAssign, kExpStm};
+  Type type = kErro;
+  std::vector<std::unique_ptr<Expression>> vec_list;
+  ParserResult<ExpressionList> rexp_list;
+  size_t num_comma = 0;
+  TokenKind kind;
 
-  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
-      boost::get<std::string>(token_.GetValue())));
+  do {
+    ParserResult<Expression> exp = ParserPostExp();
+    vec_list.push_back(exp.MoveAstNode());
 
-  Advance(); // Consume the token
+    if (token_.Is(TokenKind::COMMA)) {num_comma++;}
+  } while (CheckComma());
 
-  if (ValidToken().IsNot(TokenKind::ASSIGN)) {
+  if ((num_comma > 0) && token_.IsNot(TokenKind::ASSIGN)) {
     ErrorMsg(boost::format("assign expected"));
     return ParserResult<Statement>(); // Error
   }
 
-  TokenKind kind = token_.GetKind();
+  type = kExpStm;
 
-  Advance();
-  ValidToken(); // Avance until find a valid token
-  ParserResult<Expression> exp(ParserArithExp());
-  return ParserResult<Statement>(factory_.NewAssignmentStatement(
-      kind, std::move(id), exp.MoveAstNode()));
+  if (token_.Is(TokenKind::ASSIGN)) {
+    type = Type::kAssign;
+    kind = token_.GetKind();
+
+    Advance(); // consume assign token
+    ValidToken();
+
+    rexp_list = ParserExpList();
+  }
+
+  switch (type) {
+    case Type::kAssign:
+      return ParserResult<Statement>(factory_.NewAssignmentStatement(
+          kind, factory_.NewExpressionList(std::move(vec_list)),
+          rexp_list.MoveAstNode()));
+      break;
+
+    case Type::kExpStm:
+      return ParserResult<Statement>(factory_.NewExpressionStatement(
+          std::move(vec_list[0])));
+      break;
+
+    default:
+      ErrorMsg(boost::format("not a statement"));
+      return ParserResult<Statement>(); // Error
+  }
 }
 
 ParserResult<ExpressionList> Parser::ParserExpList() {
   std::vector<std::unique_ptr<Expression>> vec_exp;
 
-  auto check_token = [&]() -> bool {
-    if (ValidToken().Is(TokenKind::COMMA)) {
-      Advance();
-      return true;
-    } else {
-      return false;
-    }
-  };
-
   do {
     ParserResult<Expression> exp = ParserArithExp();
     vec_exp.push_back(exp.MoveAstNode());
-  } while (check_token());
+  } while (CheckComma());
 
   return ParserResult<ExpressionList>(factory_.NewExpressionList(
       std::move(vec_exp)));
@@ -167,6 +184,7 @@ ParserResult<Expression> Parser::ParserPostExp() {
     } else if (token_ == TokenKind::LPAREN) {
       // parser function call
       Advance();
+
       std::vector<std::unique_ptr<Expression>> exp_list;
 
       if (ValidToken().Is(TokenKind::RPAREN)) {
@@ -179,6 +197,11 @@ ParserResult<Expression> Parser::ParserPostExp() {
         auto res_exp_list = ParserExpList();
         exp = factory_.NewFunctionCall(exp.MoveAstNode(),
                                        res_exp_list.MoveAstNode());
+
+        if (ValidToken().IsNot(TokenKind::RPAREN)) {
+          ErrorMsg(boost::format("Expected close right paren"));
+          return ParserResult<Expression>(); // Error
+        }
       } // if token_ == TokenKind::RPAREN
 
       Advance(); // advance rparen ')'
@@ -198,7 +221,7 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
   } else if (token == TokenKind::LPAREN) {
     Advance(); // consume the token '('
     ParserResult<Expression> res(ParserArithExp());
-    if (CurrentToken() != TokenKind::RPAREN) {
+    if (ValidToken() != TokenKind::RPAREN) {
       ErrorMsg(boost::format("Expected ')' in the end of expression"));
       return ParserResult<Expression>(); // Error
     }

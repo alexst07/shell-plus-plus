@@ -102,7 +102,7 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitAssignmentStatement(AssignmentStatement* assign) {
     Level();
-    std::cout << "<assign>"
+    std::cout << "<assign>\n";
     level_++;
     assign->lexp_list()->Accept(this);
     level_--;

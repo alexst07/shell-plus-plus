@@ -62,6 +62,16 @@ class Parser {
     return token_;
   }
 
+  inline bool CheckComma() {
+    if (token_.Is(TokenKind::COMMA)) {
+      Advance();
+      ValidToken();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   void ErrorMsg(const boost::format& fmt_msg) {
     Message msg(Message::Severity::ERR, fmt_msg, token_.Line(), token_.Col());
     msgs_.Push(std::move(msg));
@@ -80,7 +90,7 @@ class Parser {
   ParserResult<Expression> ParserTerm();
   ParserResult<Expression> ParserArithExp();
   ParserResult<ExpressionList> ParserExpList();
-  ParserResult<Statement> ParserAssignStmt();
+  ParserResult<Statement> ParserStmt();
   ParserResult<StatementList> ParserStmtList();
 
   TokenStream ts_;

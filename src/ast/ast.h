@@ -291,6 +291,29 @@ class AssignmentStatement: public Statement {
       , rexp_(std::move(rexp_)) {}
 };
 
+class ExpressionStatement: public Statement {
+ public:
+  virtual ~ExpressionStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitExpressionStatement(this);
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> exp_;
+
+  ExpressionStatement(std::unique_ptr<Expression> exp, Position position)
+      : Statement(NodeType::kAssignmentStatement, position)
+      , exp_(std::move(exp)) {}
+};
+
+
 class BinaryOperation: public Expression {
  public:
   virtual ~BinaryOperation() {}
@@ -558,6 +581,12 @@ class AstNodeFactory {
       std::unique_ptr<ExpressionList> exp_list) {
     return std::unique_ptr<FunctionCall>(new FunctionCall(
         std::move(func_exp), std::move(exp_list), fn_pos_()));
+  }
+
+  inline std::unique_ptr<ExpressionStatement> NewExpressionStatement(
+      std::unique_ptr<Expression> exp_stmt) {
+    return std::unique_ptr<ExpressionStatement>(new ExpressionStatement(
+        std::move(exp_stmt), fn_pos_()));
   }
 
  private:
