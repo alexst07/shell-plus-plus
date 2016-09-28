@@ -5,6 +5,64 @@
 namespace setti {
 namespace internal {
 
+ParserResult<Statement> Parser::ParserIfStmt() {
+  if (token_ != TokenKind::KW_IF) {
+    ErrorMsg(boost::format("expected if statement"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  ParserResult<Expression> exp(ParserOrExp());
+
+  Advance();
+  ValidToken();
+
+  ParserResult<StatementList> then_block(ParserBlock());
+
+  Advance();
+  ValidToken();
+
+  if (token_ == TokenKind::KW_ELSE) {
+    Advance();
+    ValidToken();
+
+    ParserResult<StatementList> else_block(ParserBlock());
+
+    Advance();
+    ValidToken();
+
+    return ParserResult<Statement>(factory_.NewIfStatement(
+      exp.MoveAstNode(), then_block.MoveAstNode(), else_block.MoveAstNode()));
+  }
+
+  return ParserResult<Statement>(factory_.NewIfStatement(
+      exp.MoveAstNode(), then_block.MoveAstNode(), nullptr));
+}
+
+ParserResult<StatementList> Parser::ParserBlock() {
+  if (token_ != TokenKind::LBRACE) {
+    ErrorMsg(boost::format("expected { token"));
+      return ParserResult<StatementList>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  ParserResult<StatementList> stmt_list(ParserStmtList());
+
+  if (token_ != TokenKind::RBRACE) {
+    ErrorMsg(boost::format("expected } token"));
+      return ParserResult<StatementList>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  return stmt_list;
+}
+
 ParserResult<StatementList> Parser::ParserStmtList() {
   std::vector<std::unique_ptr<Statement>> stmt_list;
 
@@ -31,6 +89,14 @@ ParserResult<StatementList> Parser::ParserStmtList() {
 }
 
 ParserResult<Statement> Parser::ParserStmt() {
+  if (token_ == TokenKind::KW_IF) {
+    return ParserIfStmt();
+  } else {
+    return ParserSimpleStmt();
+  }
+}
+
+ParserResult<Statement> Parser::ParserSimpleStmt() {
   enum Type {kErro, kAssign, kExpStm};
   Type type = kErro;
   std::vector<std::unique_ptr<Expression>> vec_list;

@@ -99,7 +99,10 @@ class Parser {
   ParserResult<Expression> ParserOrExp();
   ParserResult<ExpressionList> ParserExpList();
   ParserResult<Statement> ParserStmt();
+  ParserResult<Statement> ParserSimpleStmt();
   ParserResult<StatementList> ParserStmtList();
+  ParserResult<StatementList> ParserBlock();
+  ParserResult<Statement> ParserIfStmt();
 
   TokenStream ts_;
   AstNodeFactory factory_;

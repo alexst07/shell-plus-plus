@@ -105,6 +105,7 @@ class Attribute;
 class FunctionCall;
 class StatementList;
 class ExpressionStatement;
+class IfStatement;
 
 // Position of ast node on source code
 struct Position {
@@ -158,6 +159,8 @@ class AstVisitor {
   void virtual VisitStatementList(StatementList* stmt_list) {}
 
   void virtual VisitExpressionStatement(ExpressionStatement *exp_stmt) {}
+
+  void virtual VisitIfStatement(IfStatement* if_stmt) {}
 };
 
 class Statement: public AstNode {
@@ -252,6 +255,49 @@ class ExpressionList: public AstNode {
                  Position position)
       : AstNode(NodeType::kExpressionList, position)
       , exps_(std::move(exps)) {}
+};
+
+class IfStatement: public Statement {
+ public:
+  virtual ~IfStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitIfStatement(this);
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+  StatementList* then_block() const noexcept {
+    return then_block_.get();
+  }
+
+  StatementList* else_block() const noexcept {
+    return else_block_.get();
+  }
+
+  bool has_else() const noexcept {
+    if (else_block_) { return true; }
+
+    return false;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> exp_;
+  std::unique_ptr<StatementList> then_block_;
+  std::unique_ptr<StatementList> else_block_;
+
+  IfStatement(std::unique_ptr<Expression> exp,
+              std::unique_ptr<StatementList> then_block,
+              std::unique_ptr<StatementList> else_block,
+              Position position)
+      : Statement(NodeType::kAssignmentStatement, position)
+      , exp_(std::move(exp))
+      , then_block_(std::move(then_block))
+      , else_block_(std::move(else_block)) {}
 };
 
 class AssignmentStatement: public Statement {
@@ -587,6 +633,15 @@ class AstNodeFactory {
       std::unique_ptr<Expression> exp_stmt) {
     return std::unique_ptr<ExpressionStatement>(new ExpressionStatement(
         std::move(exp_stmt), fn_pos_()));
+  }
+
+  inline std::unique_ptr<IfStatement> NewIfStatement(
+      std::unique_ptr<Expression> exp,
+      std::unique_ptr<StatementList> then_block,
+      std::unique_ptr<StatementList> else_block) {
+    return std::unique_ptr<IfStatement>(new IfStatement(
+        std::move(exp), std::move(then_block), std::move(else_block),
+        fn_pos_()));
   }
 
  private:

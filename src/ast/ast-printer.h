@@ -151,6 +151,34 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitIfStatement(IfStatement* if_stmt) {
+    Level();
+    std::cout << "<if>\n";
+    level_++;
+
+    Level();
+    std::cout << "<condition>\n";
+    level_++;
+    if_stmt->exp()->Accept(this);
+    level_--;
+
+    Level();
+    std::cout << "<then>\n";
+    level_++;
+    if_stmt->then_block()->Accept(this);
+    level_--;
+
+    if (if_stmt->has_else()) {
+      Level();
+      std::cout << "<else>\n";
+      level_++;
+      if_stmt->then_block()->Accept(this);
+      level_--;
+    }
+
+    level_--;
+  }
+
   void Visit(AstNode *node) {
     level_ = 0;
     node->Accept(this);
