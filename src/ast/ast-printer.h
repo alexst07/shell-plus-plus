@@ -29,6 +29,7 @@ class AstPrinter: public AstVisitor {
     auto vec = stmt_list->children();
     int i = 0;
     for (const auto stmt: vec) {
+      Level();
       std::cout << "<stmt i: " << i << ">\n";
       level_++;
       stmt->Accept(this);
@@ -176,6 +177,15 @@ class AstPrinter: public AstVisitor {
       level_--;
     }
 
+    level_--;
+  }
+
+  void virtual VisitBlock(Block* block) {
+    Level();
+    std::cout << "<block>\n";
+    level_++;
+
+    block->stmt_list()->Accept(this);
     level_--;
   }
 

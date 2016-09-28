@@ -16,22 +16,21 @@ ParserResult<Statement> Parser::ParserIfStmt() {
 
   ParserResult<Expression> exp(ParserOrExp());
 
-  Advance();
   ValidToken();
 
-  ParserResult<StatementList> then_block(ParserBlock());
-
-  Advance();
-  ValidToken();
+  ParserResult<Statement> then_block(ParserBlock());
 
   if (token_ == TokenKind::KW_ELSE) {
-    Advance();
-    ValidToken();
-
-    ParserResult<StatementList> else_block(ParserBlock());
+    ParserResult<Statement> else_block;
 
     Advance();
     ValidToken();
+
+    if (token_ == TokenKind::KW_IF) {
+      else_block = std::move(ParserIfStmt());
+    } else {
+      else_block = std::move(ParserBlock());
+    }
 
     return ParserResult<Statement>(factory_.NewIfStatement(
       exp.MoveAstNode(), then_block.MoveAstNode(), else_block.MoveAstNode()));
@@ -41,10 +40,10 @@ ParserResult<Statement> Parser::ParserIfStmt() {
       exp.MoveAstNode(), then_block.MoveAstNode(), nullptr));
 }
 
-ParserResult<StatementList> Parser::ParserBlock() {
+ParserResult<Statement> Parser::ParserBlock() {
   if (token_ != TokenKind::LBRACE) {
-    ErrorMsg(boost::format("expected { token"));
-      return ParserResult<StatementList>(); // Error
+    ErrorMsg(boost::format("expected { token, got %1%")% TokenValueStr());
+      return ParserResult<Statement>(); // Error
   }
 
   Advance();
@@ -52,21 +51,21 @@ ParserResult<StatementList> Parser::ParserBlock() {
 
   ParserResult<StatementList> stmt_list(ParserStmtList());
 
-  if (token_ != TokenKind::RBRACE) {
-    ErrorMsg(boost::format("expected } token"));
-      return ParserResult<StatementList>(); // Error
+  if (ValidToken() != TokenKind::RBRACE) {
+    ErrorMsg(boost::format("expected } token, got %1%")% TokenValueStr());
+      return ParserResult<Statement>(); // Error
   }
 
   Advance();
   ValidToken();
 
-  return stmt_list;
+  return ParserResult<Statement>(factory_.NewBlock(stmt_list.MoveAstNode()));
 }
 
 ParserResult<StatementList> Parser::ParserStmtList() {
   std::vector<std::unique_ptr<Statement>> stmt_list;
 
-  while (token_ != TokenKind::EOS) {
+  while (token_.IsNot(TokenKind::EOS, TokenKind::RBRACE)) {
     ValidToken();
     ParserResult<Statement> stmt = ParserStmt();
     stmt_list.push_back(stmt.MoveAstNode());
@@ -75,12 +74,11 @@ ParserResult<StatementList> Parser::ParserStmtList() {
     // a valid token
     if (token_ == TokenKind::NWL) {
       ValidToken();
-    } else if (token_ == TokenKind::EOS) {
-      // end of file is a valid end for statement
+    } else if (token_.IsAny(TokenKind::EOS, TokenKind::RBRACE)) {
+      // end of file and end of block are a valid end for statement
       break;
     } else {
-      ErrorMsg(boost::format("end of stmt expected"));
-      return ParserResult<StatementList>(); // Error
+      continue;
     }
   }
 
@@ -502,7 +500,8 @@ ParserResult<Expression> Parser::LiteralExp() {
     return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
                                                         Literal::kBool));
   } else {
-    ErrorMsg(boost::format("primary expression expected"));
+    ErrorMsg(boost::format("primary expression expected, got %1%")
+        % Token::TokenValueToStr(token.GetValue()));
     return ParserResult<Expression>(); // Error
   }
 }

@@ -106,6 +106,7 @@ class FunctionCall;
 class StatementList;
 class ExpressionStatement;
 class IfStatement;
+class Block;
 
 // Position of ast node on source code
 struct Position {
@@ -161,6 +162,8 @@ class AstVisitor {
   void virtual VisitExpressionStatement(ExpressionStatement *exp_stmt) {}
 
   void virtual VisitIfStatement(IfStatement* if_stmt) {}
+
+  void virtual VisitBlock(Block* block) {}
 };
 
 class Statement: public AstNode {
@@ -220,6 +223,28 @@ class StatementList: public AstNode {
       , stmt_list_(std::move(stmt_list)) {}
 };
 
+class Block: public Statement {
+ public:
+  virtual ~Block() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitBlock(this);
+  }
+
+  StatementList* stmt_list() const noexcept {
+    return stmt_list_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<StatementList> stmt_list_;
+
+  Block(std::unique_ptr<StatementList> stmt_list, Position position)
+      : Statement(NodeType::kBlock, position)
+      , stmt_list_(std::move(stmt_list)) {}
+};
+
 class ExpressionList: public AstNode {
  public:
   virtual ~ExpressionList() {}
@@ -269,11 +294,11 @@ class IfStatement: public Statement {
     return exp_.get();
   }
 
-  StatementList* then_block() const noexcept {
+  Statement* then_block() const noexcept {
     return then_block_.get();
   }
 
-  StatementList* else_block() const noexcept {
+  Statement* else_block() const noexcept {
     return else_block_.get();
   }
 
@@ -287,14 +312,14 @@ class IfStatement: public Statement {
   friend class AstNodeFactory;
 
   std::unique_ptr<Expression> exp_;
-  std::unique_ptr<StatementList> then_block_;
-  std::unique_ptr<StatementList> else_block_;
+  std::unique_ptr<Statement> then_block_;
+  std::unique_ptr<Statement> else_block_;
 
   IfStatement(std::unique_ptr<Expression> exp,
-              std::unique_ptr<StatementList> then_block,
-              std::unique_ptr<StatementList> else_block,
+              std::unique_ptr<Statement> then_block,
+              std::unique_ptr<Statement> else_block,
               Position position)
-      : Statement(NodeType::kAssignmentStatement, position)
+      : Statement(NodeType::kIfStatement, position)
       , exp_(std::move(exp))
       , then_block_(std::move(then_block))
       , else_block_(std::move(else_block)) {}
@@ -355,7 +380,7 @@ class ExpressionStatement: public Statement {
   std::unique_ptr<Expression> exp_;
 
   ExpressionStatement(std::unique_ptr<Expression> exp, Position position)
-      : Statement(NodeType::kAssignmentStatement, position)
+      : Statement(NodeType::kExpressionStatement, position)
       , exp_(std::move(exp)) {}
 };
 
@@ -635,10 +660,16 @@ class AstNodeFactory {
         std::move(exp_stmt), fn_pos_()));
   }
 
+  inline std::unique_ptr<Statement> NewBlock(
+      std::unique_ptr<StatementList> stmt_list) {
+    return std::unique_ptr<Statement>(new Block(
+        std::move(stmt_list), fn_pos_()));
+  }
+
   inline std::unique_ptr<IfStatement> NewIfStatement(
       std::unique_ptr<Expression> exp,
-      std::unique_ptr<StatementList> then_block,
-      std::unique_ptr<StatementList> else_block) {
+      std::unique_ptr<Statement> then_block,
+      std::unique_ptr<Statement> else_block) {
     return std::unique_ptr<IfStatement>(new IfStatement(
         std::move(exp), std::move(then_block), std::move(else_block),
         fn_pos_()));

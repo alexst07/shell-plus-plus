@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <boost/format.hpp>
 
 #include "token.h"
 #include "msg.h"
@@ -31,6 +32,10 @@ class Parser {
 
   inline uint nerrors() const {
     return nerror_;
+  }
+
+  inline const Messages& Msgs() const {
+    return msgs_;
   }
 
  private:
@@ -72,6 +77,10 @@ class Parser {
     }
   }
 
+  inline std::string TokenValueStr() {
+    return Token::TokenValueToStr(token_.GetValue());
+  }
+
   void ErrorMsg(const boost::format& fmt_msg) {
     Message msg(Message::Severity::ERR, fmt_msg, token_.Line(), token_.Col());
     msgs_.Push(std::move(msg));
@@ -101,7 +110,7 @@ class Parser {
   ParserResult<Statement> ParserStmt();
   ParserResult<Statement> ParserSimpleStmt();
   ParserResult<StatementList> ParserStmtList();
-  ParserResult<StatementList> ParserBlock();
+  ParserResult<Statement> ParserBlock();
   ParserResult<Statement> ParserIfStmt();
 
   TokenStream ts_;
