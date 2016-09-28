@@ -28,6 +28,10 @@ int main(int argc, char **argv) {
     AstPrinter visitor;
     visitor.Visit(res.NodePtr());
   } else {
-    std::cout << "Parser error analysis\n";
+    std::cout << "Parser error analysis:\n";
+    auto msgs = p.Msgs();
+    for (const auto& msg : msgs) {
+      std::cout << msg << "\n";
+    }
   }
 }
