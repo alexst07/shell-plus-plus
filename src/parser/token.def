@@ -1,4 +1,12 @@
 
+#ifndef TOKEN
+#define TOKEN(kw, str)
+#endif
+
+#ifndef LITERAL
+#define LITERAL(kw, str)
+#endif
+
 #ifndef KEYWORD
 #define KEYWORD(kw, str)
 #endif
@@ -27,6 +35,19 @@
 #ifndef PUNCTUATOR_COMP
 #define PUNCTUATOR_COMP(name, str)
 #endif
+
+TOKEN(EOS,        "end of source")
+TOKEN(NWL,        "new line")
+TOKEN(COMMENT,    "comment")
+TOKEN(IDENTIFIER, "")
+TOKEN(WORD,       "")
+
+LITERAL(INT_LITERAL,   "")
+LITERAL(HEX_LITERAL,   "")
+LITERAL(OCT_LITERAL,   "")
+LITERAL(BIN_LITERAL,   "")
+LITERAL(REAL_LITERAL,  "")
+LITERAL(STRING_LITERAL,"")
 
 // Keywords that start decls.
 DECL_KEYWORD(CLASS,         "class")
@@ -141,6 +162,8 @@ PUNCTUATOR(DOLLAR,          "$")
 PUNCTUATOR(DOLLAR_LPAREN,   "$(")
 PUNCTUATOR(DOLLAR_LBRACE,   "${")
 
+#undef TOKEN
+#undef LITERAL
 #undef KEYWORD
 #undef DECL_KEYWORD
 #undef STMT_KEYWORD

@@ -30,7 +30,7 @@ TEST(Token, Comparing) {
   ASSERT_TRUE(t3 != TokenKind::KW_IF);
 
   ASSERT_TRUE(t1.IsAny(TokenKind::INT_LITERAL, TokenKind::KW_IF));
-  ASSERT_TRUE(t2.isNot(TokenKind::REAL_LITERAL, TokenKind::KW_IF));
+  ASSERT_TRUE(t2.IsNot(TokenKind::REAL_LITERAL, TokenKind::KW_IF));
 }
 
 TEST(TokenStream, Operations) {

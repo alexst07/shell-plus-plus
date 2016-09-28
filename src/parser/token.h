@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <sstream>
 #include <map>
 #include <tuple>
 #include <boost/variant.hpp>
@@ -13,18 +14,9 @@ namespace internal {
 
 enum class TokenKind {
   UNKNOWN = 0,
-  EOS,
-  NWL,
-  COMMENT,
-  INT_LITERAL,
-  HEX_LITERAL,
-  OCT_LITERAL,
-  BIN_LITERAL,
-  REAL_LITERAL,
-  STRING_LITERAL,
-  IDENTIFIER,
-  WORD,
 
+#define TOKEN(X, Y) X,
+#define LITERAL(X, Y) X,
 #define KEYWORD(X, Y) KW_ ## X,
 #define PUNCTUATOR_ASSIGN(X, Y) X,
 #define PUNCTUATOR_COMP(X, Y) X,
@@ -35,19 +27,10 @@ enum class TokenKind {
 };
 
 static const char* token_value_str[] = {
-  "", // UNKNOWN
-  "", // EOS
-  "\n", // NWL
-  "", // COMMENT
-  "", // INT_LITERAL
-  "", // HEX_LITERAL
-  "", // OCT_LITERAL
-  "", // BIN_LITERAL
-  "", // REAL_LITERAL
-  "", // STRING_LITERAL
-  "", // IDENTIFIER
-  "", // WORD
+  "UNKNOWN", // UNKNOWN
 
+#define TOKEN(X, Y) Y,
+#define LITERAL(X, Y) Y,
 #define KEYWORD(X, Y) Y,
 #define PUNCTUATOR_ASSIGN(X, Y) Y,
 #define PUNCTUATOR_COMP(X, Y) Y,
@@ -56,6 +39,21 @@ static const char* token_value_str[] = {
 
   ""
 };
+
+static const char* token_name_str[] = {
+  "UNKNOWN", // UNKNOWN
+
+#define TOKEN(X, Y) #X,
+#define LITERAL(X, Y) #X,
+#define KEYWORD(X, Y) #X,
+#define PUNCTUATOR_ASSIGN(X, Y) #X,
+#define PUNCTUATOR_COMP(X, Y) #X,
+#define PUNCTUATOR(X, Y) #X,
+#include "token.def"
+
+  ""
+};
+
 
 class Token {
  public:
@@ -151,7 +149,7 @@ class Token {
   }
 
   template <typename ...T>
-  bool isNot(TokenKind k1, T... kn) const noexcept {
+  bool IsNot(TokenKind k1, T... kn) const noexcept {
     return !IsAny(k1, kn...);
   }
 
@@ -207,6 +205,13 @@ class Token {
     return token_value_str[static_cast<int>(kind)];
   }
 
+  static std::string TokenValueToStr(Value value) {
+    std::string str_value;
+    std::stringstream stream;
+    boost::apply_visitor(Token::Output{stream}, value);
+    return stream.str();
+  }
+
  private:
   struct Output : public boost::static_visitor<> {
     std::ostream& stream_;
@@ -223,8 +228,9 @@ class Token {
 };
 
 inline std::ostream& operator<<(std::ostream& stream, Token& token) {
-  stream << "Type: " << token_value_str[static_cast<int>(token.kind_)]
-                     << ", Value: ";
+  std::string value = token_value_str[static_cast<int>(token.kind_)];
+  stream  << "Name: " << token_name_str[static_cast<int>(token.kind_)]
+          << ", Type: " << (value == "\n"? "": value) << ", Value: ";
   boost::apply_visitor(Token::Output{stream}, token.value_);
   stream << "\n";
 
@@ -232,8 +238,9 @@ inline std::ostream& operator<<(std::ostream& stream, Token& token) {
 }
 
 inline std::ostream& operator<<(std::ostream& stream, const Token& token) {
-  stream << "Type: " << token_value_str[static_cast<int>(token.kind_)]
-                     << ", Value: ";
+  std::string value = token_value_str[static_cast<int>(token.kind_)];
+  stream  << "Name: " << token_name_str[static_cast<int>(token.kind_)]
+          << ", Type: " << (value == "\n"? "": value) << ", Value: ";
   boost::apply_visitor(Token::Output{stream}, token.value_);
   stream << "\n";
 
