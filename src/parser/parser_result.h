@@ -24,6 +24,8 @@ class ParserResult {
   ParserResult(ParserResult&& pres) noexcept: uptr_(std::move(pres.uptr_)) {}
   ParserResult(const ParserResult&) = delete;
 
+  ~ParserResult() {}
+
   ParserResult& operator=(ParserResult&& pres) noexcept {
     uptr_ = std::move(pres.uptr_);
   }

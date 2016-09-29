@@ -5,6 +5,32 @@
 namespace setti {
 namespace internal {
 
+ParserResult<Statement> Parser::ParserForInStmt() {
+  if (token_ != TokenKind::KW_FOR) {
+    ErrorMsg(boost::format("expected for statement"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+  ParserResult<ExpressionList> exp_list(ParserPostExpList());
+
+  if (token_ != TokenKind::KW_IN) {
+    ErrorMsg(boost::format("expected for statement"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+  ParserResult<ExpressionList> test_list(ParserExpList());
+
+  ValidToken();
+  ParserResult<Statement> block(ParserBlock());
+
+  return ParserResult<Statement>(factory_.NewForInStatement(
+      exp_list.MoveAstNode(), test_list.MoveAstNode(), block.MoveAstNode()));
+}
+
 ParserResult<Statement> Parser::ParserIfStmt() {
   if (token_ != TokenKind::KW_IF) {
     ErrorMsg(boost::format("expected if statement"));
@@ -163,6 +189,10 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserDefaultStmt();
   } else if (token_ == TokenKind::KW_SWITCH) {
     return ParserSwitchStmt();
+  } else if (token_ == TokenKind::KW_FOR) {
+    return ParserForInStmt();
+  } else if (token_ == TokenKind::LBRACE) {
+    return ParserBlock();
   } else {
     return ParserSimpleStmt();
   }
@@ -237,6 +267,9 @@ ParserResult<Statement> Parser::ParserSimpleStmt() {
       break;
 
     case Type::kExpStm:
+      // if there is no assing token, so it is a statement expression
+      // function call is the only expression accept, this check is
+      // done on semantic analysis
       return ParserResult<Statement>(factory_.NewExpressionStatement(
           std::move(vec_list[0])));
       break;
@@ -245,6 +278,18 @@ ParserResult<Statement> Parser::ParserSimpleStmt() {
       ErrorMsg(boost::format("not a statement"));
       return ParserResult<Statement>(); // Error
   }
+}
+
+ParserResult<ExpressionList> Parser::ParserPostExpList() {
+  std::vector<std::unique_ptr<Expression>> vec_list;
+
+  do {
+    ParserResult<Expression> exp = ParserPostExp();
+    vec_list.push_back(exp.MoveAstNode());
+  } while (CheckComma());
+
+  ParserResult<ExpressionList> exp_list(factory_.NewExpressionList(
+      std::move(vec_list)));
 }
 
 ParserResult<ExpressionList> Parser::ParserExpList() {

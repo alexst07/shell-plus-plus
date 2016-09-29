@@ -259,6 +259,35 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitForInStatement(ForInStatement* for_in_stmt) {
+    Level();
+    std::cout << "<for_in>\n";
+    level_++;
+
+    Level();
+    std::cout << "<exp_list>\n";
+    level_++;
+    if (for_in_stmt->exp_list() == nullptr)
+      std::cout << "exp_list null\n";
+    else
+//       for_in_stmt->exp_list()->Accept(this);
+    level_--;
+
+    Level();
+    std::cout << "<test_list>\n";
+    level_++;
+    for_in_stmt->test_list()->Accept(this);
+    level_--;
+
+    Level();
+    std::cout << "<block>\n";
+    level_++;
+    for_in_stmt->block()->Accept(this);
+    level_--;
+
+    level_--;
+  }
+
   void Visit(AstNode *node) {
     level_ = 0;
     node->Accept(this);

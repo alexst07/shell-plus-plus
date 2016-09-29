@@ -113,6 +113,7 @@ class BreakStatement;
 class CaseStatement;
 class DefaultStatement;
 class SwitchStatement;
+class ForInStatement;
 
 // Position of ast node on source code
 struct Position {
@@ -180,6 +181,8 @@ class AstVisitor {
   void virtual VisitDefaultStatement(DefaultStatement* default_stmt) {}
 
   void virtual VisitSwitchStatement(SwitchStatement* switch_stmt) {}
+
+  void virtual VisitForInStatement(ForInStatement* for_in_stmt) {}
 };
 
 class Statement: public AstNode {
@@ -296,6 +299,43 @@ class ExpressionList: public AstNode {
                  Position position)
       : AstNode(NodeType::kExpressionList, position)
       , exps_(std::move(exps)) {}
+};
+
+class ForInStatement: public Statement {
+ public:
+  virtual ~ForInStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitForInStatement(this);
+  }
+
+  ExpressionList* exp_list() const noexcept {
+    return exp_list_.get();
+  }
+
+  ExpressionList* test_list() const noexcept {
+    return test_list_.get();
+  }
+
+  Statement* block() const noexcept {
+    return block_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<ExpressionList> exp_list_;
+  std::unique_ptr<ExpressionList> test_list_;
+  std::unique_ptr<Statement> block_;
+
+  ForInStatement(std::unique_ptr<ExpressionList> exp_list,
+                 std::unique_ptr<ExpressionList> test_list,
+                 std::unique_ptr<Statement> block,
+                 Position position)
+      : Statement(NodeType::kForInStatement, position)
+      , exp_list_(std::move(exp_list))
+      , test_list_(std::move(test_list))
+      , block_(std::move(block)) {}
 };
 
 class SwitchStatement: public Statement {
@@ -831,6 +871,15 @@ class AstNodeFactory {
       std::unique_ptr<Statement> block) {
     return std::unique_ptr<SwitchStatement>(new SwitchStatement(
         std::move(exp), std::move(block), fn_pos_()));
+  }
+
+  inline std::unique_ptr<ForInStatement> NewForInStatement(
+      std::unique_ptr<ExpressionList> exp_list,
+      std::unique_ptr<ExpressionList> test_list,
+      std::unique_ptr<Statement> block) {
+    return std::unique_ptr<ForInStatement>(new ForInStatement(
+        std::move(exp_list), std::move(test_list), std::move(block),
+        fn_pos_()));
   }
 
   inline std::unique_ptr<CaseStatement> NewCaseStatement(
