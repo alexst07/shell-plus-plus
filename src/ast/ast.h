@@ -107,6 +107,7 @@ class StatementList;
 class ExpressionStatement;
 class IfStatement;
 class Block;
+class WhileStatement;
 
 // Position of ast node on source code
 struct Position {
@@ -164,6 +165,8 @@ class AstVisitor {
   void virtual VisitIfStatement(IfStatement* if_stmt) {}
 
   void virtual VisitBlock(Block* block) {}
+
+  void virtual VisitWhileStatement(WhileStatement* while_stmt) {}
 };
 
 class Statement: public AstNode {
@@ -323,6 +326,36 @@ class IfStatement: public Statement {
       , exp_(std::move(exp))
       , then_block_(std::move(then_block))
       , else_block_(std::move(else_block)) {}
+};
+
+class WhileStatement: public Statement {
+ public:
+  virtual ~WhileStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitWhileStatement(this);
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+  Statement* block() const noexcept {
+    return block_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> exp_;
+  std::unique_ptr<Statement> block_;
+
+  WhileStatement(std::unique_ptr<Expression> exp,
+              std::unique_ptr<Statement> block,
+              Position position)
+      : Statement(NodeType::kIfStatement, position)
+      , exp_(std::move(exp))
+      , block_(std::move(block)) {}
 };
 
 class AssignmentStatement: public Statement {
@@ -673,6 +706,13 @@ class AstNodeFactory {
     return std::unique_ptr<IfStatement>(new IfStatement(
         std::move(exp), std::move(then_block), std::move(else_block),
         fn_pos_()));
+  }
+
+  inline std::unique_ptr<WhileStatement> NewWhileStatement(
+      std::unique_ptr<Expression> exp,
+      std::unique_ptr<Statement> block) {
+    return std::unique_ptr<WhileStatement>(new WhileStatement(
+        std::move(exp), std::move(block), fn_pos_()));
   }
 
  private:

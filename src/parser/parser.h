@@ -112,6 +112,7 @@ class Parser {
   ParserResult<StatementList> ParserStmtList();
   ParserResult<Statement> ParserBlock();
   ParserResult<Statement> ParserIfStmt();
+  ParserResult<Statement> ParserWhileStmt();
 
   TokenStream ts_;
   AstNodeFactory factory_;

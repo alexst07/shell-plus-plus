@@ -173,9 +173,29 @@ class AstPrinter: public AstVisitor {
       Level();
       std::cout << "<else>\n";
       level_++;
-      if_stmt->then_block()->Accept(this);
+      if_stmt->else_block()->Accept(this);
       level_--;
     }
+
+    level_--;
+  }
+
+  void virtual VisitWhileStatement(WhileStatement* while_stmt) {
+    Level();
+    std::cout << "<while>\n";
+    level_++;
+
+    Level();
+    std::cout << "<condition>\n";
+    level_++;
+    while_stmt->exp()->Accept(this);
+    level_--;
+
+    Level();
+    std::cout << "<do>\n";
+    level_++;
+    while_stmt->block()->Accept(this);
+    level_--;
 
     level_--;
   }
@@ -189,10 +209,21 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitExpressionStatement(ExpressionStatement* exp_stmt) {
+    Level();
+    std::cout << "<exp_stmt>\n";
+    level_++;
+
+    exp_stmt->exp()->Accept(this);
+    level_--;
+  }
+
   void Visit(AstNode *node) {
     level_ = 0;
     node->Accept(this);
   }
+
+
 };
 
 }

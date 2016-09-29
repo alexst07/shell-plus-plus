@@ -24,11 +24,12 @@ ParserResult<Statement> Parser::ParserIfStmt() {
     ParserResult<Statement> else_block;
 
     Advance();
-    ValidToken();
 
-    if (token_ == TokenKind::KW_IF) {
+    if (ValidToken() == TokenKind::KW_IF) {
+      std::cout << "enter on if\n";
       else_block = std::move(ParserIfStmt());
     } else {
+      std::cout << "enter on block\n";
       else_block = std::move(ParserBlock());
     }
 
@@ -86,9 +87,30 @@ ParserResult<StatementList> Parser::ParserStmtList() {
       std::move(stmt_list)));
 }
 
+ParserResult<Statement> Parser::ParserWhileStmt() {
+  if (token_ != TokenKind::KW_WHILE) {
+    ErrorMsg(boost::format("expected while statement"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  ParserResult<Expression> exp(ParserOrExp());
+
+  ValidToken();
+
+  ParserResult<Statement> block(ParserBlock());
+
+  return ParserResult<Statement>(factory_.NewWhileStatement(
+      exp.MoveAstNode(), block.MoveAstNode()));
+}
+
 ParserResult<Statement> Parser::ParserStmt() {
   if (token_ == TokenKind::KW_IF) {
     return ParserIfStmt();
+  } else if (token_ == TokenKind::KW_WHILE) {
+    return ParserWhileStmt();
   } else {
     return ParserSimpleStmt();
   }
