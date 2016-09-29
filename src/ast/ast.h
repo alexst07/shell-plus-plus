@@ -40,7 +40,8 @@ namespace internal {
   V(ContinueStatement)            \
   V(BreakStatement)               \
   V(ReturnStatement)              \
-  V(WithStatement)                \
+  V(CaseStatement)                \
+  V(DefaultStatement)             \
   V(TryCatchStatement)            \
   V(TryFinallyStatement)          \
   V(DebuggerStatement)
@@ -109,6 +110,9 @@ class IfStatement;
 class Block;
 class WhileStatement;
 class BreakStatement;
+class CaseStatement;
+class DefaultStatement;
+class SwitchStatement;
 
 // Position of ast node on source code
 struct Position {
@@ -170,6 +174,12 @@ class AstVisitor {
   void virtual VisitWhileStatement(WhileStatement* while_stmt) {}
 
   void virtual VisitBreakStatement(BreakStatement* pbreak) {}
+
+  void virtual VisitCaseStatement(CaseStatement* case_stmt) {}
+
+  void virtual VisitDefaultStatement(DefaultStatement* default_stmt) {}
+
+  void virtual VisitSwitchStatement(SwitchStatement* switch_stmt) {}
 };
 
 class Statement: public AstNode {
@@ -286,6 +296,67 @@ class ExpressionList: public AstNode {
                  Position position)
       : AstNode(NodeType::kExpressionList, position)
       , exps_(std::move(exps)) {}
+};
+
+class SwitchStatement: public Statement {
+ public:
+  virtual ~SwitchStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitSwitchStatement(this);
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+  Statement* block() const noexcept {
+    return block_.get();
+  }
+
+  bool has_exp() const noexcept {
+    if (exp_) {
+      return true;
+    }
+
+    return false;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> exp_;
+  std::unique_ptr<Statement> block_;
+
+  SwitchStatement(std::unique_ptr<Expression> exp,
+                  std::unique_ptr<Statement> block,
+                  Position position)
+      : Statement(NodeType::kSwitchStatement, position)
+      , exp_(std::move(exp))
+      , block_(std::move(block)) {}
+};
+
+class CaseStatement: public Statement {
+ public:
+  virtual ~CaseStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitCaseStatement(this);
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> exp_;
+
+  CaseStatement(std::unique_ptr<Expression> exp,
+                Position position)
+      : Statement(NodeType::kCaseStatement, position)
+      , exp_(std::move(exp)) {}
 };
 
 class IfStatement: public Statement {
@@ -435,6 +506,20 @@ class BreakStatement: public Statement {
       : Statement(NodeType::kBreakStatement, position) {}
 };
 
+class DefaultStatement: public Statement {
+ public:
+  virtual ~DefaultStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitDefaultStatement(this);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  DefaultStatement(Position position)
+      : Statement(NodeType::kBreakStatement, position) {}
+};
 
 class BinaryOperation: public Expression {
  public:
@@ -721,6 +806,10 @@ class AstNodeFactory {
     return std::unique_ptr<BreakStatement>(new BreakStatement(fn_pos_()));
   }
 
+  inline std::unique_ptr<DefaultStatement> NewDefaultStatement() {
+    return std::unique_ptr<DefaultStatement>(new DefaultStatement(fn_pos_()));
+  }
+
   inline std::unique_ptr<IfStatement> NewIfStatement(
       std::unique_ptr<Expression> exp,
       std::unique_ptr<Statement> then_block,
@@ -735,6 +824,19 @@ class AstNodeFactory {
       std::unique_ptr<Statement> block) {
     return std::unique_ptr<WhileStatement>(new WhileStatement(
         std::move(exp), std::move(block), fn_pos_()));
+  }
+
+  inline std::unique_ptr<SwitchStatement> NewSwitchStatement(
+      std::unique_ptr<Expression> exp,
+      std::unique_ptr<Statement> block) {
+    return std::unique_ptr<SwitchStatement>(new SwitchStatement(
+        std::move(exp), std::move(block), fn_pos_()));
+  }
+
+  inline std::unique_ptr<CaseStatement> NewCaseStatement(
+      std::unique_ptr<Expression> exp) {
+    return std::unique_ptr<CaseStatement>(new CaseStatement(
+        std::move(exp), fn_pos_()));
   }
 
  private:

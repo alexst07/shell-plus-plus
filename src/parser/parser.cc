@@ -39,6 +39,52 @@ ParserResult<Statement> Parser::ParserIfStmt() {
       exp.MoveAstNode(), then_block.MoveAstNode(), nullptr));
 }
 
+ParserResult<Statement> Parser::ParserSwitchStmt() {
+  if (token_ != TokenKind::KW_SWITCH) {
+    ErrorMsg(boost::format("expected switch token, got %1%")% TokenValueStr());
+    return ParserResult<Statement>(); // Error
+  }
+
+  ParserResult<Expression> exp;
+
+  Advance();
+
+  if (ValidToken() == TokenKind::LBRACE) {
+    exp = std::move(nullptr);
+  } else {
+    exp = std::move(ParserOrExp());
+  }
+
+  ValidToken();
+
+  ParserResult<Statement> block(ParserBlock());
+
+  return ParserResult<Statement>(factory_.NewSwitchStatement(exp.MoveAstNode(),
+      block.MoveAstNode()));
+}
+
+ParserResult<Statement> Parser::ParserCaseStmt() {
+  if (token_ != TokenKind::KW_CASE) {
+    ErrorMsg(boost::format("expected case token, got %1%")% TokenValueStr());
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  ParserResult<Expression> exp(ParserOrExp());
+
+  if (ValidToken() != TokenKind::COLON) {
+    ErrorMsg(boost::format("expected ':' token, got %1%")% TokenValueStr());
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  return ParserResult<Statement>(factory_.NewCaseStatement(exp.MoveAstNode()));
+}
+
 ParserResult<Statement> Parser::ParserBlock() {
   if (token_ != TokenKind::LBRACE) {
     ErrorMsg(boost::format("expected { token, got %1%")% TokenValueStr());
@@ -111,6 +157,12 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserWhileStmt();
   } else if (token_ == TokenKind::KW_BREAK) {
     return ParserBreakStmt();
+  } else if (token_ == TokenKind::KW_CASE) {
+    return ParserCaseStmt();
+  } else if (token_ == TokenKind::KW_DEFAULT) {
+    return ParserDefaultStmt();
+  } else if (token_ == TokenKind::KW_SWITCH) {
+    return ParserSwitchStmt();
   } else {
     return ParserSimpleStmt();
   }
@@ -125,6 +177,24 @@ ParserResult<Statement> Parser::ParserBreakStmt() {
   Advance();
 
   return ParserResult<Statement>(factory_.NewBreakStatement());
+}
+
+ParserResult<Statement> Parser::ParserDefaultStmt() {
+  if (token_ != TokenKind::KW_DEFAULT) {
+    ErrorMsg(boost::format("expected default token, got %1%")% TokenValueStr());
+      return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+
+  if (token_ != TokenKind::COLON) {
+    ErrorMsg(boost::format("expected ':' token, got %1%")% TokenValueStr());
+      return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+
+  return ParserResult<Statement>(factory_.NewDefaultStatement());
 }
 
 ParserResult<Statement> Parser::ParserSimpleStmt() {

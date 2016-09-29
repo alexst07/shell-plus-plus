@@ -218,9 +218,45 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitCaseStatement(CaseStatement* case_stmt) {
+    Level();
+    std::cout << "<case_stmt>\n";
+    level_++;
+
+    case_stmt->exp()->Accept(this);
+    level_--;
+  }
+
   void virtual VisitBreakStatement(BreakStatement* pbreak) {
     Level();
     std::cout << "<break>\n";
+  }
+
+  void virtual VisitDefaultStatement(DefaultStatement* default_stmt) {
+    Level();
+    std::cout << "<default>\n";
+  }
+
+  void virtual VisitSwitchStatement(SwitchStatement* switch_stmt) {
+    Level();
+    std::cout << "<switch>\n";
+    level_++;
+
+    if (switch_stmt->has_exp()) {
+       Level();
+      std::cout << "<exp>\n";
+      level_++;
+      switch_stmt->exp()->Accept(this);
+      level_--;
+    }
+
+    Level();
+    std::cout << "<block>\n";
+    level_++;
+    switch_stmt->block()->Accept(this);
+    level_--;
+
+    level_--;
   }
 
   void Visit(AstNode *node) {

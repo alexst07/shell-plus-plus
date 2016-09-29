@@ -114,6 +114,9 @@ class Parser {
   ParserResult<Statement> ParserBreakStmt();
   ParserResult<Statement> ParserIfStmt();
   ParserResult<Statement> ParserWhileStmt();
+  ParserResult<Statement> ParserSwitchStmt();
+  ParserResult<Statement> ParserCaseStmt();
+  ParserResult<Statement> ParserDefaultStmt();
 
   TokenStream ts_;
   AstNodeFactory factory_;
