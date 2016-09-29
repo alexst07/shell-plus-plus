@@ -218,12 +218,15 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitBreakStatement(BreakStatement* pbreak) {
+    Level();
+    std::cout << "<break>\n";
+  }
+
   void Visit(AstNode *node) {
     level_ = 0;
     node->Accept(this);
   }
-
-
 };
 
 }

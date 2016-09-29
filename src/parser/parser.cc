@@ -26,10 +26,8 @@ ParserResult<Statement> Parser::ParserIfStmt() {
     Advance();
 
     if (ValidToken() == TokenKind::KW_IF) {
-      std::cout << "enter on if\n";
       else_block = std::move(ParserIfStmt());
     } else {
-      std::cout << "enter on block\n";
       else_block = std::move(ParserBlock());
     }
 
@@ -111,9 +109,22 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserIfStmt();
   } else if (token_ == TokenKind::KW_WHILE) {
     return ParserWhileStmt();
+  } else if (token_ == TokenKind::KW_BREAK) {
+    return ParserBreakStmt();
   } else {
     return ParserSimpleStmt();
   }
+}
+
+ParserResult<Statement> Parser::ParserBreakStmt() {
+  if (token_ != TokenKind::KW_BREAK) {
+    ErrorMsg(boost::format("expected break token, got %1%")% TokenValueStr());
+      return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+
+  return ParserResult<Statement>(factory_.NewBreakStatement());
 }
 
 ParserResult<Statement> Parser::ParserSimpleStmt() {

@@ -108,6 +108,7 @@ class ExpressionStatement;
 class IfStatement;
 class Block;
 class WhileStatement;
+class BreakStatement;
 
 // Position of ast node on source code
 struct Position {
@@ -167,6 +168,8 @@ class AstVisitor {
   void virtual VisitBlock(Block* block) {}
 
   void virtual VisitWhileStatement(WhileStatement* while_stmt) {}
+
+  void virtual VisitBreakStatement(BreakStatement* pbreak) {}
 };
 
 class Statement: public AstNode {
@@ -415,6 +418,21 @@ class ExpressionStatement: public Statement {
   ExpressionStatement(std::unique_ptr<Expression> exp, Position position)
       : Statement(NodeType::kExpressionStatement, position)
       , exp_(std::move(exp)) {}
+};
+
+class BreakStatement: public Statement {
+ public:
+  virtual ~BreakStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitBreakStatement(this);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  BreakStatement(Position position)
+      : Statement(NodeType::kBreakStatement, position) {}
 };
 
 
@@ -697,6 +715,10 @@ class AstNodeFactory {
       std::unique_ptr<StatementList> stmt_list) {
     return std::unique_ptr<Statement>(new Block(
         std::move(stmt_list), fn_pos_()));
+  }
+
+  inline std::unique_ptr<BreakStatement> NewBreakStatement() {
+    return std::unique_ptr<BreakStatement>(new BreakStatement(fn_pos_()));
   }
 
   inline std::unique_ptr<IfStatement> NewIfStatement(
