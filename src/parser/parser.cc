@@ -193,9 +193,25 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserForInStmt();
   } else if (token_ == TokenKind::LBRACE) {
     return ParserBlock();
-  } else {
+  } else if (MatchLangStmt()) {
     return ParserSimpleStmt();
+  } else {
+    return ParserSimpleCmd();
   }
+}
+
+ParserResult<Statement> Parser::ParserSimpleCmd() {
+  std::vector<Token> tokens;
+
+  ValidToken();
+  while (!Token::CmdValidToken(token_)) {
+    tokens.push_back(token_); // make copy of token_
+    Advance();
+  }
+
+  ValidToken();
+
+  return ParserResult<Statement>(factory_.NewSimpleCmd(std::move(tokens)));
 }
 
 ParserResult<Statement> Parser::ParserBreakStmt() {

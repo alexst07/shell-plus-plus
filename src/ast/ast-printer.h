@@ -237,6 +237,11 @@ class AstPrinter: public AstVisitor {
     std::cout << "<default>\n";
   }
 
+  void virtual VisitSimpleCmd(SimpleCmd* cmd) {
+    Level();
+    std::cout << "<cmd: " << cmd->cmd_str() << ">\n";
+  }
+
   void virtual VisitSwitchStatement(SwitchStatement* switch_stmt) {
     Level();
     std::cout << "<switch>\n";

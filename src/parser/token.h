@@ -212,6 +212,31 @@ class Token {
     return stream.str();
   }
 
+  static bool CmdValidToken(const Token& tok) {
+    switch (tok.GetKind()) {
+      case TokenKind::KW_NULL:        // null
+      case TokenKind::SHL:            // <<
+      case TokenKind::SAR:            // >>
+      case TokenKind::DOLLAR_LBRACE:  // ${
+      case TokenKind::RBRACE:         // }
+      case TokenKind::BIT_AND:        // &
+      case TokenKind::BIT_OR:         // |
+      case TokenKind::AND:            // &&
+      case TokenKind::OR:             // ||
+      case TokenKind::NOT:            // !
+      case TokenKind::LESS_THAN:      // <
+      case TokenKind::GREATER_THAN:   // >
+      case TokenKind::NWL:            // new line
+      case TokenKind::SEMI_COLON:     // ;
+      case TokenKind::EOS:            // eos
+        return true;
+        break;
+
+      default:
+        return false;
+    }
+  }
+
  private:
   struct Output : public boost::static_visitor<> {
     std::ostream& stream_;
@@ -230,7 +255,9 @@ class Token {
 inline std::ostream& operator<<(std::ostream& stream, Token& token) {
   std::string value = token_value_str[static_cast<int>(token.kind_)];
   stream  << "Name: " << token_name_str[static_cast<int>(token.kind_)]
+          << ", BlankSpace: " << (token.blank_after_? "y": "n")
           << ", Type: " << (value == "\n"? "": value) << ", Value: ";
+
   boost::apply_visitor(Token::Output{stream}, token.value_);
   stream << "\n";
 
@@ -240,7 +267,9 @@ inline std::ostream& operator<<(std::ostream& stream, Token& token) {
 inline std::ostream& operator<<(std::ostream& stream, const Token& token) {
   std::string value = token_value_str[static_cast<int>(token.kind_)];
   stream  << "Name: " << token_name_str[static_cast<int>(token.kind_)]
+          << ", BlankSpace: " << (token.blank_after_? "y": "n")
           << ", Type: " << (value == "\n"? "": value) << ", Value: ";
+
   boost::apply_visitor(Token::Output{stream}, token.value_);
   stream << "\n";
 

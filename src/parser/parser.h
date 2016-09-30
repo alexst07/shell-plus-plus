@@ -92,6 +92,33 @@ class Parser {
     return pos;
   }
 
+  bool MatchLangStmt() {
+    const Token& tok(CurrentToken());
+    const Token& tok_ahead(PeekAhead());
+
+    // match id ('=' | '+=' | ...) ...
+    if (Token::IsAssignToken(tok_ahead.GetKind())) {
+      return true;
+    }
+
+    // match (...
+    if (tok == TokenKind::LPAREN) {
+      return true;
+    }
+
+    switch (tok_ahead.GetKind()) {
+      case TokenKind::COMMA:  // match id, ...
+      case TokenKind::ARROW:  // match id->...
+      case TokenKind::LPAREN:  // match id(...
+      case TokenKind::LBRACKET:  // match id[...
+        return true;
+        break;
+
+      default:
+        return false;
+    }
+  }
+
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserPrimaryExp();
   ParserResult<Expression> ParserPostExp();
@@ -119,6 +146,7 @@ class Parser {
   ParserResult<Statement> ParserDefaultStmt();
   ParserResult<ExpressionList> ParserPostExpList();
   ParserResult<Statement> ParserForInStmt();
+  ParserResult<Statement> ParserSimpleCmd();
 
   TokenStream ts_;
   AstNodeFactory factory_;

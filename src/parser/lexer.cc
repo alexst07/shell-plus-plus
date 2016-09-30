@@ -83,7 +83,9 @@ Token Lexer::ScanString() {
     Advance();
   }
 
-  return Select(TokenKind::STRING_LITERAL, str);
+  // Check blank char after string
+  char check_blank = c_;
+  return Select(TokenKind::STRING_LITERAL, str, check_blank);
 }
 
 Token Lexer::ScanIdentifier() {
@@ -102,10 +104,13 @@ Token Lexer::ScanIdentifier() {
     bool res;
     std::tie(token_kind, res) = Token::IsKeyWord(id);
 
+    // Check blank char after identifier
+    char check_blank = c_;
+
     if (res) {
-      return GetToken(token_kind);
+      return GetToken(token_kind, check_blank);
     } else {
-      return GetToken(TokenKind::IDENTIFIER, id);
+      return GetToken(TokenKind::IDENTIFIER, id, check_blank);
     }
   }
 
@@ -133,16 +138,19 @@ Token Lexer::ScanNumber() {
     }
   }
 
+  // Check blank char after number
+  char check_blank = c_;
+
   if (point_num == 0) {
     int v;
     std::istringstream ss(str_num);
     ss >> v;
-    return GetToken(TokenKind::INT_LITERAL, v);
+    return GetToken(TokenKind::INT_LITERAL, v, check_blank);
   } else {
     float v;
     std::istringstream ss(str_num);
     ss >> v;
-    return GetToken(TokenKind::REAL_LITERAL, v);
+    return GetToken(TokenKind::REAL_LITERAL, v, check_blank);
   }
 }
 
@@ -160,11 +168,14 @@ Token Lexer::ScanWord(const std::string& prestr) {
     Advance();
   }
 
-  return GetToken(TokenKind::WORD, word);
+  // Check blank char after word
+  char check_blank = c_;
+  return GetToken(TokenKind::WORD, word, check_blank);
 }
 
 TokenStream Lexer::Scanner() {
   TokenStream ts;
+  char check_blank = c_;
 
   while (true) {
     bool whitespace = false;
@@ -192,6 +203,7 @@ TokenStream Lexer::Scanner() {
       case '<':
         // < <= << <<=
         Advance();
+        check_blank = c_;
         if (c_ == '=') {
           token = Select(TokenKind::LESS_EQ);
         } else if (c_ == '<') {
@@ -202,13 +214,14 @@ TokenStream Lexer::Scanner() {
             token = GetToken(TokenKind::SHL);
           }
         } else {
-          token = GetToken(TokenKind::LESS_THAN);
+          token = GetToken(TokenKind::LESS_THAN, check_blank);
         }
         break;
 
       case '>':
         // > >= >> >>=
         Advance();
+        check_blank = c_;
         if (c_ == '=') {
           token = Select(TokenKind::GREATER_EQ);
         } else if (c_ == '>') {
@@ -219,7 +232,7 @@ TokenStream Lexer::Scanner() {
             token = GetToken(TokenKind::SAR);
           }
         } else {
-          token = GetToken(TokenKind::GREATER_THAN);
+          token = GetToken(TokenKind::GREATER_THAN, check_blank);
         }
         break;
 
@@ -276,7 +289,7 @@ TokenStream Lexer::Scanner() {
         break;
 
       case '/':
-        // * /=
+        // / /=
         Advance();
         if (c_ == '=') {
           token = Select(TokenKind::ASSIGN_DIV);
@@ -291,7 +304,7 @@ TokenStream Lexer::Scanner() {
         if (c_ == '=') {
           Select(TokenKind::ASSIGN_MOD);
         } else {
-          Select(TokenKind::MOD);
+          GetToken(TokenKind::MOD);
         }
         break;
 

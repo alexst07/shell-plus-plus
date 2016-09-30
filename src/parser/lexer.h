@@ -84,26 +84,42 @@ private:
     return str_[buffer_cursor_ + 1];
   }
 
-  inline Token GetToken(TokenKind k) {
-    bool blank_after = PeekAhead() == ' ';
+  inline Token GetToken(TokenKind k, char check_blank = 0) {
+    if (check_blank == 0) {
+      check_blank = c_;
+    }
+
+    bool blank_after = check_blank == ' ';
     Token t(k, blank_after, line_, line_pos_);
     return t;
   }
 
-  inline Token GetToken(TokenKind k, Token::Value v) {
-    bool blank_after = PeekAhead() == ' ';
+  inline Token GetToken(TokenKind k, Token::Value v, char check_blank = 0) {
+    if (check_blank == 0) {
+      check_blank = c_;
+    }
+
+    bool blank_after = check_blank == ' ';
     Token t(k, v, blank_after, line_, line_pos_);
     return t;
   }
 
-  inline Token Select(TokenKind k) {
-    Token t(GetToken(k));
+  inline Token Select(TokenKind k, char check_blank = 0) {
+    if (check_blank == 0) {
+      check_blank = PeekAhead();
+    }
+
+    Token t(GetToken(k, check_blank));
     Advance();
     return t;
   }
 
-  inline Token Select(TokenKind k, Token::Value v) {
-    Token t(GetToken(k, v));
+  inline Token Select(TokenKind k, Token::Value v, char check_blank = 0) {
+    if (check_blank == 0) {
+      check_blank = PeekAhead();
+    }
+
+    Token t(GetToken(k, v, check_blank));
     Advance();
     return t;
   }

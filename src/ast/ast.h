@@ -86,10 +86,15 @@ namespace internal {
   V(EmptyParentheses)           \
   V(DoExpression)
 
+#define CMD_NODE_LIST(V)   \
+  V(Cmd)                   \
+  V(SimpleCmd)
+
 #define AST_NODE_LIST(V)        \
   DECLARATION_NODE_LIST(V)      \
   STATEMENT_NODE_LIST(V)        \
-  EXPRESSION_NODE_LIST(V)
+  EXPRESSION_NODE_LIST(V)       \
+  CMD_NODE_LIST(V)
 
 class AstNodeFactory;
 
@@ -114,6 +119,8 @@ class CaseStatement;
 class DefaultStatement;
 class SwitchStatement;
 class ForInStatement;
+class Cmd;
+class SimpleCmd;
 
 // Position of ast node on source code
 struct Position {
@@ -183,6 +190,8 @@ class AstVisitor {
   void virtual VisitSwitchStatement(SwitchStatement* switch_stmt) {}
 
   void virtual VisitForInStatement(ForInStatement* for_in_stmt) {}
+
+  void virtual VisitSimpleCmd(SimpleCmd *cmd) {}
 };
 
 class Statement: public AstNode {
@@ -203,6 +212,16 @@ class Expression: public Statement {
 
  protected:
   Expression(NodeType type, Position position): Statement(type, position) {}
+};
+
+class Cmd: public Statement {
+ public:
+  virtual ~Cmd() {}
+
+  virtual void Accept(AstVisitor* visitor) = 0;
+
+ protected:
+  Cmd(NodeType type, Position position): Statement(type, position) {}
 };
 
 class StatementList: public AstNode {
@@ -299,6 +318,37 @@ class ExpressionList: public AstNode {
                  Position position)
       : AstNode(NodeType::kExpressionList, position)
       , exps_(std::move(exps)) {}
+};
+
+class SimpleCmd: public Cmd {
+ public:
+  ~SimpleCmd() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitSimpleCmd(this);
+  }
+
+  std::string cmd_str() {
+    std::string str = "";
+    for (const auto& token: tokens_) {
+      str += Token::TokenValueToStr(token.GetValue());
+
+      if (token.BlankAfter()) {
+        str += " ";
+      }
+    }
+
+    return str;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<Token> tokens_;
+
+  SimpleCmd(std::vector<Token>&& tokens, Position position)
+      : Cmd(NodeType::kSimpleCmd, position)
+      , tokens_(std::move(tokens)) {}
 };
 
 class ForInStatement: public Statement {
@@ -886,6 +936,11 @@ class AstNodeFactory {
       std::unique_ptr<Expression> exp) {
     return std::unique_ptr<CaseStatement>(new CaseStatement(
         std::move(exp), fn_pos_()));
+  }
+
+  inline std::unique_ptr<SimpleCmd> NewSimpleCmd(std::vector<Token>&& tokens) {
+    return std::unique_ptr<SimpleCmd>(new SimpleCmd(
+        std::move(tokens), fn_pos_()));
   }
 
  private:
