@@ -16,7 +16,7 @@ ParserResult<Statement> Parser::ParserForInStmt() {
   ParserResult<ExpressionList> exp_list(ParserPostExpList());
 
   if (token_ != TokenKind::KW_IN) {
-    ErrorMsg(boost::format("expected for statement"));
+    ErrorMsg(boost::format("expected in operator"));
     return ParserResult<Statement>(); // Error
   }
 
@@ -284,11 +284,11 @@ ParserResult<ExpressionList> Parser::ParserPostExpList() {
   std::vector<std::unique_ptr<Expression>> vec_list;
 
   do {
-    ParserResult<Expression> exp = ParserPostExp();
+    ParserResult<Expression> exp(ParserPostExp());
     vec_list.push_back(exp.MoveAstNode());
   } while (CheckComma());
 
-  ParserResult<ExpressionList> exp_list(factory_.NewExpressionList(
+  return ParserResult<ExpressionList>(factory_.NewExpressionList(
       std::move(vec_list)));
 }
 

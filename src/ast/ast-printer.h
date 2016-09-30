@@ -267,10 +267,7 @@ class AstPrinter: public AstVisitor {
     Level();
     std::cout << "<exp_list>\n";
     level_++;
-    if (for_in_stmt->exp_list() == nullptr)
-      std::cout << "exp_list null\n";
-    else
-//       for_in_stmt->exp_list()->Accept(this);
+    for_in_stmt->exp_list()->Accept(this);
     level_--;
 
     Level();
