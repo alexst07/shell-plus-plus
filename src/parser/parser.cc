@@ -201,23 +201,46 @@ ParserResult<Statement> Parser::ParserStmt() {
 }
 
 ParserResult<Statement> Parser::ParserSimpleCmd() {
-  std::vector<Token> tokens;
+  std::vector<std::unique_ptr<AstNode>> pieces;
 
   ValidToken();
   while (!Token::CmdValidToken(token_)) {
-    tokens.push_back(token_); // make copy of token_
+    // Parser an expression inside command
+    // ex: cmd -e ${v[0] + 1} -d
+    if (token_ == TokenKind::DOLLAR_LBRACE) {
+      Advance();
+
+      if (token_ == TokenKind::NWL) {
+        ErrorMsg(boost::format("New line not allowed"));
+        return ParserResult<Statement>(); // Error
+      }
+
+      ParserResult<Expression> exp(ParserOrExp());
+
+      if (token_ != TokenKind::RBRACE) {
+        ErrorMsg(boost::format("token '}' expected"));
+        return ParserResult<Statement>(); // Error
+      }
+
+      Advance();
+
+      pieces.push_back(std::move(exp.MoveAstNode()));
+      continue;
+    }
+    auto piece = factory_.NewCmdPiece(token_);
+    pieces.push_back(std::move(piece));
     Advance();
   }
 
   ValidToken();
 
-  return ParserResult<Statement>(factory_.NewSimpleCmd(std::move(tokens)));
+  return ParserResult<Statement>(factory_.NewSimpleCmd(std::move(pieces)));
 }
 
 ParserResult<Statement> Parser::ParserBreakStmt() {
   if (token_ != TokenKind::KW_BREAK) {
     ErrorMsg(boost::format("expected break token, got %1%")% TokenValueStr());
-      return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>(); // Error
   }
 
   Advance();

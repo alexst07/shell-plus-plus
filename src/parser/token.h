@@ -217,8 +217,6 @@ class Token {
       case TokenKind::KW_NULL:        // null
       case TokenKind::SHL:            // <<
       case TokenKind::SAR:            // >>
-      case TokenKind::DOLLAR_LBRACE:  // ${
-      case TokenKind::RBRACE:         // }
       case TokenKind::BIT_AND:        // &
       case TokenKind::BIT_OR:         // |
       case TokenKind::AND:            // &&

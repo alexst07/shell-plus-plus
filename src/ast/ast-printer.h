@@ -14,6 +14,7 @@ namespace internal {
 
 class AstPrinter: public AstVisitor {
   int level_;
+  bool inside_cmd_;
 
   void Level() {
     for (int i = 0; i < level_-1; i++) {
@@ -237,9 +238,25 @@ class AstPrinter: public AstVisitor {
     std::cout << "<default>\n";
   }
 
+  void virtual VisitCmdPiece(CmdPiece* cmd_piece) {
+    std::cout << cmd_piece->cmd_str();
+    if (cmd_piece->blank_after()) {
+      std::cout << " ";
+    }
+  }
+
   void virtual VisitSimpleCmd(SimpleCmd* cmd) {
+    inside_cmd_ = true;
     Level();
-    std::cout << "<cmd: " << cmd->cmd_str() << ">\n";
+    std::cout << "<cmd: ";
+    auto vec = cmd->children();
+
+    for (const auto c: vec) {
+      c->Accept(this);
+    }
+
+    std::cout << ">\n";
+    inside_cmd_ = false;
   }
 
   void virtual VisitSwitchStatement(SwitchStatement* switch_stmt) {
@@ -292,6 +309,7 @@ class AstPrinter: public AstVisitor {
 
   void Visit(AstNode *node) {
     level_ = 0;
+    inside_cmd_ = false;
     node->Accept(this);
   }
 };

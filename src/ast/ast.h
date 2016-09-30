@@ -88,6 +88,7 @@ namespace internal {
 
 #define CMD_NODE_LIST(V)   \
   V(Cmd)                   \
+  V(CmdPiece)              \
   V(SimpleCmd)
 
 #define AST_NODE_LIST(V)        \
@@ -120,6 +121,7 @@ class DefaultStatement;
 class SwitchStatement;
 class ForInStatement;
 class Cmd;
+class CmdPiece;
 class SimpleCmd;
 
 // Position of ast node on source code
@@ -190,6 +192,8 @@ class AstVisitor {
   void virtual VisitSwitchStatement(SwitchStatement* switch_stmt) {}
 
   void virtual VisitForInStatement(ForInStatement* for_in_stmt) {}
+
+  void virtual VisitCmdPiece(CmdPiece* cmd_piece) {}
 
   void virtual VisitSimpleCmd(SimpleCmd *cmd) {}
 };
@@ -320,6 +324,34 @@ class ExpressionList: public AstNode {
       , exps_(std::move(exps)) {}
 };
 
+class CmdPiece: public AstNode {
+ public:
+  ~CmdPiece() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitCmdPiece(this);
+  }
+
+  std::string cmd_str() {
+    std::string str = Token::TokenValueToStr(token_.GetValue());
+
+    return str;
+  }
+
+  bool blank_after() {
+    return token_.BlankAfter();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  Token token_;
+
+  CmdPiece(const Token& token, Position position)
+      : AstNode(NodeType::kCmdPiece, position)
+      , token_(std::move(token)) {}
+};
+
 class SimpleCmd: public Cmd {
  public:
   ~SimpleCmd() {}
@@ -328,27 +360,28 @@ class SimpleCmd: public Cmd {
     visitor->VisitSimpleCmd(this);
   }
 
-  std::string cmd_str() {
-    std::string str = "";
-    for (const auto& token: tokens_) {
-      str += Token::TokenValueToStr(token.GetValue());
+  std::vector<AstNode*> children() noexcept {
+    std::vector<AstNode*> vec;
 
-      if (token.BlankAfter()) {
-        str += " ";
-      }
+    for (auto&& piece: pieces_) {
+      vec.push_back(piece.get());
     }
 
-    return str;
+    return vec;
+  }
+
+  size_t num_children() const noexcept {
+    pieces_.size();
   }
 
  private:
   friend class AstNodeFactory;
 
-  std::vector<Token> tokens_;
+  std::vector<std::unique_ptr<AstNode>> pieces_;
 
-  SimpleCmd(std::vector<Token>&& tokens, Position position)
+  SimpleCmd(std::vector<std::unique_ptr<AstNode>>&& pieces, Position position)
       : Cmd(NodeType::kSimpleCmd, position)
-      , tokens_(std::move(tokens)) {}
+      , pieces_(std::move(pieces)) {}
 };
 
 class ForInStatement: public Statement {
@@ -938,9 +971,14 @@ class AstNodeFactory {
         std::move(exp), fn_pos_()));
   }
 
-  inline std::unique_ptr<SimpleCmd> NewSimpleCmd(std::vector<Token>&& tokens) {
+  inline std::unique_ptr<CmdPiece> NewCmdPiece(const Token& token) {
+    return std::unique_ptr<CmdPiece>(new CmdPiece(token, fn_pos_()));
+  }
+
+  inline std::unique_ptr<SimpleCmd> NewSimpleCmd(
+      std::vector<std::unique_ptr<AstNode>>&& pieces) {
     return std::unique_ptr<SimpleCmd>(new SimpleCmd(
-        std::move(tokens), fn_pos_()));
+        std::move(pieces), fn_pos_()));
   }
 
  private:
