@@ -147,6 +147,7 @@ class Parser {
   ParserResult<ExpressionList> ParserPostExpList();
   ParserResult<Statement> ParserForInStmt();
   ParserResult<Statement> ParserSimpleCmd();
+  ParserResult<Statement> ParserIoRedirectCmd();
 
   TokenStream ts_;
   AstNodeFactory factory_;

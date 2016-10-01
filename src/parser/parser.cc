@@ -196,15 +196,91 @@ ParserResult<Statement> Parser::ParserStmt() {
   } else if (MatchLangStmt()) {
     return ParserSimpleStmt();
   } else {
-    return ParserSimpleCmd();
+    return ParserIoRedirectCmd();
   }
+}
+
+ParserResult<Statement> Parser::ParserIoRedirectCmd() {
+  ParserResult<Statement> simple_cmd(ParserSimpleCmd());
+
+  auto io_token = [](const Token& tok) {
+    switch (tok.GetKind()) {
+      case TokenKind::LESS_THAN:
+      case TokenKind::GREATER_THAN:
+      case TokenKind::SHL:
+      case TokenKind::SAR:
+        return true;
+        break;
+
+      default:
+        return false;
+    }
+  };
+
+  auto io_int = [&]() {
+    if (token_ == TokenKind::INT_LITERAL && io_token(token_)) {
+      return true;
+    }
+
+    return false;
+  };
+
+  auto cmd_valid_int = [&]() {
+    if ((token_ == TokenKind::INT_LITERAL) &&
+        (PeekAhead() == TokenKind::GREATER_THAN ||
+        PeekAhead() == TokenKind::SAR)) {
+      return true;
+    }
+
+    return false;
+  };
+
+  ParserResult<Expression> integer(nullptr);
+  if (io_int()) {
+    integer = std::move(factory_.NewLiteral(token_.GetValue(),
+                                            Literal::kInteger));
+    Advance();
+  }
+
+  if (io_token(token_)) {
+    std::vector<std::unique_ptr<AstNode>> pieces;
+    TokenKind kind = token_.GetKind();
+    Advance();
+
+    while (!Token::CmdValidToken(token_) && !cmd_valid_int()) {
+      auto piece = factory_.NewCmdPiece(token_);
+      pieces.push_back(std::move(piece));
+      Advance();
+    }
+
+    std::unique_ptr<FilePathCmd> path(
+        factory_.NewFilePathCmd(std::move(pieces)));
+    std::unique_ptr<Cmd> cmdptr(simple_cmd.MoveAstNode<Cmd>());
+    std::unique_ptr<Literal> intptr(integer.MoveAstNode<Literal>());
+
+    return ParserResult<Statement>(factory_.NewCmdIoRedirect(
+        std::move(cmdptr), std::move(intptr), std::move(path),
+        kind));
+  }
+
+  return simple_cmd;
 }
 
 ParserResult<Statement> Parser::ParserSimpleCmd() {
   std::vector<std::unique_ptr<AstNode>> pieces;
 
+  auto cmd_valid_int = [&]() {
+    if ((token_ == TokenKind::INT_LITERAL) &&
+        (PeekAhead() == TokenKind::GREATER_THAN ||
+        PeekAhead() == TokenKind::SAR)) {
+      return true;
+    }
+
+    return false;
+  };
+
   ValidToken();
-  while (!Token::CmdValidToken(token_)) {
+  while (!Token::CmdValidToken(token_) && !cmd_valid_int()) {
     // Parser an expression inside command
     // ex: cmd -e ${v[0] + 1} -d
     if (token_ == TokenKind::DOLLAR_LBRACE) {

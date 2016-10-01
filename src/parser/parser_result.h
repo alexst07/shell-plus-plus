@@ -40,6 +40,12 @@ class ParserResult {
 
   ParserResult& operator= (const ParserResult&) = delete;
 
+  template <class U>
+  std::unique_ptr<U> MoveAstNode() noexcept {
+    auto d = static_cast<U*>(uptr_.release());
+    return std::unique_ptr<U>(d);
+  }
+
   std::unique_ptr<T> MoveAstNode() noexcept {
     return std::move(uptr_);
   }

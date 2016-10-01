@@ -247,16 +247,38 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitSimpleCmd(SimpleCmd* cmd) {
     inside_cmd_ = true;
-    Level();
+
     std::cout << "<cmd: ";
     auto vec = cmd->children();
 
     for (const auto c: vec) {
       c->Accept(this);
     }
+    std::cout << ">\n";
+  }
+
+  void virtual VisitFilePathCmd(FilePathCmd* fp_cmd) {
+    Level();
+    std::cout << "<cmd: ";
+    auto vec = fp_cmd->children();
+
+    for (const auto c: vec) {
+      c->Accept(this);
+    }
 
     std::cout << ">\n";
-    inside_cmd_ = false;
+  }
+
+  void virtual VisitCmdIoRedirect(CmdIoRedirect* cmd_io) {
+    Level();
+    std::cout << "<io_redirect: ";
+    cmd_io->cmd()->Accept(this);
+    if (cmd_io->has_integer()) {
+      cmd_io->integer()->Accept(this);
+    }
+
+    cmd_io->file_path_cmd()->Accept(this);
+    std::cout << ">\n";
   }
 
   void virtual VisitSwitchStatement(SwitchStatement* switch_stmt) {

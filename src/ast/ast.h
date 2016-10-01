@@ -89,7 +89,9 @@ namespace internal {
 #define CMD_NODE_LIST(V)   \
   V(Cmd)                   \
   V(CmdPiece)              \
-  V(SimpleCmd)
+  V(SimpleCmd)             \
+  V(CmdIoRedirect)         \
+  V(FilePathCmd)
 
 #define AST_NODE_LIST(V)        \
   DECLARATION_NODE_LIST(V)      \
@@ -123,6 +125,8 @@ class ForInStatement;
 class Cmd;
 class CmdPiece;
 class SimpleCmd;
+class CmdIoRedirect;
+class FilePathCmd;
 
 // Position of ast node on source code
 struct Position {
@@ -196,6 +200,10 @@ class AstVisitor {
   void virtual VisitCmdPiece(CmdPiece* cmd_piece) {}
 
   void virtual VisitSimpleCmd(SimpleCmd *cmd) {}
+
+  void virtual VisitCmdIoRedirect(CmdIoRedirect* io) {}
+
+  void virtual VisitFilePathCmd(FilePathCmd* fp_cmd) {}
 };
 
 class Statement: public AstNode {
@@ -350,6 +358,91 @@ class CmdPiece: public AstNode {
   CmdPiece(const Token& token, Position position)
       : AstNode(NodeType::kCmdPiece, position)
       , token_(std::move(token)) {}
+};
+
+// class to support CmdIoRedirect
+class FilePathCmd: public Cmd {
+ public:
+  ~FilePathCmd() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitFilePathCmd(this);
+  }
+
+  std::vector<AstNode*> children() noexcept {
+    std::vector<AstNode*> vec;
+
+    for (auto&& piece: pieces_) {
+      vec.push_back(piece.get());
+    }
+
+    return vec;
+  }
+
+  size_t num_children() const noexcept {
+    pieces_.size();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<AstNode>> pieces_;
+
+  FilePathCmd(std::vector<std::unique_ptr<AstNode>>&& pieces,
+              Position position)
+      : Cmd(NodeType::kFilePathCmd, position)
+      , pieces_(std::move(pieces)) {}
+};
+
+class CmdIoRedirect: public Cmd {
+ public:
+  ~CmdIoRedirect() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitCmdIoRedirect(this);
+  }
+
+  Cmd* cmd() const noexcept {
+    return cmd_.get();
+  }
+
+  TokenKind kind() const noexcept {
+    return token_kind_;
+  }
+
+  bool has_integer() const noexcept {
+    if (integer_) {
+      return true;
+    }
+
+    return false;
+  }
+
+  Literal* integer() const noexcept {
+    return integer_.get();
+  }
+
+  FilePathCmd* file_path_cmd() const noexcept {
+    return fp_cmd_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Cmd> cmd_;
+  std::unique_ptr<Literal> integer_;
+  std::unique_ptr<FilePathCmd> fp_cmd_;
+  TokenKind token_kind_;
+
+
+  CmdIoRedirect(std::unique_ptr<Cmd> cmd, std::unique_ptr<Literal> integer,
+                std::unique_ptr<FilePathCmd> fp_cmd, TokenKind token_kind,
+                Position position)
+      : Cmd(NodeType::kCmdIoRedirect, position)
+      , cmd_(std::move(cmd))
+      , integer_(std::move(integer))
+      , fp_cmd_(std::move(fp_cmd))
+      , token_kind_(token_kind) {}
 };
 
 class SimpleCmd: public Cmd {
@@ -979,6 +1072,20 @@ class AstNodeFactory {
       std::vector<std::unique_ptr<AstNode>>&& pieces) {
     return std::unique_ptr<SimpleCmd>(new SimpleCmd(
         std::move(pieces), fn_pos_()));
+  }
+
+  inline std::unique_ptr<FilePathCmd> NewFilePathCmd(
+      std::vector<std::unique_ptr<AstNode>>&& pieces) {
+    return std::unique_ptr<FilePathCmd>(new FilePathCmd(
+        std::move(pieces), fn_pos_()));
+  }
+
+  inline std::unique_ptr<CmdIoRedirect> NewCmdIoRedirect(
+      std::unique_ptr<Cmd> cmd, std::unique_ptr<Literal> integer,
+      std::unique_ptr<FilePathCmd> fp_cmd, TokenKind kind) {
+    return std::unique_ptr<CmdIoRedirect>(new CmdIoRedirect(
+        std::move(cmd), std::move(integer), std::move(fp_cmd), kind,
+        fn_pos_()));
   }
 
  private:
