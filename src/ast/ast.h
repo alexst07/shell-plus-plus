@@ -91,7 +91,8 @@ namespace internal {
   V(CmdPiece)              \
   V(SimpleCmd)             \
   V(CmdIoRedirect)         \
-  V(FilePathCmd)
+  V(FilePathCmd)           \
+  V(CmdPipeSequence)       \
 
 #define AST_NODE_LIST(V)        \
   DECLARATION_NODE_LIST(V)      \
@@ -127,6 +128,7 @@ class CmdPiece;
 class SimpleCmd;
 class CmdIoRedirect;
 class FilePathCmd;
+class CmdPipeSequence;
 
 // Position of ast node on source code
 struct Position {
@@ -204,6 +206,8 @@ class AstVisitor {
   void virtual VisitCmdIoRedirect(CmdIoRedirect* io) {}
 
   void virtual VisitFilePathCmd(FilePathCmd* fp_cmd) {}
+
+  void virtual VisitCmdPipeSequence(CmdPipeSequence* cmd_pipe) {}
 };
 
 class Statement: public AstNode {
@@ -330,6 +334,38 @@ class ExpressionList: public AstNode {
                  Position position)
       : AstNode(NodeType::kExpressionList, position)
       , exps_(std::move(exps)) {}
+};
+
+class CmdPipeSequence: public Cmd {
+ public:
+  ~CmdPipeSequence() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitCmdPipeSequence(this);
+  }
+
+  std::vector<Cmd*> children() noexcept {
+    std::vector<Cmd*> vec;
+
+    for (auto&& cmd: cmds_) {
+      vec.push_back(cmd.get());
+    }
+
+    return vec;
+  }
+
+  size_t num_children() const noexcept {
+    cmds_.size();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<Cmd>> cmds_;
+
+  CmdPipeSequence(std::vector<std::unique_ptr<Cmd>>&& cmds, Position position)
+      : Cmd(NodeType::kCmdPipeSequence, position)
+      , cmds_(std::move(cmds)) {}
 };
 
 class CmdPiece: public AstNode {
@@ -1086,6 +1122,12 @@ class AstNodeFactory {
     return std::unique_ptr<CmdIoRedirect>(new CmdIoRedirect(
         std::move(cmd), std::move(integer), std::move(fp_cmd), kind,
         fn_pos_()));
+  }
+
+  inline std::unique_ptr<CmdPipeSequence> NewCmdPipeSequence(
+      std::vector<std::unique_ptr<Cmd>>&& cmds) {
+    return std::unique_ptr<CmdPipeSequence>(new CmdPipeSequence(
+        std::move(cmds), fn_pos_()));
   }
 
  private:
