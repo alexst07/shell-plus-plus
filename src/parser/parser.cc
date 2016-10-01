@@ -216,6 +216,14 @@ ParserResult<Statement> Parser::ParserIoRedirectCmd() {
     Advance();
 
     while (!Token::CmdValidToken(token_) && !CmdValidInt()) {
+      // Parser an expression inside the path
+      // ex: cmd_any > f${v[0]}.any
+      if (token_ == TokenKind::DOLLAR_LBRACE) {
+        ParserResult<Expression> exp(ParserExpCmd());
+        pieces.push_back(std::move(exp.MoveAstNode()));
+        continue;
+      }
+
       auto piece = factory_.NewCmdPiece(token_);
       pieces.push_back(std::move(piece));
       Advance();
