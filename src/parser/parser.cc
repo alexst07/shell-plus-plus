@@ -730,7 +730,7 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
     return res;
   } else if (token == TokenKind::LPAREN) {
     Advance(); // consume the token '('
-    ParserResult<Expression> res(ParserAndExp());
+    ParserResult<Expression> res(ParserOrExp());
     if (ValidToken() != TokenKind::RPAREN) {
       ErrorMsg(boost::format("Expected ')' in the end of expression"));
       return ParserResult<Expression>(); // Error
