@@ -334,6 +334,15 @@ class AstPrinter: public AstVisitor {
     inside_cmd_ = false;
     node->Accept(this);
   }
+
+  void virtual VisitCmdPipeSequence(CmdPipeSequence* cmd_pipe) {
+    Level();
+    std::cout << "<command pipe>\n";
+    level_++;
+    cmd_pipe->cmd_left()->Accept(this);
+    cmd_pipe->cmd_right()->Accept(this);
+    level_--;
+  }
 };
 
 }

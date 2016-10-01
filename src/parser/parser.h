@@ -177,6 +177,7 @@ class Parser {
   ParserResult<Expression> ParserExpCmd();
   ParserResult<Statement> ParserSimpleCmd();
   ParserResult<Statement> ParserIoRedirectCmd();
+  ParserResult<Statement> ParserCmdPipe();
 
   TokenStream ts_;
   AstNodeFactory factory_;

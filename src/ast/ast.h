@@ -344,28 +344,25 @@ class CmdPipeSequence: public Cmd {
     visitor->VisitCmdPipeSequence(this);
   }
 
-  std::vector<Cmd*> children() noexcept {
-    std::vector<Cmd*> vec;
-
-    for (auto&& cmd: cmds_) {
-      vec.push_back(cmd.get());
-    }
-
-    return vec;
+  Cmd* cmd_left() const noexcept {
+    return cmd_left_.get();
   }
 
-  size_t num_children() const noexcept {
-    cmds_.size();
+  Cmd* cmd_right() const noexcept {
+    return cmd_right_.get();
   }
 
  private:
   friend class AstNodeFactory;
 
-  std::vector<std::unique_ptr<Cmd>> cmds_;
+  std::unique_ptr<Cmd> cmd_left_;
+  std::unique_ptr<Cmd> cmd_right_;
 
-  CmdPipeSequence(std::vector<std::unique_ptr<Cmd>>&& cmds, Position position)
+  CmdPipeSequence(std::unique_ptr<Cmd> cmd_left,
+                  std::unique_ptr<Cmd> cmd_right, Position position)
       : Cmd(NodeType::kCmdPipeSequence, position)
-      , cmds_(std::move(cmds)) {}
+      , cmd_left_(std::move(cmd_left))
+      , cmd_right_(std::move(cmd_right)) {}
 };
 
 class CmdPiece: public AstNode {
@@ -1125,9 +1122,9 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<CmdPipeSequence> NewCmdPipeSequence(
-      std::vector<std::unique_ptr<Cmd>>&& cmds) {
+      std::unique_ptr<Cmd> cmd_left, std::unique_ptr<Cmd> cmd_right) {
     return std::unique_ptr<CmdPipeSequence>(new CmdPipeSequence(
-        std::move(cmds), fn_pos_()));
+        std::move(cmd_left),  std::move(cmd_right), fn_pos_()));
   }
 
  private:

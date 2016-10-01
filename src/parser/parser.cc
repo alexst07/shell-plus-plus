@@ -196,8 +196,32 @@ ParserResult<Statement> Parser::ParserStmt() {
   } else if (MatchLangStmt()) {
     return ParserSimpleStmt();
   } else {
-    return ParserIoRedirectCmd();
+    return ParserCmdPipe();
   }
+}
+
+ParserResult<Statement> Parser::ParserCmdPipe() {
+  ParserResult<Statement> rstmt;
+  ParserResult<Statement> lstmt = ParserIoRedirectCmd();
+
+  if (!lstmt) {
+    return ParserResult<Statement>(); // Error
+  }
+
+  while (token_.Is(TokenKind::BIT_OR)) {
+    TokenKind token_kind = token_.GetKind();
+    Advance();
+    ValidToken();
+
+    rstmt = std::move(ParserIoRedirectCmd());
+
+    if (rstmt) {
+      lstmt = std::move(factory_.NewCmdPipeSequence(
+          lstmt.MoveAstNode<Cmd>(), rstmt.MoveAstNode<Cmd>()));
+    }
+  }
+
+  return lstmt;
 }
 
 ParserResult<Statement> Parser::ParserIoRedirectCmd() {
