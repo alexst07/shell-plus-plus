@@ -343,6 +343,16 @@ class AstPrinter: public AstVisitor {
     cmd_pipe->cmd_right()->Accept(this);
     level_--;
   }
+
+  void virtual VisitCmdAndOr(CmdAndOr* cmd_and_or) {
+    Level();
+    std::cout << "<command_and_or type: "
+              << Token::name(cmd_and_or->kind()) << ">\n";
+    level_++;
+    cmd_and_or->cmd_left()->Accept(this);
+    cmd_and_or->cmd_right()->Accept(this);
+    level_--;
+  }
 };
 
 }

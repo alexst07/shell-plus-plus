@@ -93,6 +93,7 @@ namespace internal {
   V(CmdIoRedirect)         \
   V(FilePathCmd)           \
   V(CmdPipeSequence)       \
+  V(CmdAndOr)
 
 #define AST_NODE_LIST(V)        \
   DECLARATION_NODE_LIST(V)      \
@@ -129,6 +130,7 @@ class SimpleCmd;
 class CmdIoRedirect;
 class FilePathCmd;
 class CmdPipeSequence;
+class CmdAndOr;
 
 // Position of ast node on source code
 struct Position {
@@ -208,6 +210,8 @@ class AstVisitor {
   void virtual VisitFilePathCmd(FilePathCmd* fp_cmd) {}
 
   void virtual VisitCmdPipeSequence(CmdPipeSequence* cmd_pipe) {}
+
+  void virtual VisitCmdAndOr(CmdAndOr* cmd_and_or) {}
 };
 
 class Statement: public AstNode {
@@ -334,6 +338,41 @@ class ExpressionList: public AstNode {
                  Position position)
       : AstNode(NodeType::kExpressionList, position)
       , exps_(std::move(exps)) {}
+};
+
+class CmdAndOr: public Cmd {
+ public:
+  virtual ~CmdAndOr() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitCmdAndOr(this);
+  }
+
+  TokenKind kind() const noexcept {
+    return token_kind_;
+  }
+
+  Cmd* cmd_left() const noexcept {
+    return cmd_left_.get();
+  }
+
+  Cmd* cmd_right() const noexcept {
+    return cmd_right_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  TokenKind token_kind_;
+  std::unique_ptr<Cmd> cmd_left_;
+  std::unique_ptr<Cmd> cmd_right_;
+
+  CmdAndOr(TokenKind token_kind, std::unique_ptr<Cmd> cmd_left,
+                  std::unique_ptr<Cmd> cmd_right, Position position)
+      : Cmd(NodeType::kBinaryOperation, position)
+      , token_kind_(token_kind)
+      , cmd_left_(std::move(cmd_left))
+      , cmd_right_(std::move(cmd_right)) {}
 };
 
 class CmdPipeSequence: public Cmd {
@@ -1125,6 +1164,13 @@ class AstNodeFactory {
       std::unique_ptr<Cmd> cmd_left, std::unique_ptr<Cmd> cmd_right) {
     return std::unique_ptr<CmdPipeSequence>(new CmdPipeSequence(
         std::move(cmd_left),  std::move(cmd_right), fn_pos_()));
+  }
+
+  inline std::unique_ptr<CmdAndOr> NewCmdAndOr(
+      TokenKind token_kind, std::unique_ptr<Cmd> cmd_left,
+      std::unique_ptr<Cmd> cmd_right) {
+    return std::unique_ptr<CmdAndOr>(new CmdAndOr(
+        token_kind, std::move(cmd_left),  std::move(cmd_right), fn_pos_()));
   }
 
  private:
