@@ -202,44 +202,20 @@ ParserResult<Statement> Parser::ParserStmt() {
 
 ParserResult<Statement> Parser::ParserIoRedirectCmd() {
   ParserResult<Statement> simple_cmd(ParserSimpleCmd());
-
-  auto io_token = [](const Token& tok) {
-    switch (tok.GetKind()) {
-      case TokenKind::LESS_THAN:
-      case TokenKind::GREATER_THAN:
-      case TokenKind::SHL:
-      case TokenKind::SAR:
-        return true;
-        break;
-
-      default:
-        return false;
-    }
-  };
-
-  auto cmd_valid_int = [&]() {
-    if ((token_ == TokenKind::INT_LITERAL) &&
-        (PeekAhead() == TokenKind::GREATER_THAN ||
-        PeekAhead() == TokenKind::SAR)) {
-      return true;
-    }
-
-    return false;
-  };
-
   ParserResult<Expression> integer(nullptr);
-  if (cmd_valid_int()) {
-    integer = std::move(factory_.NewLiteral(token_.GetValue(),
-                                            Literal::kInteger));
+
+  if (CmdValidInt()) {
+    integer = std::move(factory_.NewLiteral(
+        token_.GetValue(), Literal::kInteger));
     Advance();
   }
 
-  if (io_token(token_)) {
+  if (IsIOToken(token_)) {
     std::vector<std::unique_ptr<AstNode>> pieces;
     TokenKind kind = token_.GetKind();
     Advance();
 
-    while (!Token::CmdValidToken(token_) && !cmd_valid_int()) {
+    while (!Token::CmdValidToken(token_) && !CmdValidInt()) {
       auto piece = factory_.NewCmdPiece(token_);
       pieces.push_back(std::move(piece));
       Advance();
@@ -261,46 +237,47 @@ ParserResult<Statement> Parser::ParserIoRedirectCmd() {
 ParserResult<Statement> Parser::ParserSimpleCmd() {
   std::vector<std::unique_ptr<AstNode>> pieces;
 
-  auto cmd_valid_int = [&]() {
-    if ((token_ == TokenKind::INT_LITERAL) &&
-        (PeekAhead() == TokenKind::GREATER_THAN ||
-        PeekAhead() == TokenKind::SAR)) {
-      return true;
-    }
-
-    return false;
-  };
-
   ValidToken();
-  while (!Token::CmdValidToken(token_) && !cmd_valid_int()) {
+  while (!Token::CmdValidToken(token_) && !CmdValidInt()) {
     // Parser an expression inside command
     // ex: cmd -e ${v[0] + 1} -d
     if (token_ == TokenKind::DOLLAR_LBRACE) {
-      Advance();
-
-      if (token_ == TokenKind::NWL) {
-        ErrorMsg(boost::format("New line not allowed"));
-        return ParserResult<Statement>(); // Error
-      }
-
-      ParserResult<Expression> exp(ParserOrExp());
-
-      if (token_ != TokenKind::RBRACE) {
-        ErrorMsg(boost::format("token '}' expected"));
-        return ParserResult<Statement>(); // Error
-      }
-
-      Advance();
-
+      ParserResult<Expression> exp(ParserExpCmd());
       pieces.push_back(std::move(exp.MoveAstNode()));
       continue;
     }
+
     auto piece = factory_.NewCmdPiece(token_);
     pieces.push_back(std::move(piece));
     Advance();
   }
 
   return ParserResult<Statement>(factory_.NewSimpleCmd(std::move(pieces)));
+}
+
+ParserResult<Expression> Parser::ParserExpCmd() {
+  // Parser an expression inside command
+  // ex: any_cmd -e ${v[0] + 1} -d
+  if (token_ != TokenKind::DOLLAR_LBRACE) {
+    ErrorMsg(boost::format("expected ${ token"));
+    return ParserResult<Expression>(); // Error
+  }
+
+  Advance();
+  if (token_ == TokenKind::NWL) {
+    ErrorMsg(boost::format("New line not allowed"));
+    return ParserResult<Expression>(); // Error
+  }
+
+  ParserResult<Expression> exp(ParserOrExp());
+
+  if (token_ != TokenKind::RBRACE) {
+    ErrorMsg(boost::format("token '}' expected"));
+    return ParserResult<Expression>(); // Error
+  }
+  Advance();
+
+  return exp;
 }
 
 ParserResult<Statement> Parser::ParserBreakStmt() {

@@ -92,6 +92,7 @@ class Parser {
     return pos;
   }
 
+  // Try match with any language statement or declaration
   bool MatchLangStmt() {
     const Token& tok(CurrentToken());
     const Token& tok_ahead(PeekAhead());
@@ -117,6 +118,33 @@ class Parser {
       default:
         return false;
     }
+  }
+
+  // Test if the token is an IO valid token
+  inline bool IsIOToken(const Token& tok) {
+    switch (tok.GetKind()) {
+      case TokenKind::LESS_THAN:
+      case TokenKind::GREATER_THAN:
+      case TokenKind::SHL:
+      case TokenKind::SAR:
+        return true;
+        break;
+
+      default:
+        return false;
+    }
+  }
+
+  // Test if the integer inside a command should be parsed as
+  // only an integer token, or it is the io output channel
+  inline bool CmdValidInt() {
+    if ((token_ == TokenKind::INT_LITERAL) &&
+        (PeekAhead() == TokenKind::GREATER_THAN ||
+        PeekAhead() == TokenKind::SAR)) {
+      return true;
+    }
+
+    return false;
   }
 
   ParserResult<Expression> LiteralExp();
@@ -146,6 +174,7 @@ class Parser {
   ParserResult<Statement> ParserDefaultStmt();
   ParserResult<ExpressionList> ParserPostExpList();
   ParserResult<Statement> ParserForInStmt();
+  ParserResult<Expression> ParserExpCmd();
   ParserResult<Statement> ParserSimpleCmd();
   ParserResult<Statement> ParserIoRedirectCmd();
 
