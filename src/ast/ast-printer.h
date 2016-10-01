@@ -259,7 +259,7 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitFilePathCmd(FilePathCmd* fp_cmd) {
     Level();
-    std::cout << "<cmd: ";
+    std::cout << "<cmd_path: ";
     auto vec = fp_cmd->children();
 
     for (const auto c: vec) {

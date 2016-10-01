@@ -217,14 +217,6 @@ ParserResult<Statement> Parser::ParserIoRedirectCmd() {
     }
   };
 
-  auto io_int = [&]() {
-    if (token_ == TokenKind::INT_LITERAL && io_token(token_)) {
-      return true;
-    }
-
-    return false;
-  };
-
   auto cmd_valid_int = [&]() {
     if ((token_ == TokenKind::INT_LITERAL) &&
         (PeekAhead() == TokenKind::GREATER_THAN ||
@@ -236,7 +228,7 @@ ParserResult<Statement> Parser::ParserIoRedirectCmd() {
   };
 
   ParserResult<Expression> integer(nullptr);
-  if (io_int()) {
+  if (cmd_valid_int()) {
     integer = std::move(factory_.NewLiteral(token_.GetValue(),
                                             Literal::kInteger));
     Advance();
@@ -307,8 +299,6 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
     pieces.push_back(std::move(piece));
     Advance();
   }
-
-  ValidToken();
 
   return ParserResult<Statement>(factory_.NewSimpleCmd(std::move(pieces)));
 }
