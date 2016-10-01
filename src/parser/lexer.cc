@@ -325,7 +325,7 @@ TokenStream Lexer::Scanner() {
         Advance();
         if (c_ == '=') {
           token = Select(TokenKind::ASSIGN_BIT_OR);
-        } else if (c_ == '&') {
+        } else if (c_ == '|') {
           token = Select(TokenKind::OR);
         } else {
           token = GetToken(TokenKind::BIT_OR);

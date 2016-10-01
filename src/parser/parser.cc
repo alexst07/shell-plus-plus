@@ -402,15 +402,15 @@ ParserResult<Expression> Parser::ParserOrExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (token_.Is(TokenKind::OR)) {
+  while (token_.Is(TokenKind::OR)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserOrExp());
+    rexp = std::move(ParserAndExp());
 
     if (rexp) {
-      return ParserResult<Expression>(factory_.NewBinaryOperation(
+      lexp = std::move(factory_.NewBinaryOperation(
           token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
     }
   }
@@ -426,15 +426,15 @@ ParserResult<Expression> Parser::ParserAndExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (token_.Is(TokenKind::AND)) {
+  while (token_.Is(TokenKind::AND)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserAndExp());
+    rexp = std::move(ParserNotExp());
 
     if (rexp) {
-      return ParserResult<Expression>(factory_.NewBinaryOperation(
+      lexp = std::move(factory_.NewBinaryOperation(
           token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
     }
   }
@@ -464,15 +464,15 @@ ParserResult<Expression> Parser::ParserComparisonExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (Token::IsComparisonToken(token_.GetKind())) {
+  while (Token::IsComparisonToken(token_.GetKind())) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserComparisonExp());
+    rexp = std::move(ParserBitOrExp());
 
     if (rexp) {
-      return ParserResult<Expression>(factory_.NewBinaryOperation(
+      lexp = std::move(factory_.NewBinaryOperation(
           token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
     }
   }
@@ -488,15 +488,15 @@ ParserResult<Expression> Parser::ParserBitOrExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (token_.Is(TokenKind::BIT_OR)) {
+  while (token_.Is(TokenKind::BIT_OR)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserBitOrExp());
+    rexp = std::move(ParserBitXorExp());
 
     if (rexp) {
-      return ParserResult<Expression>(factory_.NewBinaryOperation(
+      lexp = std::move(factory_.NewBinaryOperation(
           token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
     }
   }
@@ -512,15 +512,15 @@ ParserResult<Expression> Parser::ParserBitXorExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (token_.Is(TokenKind::BIT_XOR)) {
+  while (token_.Is(TokenKind::BIT_XOR)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserBitXorExp());
+    rexp = std::move(ParserBitAndExp());
 
     if (rexp) {
-      return ParserResult<Expression>(factory_.NewBinaryOperation(
+      lexp = std::move(factory_.NewBinaryOperation(
           token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
     }
   }
@@ -536,15 +536,15 @@ ParserResult<Expression> Parser::ParserBitAndExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (token_.Is(TokenKind::BIT_AND)) {
+  while (token_.Is(TokenKind::BIT_AND)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserBitAndExp());
+    rexp = std::move(ParserShiftExp());
 
     if (rexp) {
-      return ParserResult<Expression>(factory_.NewBinaryOperation(
+      lexp = std::move(factory_.NewBinaryOperation(
           token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
     }
   }
@@ -560,15 +560,15 @@ ParserResult<Expression> Parser::ParserShiftExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (token_.IsAny(TokenKind::SHL, TokenKind::SAR)) {
+  while (token_.IsAny(TokenKind::SHL, TokenKind::SAR)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserShiftExp());
+    rexp = std::move(ParserArithExp());
 
     if (rexp) {
-      return ParserResult<Expression>(factory_.NewBinaryOperation(
+      lexp = std::move(factory_.NewBinaryOperation(
           token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
     }
   }
@@ -584,15 +584,15 @@ ParserResult<Expression> Parser::ParserArithExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (token_.IsAny(TokenKind::ADD, TokenKind::SUB)) {
+  while (token_.IsAny(TokenKind::ADD, TokenKind::SUB)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserArithExp());
+    rexp = std::move(ParserTerm());
 
     if (rexp) {
-      return ParserResult<Expression>(factory_.NewBinaryOperation(
+      lexp = std::move(factory_.NewBinaryOperation(
           token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
     }
   }
@@ -608,18 +608,16 @@ ParserResult<Expression> Parser::ParserTerm() {
     return ParserResult<Expression>(); // Error
   }
 
-  if (token_.IsAny(TokenKind::MUL, TokenKind::DIV)) {
+  while (token_.IsAny(TokenKind::MUL, TokenKind::DIV)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserTerm());
+    rexp = std::move(ParserUnaryExp());
 
     if (rexp) {
-      return ParserResult<Expression>(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(),rexp.MoveAstNode()));
-    } else {
-      return ParserResult<Expression>(); // Error
+      lexp = std::move(factory_.NewBinaryOperation(
+          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
     }
   }
 
