@@ -227,11 +227,16 @@ ParserResult<Statement> Parser::ParserCmdPipe() {
 ParserResult<Statement> Parser::ParserIoRedirectCmd() {
   ParserResult<Statement> simple_cmd(ParserSimpleCmd());
   ParserResult<Expression> integer(nullptr);
+  bool all = false; // all output interfaces
 
   // Check if is an int before io redirect as 2> or 2>> for example
   if (CmdValidInt()) {
     integer = std::move(factory_.NewLiteral(
         token_.GetValue(), Literal::kInteger));
+    Advance();
+  } else if (token_ == TokenKind::BIT_AND && IsIOToken(PeekAhead())) {
+    // Check if the token is & follows by io token: &> or &>>
+    all = true;
     Advance();
   }
 
@@ -268,7 +273,7 @@ ParserResult<Statement> Parser::ParserIoRedirectCmd() {
 
     return ParserResult<Statement>(factory_.NewCmdIoRedirect(
         std::move(cmdptr), std::move(intptr), std::move(path),
-        kind));
+        kind, all));
   }
 
   return simple_cmd;

@@ -490,6 +490,10 @@ class CmdIoRedirect: public Cmd {
     return false;
   }
 
+  bool all() const noexcept {
+    return all_;
+  }
+
   Literal* integer() const noexcept {
     return integer_.get();
   }
@@ -505,16 +509,18 @@ class CmdIoRedirect: public Cmd {
   std::unique_ptr<Literal> integer_;
   std::unique_ptr<FilePathCmd> fp_cmd_;
   TokenKind token_kind_;
+  bool all_;
 
 
   CmdIoRedirect(std::unique_ptr<Cmd> cmd, std::unique_ptr<Literal> integer,
                 std::unique_ptr<FilePathCmd> fp_cmd, TokenKind token_kind,
-                Position position)
+                bool all, Position position)
       : Cmd(NodeType::kCmdIoRedirect, position)
       , cmd_(std::move(cmd))
       , integer_(std::move(integer))
       , fp_cmd_(std::move(fp_cmd))
-      , token_kind_(token_kind) {}
+      , token_kind_(token_kind)
+      , all_(all) {}
 };
 
 class SimpleCmd: public Cmd {
@@ -1154,9 +1160,9 @@ class AstNodeFactory {
 
   inline std::unique_ptr<CmdIoRedirect> NewCmdIoRedirect(
       std::unique_ptr<Cmd> cmd, std::unique_ptr<Literal> integer,
-      std::unique_ptr<FilePathCmd> fp_cmd, TokenKind kind) {
+      std::unique_ptr<FilePathCmd> fp_cmd, TokenKind kind, bool all) {
     return std::unique_ptr<CmdIoRedirect>(new CmdIoRedirect(
-        std::move(cmd), std::move(integer), std::move(fp_cmd), kind,
+        std::move(cmd), std::move(integer), std::move(fp_cmd), kind, all,
         fn_pos_()));
   }
 

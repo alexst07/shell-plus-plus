@@ -277,6 +277,10 @@ class AstPrinter: public AstVisitor {
       cmd_io->integer()->Accept(this);
     }
 
+    if (cmd_io->all()) {
+      std::cout << "&";
+    }
+
     cmd_io->file_path_cmd()->Accept(this);
     std::cout << ">\n";
   }
