@@ -228,17 +228,21 @@ ParserResult<Statement> Parser::ParserIoRedirectCmd() {
   ParserResult<Statement> simple_cmd(ParserSimpleCmd());
   ParserResult<Expression> integer(nullptr);
 
+  // Check if is an int before io redirect as 2> or 2>> for example
   if (CmdValidInt()) {
     integer = std::move(factory_.NewLiteral(
         token_.GetValue(), Literal::kInteger));
     Advance();
   }
 
+  // Check if is a io redirect token: '>', '>>', '<' or '<<'
   if (IsIOToken(token_)) {
     std::vector<std::unique_ptr<AstNode>> pieces;
     TokenKind kind = token_.GetKind();
     Advance();
 
+    // All tokens that doesn't mean any special token to command is
+    // get as pieces of file path
     while (!Token::CmdValidToken(token_) && !CmdValidInt()) {
       // Parser an expression inside the path
       // ex: cmd_any > f${v[0]}.any
@@ -248,6 +252,8 @@ ParserResult<Statement> Parser::ParserIoRedirectCmd() {
         continue;
       }
 
+      // Puts piece of the file path on a vector, this vector will be
+      // the path of file
       auto piece = factory_.NewCmdPiece(token_);
       pieces.push_back(std::move(piece));
       Advance();
@@ -255,7 +261,9 @@ ParserResult<Statement> Parser::ParserIoRedirectCmd() {
 
     std::unique_ptr<FilePathCmd> path(
         factory_.NewFilePathCmd(std::move(pieces)));
+
     std::unique_ptr<Cmd> cmdptr(simple_cmd.MoveAstNode<Cmd>());
+
     std::unique_ptr<Literal> intptr(integer.MoveAstNode<Literal>());
 
     return ParserResult<Statement>(factory_.NewCmdIoRedirect(
@@ -279,6 +287,8 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
       continue;
     }
 
+    // Puts piece of the command on a vector, this vector will be the
+    // entire commmand
     auto piece = factory_.NewCmdPiece(token_);
     pieces.push_back(std::move(piece));
     Advance();
