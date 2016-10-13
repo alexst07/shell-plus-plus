@@ -139,6 +139,7 @@ class Parser {
   // only an integer token, or it is the io output channel
   inline bool CmdValidInt() {
     if ((token_ == TokenKind::INT_LITERAL) &&
+        (token_.BlankAfter() == false) &&
         (PeekAhead() == TokenKind::GREATER_THAN ||
         PeekAhead() == TokenKind::SAR)) {
       return true;
@@ -176,7 +177,9 @@ class Parser {
   ParserResult<Statement> ParserForInStmt();
   ParserResult<Expression> ParserExpCmd();
   ParserResult<Statement> ParserSimpleCmd();
-  ParserResult<Statement> ParserIoRedirectCmd();
+  std::unique_ptr<CmdIoRedirect> ParserIoRedirectCmd();
+  ParserResult<Statement> ParserIoRedirectCmdList();
+  bool IsIoRedirect();
   ParserResult<Statement> ParserCmdPipe();
 
   TokenStream ts_;

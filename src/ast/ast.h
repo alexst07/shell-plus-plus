@@ -92,6 +92,7 @@ namespace internal {
   V(SimpleCmd)             \
   V(CmdIoRedirect)         \
   V(FilePathCmd)           \
+  V(CmdIoRedirectList)     \
   V(CmdPipeSequence)       \
   V(CmdAndOr)
 
@@ -128,6 +129,7 @@ class Cmd;
 class CmdPiece;
 class SimpleCmd;
 class CmdIoRedirect;
+class CmdIoRedirectList;
 class FilePathCmd;
 class CmdPipeSequence;
 class CmdAndOr;
@@ -206,6 +208,8 @@ class AstVisitor {
   void virtual VisitSimpleCmd(SimpleCmd *cmd) {}
 
   void virtual VisitCmdIoRedirect(CmdIoRedirect* io) {}
+
+  void virtual VisitCmdIoRedirectList(CmdIoRedirectList *io_list) {}
 
   void virtual VisitFilePathCmd(FilePathCmd* fp_cmd) {}
 
@@ -466,16 +470,51 @@ class FilePathCmd: public Cmd {
       , pieces_(std::move(pieces)) {}
 };
 
+class CmdIoRedirectList: public Cmd {
+public:
+ ~CmdIoRedirectList() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitCmdIoRedirectList(this);
+  }
+
+  Cmd* cmd() const noexcept {
+   return cmd_.get();
+  }
+
+  std::vector<CmdIoRedirect*> children() noexcept {
+    std::vector<CmdIoRedirect*> vec;
+
+    for (auto& io: io_list_) {
+      vec.push_back(io.get());
+    }
+
+    return vec;
+  }
+
+  size_t num_children() const noexcept {
+    io_list_.size();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<CmdIoRedirect>> io_list_;
+  std::unique_ptr<Cmd> cmd_;
+
+  CmdIoRedirectList(std::unique_ptr<Cmd> cmd,
+                    std::vector<std::unique_ptr<CmdIoRedirect>> io_list,
+                    Position position)
+     : Cmd(NodeType::kCmdIoRedirectList, position)
+     , io_list_(std::move(io_list)) {}
+};
+
 class CmdIoRedirect: public Cmd {
  public:
   ~CmdIoRedirect() {}
 
   virtual void Accept(AstVisitor* visitor) {
     visitor->VisitCmdIoRedirect(this);
-  }
-
-  Cmd* cmd() const noexcept {
-    return cmd_.get();
   }
 
   TokenKind kind() const noexcept {
@@ -490,10 +529,13 @@ class CmdIoRedirect: public Cmd {
     return false;
   }
 
+  //Verify is the output io interface is all interfaces
+  // that is: "&>", means stdout and stderr
   bool all() const noexcept {
     return all_;
   }
 
+  // IO interface number: 2> or 1>
   Literal* integer() const noexcept {
     return integer_.get();
   }
@@ -505,18 +547,16 @@ class CmdIoRedirect: public Cmd {
  private:
   friend class AstNodeFactory;
 
-  std::unique_ptr<Cmd> cmd_;
   std::unique_ptr<Literal> integer_;
   std::unique_ptr<FilePathCmd> fp_cmd_;
   TokenKind token_kind_;
   bool all_;
 
 
-  CmdIoRedirect(std::unique_ptr<Cmd> cmd, std::unique_ptr<Literal> integer,
+  CmdIoRedirect(std::unique_ptr<Literal> integer,
                 std::unique_ptr<FilePathCmd> fp_cmd, TokenKind token_kind,
                 bool all, Position position)
       : Cmd(NodeType::kCmdIoRedirect, position)
-      , cmd_(std::move(cmd))
       , integer_(std::move(integer))
       , fp_cmd_(std::move(fp_cmd))
       , token_kind_(token_kind)
@@ -1159,11 +1199,17 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<CmdIoRedirect> NewCmdIoRedirect(
-      std::unique_ptr<Cmd> cmd, std::unique_ptr<Literal> integer,
-      std::unique_ptr<FilePathCmd> fp_cmd, TokenKind kind, bool all) {
+      std::unique_ptr<Literal> integer, std::unique_ptr<FilePathCmd> fp_cmd,
+      TokenKind kind, bool all) {
     return std::unique_ptr<CmdIoRedirect>(new CmdIoRedirect(
-        std::move(cmd), std::move(integer), std::move(fp_cmd), kind, all,
-        fn_pos_()));
+        std::move(integer), std::move(fp_cmd), kind, all, fn_pos_()));
+  }
+
+  inline std::unique_ptr<CmdIoRedirectList> NewCmdIoRedirectList(
+      std::unique_ptr<Cmd> cmd,
+      std::vector<std::unique_ptr<CmdIoRedirect>>&& io_list) {
+    return std::unique_ptr<CmdIoRedirectList>(new CmdIoRedirectList(
+        std::move(cmd), std::move(io_list), fn_pos_()));
   }
 
   inline std::unique_ptr<CmdPipeSequence> NewCmdPipeSequence(

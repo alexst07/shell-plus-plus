@@ -202,7 +202,7 @@ ParserResult<Statement> Parser::ParserStmt() {
 
 ParserResult<Statement> Parser::ParserCmdPipe() {
   ParserResult<Statement> rstmt;
-  ParserResult<Statement> lstmt = ParserIoRedirectCmd();
+  ParserResult<Statement> lstmt = ParserIoRedirectCmdList();
 
   if (!lstmt) {
     return ParserResult<Statement>(); // Error
@@ -213,7 +213,7 @@ ParserResult<Statement> Parser::ParserCmdPipe() {
     Advance();
     ValidToken();
 
-    rstmt = std::move(ParserIoRedirectCmd());
+    rstmt = std::move(ParserIoRedirectCmdList());
 
     if (rstmt) {
       lstmt = std::move(factory_.NewCmdPipeSequence(
@@ -224,8 +224,39 @@ ParserResult<Statement> Parser::ParserCmdPipe() {
   return lstmt;
 }
 
-ParserResult<Statement> Parser::ParserIoRedirectCmd() {
+bool Parser::IsIoRedirect() {
+  bool res = false;
+
+  if (CmdValidInt()) {
+    res = true;
+  }
+
+  if (IsIOToken(PeekAhead())) {
+    res = true;
+  }
+
+  return res;
+}
+
+ParserResult<Statement> Parser::ParserIoRedirectCmdList() {
   ParserResult<Statement> simple_cmd(ParserSimpleCmd());
+  std::vector<std::unique_ptr<CmdIoRedirect>> vec_io;
+
+  // Check if there are some io redirect on command
+  while (IsIoRedirect()) {
+    // Gets each io redirect
+    std::unique_ptr<CmdIoRedirect> io(std::move(ParserIoRedirectCmd()));
+    vec_io.push_back(std::move(io));
+  }
+
+  // Cast from statment to command
+  std::unique_ptr<Cmd> cmdptr(simple_cmd.MoveAstNode<Cmd>());
+
+  return ParserResult<Statement>(factory_.NewCmdIoRedirectList(
+      std::move(cmdptr), std::move(vec_io)));
+}
+
+std::unique_ptr<CmdIoRedirect> Parser::ParserIoRedirectCmd() {
   ParserResult<Expression> integer(nullptr);
   bool all = false; // all output interfaces
 
@@ -240,43 +271,36 @@ ParserResult<Statement> Parser::ParserIoRedirectCmd() {
     Advance();
   }
 
-  // Check if is a io redirect token: '>', '>>', '<' or '<<'
-  if (IsIOToken(token_)) {
-    std::vector<std::unique_ptr<AstNode>> pieces;
-    TokenKind kind = token_.GetKind();
-    Advance();
+  std::vector<std::unique_ptr<AstNode>> pieces;
+  TokenKind kind = token_.GetKind();
+  Advance();
 
-    // All tokens that doesn't mean any special token to command is
-    // get as pieces of file path
-    while (!Token::CmdValidToken(token_) && !CmdValidInt()) {
-      // Parser an expression inside the path
-      // ex: cmd_any > f${v[0]}.any
-      if (token_ == TokenKind::DOLLAR_LBRACE) {
-        ParserResult<Expression> exp(ParserExpCmd());
-        pieces.push_back(std::move(exp.MoveAstNode()));
-        continue;
-      }
-
-      // Puts piece of the file path on a vector, this vector will be
-      // the path of file
-      auto piece = factory_.NewCmdPiece(token_);
-      pieces.push_back(std::move(piece));
-      Advance();
+  // All tokens that doesn't mean any special token to command is
+  // get as pieces of file path
+  while (!Token::CmdValidToken(token_) && !CmdValidInt()) {
+    // Parser an expression inside the path
+    // ex: cmd_any > f${v[0]}.any
+    if (token_ == TokenKind::DOLLAR_LBRACE) {
+      ParserResult<Expression> exp(ParserExpCmd());
+      pieces.push_back(std::move(exp.MoveAstNode()));
+      continue;
     }
 
-    std::unique_ptr<FilePathCmd> path(
-        factory_.NewFilePathCmd(std::move(pieces)));
-
-    std::unique_ptr<Cmd> cmdptr(simple_cmd.MoveAstNode<Cmd>());
-
-    std::unique_ptr<Literal> intptr(integer.MoveAstNode<Literal>());
-
-    return ParserResult<Statement>(factory_.NewCmdIoRedirect(
-        std::move(cmdptr), std::move(intptr), std::move(path),
-        kind, all));
+    // Puts piece of the file path on a vector, this vector will be
+    // the path of file
+    auto piece = factory_.NewCmdPiece(token_);
+    pieces.push_back(std::move(piece));
+    Advance();
   }
 
-  return simple_cmd;
+  std::unique_ptr<FilePathCmd> path(
+      factory_.NewFilePathCmd(std::move(pieces)));
+
+  std::unique_ptr<Literal> intptr(integer.MoveAstNode<Literal>());
+
+  return factory_.NewCmdIoRedirect(std::move(intptr), std::move(path), kind,
+                                   all);
+
 }
 
 ParserResult<Statement> Parser::ParserSimpleCmd() {

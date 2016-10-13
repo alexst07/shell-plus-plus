@@ -269,10 +269,21 @@ class AstPrinter: public AstVisitor {
     std::cout << ">\n";
   }
 
-  void virtual VisitCmdIoRedirect(CmdIoRedirect* cmd_io) {
+  void virtual VisitCmdIoRedirectList(CmdIoRedirectList *cmd_io_list) {
     Level();
-    std::cout << "<io_redirect: ";
-    cmd_io->cmd()->Accept(this);
+    std::cout << "<io_redirect_list: ";
+
+    cmd_io_list->cmd()->Accept(this);
+    auto vec = cmd_io_list->children();
+
+    for (const auto c: vec) {
+      c->Accept(this);
+    }
+
+    std::cout << ">\n";
+  }
+
+  void virtual VisitCmdIoRedirect(CmdIoRedirect* cmd_io) {
     if (cmd_io->has_integer()) {
       cmd_io->integer()->Accept(this);
     }
@@ -282,7 +293,6 @@ class AstPrinter: public AstVisitor {
     }
 
     cmd_io->file_path_cmd()->Accept(this);
-    std::cout << ">\n";
   }
 
   void virtual VisitSwitchStatement(SwitchStatement* switch_stmt) {
