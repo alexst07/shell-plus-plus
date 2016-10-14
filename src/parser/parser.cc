@@ -267,6 +267,10 @@ ParserResult<Statement> Parser::ParserIoRedirectCmdList() {
     vec_io.push_back(std::move(io));
   }
 
+  if (vec_io.empty()) {
+    return simple_cmd;
+  }
+
   // Cast from statment to command
   std::unique_ptr<Cmd> cmdptr(simple_cmd.MoveAstNode<Cmd>());
 
