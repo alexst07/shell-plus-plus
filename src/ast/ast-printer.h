@@ -1,4 +1,4 @@
-#ifndef SETTI_AST_TRAVERSAL_VISITOR_H
+﻿#ifndef SETTI_AST_TRAVERSAL_VISITOR_H
 #define SETTI_AST_TRAVERSAL_VISITOR_H
 
 #include <string>
@@ -365,6 +365,15 @@ class AstPrinter: public AstVisitor {
     level_++;
     cmd_and_or->cmd_left()->Accept(this);
     cmd_and_or->cmd_right()->Accept(this);
+    level_--;
+  }
+
+  void virtual VisitCmdFull(CmdFull* cmd_full) {
+    Level();
+    std::cout << "<command_full background: "
+              << (cmd_full->background()? "true": "false") << ">\n";
+    level_++;
+    cmd_full->cmd()->Accept(this);
     level_--;
   }
 };

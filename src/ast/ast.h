@@ -94,7 +94,8 @@ namespace internal {
   V(FilePathCmd)           \
   V(CmdIoRedirectList)     \
   V(CmdPipeSequence)       \
-  V(CmdAndOr)
+  V(CmdAndOr)              \
+  V(CmdFull)
 
 #define AST_NODE_LIST(V)        \
   DECLARATION_NODE_LIST(V)      \
@@ -133,6 +134,7 @@ class CmdIoRedirectList;
 class FilePathCmd;
 class CmdPipeSequence;
 class CmdAndOr;
+class CmdFull;
 
 // Position of ast node on source code
 struct Position {
@@ -216,6 +218,8 @@ class AstVisitor {
   void virtual VisitCmdPipeSequence(CmdPipeSequence* cmd_pipe) {}
 
   void virtual VisitCmdAndOr(CmdAndOr* cmd_and_or) {}
+
+  void virtual VisitCmdFull(CmdFull* cmd_full) {}
 };
 
 class Statement: public AstNode {
@@ -342,6 +346,35 @@ class ExpressionList: public AstNode {
                  Position position)
       : AstNode(NodeType::kExpressionList, position)
       , exps_(std::move(exps)) {}
+};
+
+class CmdFull: public Cmd {
+ public:
+  virtual ~CmdFull() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitCmdFull(this);
+  }
+
+  bool background() const noexcept {
+   return background_;
+  }
+
+  Cmd* cmd() const noexcept {
+   return cmd_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  bool background_;
+  std::unique_ptr<Cmd> cmd_;
+
+  CmdFull(std::unique_ptr<Cmd> cmd, bool background,
+          Position position)
+     : Cmd(NodeType::kBinaryOperation, position)
+     , cmd_(std::move(cmd))
+     , background_(background) {}
 };
 
 class CmdAndOr: public Cmd {
@@ -1224,6 +1257,12 @@ class AstNodeFactory {
       std::unique_ptr<Cmd> cmd_right) {
     return std::unique_ptr<CmdAndOr>(new CmdAndOr(
         token_kind, std::move(cmd_left),  std::move(cmd_right), fn_pos_()));
+  }
+
+  inline std::unique_ptr<CmdFull> NewCmdFull(std::unique_ptr<Cmd> cmd,
+                                             bool background) {
+    return std::unique_ptr<CmdFull>(new CmdFull(
+        std::move(cmd),  background, fn_pos_()));
   }
 
  private:
