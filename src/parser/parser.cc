@@ -196,8 +196,32 @@ ParserResult<Statement> Parser::ParserStmt() {
   } else if (MatchLangStmt()) {
     return ParserSimpleStmt();
   } else {
-    return ParserCmdPipe();
+    return ParserCmdAndOr();
   }
+}
+
+ParserResult<Statement> Parser::ParserCmdAndOr() {
+  ParserResult<Statement> rcmd;
+  ParserResult<Statement> lcmd = ParserCmdPipe();
+
+  if (!lcmd) {
+    return ParserResult<Statement>(); // Error
+  }
+
+  while (token_.IsAny(TokenKind::OR, TokenKind::AND)) {
+    TokenKind token_kind = token_.GetKind();
+    Advance();
+    ValidToken();
+
+    rcmd = std::move(ParserCmdPipe());
+
+    if (rcmd) {
+      lcmd = std::move(factory_.NewCmdAndOr(
+          token_kind, lcmd.MoveAstNode<Cmd>(), rcmd.MoveAstNode<Cmd>()));
+    }
+  }
+
+  return lcmd;
 }
 
 ParserResult<Statement> Parser::ParserCmdPipe() {
