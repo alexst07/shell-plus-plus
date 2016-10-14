@@ -1,4 +1,4 @@
-#include "parser.h"
+﻿#include "parser.h"
 
 #include <sstream>
 
@@ -225,17 +225,11 @@ ParserResult<Statement> Parser::ParserCmdPipe() {
 }
 
 bool Parser::IsIoRedirect() {
-  bool res = false;
-
-  if (CmdValidInt()) {
-    res = true;
+  if (CmdValidInt() || IsIOToken(token_)) {
+    return true;
   }
 
-  if (IsIOToken(PeekAhead())) {
-    res = true;
-  }
-
-  return res;
+  return false;
 }
 
 ParserResult<Statement> Parser::ParserIoRedirectCmdList() {
@@ -277,7 +271,7 @@ std::unique_ptr<CmdIoRedirect> Parser::ParserIoRedirectCmd() {
 
   // All tokens that doesn't mean any special token to command is
   // get as pieces of file path
-  while (!Token::CmdValidToken(token_) && !CmdValidInt()) {
+  while (!IsCmdStopPoint()) {
     // Parser an expression inside the path
     // ex: cmd_any > f${v[0]}.any
     if (token_ == TokenKind::DOLLAR_LBRACE) {
@@ -307,7 +301,7 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
   std::vector<std::unique_ptr<AstNode>> pieces;
 
   ValidToken();
-  while (!Token::CmdValidToken(token_) && !CmdValidInt()) {
+  while (!IsCmdStopPoint()) {
     // Parser an expression inside command
     // ex: cmd -e ${v[0] + 1} -d
     if (token_ == TokenKind::DOLLAR_LBRACE) {

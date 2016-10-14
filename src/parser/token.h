@@ -1,4 +1,4 @@
-#ifndef SETTI_TOKEN_H
+﻿#ifndef SETTI_TOKEN_H
 #define SETTI_TOKEN_H
 
 #include <string>
@@ -219,6 +219,7 @@ class Token {
       case TokenKind::SAR:            // >>
       case TokenKind::BIT_AND:        // &
       case TokenKind::BIT_OR:         // |
+      case TokenKind::RPAREN:         // )
       case TokenKind::AND:            // &&
       case TokenKind::OR:             // ||
       case TokenKind::NOT:            // !

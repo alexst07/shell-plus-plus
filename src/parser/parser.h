@@ -1,4 +1,4 @@
-#ifndef SETTI_PARSER_H
+﻿#ifndef SETTI_PARSER_H
 #define SETTI_PARSER_H
 
 #include <string>
@@ -146,6 +146,11 @@ class Parser {
     }
 
     return false;
+  }
+
+  // Check if is a stop sequence of tokens to command
+  inline bool IsCmdStopPoint() {
+    return Token::CmdValidToken(token_) || CmdValidInt();
   }
 
   ParserResult<Expression> LiteralExp();

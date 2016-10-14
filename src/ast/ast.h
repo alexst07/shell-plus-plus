@@ -1,4 +1,4 @@
-#ifndef SETTI_AST_H
+﻿#ifndef SETTI_AST_H
 #define SETTI_AST_H
 
 #include <string>
@@ -506,6 +506,7 @@ public:
                     std::vector<std::unique_ptr<CmdIoRedirect>> io_list,
                     Position position)
      : Cmd(NodeType::kCmdIoRedirectList, position)
+     , cmd_(std::move(cmd))
      , io_list_(std::move(io_list)) {}
 };
 
