@@ -27,6 +27,10 @@ ParserResult<Statement> Parser::ParserForInStmt() {
   ValidToken();
   ParserResult<Statement> block(ParserBlock());
 
+  if (!block || !test_list || !exp_list) {
+    return ParserResult<Statement>();
+  }
+
   return ParserResult<Statement>(factory_.NewForInStatement(
       exp_list.MoveAstNode(), test_list.MoveAstNode(), block.MoveAstNode()));
 }
@@ -46,6 +50,10 @@ ParserResult<Statement> Parser::ParserIfStmt() {
 
   ParserResult<Statement> then_block(ParserBlock());
 
+  if (!then_block) {
+    return ParserResult<Statement>();
+  }
+
   if (token_ == TokenKind::KW_ELSE) {
     ParserResult<Statement> else_block;
 
@@ -55,6 +63,10 @@ ParserResult<Statement> Parser::ParserIfStmt() {
       else_block = std::move(ParserIfStmt());
     } else {
       else_block = std::move(ParserBlock());
+    }
+
+    if (!else_block) {
+      return ParserResult<Statement>();
     }
 
     return ParserResult<Statement>(factory_.NewIfStatement(
@@ -84,6 +96,10 @@ ParserResult<Statement> Parser::ParserSwitchStmt() {
   ValidToken();
 
   ParserResult<Statement> block(ParserBlock());
+
+  if (!block || !exp) {
+    return ParserResult<Statement>();
+  }
 
   return ParserResult<Statement>(factory_.NewSwitchStatement(exp.MoveAstNode(),
       block.MoveAstNode()));
@@ -122,6 +138,10 @@ ParserResult<Statement> Parser::ParserBlock() {
 
   ParserResult<StatementList> stmt_list(ParserStmtList());
 
+  if (!stmt_list) {
+    return ParserResult<Statement>();
+  }
+
   if (ValidToken() != TokenKind::RBRACE) {
     ErrorMsg(boost::format("expected } token, got %1%")% TokenValueStr());
       return ParserResult<Statement>(); // Error
@@ -141,7 +161,11 @@ ParserResult<StatementList> Parser::ParserStmtList() {
   // RBRACE(}) to know if it is in the end of the block
   while (token_.IsNot(TokenKind::EOS, TokenKind::RBRACE)) {
     ValidToken();
-    ParserResult<Statement> stmt = ParserStmt();
+    ParserResult<Statement> stmt(ParserStmt());
+    if (!stmt) {
+      return ParserResult<StatementList>();
+    }
+
     stmt_list.push_back(stmt.MoveAstNode());
 
     // uses new line char as end of statement, and advance until valid
@@ -206,6 +230,10 @@ ParserResult<Statement> Parser::ParserStmt() {
 ParserResult<Statement> Parser::ParserCmdFull() {
   ParserResult<Statement> cmd = ParserCmdAndOr();
   bool background_exec = false;
+
+  if (!cmd) {
+    return ParserResult<Statement>(); // Error
+  }
 
   if (token_ == TokenKind::BIT_AND) {
     background_exec = true;
@@ -279,6 +307,11 @@ bool Parser::IsIoRedirect() {
 
 ParserResult<Statement> Parser::ParserIoRedirectCmdList() {
   ParserResult<Statement> simple_cmd(ParserSimpleCmd());
+
+  if (!simple_cmd) {
+    return ParserResult<Statement>(); // Error
+  }
+
   std::vector<std::unique_ptr<CmdIoRedirect>> vec_io;
 
   // Check if there are some io redirect on command
@@ -350,7 +383,11 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
   std::vector<std::unique_ptr<AstNode>> pieces;
 
   ValidToken();
+  int num_pieces = 0;
   while (!IsCmdStopPoint()) {
+    // Count if the command has some pieces
+    num_pieces++;
+
     // Parser an expression inside command
     // ex: cmd -e ${v[0] + 1} -d
     if (token_ == TokenKind::DOLLAR_LBRACE) {
@@ -364,6 +401,13 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
     auto piece = factory_.NewCmdPiece(token_);
     pieces.push_back(std::move(piece));
     Advance();
+  }
+
+  // if the command is empty there is an error
+  if (num_pieces == 0) {
+    ErrorMsg(boost::format("Empty command, token %1% unexpected")%
+             TokenValueStr());
+    return ParserResult<Statement>(); // Error
   }
 
   return ParserResult<Statement>(factory_.NewSimpleCmd(std::move(pieces)));
