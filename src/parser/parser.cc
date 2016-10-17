@@ -850,9 +850,22 @@ ParserResult<Expression> Parser::ParserPostExp() {
 ParserResult<Expression> Parser::ParserPrimaryExp() {
   Token token(ValidToken());
   if (token == TokenKind::IDENTIFIER) {
-    ParserResult<Expression> res(
+    std::unique_ptr<Identifier> id(
         factory_.NewIdentifier(boost::get<std::string>(token.GetValue())));
     Advance(); // Consume the token
+    while (token_ == TokenKind::SCOPE) {
+      std::unique_ptr<PackageScope> scope(factory_.NewPackageScope(
+          std::move(id)));
+      Advance();
+      if (token != TokenKind::IDENTIFIER) {
+        ErrorMsg(boost::format("Expected identifier after scope operator"));
+        return ParserResult<Expression>(); // Error
+      }
+      id = std::move(factory_.NewIdentifier(boost::get<std::string>(
+          token_.GetValue()), std::move(scope)));
+      Advance();
+    }
+    ParserResult<Expression> res(std::move(id));
     return res;
   } else if (token == TokenKind::LPAREN) {
     Advance(); // consume the token '('

@@ -1,4 +1,4 @@
-#ifndef SETTI_PARSER_RESULT_H
+﻿#ifndef SETTI_PARSER_RESULT_H
 #define SETTI_PARSER_RESULT_H
 
 #include <string>
@@ -17,6 +17,9 @@ template<class T>
 class ParserResult {
  public:
   explicit ParserResult(std::unique_ptr<T>&& uptr) noexcept: uptr_(std::move(uptr)) {}
+
+  template<class U>
+  explicit ParserResult(std::unique_ptr<U>&& uptr) noexcept: uptr_(std::move(uptr)) {}
 
   constexpr ParserResult() noexcept: uptr_(nullptr) {}
   constexpr ParserResult(nullptr_t) noexcept : ParserResult() {}

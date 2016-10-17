@@ -59,6 +59,9 @@ namespace internal {
   V(Call)                 \
   V(CallNew)
 
+#define PAKCAGE_NODE_LIST(V) \
+  V(PackageScope)
+
 #define EXPRESSION_NODE_LIST(V) \
   LITERAL_NODE_LIST(V)          \
   PROPERTY_NODE_LIST(V)         \
@@ -101,7 +104,8 @@ namespace internal {
   DECLARATION_NODE_LIST(V)      \
   STATEMENT_NODE_LIST(V)        \
   EXPRESSION_NODE_LIST(V)       \
-  CMD_NODE_LIST(V)
+  CMD_NODE_LIST(V)              \
+  PAKCAGE_NODE_LIST(V)
 
 class AstNodeFactory;
 
@@ -111,6 +115,7 @@ class ExpressionList;
 class BinaryOperation;
 class Literal;
 class Identifier;
+class PackageScope;
 class AssignmentStatement;
 class UnaryOperation;
 class Array;
@@ -174,6 +179,8 @@ class AstVisitor {
   void virtual VisitLiteral(Literal* lit_exp) {}
 
   void virtual VisitIdentifier(Identifier* id) {}
+
+  void virtual VisitPackageScope(PackageScope* scope) {}
 
   void virtual VisitAssignmentStatement(AssignmentStatement* assig) {}
 
@@ -936,13 +943,50 @@ class Identifier: public Expression {
     return name_;
   }
 
+  PackageScope* scope() const noexcept {
+    return scope_.get();
+  }
+
+  bool has_scope() const noexcept {
+    if (scope_) {
+      return true;
+    }
+
+    return false;
+  }
+
  private:
   friend class AstNodeFactory;
 
   std::string name_;
+  std::unique_ptr<PackageScope> scope_;
 
-  Identifier(const std::string& name, Position position):
-    name_(name), Expression(NodeType::kIdentifier, position) {}
+  Identifier(const std::string& name, std::unique_ptr<PackageScope> scope,
+             Position position)
+    : name_(name)
+    , scope_(std::move(scope))
+    , Expression(NodeType::kIdentifier, position) {}
+};
+
+class PackageScope: public AstNode {
+ public:
+  virtual ~PackageScope() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitPackageScope(this);
+  }
+
+  Identifier* id() const noexcept {
+   return id_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Identifier> id_;
+
+  PackageScope(std::unique_ptr<Identifier> id, Position position):
+   id_(std::move(id)), AstNode(NodeType::kPackageScope, position) {}
 };
 
 class UnaryOperation: public Expression {
@@ -1128,8 +1172,17 @@ class AstNodeFactory {
                                                     fn_pos_()));
   }
 
-  inline std::unique_ptr<Identifier> NewIdentifier(const std::string& name) {
-    return std::unique_ptr<Identifier>(new Identifier(name, fn_pos_()));
+  inline std::unique_ptr<Identifier> NewIdentifier(
+      const std::string& name, std::unique_ptr<PackageScope> scope =
+          std::unique_ptr<PackageScope>(nullptr)) {
+    return std::unique_ptr<Identifier>(new Identifier(
+        name, std::move(scope), fn_pos_()));
+  }
+
+  inline std::unique_ptr<PackageScope> NewPackageScope(
+      std::unique_ptr<Identifier> id) {
+    return std::unique_ptr<PackageScope>(new PackageScope(
+        std::move(id), fn_pos_()));
   }
 
   inline std::unique_ptr<AssignmentStatement> NewAssignmentStatement(

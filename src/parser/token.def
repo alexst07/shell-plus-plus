@@ -1,4 +1,4 @@
-
+﻿
 #ifndef TOKEN
 #define TOKEN(kw, str)
 #endif
@@ -141,6 +141,7 @@ PUNCTUATOR(LBRACKET,        "[")
 PUNCTUATOR(RBRACKET,        "]")
 PUNCTUATOR(COMMA,           ",")
 PUNCTUATOR(COLON,           ":")
+PUNCTUATOR(SCOPE,           "::")
 PUNCTUATOR(SEMI_COLON,      ";")
 PUNCTUATOR(AT_SIGN,         "@")
 PUNCTUATOR(ELLIPSIS,        "...")

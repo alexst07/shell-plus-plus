@@ -1,4 +1,4 @@
-#include "lexer.h"
+﻿#include "lexer.h"
 
 #include <sstream>
 
@@ -347,7 +347,12 @@ TokenStream Lexer::Scanner() {
         break;
 
       case ':':
-        token = Select(TokenKind::COLON);
+        Advance();
+        if (c_ == ':') {
+          token = Select(TokenKind::SCOPE);
+        } else {
+          token = GetToken(TokenKind::COLON);
+        }
         break;
 
       case ',':

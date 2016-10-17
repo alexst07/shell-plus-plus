@@ -13,8 +13,16 @@ namespace setti {
 namespace internal {
 
 class AstPrinter: public AstVisitor {
+ public:
+  AstPrinter() {
+    inside_scope_ = false;
+    inside_cmd_ = false;
+  }
+
+ private:
   int level_;
   bool inside_cmd_;
+  bool inside_scope_;
 
   void Level() {
     for (int i = 0; i < level_-1; i++) {
@@ -59,8 +67,29 @@ class AstPrinter: public AstVisitor {
   }
 
   void virtual VisitIdentifier(Identifier* id) {
+    if (inside_scope_) {
+      std::cout << id->name();
+      if (id->has_scope()) {
+
+        id->scope()->Accept(this);
+      }
+      return;
+    }
+
     Level();
-    std::cout << "<identifier name: "<< id->name() << ">\n";
+    std::cout << "<identifier name: "<< id->name();
+    if (id->has_scope()) {
+      std::cout << " scope: ";
+      id->scope()->Accept(this);
+    }
+    std::cout << ">\n";
+  }
+
+  void virtual VisitPackageScope(PackageScope* scope) {
+    inside_scope_ = true;
+    scope->id()->Accept(this);
+    std::cout << "::";
+    inside_scope_ = false;
   }
 
   void virtual VisitLiteral(Literal* lit_exp) {
