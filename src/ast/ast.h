@@ -372,7 +372,7 @@ class CmdFull: public Cmd {
 
   CmdFull(std::unique_ptr<Cmd> cmd, bool background,
           Position position)
-     : Cmd(NodeType::kBinaryOperation, position)
+     : Cmd(NodeType::kCmdFull, position)
      , cmd_(std::move(cmd))
      , background_(background) {}
 };
@@ -406,7 +406,7 @@ class CmdAndOr: public Cmd {
 
   CmdAndOr(TokenKind token_kind, std::unique_ptr<Cmd> cmd_left,
                   std::unique_ptr<Cmd> cmd_right, Position position)
-      : Cmd(NodeType::kBinaryOperation, position)
+      : Cmd(NodeType::kCmdAndOr, position)
       , token_kind_(token_kind)
       , cmd_left_(std::move(cmd_left))
       , cmd_right_(std::move(cmd_right)) {}

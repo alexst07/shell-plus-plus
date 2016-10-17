@@ -136,6 +136,9 @@ ParserResult<Statement> Parser::ParserBlock() {
 ParserResult<StatementList> Parser::ParserStmtList() {
   std::vector<std::unique_ptr<Statement>> stmt_list;
 
+  // Check RBRACE because it is the end of block, and as the
+  // stmt list is inside the block, it has to check token
+  // RBRACE(}) to know if it is in the end of the block
   while (token_.IsNot(TokenKind::EOS, TokenKind::RBRACE)) {
     ValidToken();
     ParserResult<Statement> stmt = ParserStmt();
@@ -196,8 +199,26 @@ ParserResult<Statement> Parser::ParserStmt() {
   } else if (MatchLangStmt()) {
     return ParserSimpleStmt();
   } else {
-    return ParserCmdAndOr();
+    return ParserCmdFull();
   }
+}
+
+ParserResult<Statement> Parser::ParserCmdFull() {
+  ParserResult<Statement> cmd = ParserCmdAndOr();
+  bool background_exec = false;
+
+  if (token_ == TokenKind::BIT_AND) {
+    background_exec = true;
+    Advance();
+  } else if (token_ == TokenKind::SEMI_COLON) {
+    Advance();
+  } else if (token_ != TokenKind::NWL) {
+    ErrorMsg(boost::format("unexpected token in the end of command"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  return ParserResult<Statement>(factory_.NewCmdFull(
+      cmd.MoveAstNode<Cmd>(), background_exec));
 }
 
 ParserResult<Statement> Parser::ParserCmdAndOr() {

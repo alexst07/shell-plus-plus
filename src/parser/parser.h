@@ -187,6 +187,7 @@ class Parser {
   bool IsIoRedirect();
   ParserResult<Statement> ParserCmdPipe();
   ParserResult<Statement> ParserCmdAndOr();
+  ParserResult<Statement> ParserCmdFull();
 
   TokenStream ts_;
   AstNodeFactory factory_;
