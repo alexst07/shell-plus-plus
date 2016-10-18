@@ -847,29 +847,39 @@ ParserResult<Expression> Parser::ParserPostExp() {
   return exp;
 }
 
-ParserResult<Expression> Parser::ParserPrimaryExp() {
-  Token token(ValidToken());
-  if (token == TokenKind::IDENTIFIER) {
-    std::unique_ptr<Identifier> id(
-        factory_.NewIdentifier(boost::get<std::string>(token.GetValue())));
-    Advance(); // Consume the token
-    while (token_ == TokenKind::SCOPE) {
-      std::unique_ptr<PackageScope> scope(factory_.NewPackageScope(
-          std::move(id)));
-      Advance();
-      if (token != TokenKind::IDENTIFIER) {
-        ErrorMsg(boost::format("Expected identifier after scope operator"));
-        return ParserResult<Expression>(); // Error
-      }
-      id = std::move(factory_.NewIdentifier(boost::get<std::string>(
-          token_.GetValue()), std::move(scope)));
-      Advance();
+ParserResult<Expression> Parser::ParserScopeIdentifier() {
+  std::unique_ptr<Identifier> id(
+      factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
+
+  Advance(); // Consume the id token
+
+  while (token_ == TokenKind::SCOPE) {
+    std::unique_ptr<PackageScope> scope(factory_.NewPackageScope(
+        std::move(id)));
+    Advance();
+
+    if (token_ != TokenKind::IDENTIFIER) {
+      ErrorMsg(boost::format("Expected identifier after scope operator"));
+      return ParserResult<Expression>(); // Error
     }
-    ParserResult<Expression> res(std::move(id));
-    return res;
-  } else if (token == TokenKind::LPAREN) {
+
+    id = std::move(factory_.NewIdentifier(boost::get<std::string>(
+        token_.GetValue()), std::move(scope)));
+    Advance();
+  }
+
+  ParserResult<Expression> res(std::move(id));
+  return res;
+}
+
+ParserResult<Expression> Parser::ParserPrimaryExp() {
+  if (token_ == TokenKind::IDENTIFIER) {
+    // parser scope id: scope1::scope2::id
+    return ParserScopeIdentifier();
+  } else if (token_ == TokenKind::LPAREN) {
     Advance(); // consume the token '('
     ParserResult<Expression> res(ParserOrExp());
+
     if (ValidToken() != TokenKind::RPAREN) {
       ErrorMsg(boost::format("Expected ')' in the end of expression"));
       return ParserResult<Expression>(); // Error
@@ -880,7 +890,6 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
   } else {
     return LiteralExp();
   }
-
 }
 
 ParserResult<Expression> Parser::LiteralExp() {

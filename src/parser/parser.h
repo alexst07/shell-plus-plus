@@ -155,6 +155,7 @@ class Parser {
   }
 
   ParserResult<Expression> LiteralExp();
+  ParserResult<Expression> ParserScopeIdentifier();
   ParserResult<Expression> ParserPrimaryExp();
   ParserResult<Expression> ParserPostExp();
   ParserResult<Expression> ParserUnaryExp();
