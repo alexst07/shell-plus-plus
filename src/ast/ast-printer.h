@@ -69,6 +69,7 @@ class AstPrinter: public AstVisitor {
   void virtual VisitIdentifier(Identifier* id) {
     if (inside_scope_) {
       std::cout << id->name();
+      std::cout << "::";
       if (id->has_scope()) {
 
         id->scope()->Accept(this);
@@ -88,7 +89,6 @@ class AstPrinter: public AstVisitor {
   void virtual VisitPackageScope(PackageScope* scope) {
     inside_scope_ = true;
     scope->id()->Accept(this);
-    std::cout << "::";
     inside_scope_ = false;
   }
 

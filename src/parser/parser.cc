@@ -240,7 +240,7 @@ ParserResult<Statement> Parser::ParserCmdFull() {
     Advance();
   } else if (token_ == TokenKind::SEMI_COLON) {
     Advance();
-  } else if (token_ != TokenKind::NWL) {
+  } else if (token_.IsNot(TokenKind::NWL, TokenKind::EOS)) {
     ErrorMsg(boost::format("unexpected token in the end of command"));
     return ParserResult<Statement>(); // Error
   }
