@@ -154,6 +154,14 @@ class Parser {
     return Token::CmdValidToken(token_) || CmdValidInt();
   }
 
+  inline bool TokenEndFullCmd() {
+    bool r = token_.IsAny(TokenKind::NWL,
+                          TokenKind::EOS,
+                          TokenKind::RBRACE,
+                          TokenKind::RPAREN);
+    return r;
+  }
+
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserScopeIdentifier();
   ParserResult<Expression> ParserPrimaryExp();

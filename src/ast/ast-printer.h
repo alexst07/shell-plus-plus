@@ -405,6 +405,10 @@ class AstPrinter: public AstVisitor {
     cmd_full->cmd()->Accept(this);
     level_--;
   }
+
+  void virtual VisitCmdExpression(CmdExpression* cmd) {
+    cmd->cmd()->Accept(this);
+  }
 };
 
 }

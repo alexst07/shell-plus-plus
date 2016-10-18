@@ -220,6 +220,7 @@ class Token {
       case TokenKind::BIT_AND:        // &
       case TokenKind::BIT_OR:         // |
       case TokenKind::RPAREN:         // )
+      case TokenKind::RBRACE:         // }
       case TokenKind::AND:            // &&
       case TokenKind::OR:             // ||
       case TokenKind::NOT:            // !

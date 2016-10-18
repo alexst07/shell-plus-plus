@@ -82,6 +82,7 @@ namespace internal {
   V(CompareOperation)           \
   V(ExpressionList)             \
   V(FunctionCall)               \
+  V(CmdExpression)              \
   V(ThisFunction)               \
   V(SuperPropertyReference)     \
   V(SuperCallReference)         \
@@ -140,6 +141,7 @@ class FilePathCmd;
 class CmdPipeSequence;
 class CmdAndOr;
 class CmdFull;
+class CmdExpression;
 
 // Position of ast node on source code
 struct Position {
@@ -227,6 +229,8 @@ class AstVisitor {
   void virtual VisitCmdAndOr(CmdAndOr* cmd_and_or) {}
 
   void virtual VisitCmdFull(CmdFull* cmd_full) {}
+
+  void virtual VisitCmdExpression(CmdExpression* cmd) {}
 };
 
 class Statement: public AstNode {
@@ -353,6 +357,28 @@ class ExpressionList: public AstNode {
                  Position position)
       : AstNode(NodeType::kExpressionList, position)
       , exps_(std::move(exps)) {}
+};
+
+class CmdExpression: public Expression {
+ public:
+  virtual ~CmdExpression() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+  visitor->VisitCmdExpression(this);
+  }
+
+  Cmd* cmd() const noexcept {
+  return cmd_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Cmd> cmd_;
+
+  CmdExpression(std::unique_ptr<Cmd> cmd, Position position)
+    : Expression(NodeType::kCmdExpression, position)
+    , cmd_(std::move(cmd)) {}
 };
 
 class CmdFull: public Cmd {
@@ -1316,6 +1342,12 @@ class AstNodeFactory {
                                              bool background) {
     return std::unique_ptr<CmdFull>(new CmdFull(
         std::move(cmd),  background, fn_pos_()));
+  }
+
+  inline std::unique_ptr<CmdExpression> NewCmdExpression(
+      std::unique_ptr<Cmd> cmd) {
+    return std::unique_ptr<CmdExpression>(new CmdExpression(
+        std::move(cmd), fn_pos_()));
   }
 
  private:

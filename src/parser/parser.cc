@@ -240,7 +240,7 @@ ParserResult<Statement> Parser::ParserCmdFull() {
     Advance();
   } else if (token_ == TokenKind::SEMI_COLON) {
     Advance();
-  } else if (token_.IsNot(TokenKind::NWL, TokenKind::EOS)) {
+  } else if (!TokenEndFullCmd()) {
     ErrorMsg(boost::format("unexpected token in the end of command"));
     return ParserResult<Statement>(); // Error
   }
@@ -876,6 +876,14 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
   if (token_ == TokenKind::IDENTIFIER) {
     // parser scope id: scope1::scope2::id
     return ParserScopeIdentifier();
+  } else if (token_ == TokenKind::DOLLAR_LPAREN) {
+    Advance(); // consume the token '$('
+
+    std::unique_ptr<CmdFull> cmd(ParserCmdFull().MoveAstNode<CmdFull>());
+    Advance(); // consume the token ')'
+
+    ParserResult<Expression> res(factory_.NewCmdExpression(std::move(cmd)));
+    return res;
   } else if (token_ == TokenKind::LPAREN) {
     Advance(); // consume the token '('
     ParserResult<Expression> res(ParserOrExp());
