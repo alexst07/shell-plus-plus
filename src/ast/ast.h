@@ -18,7 +18,8 @@ namespace internal {
 #define DECLARATION_NODE_LIST(V) \
   V(VariableDeclaration)         \
   V(FunctionDeclaration)         \
-  V(FunctionParam)
+  V(FunctionParam)               \
+  V(CmdDeclaration)
 
 #define ITERATION_NODE_LIST(V) \
   V(DoWhileStatement)          \
@@ -156,6 +157,7 @@ class AssignableList;
 class KeyValue;
 class DictionaryInstantiation;
 class ReturnStatement;
+class CmdDeclaration;
 
 // Position of ast node on source code
 struct Position {
@@ -261,6 +263,8 @@ class AstVisitor {
   void virtual VisitDictionaryInstantiation(DictionaryInstantiation* dic) {}
 
   void virtual VisitReturnStatement(ReturnStatement* ret) {}
+
+  void virtual VisitCmdDeclaration(CmdDeclaration* cmd_decl) {}
 };
 
 class Statement: public AstNode {
@@ -559,6 +563,35 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
     , name_(std::move(name))
     , params_(std::move(params))
     , block_(std::move(block)) {}
+};
+
+class CmdDeclaration: public Statement {
+ public:
+  virtual ~CmdDeclaration() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitCmdDeclaration(this);
+  }
+
+  Identifier* id() const noexcept {
+    return id_.get();
+  }
+
+  Block* block() const noexcept {
+    return block_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Block> block_;
+  std::unique_ptr<Identifier> id_;
+
+  CmdDeclaration(std::unique_ptr<Identifier> id, std::unique_ptr<Block> block,
+                Position position)
+      : Statement(NodeType::kReturnStatement, position)
+      , block_(std::move(block))
+      , id_(std::move(id)) {}
 };
 
 class ReturnStatement: public Statement {
