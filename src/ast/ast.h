@@ -54,7 +54,8 @@ namespace internal {
 #define PROPERTY_NODE_LIST(V) \
   V(Assignment)               \
   V(CountOperation)           \
-  V(Property)
+  V(Property)                 \
+  V(AssignableList)
 
 #define CALL_NODE_LIST(V) \
   V(Call)                 \
@@ -145,6 +146,7 @@ class CmdFull;
 class CmdExpression;
 class FunctionParam;
 class FunctionDeclaration;
+class AssignableList;
 
 // Position of ast node on source code
 struct Position {
@@ -238,6 +240,8 @@ class AstVisitor {
   void virtual VisitFunctionParam(FunctionParam* func_param) {}
 
   void virtual VisitFunctionDeclaration(FunctionDeclaration* func_decl) {}
+
+  void virtual VisitAssignableList(AssignableList* assign_list) {}
 };
 
 class Statement: public AstNode {
@@ -260,7 +264,12 @@ class Declaration: public Statement {
   Declaration(NodeType type, Position position): Statement(type, position) {}
 };
 
-class Expression: public Statement {
+// Interface class to assignable
+class AssignableInterface {
+
+};
+
+class Expression: public Statement, public AssignableInterface {
  public:
   virtual ~Expression() {}
 
@@ -317,6 +326,46 @@ class StatementList: public AstNode {
       , stmt_list_(std::move(stmt_list)) {}
 };
 
+class AssignableList: public AstNode, public AssignableInterface {
+ public:
+  virtual ~AssignableList() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitAssignableList(this);
+  }
+
+  std::vector<AstNode*> children() noexcept {
+    std::vector<AstNode*> vec;
+
+    for (auto&& node: nodes_) {
+      vec.push_back(node.get());
+    }
+
+    return vec;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<AstNode>> nodes_;
+
+  template<class T>
+  AssignableList(std::vector<std::unique_ptr<T>>&& nodes,
+                     Position position)
+      : AstNode(NodeType::kAssignableList, position) {
+    static_assert(std::is_base_of<AstNode,T>::value,
+                  "Type is not derivated from AstNode");
+
+    static_assert(std::is_base_of<AssignableInterface,T>::value,
+                  "Type not implements AssignableInterface");
+
+    for (auto&& node: nodes) {
+      nodes_.push_back(std::move(std::unique_ptr<AstNode>(
+          static_cast<AstNode*>(node.release()))));
+    }
+  }
+};
+
 class FunctionParam: public AstNode {
  public:
   virtual ~FunctionParam() {}
@@ -346,7 +395,7 @@ class FunctionParam: public AstNode {
      , variadic_(variadic) {}
 };
 
-class FunctionDeclaration: public Declaration {
+class FunctionDeclaration: public Declaration, public AssignableInterface {
  public:
   virtual ~FunctionDeclaration() {}
 
