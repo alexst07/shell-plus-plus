@@ -365,8 +365,8 @@ class KeyValue: public AstNode {
   std::unique_ptr<Expression> key_;
 
   KeyValue(std::unique_ptr<Expression> key,
-          std::unique_ptr<AssignableValue> value,
-          Position position)
+           std::unique_ptr<AssignableValue> value,
+           Position position)
       : AstNode(NodeType::kKeyValue, position)
       , key_(std::move(key))
       , value_(std::move(value)) {}
@@ -383,12 +383,13 @@ class DictionaryInstantiation: public Expression {
  private:
   friend class AstNodeFactory;
 
-  std::unique_ptr<KeyValue> key_value_;
+  std::vector<std::unique_ptr<KeyValue>> key_value_list_;
 
-  DictionaryInstantiation(std::unique_ptr<KeyValue> key_value,
-                          Position position)
+  DictionaryInstantiation(
+      std::vector<std::unique_ptr<KeyValue>>&& key_value_list,
+      Position position)
       : Expression(NodeType::kDictionaryInstantiation, position)
-      , key_value_(std::move(key_value)) {}
+      , key_value_list_(std::move(key_value_list)) {}
 };
 
 class ArrayInstantiation: public Expression {
