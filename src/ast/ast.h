@@ -17,7 +17,8 @@ namespace internal {
 
 #define DECLARATION_NODE_LIST(V) \
   V(VariableDeclaration)         \
-  V(FunctionDeclaration)
+  V(FunctionDeclaration)         \
+  V(FunctionParam)
 
 #define ITERATION_NODE_LIST(V) \
   V(DoWhileStatement)          \
@@ -142,6 +143,8 @@ class CmdPipeSequence;
 class CmdAndOr;
 class CmdFull;
 class CmdExpression;
+class FunctionParam;
+class FunctionDeclaration;
 
 // Position of ast node on source code
 struct Position {
@@ -231,6 +234,10 @@ class AstVisitor {
   void virtual VisitCmdFull(CmdFull* cmd_full) {}
 
   void virtual VisitCmdExpression(CmdExpression* cmd) {}
+
+  void virtual VisitFunctionParam(FunctionParam* func_param) {}
+
+  void virtual VisitFunctionDeclaration(FunctionDeclaration* func_decl) {}
 };
 
 class Statement: public AstNode {
@@ -241,6 +248,16 @@ class Statement: public AstNode {
 
  protected:
   Statement(NodeType type, Position position): AstNode(type, position) {}
+};
+
+class Declaration: public Statement {
+ public:
+  virtual ~Declaration() {}
+
+  virtual void Accept(AstVisitor* visitor) = 0;
+
+ protected:
+  Declaration(NodeType type, Position position): Statement(type, position) {}
 };
 
 class Expression: public Statement {
@@ -298,6 +315,82 @@ class StatementList: public AstNode {
                 Position position)
       : AstNode(NodeType::kStatementList, position)
       , stmt_list_(std::move(stmt_list)) {}
+};
+
+class FunctionParam: public AstNode {
+ public:
+  virtual ~FunctionParam() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitFunctionParam(this);
+  }
+
+  bool variadic() const noexcept {
+    return variadic_;
+  }
+
+  Identifier* id() const noexcept {
+    return id_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Identifier> id_;
+  bool variadic_;
+
+  FunctionParam(std::unique_ptr<Identifier> id, bool variadic,
+                Position position)
+     : AstNode(NodeType::kFunctionParam, position)
+     , id_(std::move(id))
+     , variadic_(variadic) {}
+};
+
+class FunctionDeclaration: public Declaration {
+ public:
+  virtual ~FunctionDeclaration() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitFunctionDeclaration(this);
+  }
+
+  bool variadic() const noexcept {
+   return params_.back()->variadic();
+  }
+
+  Identifier* name() const noexcept {
+    return name_.get();
+  }
+
+  bool is_anonymous() const noexcept {
+    if (name_) {
+      return false;
+    }
+
+    return true;
+  }
+
+  std::vector<FunctionParam*> children() noexcept {
+    std::vector<FunctionParam*> vec;
+
+    for (auto& p_exp: params_) {
+      vec.push_back(p_exp.get());
+    }
+
+    return vec;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<FunctionParam>> params_;
+  std::unique_ptr<Identifier> name_;
+
+  FunctionDeclaration(std::vector<std::unique_ptr<FunctionParam>>&& params,
+                      std::unique_ptr<Identifier> name, Position position)
+    : Declaration(NodeType::kFunctionDeclaration, position)
+    , name_(std::move(name))
+    , params_(std::move(params)) {}
 };
 
 class Block: public Statement {
