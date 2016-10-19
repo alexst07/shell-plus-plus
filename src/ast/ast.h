@@ -55,7 +55,9 @@ namespace internal {
   V(Assignment)               \
   V(CountOperation)           \
   V(Property)                 \
-  V(AssignableList)
+  V(AssignableValue)          \
+  V(AssignableList)           \
+  V(KeyValue)
 
 #define CALL_NODE_LIST(V) \
   V(Call)                 \
@@ -75,6 +77,8 @@ namespace internal {
   V(VariableProxy)              \
   V(Literal)                    \
   V(Array)                      \
+  V(ArrayInstantiation)         \
+  V(DictionaryInstantiation)    \
   V(Identifier)                 \
   V(Yield)                      \
   V(Throw)                      \
@@ -146,7 +150,11 @@ class CmdFull;
 class CmdExpression;
 class FunctionParam;
 class FunctionDeclaration;
+class ArrayInstantiation;
+class AssignableValue;
 class AssignableList;
+class KeyValue;
+class DictionaryInstantiation;
 
 // Position of ast node on source code
 struct Position {
@@ -241,7 +249,15 @@ class AstVisitor {
 
   void virtual VisitFunctionDeclaration(FunctionDeclaration* func_decl) {}
 
+  void virtual VisitArrayInstantiation(ArrayInstantiation* array) {}
+
+  void virtual VisitAssignableValue(AssignableValue* value) {}
+
   void virtual VisitAssignableList(AssignableList* assign_list) {}
+
+  void virtual VisitKeyValue(KeyValue* key_value) {}
+
+  void virtual VisitDictionaryInstantiation(DictionaryInstantiation* dic) {}
 };
 
 class Statement: public AstNode {
@@ -326,6 +342,106 @@ class StatementList: public AstNode {
       , stmt_list_(std::move(stmt_list)) {}
 };
 
+class KeyValue: public AstNode {
+ public:
+  virtual ~KeyValue() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitKeyValue(this);
+  }
+
+  Expression* key() const noexcept {
+    return key_.get();
+  }
+
+  AssignableValue* value() const noexcept {
+    return value_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<AssignableValue> value_;
+  std::unique_ptr<Expression> key_;
+
+  KeyValue(std::unique_ptr<Expression> key,
+          std::unique_ptr<AssignableValue> value,
+          Position position)
+      : AstNode(NodeType::kKeyValue, position)
+      , key_(std::move(key))
+      , value_(std::move(value)) {}
+};
+
+class DictionaryInstantiation: public Expression {
+ public:
+  virtual ~DictionaryInstantiation() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitDictionaryInstantiation(this);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<KeyValue> key_value_;
+
+  DictionaryInstantiation(std::unique_ptr<KeyValue> key_value,
+                          Position position)
+      : Expression(NodeType::kDictionaryInstantiation, position)
+      , key_value_(std::move(key_value)) {}
+};
+
+class ArrayInstantiation: public Expression {
+ public:
+  virtual ~ArrayInstantiation() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitArrayInstantiation(this);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<AssignableList> elements_;
+
+  ArrayInstantiation(std::unique_ptr<AssignableList> elements,
+                     Position position)
+      : Expression(NodeType::kArrayInstantiation, position)
+      , elements_(std::move(elements)) {}
+};
+
+class AssignableValue: public AstNode, public AssignableInterface {
+ public:
+  virtual ~AssignableValue() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitAssignableValue(this);
+  }
+
+  AstNode* value() const noexcept {
+    return value_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<AstNode> value_;
+
+ template<class T>
+ AssignableValue(std::vector<std::unique_ptr<T>>&& value,
+                    Position position)
+     : AstNode(NodeType::kAssignableValue, position) {
+   static_assert(std::is_base_of<AstNode,T>::value,
+                 "Type is not derivated from AstNode");
+
+   static_assert(std::is_base_of<AssignableInterface,T>::value,
+                 "Type not implements AssignableInterface");
+
+   value_ =  std::move(std::unique_ptr<AstNode>(
+         static_cast<AstNode*>(value.release())));
+ }
+};
+
 class AssignableList: public AstNode, public AssignableInterface {
  public:
   virtual ~AssignableList() {}
@@ -334,8 +450,8 @@ class AssignableList: public AstNode, public AssignableInterface {
     visitor->VisitAssignableList(this);
   }
 
-  std::vector<AstNode*> children() noexcept {
-    std::vector<AstNode*> vec;
+  std::vector<AssignableValue*> children() noexcept {
+    std::vector<AssignableValue*> vec;
 
     for (auto&& node: nodes_) {
       vec.push_back(node.get());
@@ -347,21 +463,13 @@ class AssignableList: public AstNode, public AssignableInterface {
  private:
   friend class AstNodeFactory;
 
-  std::vector<std::unique_ptr<AstNode>> nodes_;
+  std::vector<std::unique_ptr<AssignableValue>> nodes_;
 
-  template<class T>
-  AssignableList(std::vector<std::unique_ptr<T>>&& nodes,
-                     Position position)
+  AssignableList(std::vector<std::unique_ptr<AssignableValue>>&& nodes,
+                 Position position)
       : AstNode(NodeType::kAssignableList, position) {
-    static_assert(std::is_base_of<AstNode,T>::value,
-                  "Type is not derivated from AstNode");
-
-    static_assert(std::is_base_of<AssignableInterface,T>::value,
-                  "Type not implements AssignableInterface");
-
     for (auto&& node: nodes) {
-      nodes_.push_back(std::move(std::unique_ptr<AstNode>(
-          static_cast<AstNode*>(node.release()))));
+      nodes_.push_back(std::move(node));
     }
   }
 };
