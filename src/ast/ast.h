@@ -538,17 +538,24 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
     return vec;
   }
 
+  Block* block() const noexcept {
+    return block_.get();
+  }
+
  private:
   friend class AstNodeFactory;
 
   std::vector<std::unique_ptr<FunctionParam>> params_;
   std::unique_ptr<Identifier> name_;
+  std::unique_ptr<Block> block_;
 
   FunctionDeclaration(std::vector<std::unique_ptr<FunctionParam>>&& params,
-                      std::unique_ptr<Identifier> name, Position position)
+                      std::unique_ptr<Identifier> name,
+                      std::unique_ptr<Block> block, Position position)
     : Declaration(NodeType::kFunctionDeclaration, position)
     , name_(std::move(name))
-    , params_(std::move(params)) {}
+    , params_(std::move(params))
+    , block_(std::move(block)) {}
 };
 
 class Block: public Statement {
