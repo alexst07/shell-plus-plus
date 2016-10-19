@@ -155,6 +155,7 @@ class AssignableValue;
 class AssignableList;
 class KeyValue;
 class DictionaryInstantiation;
+class ReturnStatement;
 
 // Position of ast node on source code
 struct Position {
@@ -258,6 +259,8 @@ class AstVisitor {
   void virtual VisitKeyValue(KeyValue* key_value) {}
 
   void virtual VisitDictionaryInstantiation(DictionaryInstantiation* dic) {}
+
+  void virtual VisitReturnStatement(ReturnStatement* ret) {}
 };
 
 class Statement: public AstNode {
@@ -556,6 +559,25 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
     , name_(std::move(name))
     , params_(std::move(params))
     , block_(std::move(block)) {}
+};
+
+class ReturnStatement: public Statement {
+ public:
+  virtual ~ReturnStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitReturnStatement(this);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<AssignableList> assign_list_;
+
+  ReturnStatement(std::unique_ptr<AssignableList> assign_list,
+                  Position position)
+      : Statement(NodeType::kReturnStatement, position)
+      , assign_list_(std::move(assign_list)) {}
 };
 
 class Block: public Statement {
