@@ -440,8 +440,7 @@ class AssignableValue: public AstNode, public AssignableInterface {
   std::unique_ptr<AstNode> value_;
 
  template<class T>
- AssignableValue(std::vector<std::unique_ptr<T>>&& value,
-                    Position position)
+ AssignableValue(std::unique_ptr<T>&& value, Position position)
      : AstNode(NodeType::kAssignableValue, position) {
    static_assert(std::is_base_of<AstNode,T>::value,
                  "Type is not derivated from AstNode");
@@ -1687,6 +1686,67 @@ class AstNodeFactory {
       std::unique_ptr<Cmd> cmd) {
     return std::unique_ptr<CmdExpression>(new CmdExpression(
         std::move(cmd), fn_pos_()));
+  }
+
+  inline std::unique_ptr<FunctionParam> NewFunctionParam(
+      std::unique_ptr<Identifier> id, bool variadic) {
+    return std::unique_ptr<FunctionParam>(new FunctionParam(
+        std::move(id), variadic, fn_pos_()));
+  }
+
+  inline std::unique_ptr<FunctionDeclaration> NewFunctionDeclaration(
+      std::vector<std::unique_ptr<FunctionParam>>&& params,
+      std::unique_ptr<Identifier> name,
+      std::unique_ptr<Block> block) {
+    return std::unique_ptr<FunctionDeclaration>(new FunctionDeclaration(
+        std::move(params), std::move(name), std::move(block), fn_pos_()));
+  }
+
+  inline std::unique_ptr<ArrayInstantiation> NewArrayInstantiation(
+      std::unique_ptr<AssignableList> elements) {
+    return std::unique_ptr<ArrayInstantiation>(new ArrayInstantiation(
+        std::move(elements), fn_pos_()));
+  }
+
+  template<class T>
+  inline std::unique_ptr<AssignableValue> NewAssignableValue(
+      std::unique_ptr<T>&& value) {
+    return std::unique_ptr<AssignableValue>(new AssignableValue(
+        std::move(value), fn_pos_()));
+  }
+
+  inline std::unique_ptr<AssignableList> NewAssignableList(
+      std::vector<std::unique_ptr<AssignableValue>>&& nodes) {
+    return std::unique_ptr<AssignableList>(new AssignableList(
+        std::move(nodes), fn_pos_()));
+  }
+
+  inline std::unique_ptr<KeyValue> NewKeyValue(
+      std::unique_ptr<Expression> key, std::unique_ptr<AssignableValue> value) {
+    return std::unique_ptr<KeyValue>(new KeyValue(
+        std::move(key), std::move(value), fn_pos_()));
+  }
+
+  inline std::unique_ptr<DictionaryInstantiation> NewDictionaryInstantiation(
+      std::vector<std::unique_ptr<KeyValue>>&& key_value_list) {
+    return std::unique_ptr<DictionaryInstantiation>(new DictionaryInstantiation(
+        std::move(key_value_list), fn_pos_()));
+  }
+
+  inline std::unique_ptr<ReturnStatement> NewReturnStatement(
+      std::unique_ptr<AssignableList> assign_list) {
+    return std::unique_ptr<ReturnStatement>(new ReturnStatement(
+        std::move(assign_list), fn_pos_()));
+  }
+
+  inline std::unique_ptr<CmdDeclaration> NewCmdDeclaration(
+      std::unique_ptr<Identifier> id, std::unique_ptr<Block> block) {
+    return std::unique_ptr<CmdDeclaration>(new CmdDeclaration(
+        std::move(id), std::move(block), fn_pos_()));
+  }
+
+  inline std::unique_ptr<SubShell> NewSubShell(std::unique_ptr<Block> block) {
+    return std::unique_ptr<SubShell>(new SubShell(std::move(block), fn_pos_()));
   }
 
  private:
