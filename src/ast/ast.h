@@ -106,7 +106,8 @@ namespace internal {
   V(CmdIoRedirectList)     \
   V(CmdPipeSequence)       \
   V(CmdAndOr)              \
-  V(CmdFull)
+  V(CmdFull)               \
+  V(SubShell)
 
 #define AST_NODE_LIST(V)        \
   DECLARATION_NODE_LIST(V)      \
@@ -148,6 +149,7 @@ class FilePathCmd;
 class CmdPipeSequence;
 class CmdAndOr;
 class CmdFull;
+class SubShell;
 class CmdExpression;
 class FunctionParam;
 class FunctionDeclaration;
@@ -265,6 +267,8 @@ class AstVisitor {
   void virtual VisitReturnStatement(ReturnStatement* ret) {}
 
   void virtual VisitCmdDeclaration(CmdDeclaration* cmd_decl) {}
+
+  void virtual VisitSubShell(SubShell* sub_shell) {}
 };
 
 class Statement: public AstNode {
@@ -692,6 +696,28 @@ class CmdExpression: public Expression {
   CmdExpression(std::unique_ptr<Cmd> cmd, Position position)
     : Expression(NodeType::kCmdExpression, position)
     , cmd_(std::move(cmd)) {}
+};
+
+class SubShell: public Cmd {
+ public:
+  virtual ~SubShell() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitSubShell(this);
+  }
+
+ Block* block() const noexcept {
+  return block_.get();
+ }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Block> block_;
+
+  SubShell(std::unique_ptr<Block> block,  Position position)
+      : Cmd(NodeType::kCmdFull, position)
+      , block_(std::move(block)) {}
 };
 
 class CmdFull: public Cmd {
