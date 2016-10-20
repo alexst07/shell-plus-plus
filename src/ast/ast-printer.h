@@ -409,6 +409,101 @@ class AstPrinter: public AstVisitor {
   void virtual VisitCmdExpression(CmdExpression* cmd) {
     cmd->cmd()->Accept(this);
   }
+
+  void virtual VisitFunctionParam(FunctionParam* func_param) {
+    Level();
+    std::cout << "<function_param variadic: "
+              << (func_param->variadic()? "true": "false") << ">\n";
+    level_++;
+    func_param->id()->Accept(this);
+    level_--;
+  }
+
+  void virtual VisitFunctionDeclaration(FunctionDeclaration* func_decl) {
+    Level();
+    std::cout << "<function variadic:"
+              << (func_decl->variadic()? "true": "false") << "anonymous: "
+              << (func_decl->is_anonymous()? "true": "false") << ">\n";
+    level_++;
+    func_decl->name()->Accept(this);
+
+    auto vec = func_decl->children();
+
+    for (const auto c: vec) {
+      c->Accept(this);
+    }
+
+    level_--;
+  }
+
+  void virtual VisitArrayInstantiation(ArrayInstantiation* array) {
+    Level();
+    std::cout << "<array_instantiation>\n";
+    level_++;
+    array->assignable_list()->Accept(this);
+    level_--;
+  }
+
+  void virtual VisitAssignableValue(AssignableValue* value) {
+    Level();
+    std::cout << "<AssignableValue>\n";
+    level_++;
+    value->value()->Accept(this);
+    level_--;
+  }
+
+  void virtual VisitKeyValue(KeyValue* key_value) {
+    Level();
+    std::cout << "<key_value>\n";
+    level_++;
+    std::cout << "<key>\n";
+    level_++;
+    key_value->key()->Accept(this);
+    level_--;
+    std::cout << "<value>\n";
+    level_++;
+    key_value->value()->Accept(this);
+    level_--;
+    level_--;
+  }
+
+  void virtual VisitDictionaryInstantiation(DictionaryInstantiation* dic) {
+    Level();
+    std::cout << "<dictionary_instantiation>\n";
+    level_++;
+
+    auto vec = dic->children();
+
+    for (const auto c: vec) {
+      c->Accept(this);
+    }
+    level_--;
+  }
+
+  void virtual VisitReturnStatement(ReturnStatement* ret) {
+    Level();
+    std::cout << "<return>\n";
+    level_++;
+    ret->assign_list()->Accept(this);
+    level_--;
+  }
+
+  void virtual VisitCmdDeclaration(CmdDeclaration* cmd_decl) {
+    Level();
+    std::cout << "<cmd_declaration>\n";
+    level_++;
+    cmd_decl->id()->Accept(this);
+    cmd_decl->block()->Accept(this);
+    level_--;
+  }
+
+  void virtual VisitSubShell(SubShell* sub_shell) {
+    Level();
+    std::cout << "<sub_shell>\n";
+    level_++;
+    sub_shell->block()->Accept(this);
+    level_--;
+  }
 };
 
 }
