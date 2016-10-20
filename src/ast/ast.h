@@ -391,6 +391,16 @@ class DictionaryInstantiation: public Expression {
     visitor->VisitDictionaryInstantiation(this);
   }
 
+  std::vector<KeyValue*> children() noexcept {
+    std::vector<KeyValue*> vec;
+
+    for (auto&& e: key_value_list_) {
+      vec.push_back(e.get());
+    }
+
+    return vec;
+  }
+
  private:
   friend class AstNodeFactory;
 
@@ -409,6 +419,10 @@ class ArrayInstantiation: public Expression {
 
   virtual void Accept(AstVisitor* visitor) {
     visitor->VisitArrayInstantiation(this);
+  }
+
+  AssignableList* assignable_list() {
+    return elements_.get();
   }
 
  private:
@@ -603,6 +617,10 @@ class ReturnStatement: public Statement {
 
   virtual void Accept(AstVisitor* visitor) {
    visitor->VisitReturnStatement(this);
+  }
+
+  AssignableList* assign_list() const noexcept {
+    return assign_list_.get();
   }
 
  private:
