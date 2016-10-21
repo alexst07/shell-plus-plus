@@ -199,7 +199,7 @@ class Parser {
   ParserResult<Statement> ParserCmdPipe();
   ParserResult<Statement> ParserCmdAndOr();
   ParserResult<Statement> ParserCmdFull();
-  ParserResult<Declaration> ParserFunctionDeclaration(bool lambda);
+  ParserResult<FunctionDeclaration> ParserFunctionDeclaration(bool lambda);
 
   std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>
   ParserParamsList();
@@ -209,6 +209,8 @@ class Parser {
   ParserResult<Statement> ParserStmtDecl();
   bool IsStmtDecl();
 
+  ParserResult<AssignableValue> ParserAssignable();
+  ParserResult<AssignableList> ParserAssignableList();
 
   TokenStream ts_;
   AstNodeFactory factory_;

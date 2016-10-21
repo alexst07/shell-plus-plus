@@ -7,7 +7,7 @@ namespace internal {
 
 ParserResult<Statement> Parser::ParserStmtDecl() {
   if (token_ == TokenKind::KW_FUNC) {
-    ParserResult<Declaration> func(ParserFunctionDeclaration(false));
+    ParserResult<FunctionDeclaration> func(ParserFunctionDeclaration(false));
     return ParserResult<Statement>(func.MoveAstNode<Statement>());
   } else if (token_ == TokenKind::KW_CMD) {
     ParserResult<Declaration> cmd(ParserCmdDeclaration());
@@ -87,10 +87,11 @@ Parser::ParserParamsList() {
       std::move(vec_params), true); // Error
 }
 
-ParserResult<Declaration> Parser::ParserFunctionDeclaration(bool lambda) {
+ParserResult<FunctionDeclaration> Parser::ParserFunctionDeclaration(
+    bool lambda) {
   if (token_ != TokenKind::KW_FUNC) {
     ErrorMsg(boost::format("expected function"));
-    return ParserResult<Declaration>(); // Error
+    return ParserResult<FunctionDeclaration>(); // Error
   }
 
   Advance();
@@ -102,7 +103,7 @@ ParserResult<Declaration> Parser::ParserFunctionDeclaration(bool lambda) {
   if (!lambda) {
     if (token_ != TokenKind::IDENTIFIER) {
       ErrorMsg(boost::format("expected identifier"));
-      return ParserResult<Declaration>(); // Error
+      return ParserResult<FunctionDeclaration>(); // Error
     }
 
     id = std::move(factory_.NewIdentifier(boost::get<std::string>(
@@ -114,7 +115,7 @@ ParserResult<Declaration> Parser::ParserFunctionDeclaration(bool lambda) {
 
   if (token_ != TokenKind::LPAREN) {
     ErrorMsg(boost::format("expected token '(' got %1%")% TokenValueStr());
-    return ParserResult<Declaration>(); // Error
+    return ParserResult<FunctionDeclaration>(); // Error
   }
 
   Advance();
@@ -130,11 +131,11 @@ ParserResult<Declaration> Parser::ParserFunctionDeclaration(bool lambda) {
     std::tie(func_params, ok) = ParserParamsList();
     if (token_ != TokenKind::RPAREN) {
       ErrorMsg(boost::format("expected token ')'"));
-      return ParserResult<Declaration>(); // Error
+      return ParserResult<FunctionDeclaration>(); // Error
     }
 
     if (!ok) {
-      return ParserResult<Declaration>(); // Error
+      return ParserResult<FunctionDeclaration>(); // Error
     }
 
     Advance();
@@ -143,7 +144,7 @@ ParserResult<Declaration> Parser::ParserFunctionDeclaration(bool lambda) {
 
   std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
 
-  return ParserResult<Declaration>(factory_.NewFunctionDeclaration(
+  return ParserResult<FunctionDeclaration>(factory_.NewFunctionDeclaration(
       std::move(func_params), std::move(id), std::move(block)));
 }
 
@@ -674,6 +675,30 @@ ParserResult<ExpressionList> Parser::ParserPostExpList() {
 
   return ParserResult<ExpressionList>(factory_.NewExpressionList(
       std::move(vec_list)));
+}
+
+ParserResult<AssignableValue> Parser::ParserAssignable() {
+  if (token_ == TokenKind::KW_FUNC) {
+    ParserResult<FunctionDeclaration> flambda(ParserFunctionDeclaration(true));
+    return ParserResult<AssignableValue>(factory_
+        .NewAssignableValue<FunctionDeclaration>(flambda.MoveAstNode()));
+  } else {
+    ParserResult<Expression> exp(ParserOrExp());
+    return ParserResult<AssignableValue>(
+        factory_.NewAssignableValue<Expression>(exp.MoveAstNode()));
+  }
+}
+
+ParserResult<AssignableList> Parser::ParserAssignableList() {
+  std::vector<std::unique_ptr<AssignableValue>> vec_values;
+
+  do {
+    ParserResult<AssignableValue> value(ParserAssignable());
+    vec_values.push_back(value.MoveAstNode());
+  } while (CheckComma());
+
+  return ParserResult<AssignableList>(factory_.NewAssignableList(
+      std::move(vec_values)));
 }
 
 ParserResult<ExpressionList> Parser::ParserExpList() {
