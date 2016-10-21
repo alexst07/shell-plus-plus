@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <tuple>
 #include <boost/format.hpp>
 
 #include "token.h"
@@ -198,6 +199,14 @@ class Parser {
   ParserResult<Statement> ParserCmdPipe();
   ParserResult<Statement> ParserCmdAndOr();
   ParserResult<Statement> ParserCmdFull();
+  ParserResult<Declaration> ParserFunctionDeclaration(bool lambda);
+
+  std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>
+  ParserParamsList();
+
+  ParserResult<Statement> ParserStmtDecl();
+  bool IsStmtDecl();
+
 
   TokenStream ts_;
   AstNodeFactory factory_;

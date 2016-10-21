@@ -5,6 +5,121 @@
 namespace setti {
 namespace internal {
 
+ParserResult<Statement> Parser::ParserStmtDecl() {
+  if (token_ == TokenKind::KW_FUNC) {
+    ParserResult<Declaration> func(ParserFunctionDeclaration(false));
+    return ParserResult<Statement>(func.MoveAstNode<Statement>());
+  }
+
+  return ParserResult<Statement>(); // error
+}
+
+bool Parser::IsStmtDecl() {
+  return token_.IsAny(TokenKind::KW_FUNC);
+}
+
+std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>
+Parser::ParserParamsList() {
+  std::vector<std::unique_ptr<FunctionParam>> vec_params;
+  while (true) {
+    if (token_ != TokenKind::IDENTIFIER) {
+      ErrorMsg(boost::format("expected identifier"));
+      return std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>(
+          std::move(vec_params), false); // Error
+    }
+
+    std::unique_ptr<Identifier> id(factory_.NewIdentifier(
+        boost::get<std::string>(token_.GetValue())));
+
+    Advance();
+    ValidToken();
+
+    bool variadic = false;
+
+    if (token_ == TokenKind::ELLIPSIS) {
+      variadic = true;
+      Advance();
+      ValidToken();
+    }
+
+    std::unique_ptr<FunctionParam> param(factory_.NewFunctionParam(
+        std::move(id), variadic));
+    vec_params.push_back(std::move(param));
+
+    // if the token is comma (,) goes to next parameter
+    // if not, break the loop to return
+    if (token_ == TokenKind::COMMA) {
+      Advance();
+      ValidToken();
+    } else {
+      break;
+    }
+  }
+
+  return std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>(
+      std::move(vec_params), true); // Error
+}
+
+ParserResult<Declaration> Parser::ParserFunctionDeclaration(bool lambda) {
+  if (token_ != TokenKind::KW_FUNC) {
+    ErrorMsg(boost::format("expected function"));
+    return ParserResult<Declaration>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  std::unique_ptr<Identifier> id;
+
+  // If is a lambda function, the function doesn't have identifier name
+  if (!lambda) {
+    if (token_ != TokenKind::IDENTIFIER) {
+      ErrorMsg(boost::format("expected identifier"));
+      return ParserResult<Declaration>(); // Error
+    }
+
+    id = std::move(factory_.NewIdentifier(boost::get<std::string>(
+        token_.GetValue()), std::move(nullptr)));
+
+    Advance();
+    ValidToken();
+  }
+
+  if (token_ != TokenKind::LPAREN) {
+    ErrorMsg(boost::format("expected token '(' got %1%")% TokenValueStr());
+    return ParserResult<Declaration>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  std::vector<std::unique_ptr<FunctionParam>> func_params;
+
+  if (token_ == TokenKind::RPAREN) {
+    Advance();
+    ValidToken();
+  } else {
+    bool ok = true;
+    std::tie(func_params, ok) = ParserParamsList();
+    if (token_ != TokenKind::RPAREN) {
+      ErrorMsg(boost::format("expected token ')'"));
+      return ParserResult<Declaration>(); // Error
+    }
+
+    if (!ok) {
+      return ParserResult<Declaration>(); // Error
+    }
+
+    Advance();
+    ValidToken();
+  }
+
+  std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
+
+  return ParserResult<Declaration>(factory_.NewFunctionDeclaration(
+      std::move(func_params), std::move(id), std::move(block)));
+}
+
 ParserResult<Statement> Parser::ParserForInStmt() {
   if (token_ != TokenKind::KW_FOR) {
     ErrorMsg(boost::format("expected for statement"));
@@ -220,6 +335,8 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserForInStmt();
   } else if (token_ == TokenKind::LBRACE) {
     return ParserBlock();
+  } else if (IsStmtDecl()) {
+    return ParserStmtDecl();
   } else if (MatchLangStmt()) {
     return ParserSimpleStmt();
   } else {
