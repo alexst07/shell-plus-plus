@@ -537,6 +537,10 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
   }
 
   bool variadic() const noexcept {
+   if (params_.empty()) {
+     return false;
+   }
+
    return params_.back()->variadic();
   }
 

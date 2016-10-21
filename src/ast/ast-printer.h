@@ -425,7 +425,10 @@ class AstPrinter: public AstVisitor {
               << (func_decl->variadic()? "true": "false") << "anonymous: "
               << (func_decl->is_anonymous()? "true": "false") << ">\n";
     level_++;
-    func_decl->name()->Accept(this);
+
+    if (!func_decl->is_anonymous()) {
+      func_decl->name()->Accept(this);
+    }
 
     auto vec = func_decl->children();
 
@@ -505,6 +508,12 @@ class AstPrinter: public AstVisitor {
     level_++;
     sub_shell->block()->Accept(this);
     level_--;
+  }
+
+  void virtual VisitAssignableList(AssignableList* assign_list) {
+    for (auto& e: assign_list->children()) {
+      e->Accept(this);
+    }
   }
 };
 
