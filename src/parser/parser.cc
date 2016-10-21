@@ -353,6 +353,8 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserWhileStmt();
   } else if (token_ == TokenKind::KW_BREAK) {
     return ParserBreakStmt();
+  } else if (token_ == TokenKind::KW_RETURN) {
+    return ParserReturnStmt();
   } else if (token_ == TokenKind::KW_CASE) {
     return ParserCaseStmt();
   } else if (token_ == TokenKind::KW_DEFAULT) {
@@ -581,6 +583,20 @@ ParserResult<Expression> Parser::ParserExpCmd() {
   Advance();
 
   return exp;
+}
+
+ParserResult<Statement> Parser::ParserReturnStmt() {
+  if (token_ != TokenKind::KW_RETURN) {
+    ErrorMsg(boost::format("expected return token, got %1%")% TokenValueStr());
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+
+  ParserResult<AssignableList> list(ParserAssignableList());
+
+  return ParserResult<Statement>(factory_.NewReturnStatement(
+      std::move(list.MoveAstNode())));
 }
 
 ParserResult<Statement> Parser::ParserBreakStmt() {

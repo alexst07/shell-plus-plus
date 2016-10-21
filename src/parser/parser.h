@@ -184,6 +184,7 @@ class Parser {
   ParserResult<StatementList> ParserStmtList();
   ParserResult<Statement> ParserBlock();
   ParserResult<Statement> ParserBreakStmt();
+  ParserResult<Statement> ParserReturnStmt();
   ParserResult<Statement> ParserIfStmt();
   ParserResult<Statement> ParserWhileStmt();
   ParserResult<Statement> ParserSwitchStmt();
