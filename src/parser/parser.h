@@ -204,6 +204,8 @@ class Parser {
   std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>
   ParserParamsList();
 
+  ParserResult<Declaration> ParserCmdDeclaration();
+
   ParserResult<Statement> ParserStmtDecl();
   bool IsStmtDecl();
 

@@ -9,13 +9,40 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
   if (token_ == TokenKind::KW_FUNC) {
     ParserResult<Declaration> func(ParserFunctionDeclaration(false));
     return ParserResult<Statement>(func.MoveAstNode<Statement>());
+  } else if (token_ == TokenKind::KW_CMD) {
+    ParserResult<Declaration> cmd(ParserCmdDeclaration());
+    return ParserResult<Statement>(cmd.MoveAstNode<Statement>());
   }
 
   return ParserResult<Statement>(); // error
 }
 
 bool Parser::IsStmtDecl() {
-  return token_.IsAny(TokenKind::KW_FUNC);
+  return token_.IsAny(TokenKind::KW_FUNC, TokenKind::KW_CMD);
+}
+
+ParserResult<Declaration> Parser::ParserCmdDeclaration() {
+  if (token_ != TokenKind::KW_CMD) {
+    ErrorMsg(boost::format("expected cmd"));
+    return ParserResult<Declaration>(); // Error
+  }
+
+  Advance();
+
+  if (token_ != TokenKind::IDENTIFIER) {
+    ErrorMsg(boost::format("expected identifier"));
+    return ParserResult<Declaration>(); // Error
+  }
+
+  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
+      boost::get<std::string>(token_.GetValue())));
+
+  Advance();
+
+  std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
+
+  return ParserResult<Declaration>(
+      factory_.NewCmdDeclaration(std::move(id), std::move(block)));
 }
 
 std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>
