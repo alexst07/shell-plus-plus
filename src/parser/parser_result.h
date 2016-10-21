@@ -16,10 +16,13 @@ namespace internal {
 template<class T>
 class ParserResult {
  public:
-  explicit ParserResult(std::unique_ptr<T>&& uptr) noexcept: uptr_(std::move(uptr)) {}
+  explicit ParserResult(std::unique_ptr<T>&& uptr) noexcept
+      : uptr_(std::move(uptr)) {}
 
   template<class U>
-  explicit ParserResult(std::unique_ptr<U>&& uptr) noexcept: uptr_(std::move(uptr)) {}
+  explicit ParserResult(std::unique_ptr<U>&& uptr) noexcept
+      : uptr_(std::move(std::unique_ptr<T>(
+            static_cast<T*>(uptr.release())))) {}
 
   constexpr ParserResult() noexcept: uptr_(nullptr) {}
   constexpr ParserResult(nullptr_t) noexcept : ParserResult() {}
