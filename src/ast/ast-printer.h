@@ -433,6 +433,8 @@ class AstPrinter: public AstVisitor {
       c->Accept(this);
     }
 
+    func_decl->block()->Accept(this);
+
     level_--;
   }
 
