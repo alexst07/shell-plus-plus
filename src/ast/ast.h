@@ -582,7 +582,7 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
     , block_(std::move(block)) {}
 };
 
-class CmdDeclaration: public Statement {
+class CmdDeclaration: public Declaration {
  public:
   virtual ~CmdDeclaration() {}
 
@@ -606,7 +606,7 @@ class CmdDeclaration: public Statement {
 
   CmdDeclaration(std::unique_ptr<Identifier> id, std::unique_ptr<Block> block,
                 Position position)
-      : Statement(NodeType::kReturnStatement, position)
+      : Declaration(NodeType::kReturnStatement, position)
       , block_(std::move(block))
       , id_(std::move(id)) {}
 };
