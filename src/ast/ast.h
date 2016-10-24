@@ -485,6 +485,10 @@ class AssignableList: public AstNode, public AssignableInterface {
     return vec;
   }
 
+  bool IsEmpty() const noexcept {
+    return nodes_.empty();
+  }
+
  private:
   friend class AstNodeFactory;
 
@@ -1490,25 +1494,25 @@ class FunctionCall: public Expression {
     return func_exp_.get();
   }
 
-  bool IsListExpEmpty() const noexcept {
-    return exp_list_->IsEmpty();
+  bool IsRvalueListEmpty() const noexcept {
+    return rvalue_list_->IsEmpty();
   }
 
-  ExpressionList* exp_list() {
-    return exp_list_.get();
+  AssignableList* rvalue_list() {
+    return rvalue_list_.get();
   }
 
  private:
   friend class AstNodeFactory;
 
   std::unique_ptr<Expression> func_exp_;
-  std::unique_ptr<ExpressionList> exp_list_;
+  std::unique_ptr<AssignableList> rvalue_list_;
 
   FunctionCall(std::unique_ptr<Expression> func_exp,
-               std::unique_ptr<ExpressionList> exp_list, Position position)
+               std::unique_ptr<AssignableList> rvalue_list, Position position)
       : Expression(NodeType::kFunctionCall, position)
       , func_exp_(std::move(func_exp))
-      , exp_list_(std::move(exp_list)) {}
+      , rvalue_list_(std::move(rvalue_list)) {}
 };
 
 class Literal: public Expression {
@@ -1608,9 +1612,9 @@ class AstNodeFactory {
 
   inline std::unique_ptr<FunctionCall> NewFunctionCall(
       std::unique_ptr<Expression> func_exp,
-      std::unique_ptr<ExpressionList> exp_list) {
+      std::unique_ptr<AssignableList> rvalue_list) {
     return std::unique_ptr<FunctionCall>(new FunctionCall(
-        std::move(func_exp), std::move(exp_list), fn_pos_()));
+        std::move(func_exp), std::move(rvalue_list), fn_pos_()));
   }
 
   inline std::unique_ptr<ExpressionStatement> NewExpressionStatement(

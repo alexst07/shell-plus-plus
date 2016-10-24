@@ -1017,18 +1017,18 @@ ParserResult<Expression> Parser::ParserPostExp() {
       // parser function call
       Advance();
 
-      std::vector<std::unique_ptr<Expression>> exp_list;
+      std::vector<std::unique_ptr<AssignableValue>> rlist;
 
       if (ValidToken().Is(TokenKind::RPAREN)) {
         // empty expression list
         exp = factory_.NewFunctionCall(
-            exp.MoveAstNode(), factory_.NewExpressionList(
-                std::move(exp_list)));
+            exp.MoveAstNode(), factory_.NewAssignableList(
+                std::move(rlist)));
       } else {
         // Parser expression list separted by (,) comma
-        auto res_exp_list = ParserExpList();
+        auto rvalue_list = ParserAssignableList();
         exp = factory_.NewFunctionCall(exp.MoveAstNode(),
-                                       res_exp_list.MoveAstNode());
+                                       rvalue_list.MoveAstNode());
 
         if (ValidToken().IsNot(TokenKind::RPAREN)) {
           ErrorMsg(boost::format("Expected close right paren"));

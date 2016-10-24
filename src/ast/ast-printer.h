@@ -177,9 +177,9 @@ class AstPrinter: public AstVisitor {
     level_--;
 
     Level();
-    std::cout << "<function_exp_list>\n";
+    std::cout << "<function_assignable_list>\n";
     level_++;
-    fn->exp_list()->Accept(this);
+    fn->rvalue_list()->Accept(this);
     level_--;
     level_--;
   }
