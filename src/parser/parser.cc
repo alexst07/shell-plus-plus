@@ -1068,11 +1068,33 @@ ParserResult<Expression> Parser::ParserScopeIdentifier() {
   return res;
 }
 
+ParserResult<Expression> Parser::ParserArrayInstantiation() {
+  // Advance token '[' and goes until a token different from new line
+  Advance();
+  ValidToken();
+
+  auto rvalue_list = ParserAssignableList();
+
+  ValidToken();
+  if (token_ != TokenKind::RBRACKET) {
+    ErrorMsg(boost::format("Expected token ]"));
+    return ParserResult<Expression>(); // Error
+  }
+
+  Advance();
+
+  ParserResult<Expression> arr(factory_.NewArrayInstantiation(
+      rvalue_list.MoveAstNode()));
+
+  return arr;
+}
+
 ParserResult<Expression> Parser::ParserPrimaryExp() {
   if (token_ == TokenKind::IDENTIFIER) {
     // parser scope id: scope1::scope2::id
     return ParserScopeIdentifier();
   } else if (token_ == TokenKind::DOLLAR_LPAREN) {
+    // parser expression command: $(ls)
     Advance(); // consume the token '$('
 
     std::unique_ptr<CmdFull> cmd(ParserCmdFull().MoveAstNode<CmdFull>());
@@ -1080,7 +1102,11 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
 
     ParserResult<Expression> res(factory_.NewCmdExpression(std::move(cmd)));
     return res;
+  } else if (token_ == TokenKind::LBRACKET) {
+    // parser array instantiation: [a, b, c]
+    return ParserArrayInstantiation();
   } else if (token_ == TokenKind::LPAREN) {
+    // parser expression: (4+3)
     Advance(); // consume the token '('
     ParserResult<Expression> res(ParserOrExp());
 

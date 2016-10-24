@@ -218,6 +218,7 @@ class Parser {
 
   ParserResult<AssignableValue> ParserAssignable();
   ParserResult<AssignableList> ParserAssignableList();
+  ParserResult<Expression> ParserArrayInstantiation();
 
   TokenStream ts_;
   AstNodeFactory factory_;
