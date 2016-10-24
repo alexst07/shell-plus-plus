@@ -638,10 +638,12 @@ ParserResult<Statement> Parser::ParserSimpleStmt() {
   enum Type {kErro, kAssign, kExpStm};
   Type type = kErro;
   std::vector<std::unique_ptr<Expression>> vec_list;
-  ParserResult<ExpressionList> rexp_list;
+  ParserResult<AssignableList> rvalue_list;
   size_t num_comma = 0;
   TokenKind kind;
 
+  // parser the left side, if there is a comma, or assign token
+  // the stmt must has a right value list
   do {
     ParserResult<Expression> exp = ParserPostExp();
     vec_list.push_back(exp.MoveAstNode());
@@ -656,6 +658,7 @@ ParserResult<Statement> Parser::ParserSimpleStmt() {
 
   type = kExpStm;
 
+  // After find a assign token, parser an assignable list
   if (Token::IsAssignToken(token_.GetKind())) {
     type = Type::kAssign;
     kind = token_.GetKind();
@@ -663,16 +666,18 @@ ParserResult<Statement> Parser::ParserSimpleStmt() {
     Advance(); // consume assign token
     ValidToken();
 
-    rexp_list = ParserExpList();
+    rvalue_list = ParserAssignableList();
   }
 
   switch (type) {
+    // return an assignment statement
     case Type::kAssign:
       return ParserResult<Statement>(factory_.NewAssignmentStatement(
           kind, factory_.NewExpressionList(std::move(vec_list)),
-          rexp_list.MoveAstNode()));
+          rvalue_list.MoveAstNode()));
       break;
 
+    // return an expression statement
     case Type::kExpStm:
       // if there is no assing token, so it is a statement expression
       // function call is the only expression accept, this check is

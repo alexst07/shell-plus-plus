@@ -1217,8 +1217,16 @@ class AssignmentStatement: public Statement {
     return lexp_.get();
   }
 
-  ExpressionList* rexp_list() const noexcept {
-    return rexp_.get();
+  AssignableList* rvalue_list() const noexcept {
+    return rvalue_.get();
+  }
+
+  bool has_rvalue() const noexcept {
+    if (rvalue_) {
+      return true;
+    }
+
+    return false;
   }
 
  private:
@@ -1226,16 +1234,16 @@ class AssignmentStatement: public Statement {
 
   TokenKind assign_kind_;
   std::unique_ptr<ExpressionList> lexp_;
-  std::unique_ptr<ExpressionList> rexp_;
+  std::unique_ptr<AssignableList> rvalue_;
 
   AssignmentStatement(TokenKind assign_kind,
                       std::unique_ptr<ExpressionList> lexp,
-                      std::unique_ptr<ExpressionList> rexp_,
+                      std::unique_ptr<AssignableList> rvalue,
                       Position position)
       : Statement(NodeType::kAssignmentStatement, position)
       , assign_kind_(assign_kind)
       , lexp_(std::move(lexp))
-      , rexp_(std::move(rexp_)) {}
+      , rvalue_(std::move(rvalue)) {}
 };
 
 class ExpressionStatement: public Statement {
@@ -1581,9 +1589,9 @@ class AstNodeFactory {
 
   inline std::unique_ptr<AssignmentStatement> NewAssignmentStatement(
       TokenKind assign_kind, std::unique_ptr<ExpressionList> lexp_list,
-      std::unique_ptr<ExpressionList> rexp_list) {
+      std::unique_ptr<AssignableList> rvalue_list) {
     return std::unique_ptr<AssignmentStatement>(new AssignmentStatement(
-        assign_kind, std::move(lexp_list), std::move(rexp_list), fn_pos_()));
+        assign_kind, std::move(lexp_list), std::move(rvalue_list), fn_pos_()));
   }
 
   inline std::unique_ptr<ExpressionList> NewExpressionList(

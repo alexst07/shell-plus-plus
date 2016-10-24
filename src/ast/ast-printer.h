@@ -141,9 +141,11 @@ class AstPrinter: public AstVisitor {
     Level();
     std::cout << "<kind: " << static_cast<int>(assign->assign_kind()) << ">\n";
 
-    level_++;
-    assign->rexp_list()->Accept(this);
-    level_--;
+    if (assign->has_rvalue()) {
+      level_++;
+      assign->rvalue_list()->Accept(this);
+      level_--;
+    }
   }
 
   void virtual VisitExpressionList(ExpressionList* list) {
