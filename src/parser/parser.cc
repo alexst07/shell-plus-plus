@@ -593,6 +593,12 @@ ParserResult<Statement> Parser::ParserReturnStmt() {
 
   Advance();
 
+  // Parser return for void functions
+  if (IsEndOfStmt()) {
+    return ParserResult<Statement>(factory_.NewReturnStatement(
+        std::unique_ptr<AssignableList>(nullptr)));
+  }
+
   ParserResult<AssignableList> list(ParserAssignableList());
 
   return ParserResult<Statement>(factory_.NewReturnStatement(

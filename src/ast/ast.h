@@ -610,7 +610,7 @@ class CmdDeclaration: public Declaration {
 
   CmdDeclaration(std::unique_ptr<Identifier> id, std::unique_ptr<Block> block,
                 Position position)
-      : Declaration(NodeType::kReturnStatement, position)
+      : Declaration(NodeType::kCmdDeclaration, position)
       , block_(std::move(block))
       , id_(std::move(id)) {}
 };
@@ -625,6 +625,14 @@ class ReturnStatement: public Statement {
 
   AssignableList* assign_list() const noexcept {
     return assign_list_.get();
+  }
+
+  bool is_void() const noexcept {
+    if (assign_list_) {
+      return false;
+    }
+
+    return true;
   }
 
  private:

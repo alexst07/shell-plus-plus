@@ -489,7 +489,11 @@ class AstPrinter: public AstVisitor {
     Level();
     std::cout << "<return>\n";
     level_++;
-    ret->assign_list()->Accept(this);
+
+    if (!ret->is_void()) {
+      ret->assign_list()->Accept(this);
+    }
+
     level_--;
   }
 

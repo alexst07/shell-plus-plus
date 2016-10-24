@@ -93,6 +93,12 @@ class Parser {
     return pos;
   }
 
+  // Say if the current token is a token used to end a stmt
+  bool IsEndOfStmt() {
+    return token_.IsAny(TokenKind::NWL, TokenKind::SEMI_COLON,
+                        TokenKind::RBRACE);
+  }
+
   // Try match with any language statement or declaration
   bool MatchLangStmt() {
     const Token& tok(CurrentToken());
