@@ -85,7 +85,7 @@ Token Lexer::ScanString() {
 
   // Check blank char after string
   char check_blank = c_;
-  return Select(TokenKind::STRING_LITERAL, str, check_blank);
+  return GetToken(TokenKind::STRING_LITERAL, str, check_blank);
 }
 
 Token Lexer::ScanIdentifier() {
