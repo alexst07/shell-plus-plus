@@ -220,6 +220,9 @@ class Parser {
   ParserResult<AssignableList> ParserAssignableList();
   ParserResult<Expression> ParserArrayInstantiation();
 
+  std::tuple<std::unique_ptr<KeyValue>, bool> ParserKeyValue();
+  ParserResult<Expression> ParserDictionary();
+
   TokenStream ts_;
   AstNodeFactory factory_;
   uint nerror_;

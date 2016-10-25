@@ -1043,6 +1043,66 @@ ParserResult<Expression> Parser::ParserPostExp() {
   return exp;
 }
 
+std::tuple<std::unique_ptr<KeyValue>, bool> Parser::ParserKeyValue() {
+  ParserResult<Expression> exp(ParserOrExp());
+
+  ValidToken();
+
+  if (token_ != TokenKind::COLON) {
+    ErrorMsg(boost::format("Expected token ':', got %1%")
+        % Token::TokenValueToStr(token_.GetValue()));
+
+    return std::tuple<std::unique_ptr<KeyValue>, bool>(
+        std::unique_ptr<KeyValue>(nullptr), false);
+  }
+
+  Advance();
+  ValidToken();
+
+  ParserResult<AssignableValue> rvalue(ParserAssignable());
+
+  std::unique_ptr<KeyValue> key_value(
+      factory_.NewKeyValue(exp.MoveAstNode(), rvalue.MoveAstNode()));
+
+  return std::tuple<std::unique_ptr<KeyValue>, bool>(
+      std::move(key_value), true);
+}
+
+ParserResult<Expression> Parser::ParserDictionary() {
+  // Advance token {
+  Advance();
+  ValidToken();
+
+  std::vector<std::unique_ptr<KeyValue>> key_value_list;
+
+  if (token_ == TokenKind::RBRACE) {
+    ParserResult<Expression> dic(factory_.NewDictionaryInstantiation(
+        std::move(key_value_list)));
+    return dic;
+  }
+
+  do {
+    std::unique_ptr<KeyValue> key_value;
+    bool ok;
+    std::tie(key_value, ok) = ParserKeyValue();;
+    key_value_list.push_back(std::move(key_value));
+  } while (CheckComma());
+
+  ValidToken();
+
+  if (token_ != TokenKind::RBRACE) {
+    ErrorMsg(boost::format("Expected token '}', got %1%")
+        % Token::TokenValueToStr(token_.GetValue()));
+
+    return ParserResult<Expression>();
+  }
+
+  Advance();
+
+  return ParserResult<Expression>(factory_.NewDictionaryInstantiation(
+      std::move(key_value_list)));
+}
+
 ParserResult<Expression> Parser::ParserScopeIdentifier() {
   std::unique_ptr<Identifier> id(
       factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
@@ -1105,6 +1165,9 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
   } else if (token_ == TokenKind::LBRACKET) {
     // parser array instantiation: [a, b, c]
     return ParserArrayInstantiation();
+  } else if (token_ == TokenKind::LBRACE) {
+    // parser dictionary instantiation: {a, b, c}
+    return ParserDictionary();
   } else if (token_ == TokenKind::LPAREN) {
     // parser expression: (4+3)
     Advance(); // consume the token '('
