@@ -991,7 +991,7 @@ ParserResult<Expression> Parser::ParserPostExp() {
       // parser array
       Advance();
       ValidToken();
-      ParserResult<Expression> index_exp(ParserArithExp());
+      ParserResult<Expression> index_exp(ParserSlice());
 
       if (ValidToken().IsNot(TokenKind::RBRACKET)) {
         ErrorMsg(boost::format("Expected ']' in the end of expression"));
@@ -1157,6 +1157,54 @@ ParserResult<Expression> Parser::ParserArrayInstantiation() {
       rvalue_list.MoveAstNode()));
 
   return arr;
+}
+
+ParserResult<Expression> Parser::ParserSlice() {
+  bool is_slice = false;
+  bool has_start = false;
+  bool has_end = false;
+
+  ParserResult<Expression> start_exp;
+  ParserResult<Expression> end_exp;
+
+  ValidToken();
+
+  // Verify if slice has the first part => start:end
+  if (token_ == TokenKind::COLON) {
+    goto END_PART;
+  }
+
+  start_exp = ParserOrExp();
+  has_start = true;
+
+  ValidToken();
+
+  END_PART:
+  if (token_ == TokenKind::COLON) {
+    is_slice = true;
+    Advance();
+    ValidToken();
+
+    // Verify if slice has the second part => start:end
+    if (token_.IsAny(TokenKind::RBRACKET, TokenKind::COMMA)) {
+      goto FINISH;
+    }
+
+    // Parser expression only if slice
+    end_exp = ParserOrExp();
+    has_end = true;
+  }
+
+  FINISH:
+  if (is_slice) {
+    return ParserResult<Expression>(factory_.NewSlice(
+        has_start? start_exp.MoveAstNode() : nullptr,
+        has_end? end_exp.MoveAstNode() : nullptr));
+  } else {
+    // If it is not slice, only the start expression is valid
+    // because only slice has token :
+    return start_exp;
+  }
 }
 
 ParserResult<Expression> Parser::ParserPrimaryExp() {

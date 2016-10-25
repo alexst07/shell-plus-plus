@@ -90,6 +90,7 @@ namespace internal {
   V(ExpressionList)             \
   V(FunctionCall)               \
   V(CmdExpression)              \
+  V(Slice)                      \
   V(ThisFunction)               \
   V(SuperPropertyReference)     \
   V(SuperCallReference)         \
@@ -160,6 +161,7 @@ class KeyValue;
 class DictionaryInstantiation;
 class ReturnStatement;
 class CmdDeclaration;
+class Slice;
 
 // Position of ast node on source code
 struct Position {
@@ -269,6 +271,8 @@ class AstVisitor {
   void virtual VisitCmdDeclaration(CmdDeclaration* cmd_decl) {}
 
   void virtual VisitSubShell(SubShell* sub_shell) {}
+
+  void virtual VisitSlice(Slice* slice) {}
 };
 
 class Statement: public AstNode {
@@ -1432,6 +1436,51 @@ class UnaryOperation: public Expression {
       , exp_(std::move(exp)) {}
 };
 
+class Slice: public Expression {
+ public:
+ virtual ~Slice() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitSlice(this);
+  }
+
+  Expression* start_exp() const noexcept {
+    return start_exp_.get();
+  }
+
+  Expression* end_exp() const noexcept {
+    return end_exp_.get();
+  }
+
+  bool has_start_exp() const noexcept {
+    if (start_exp_) {
+      return true;
+    }
+
+    return false;
+  }
+
+  bool has_end_exp() const noexcept {
+    if (end_exp_) {
+      return true;
+    }
+
+    return false;
+  }
+
+ private:
+ friend class AstNodeFactory;
+
+ std::unique_ptr<Expression> start_exp_;
+ std::unique_ptr<Expression> end_exp_;
+
+ Slice(std::unique_ptr<Expression> start_exp,
+       std::unique_ptr<Expression> end_exp, Position position)
+     : Expression(NodeType::kSlice, position)
+     , start_exp_(std::move(start_exp))
+     , end_exp_(std::move(end_exp)) {}
+};
+
 class Array: public Expression {
  public:
   virtual ~Array() {}
@@ -1797,6 +1846,12 @@ class AstNodeFactory {
 
   inline std::unique_ptr<SubShell> NewSubShell(std::unique_ptr<Block> block) {
     return std::unique_ptr<SubShell>(new SubShell(std::move(block), fn_pos_()));
+  }
+
+  inline std::unique_ptr<Slice> NewSlice(std::unique_ptr<Expression> start_exp,
+                                         std::unique_ptr<Expression> end_exp) {
+    return std::unique_ptr<Slice>(
+        new Slice(std::move(start_exp), std::move(end_exp), fn_pos_()));
   }
 
  private:

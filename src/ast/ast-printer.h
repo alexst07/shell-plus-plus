@@ -523,6 +523,20 @@ class AstPrinter: public AstVisitor {
       e->Accept(this);
     }
   }
+
+  void virtual VisitSlice(Slice *slice) {
+    Level();
+    std::cout << "<slice>\n";
+    level_++;
+    if (slice->has_start_exp()) {
+      slice->start_exp()->Accept(this);
+    }
+
+    if (slice->has_end_exp()) {
+      slice->end_exp()->Accept(this);
+    }
+    level_--;
+  }
 };
 
 }

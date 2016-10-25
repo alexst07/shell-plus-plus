@@ -223,6 +223,8 @@ class Parser {
   std::tuple<std::unique_ptr<KeyValue>, bool> ParserKeyValue();
   ParserResult<Expression> ParserDictionary();
 
+  ParserResult<Expression> ParserSlice();
+
   TokenStream ts_;
   AstNodeFactory factory_;
   uint nerror_;
