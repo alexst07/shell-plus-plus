@@ -446,9 +446,11 @@ class AstPrinter: public AstVisitor {
   void virtual VisitArrayInstantiation(ArrayInstantiation* array) {
     Level();
     std::cout << "<array_instantiation>\n";
-    level_++;
-    array->assignable_list()->Accept(this);
-    level_--;
+    if (array->valid_elements()) {
+      level_++;
+      array->assignable_list()->Accept(this);
+      level_--;
+    }
   }
 
   void virtual VisitAssignableValue(AssignableValue* value) {

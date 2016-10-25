@@ -425,6 +425,14 @@ class ArrayInstantiation: public Expression {
     return elements_.get();
   }
 
+  bool valid_elements() const noexcept {
+    if (elements_) {
+      return true;
+    }
+
+    return false;
+  }
+
  private:
   friend class AstNodeFactory;
 

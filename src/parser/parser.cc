@@ -1078,13 +1078,14 @@ ParserResult<Expression> Parser::ParserDictionary() {
   if (token_ == TokenKind::RBRACE) {
     ParserResult<Expression> dic(factory_.NewDictionaryInstantiation(
         std::move(key_value_list)));
+    Advance();
     return dic;
   }
 
   do {
     std::unique_ptr<KeyValue> key_value;
     bool ok;
-    std::tie(key_value, ok) = ParserKeyValue();;
+    std::tie(key_value, ok) = ParserKeyValue();
     key_value_list.push_back(std::move(key_value));
   } while (CheckComma());
 
@@ -1132,6 +1133,15 @@ ParserResult<Expression> Parser::ParserArrayInstantiation() {
   // Advance token '[' and goes until a token different from new line
   Advance();
   ValidToken();
+
+  // Parser empty array
+  if (token_ == TokenKind::RBRACKET) {
+    ParserResult<Expression> arr(factory_.NewArrayInstantiation(
+      std::unique_ptr<AssignableList>(nullptr)));
+
+    Advance();
+    return arr;
+  }
 
   auto rvalue_list = ParserAssignableList();
 
