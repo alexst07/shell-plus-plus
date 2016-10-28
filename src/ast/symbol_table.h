@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <boost/format.hpp>
 
+#include "obj_type.h"
+
 namespace setti {
 namespace internal {
 
@@ -15,6 +17,7 @@ class SymbolAttr {
 
  private:
   bool global_;
+  std::unique_ptr<Object> value_;
 
 };
 

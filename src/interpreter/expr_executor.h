@@ -13,20 +13,17 @@ namespace internal {
 
 class Executor {
  public:
-  virtual void Exec() = 0;
+
 };
 
 class ExpressionExecutor: public Executor {
  public:
-  virtual void Exec() = 0;
-}
+  // Entry point to execute expression
+  std::unique_ptr<Object> Exec(AstNode* literal);
 
-class LiteralExecutor {
- public:
-  LiteralExecutor(Literal* literal);
+  // Executes literal const and return an object with its value
+  std::unique_ptr<Object> ExecLiteral(AstNode* literal);
 
- private:
-  Literal* literal_;
 };
 
 }

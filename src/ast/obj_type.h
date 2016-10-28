@@ -11,19 +11,40 @@
 namespace setti {
 namespace internal {
 
-class ObjType {
-};
-
-class Method {
-
-};
-
-class ObjTypeNative: public ObjType {
+class Object {
  public:
+  enum class ObjectType : uint8_t {
+    INT,
+    REAL,
+    STRING,
+    ARRAY,
+    MAP,
+    TUPLE,
+    CUSTON
+  };
 
-  std::tuple<bool> GetMethod(const std::string& name);
+  virtual ~Object() {}
+
+  inline ObjectType type() {
+    return type_;
+  }
+
  private:
-  SymbolTable sym_table_;
+  ObjectType type_;
+
+ protected:
+  Object(ObjectType type): type_(type) {}
+};
+
+class IntObject: public Object {
+ public:
+  IntObject(int value): Object(INT), value_(value) {}
+  virtual ~IntObject() {}
+
+  inline int value() const noexcept { return value_; }
+
+ private:
+  int value_;
 };
 
 
