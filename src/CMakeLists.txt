@@ -1,5 +1,6 @@
-file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/parser/*.cc)
+file(GLOB SOURCES_PARSER ${CMAKE_CURRENT_SOURCE_DIR}/parser/*.cc)
+file(GLOB SOURCES_INTER ${CMAKE_CURRENT_SOURCE_DIR}/interpreter/*.cc)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(setti ${SOURCES})
+add_library(setti ${SOURCES_PARSER} ${SOURCES_INTER})

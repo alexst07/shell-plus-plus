@@ -15,6 +15,7 @@ class Object {
  public:
   enum class ObjectType : uint8_t {
     INT,
+    BOOL,
     REAL,
     STRING,
     ARRAY,
@@ -38,7 +39,7 @@ class Object {
 
 class IntObject: public Object {
  public:
-  IntObject(int value): Object(INT), value_(value) {}
+  IntObject(int value): Object(ObjectType::INT), value_(value) {}
   virtual ~IntObject() {}
 
   inline int value() const noexcept { return value_; }
@@ -47,6 +48,38 @@ class IntObject: public Object {
   int value_;
 };
 
+class BoolObject: public Object {
+ public:
+  BoolObject(bool value): Object(ObjectType::BOOL), value_(value) {}
+  virtual ~BoolObject() {}
+
+  inline bool value() const noexcept { return value_; }
+
+ private:
+  bool value_;
+};
+
+class RealObject: public Object {
+ public:
+  RealObject(float value): Object(ObjectType::REAL), value_(value) {}
+  virtual ~RealObject() {}
+
+  inline float value() const noexcept { return value_; }
+
+ private:
+  float value_;
+};
+
+class StringObject: public Object {
+ public:
+  StringObject(std::string value): Object(ObjectType::STRING), value_(value) {}
+  virtual ~StringObject() {}
+
+  inline const std::string& value() const noexcept { return value_; }
+
+ private:
+  std::string value_;
+};
 
 }
 }

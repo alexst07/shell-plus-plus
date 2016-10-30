@@ -1591,13 +1591,18 @@ class Literal: public Expression {
     return value_;
   }
 
+  Type literal_type() const noexcept {
+    return lit_type_;
+  }
+
  private:
   friend class AstNodeFactory;
 
   Token::Value value_;
+  Type lit_type_;
 
   Literal(const Token::Value& value, Type type, Position position):
-    value_(value), Expression(NodeType::kLiteral, position) {}
+    value_(value), lit_type_(type), Expression(NodeType::kLiteral, position) {}
 };
 
 class AstNodeFactory {
