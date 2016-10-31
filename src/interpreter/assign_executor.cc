@@ -4,6 +4,7 @@
 #include <boost/variant.hpp>
 
 #include "expr_executor.h"
+#include "ast/symbol_table.h"
 
 namespace setti {
 namespace internal {

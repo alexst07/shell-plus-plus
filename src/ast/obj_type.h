@@ -6,8 +6,6 @@
 #include <unordered_map>
 #include <tuple>
 
-#include "symbol_table.h"
-
 namespace setti {
 namespace internal {
 
