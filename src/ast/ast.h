@@ -181,6 +181,38 @@ class AstNode {
     return type_;
   }
 
+  static bool IsExpression(NodeType k) {
+    switch (k) {
+#define DECLARE_TYPE_EXPR(type) \
+      case NodeType::k##type:   \
+        return true;            \
+      break;
+
+      EXPRESSION_NODE_LIST(DECLARE_TYPE_EXPR)
+
+#undef DECLARE_TYPE_EXPR
+
+      default:
+        return false;
+    }
+  }
+
+  static bool IsStatement(NodeType k) {
+    switch (k) {
+#define DECLARE_TYPE_STMT(type) \
+      case NodeType::k##type:   \
+        return true;            \
+      break;
+
+      STATEMENT_NODE_LIST(DECLARE_TYPE_STMT)
+
+#undef DECLARE_TYPE_EXPR
+
+      default:
+        return false;
+    }
+  }
+
   virtual void Accept(AstVisitor* visitor) = 0;
 
  private:

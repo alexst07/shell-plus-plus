@@ -14,7 +14,15 @@ namespace internal {
 
 class Executor {
  public:
+  Executor(Executor* parent): parent_(parent) {}
 
+ protected:
+  Executor* parent() const noexcept {
+    return parent_;
+  }
+
+ private:
+  Executor* parent_;
 };
 
 }

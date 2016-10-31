@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 #include <tuple>
 
 #include "ast/ast.h"
@@ -13,8 +14,18 @@
 namespace setti {
 namespace internal {
 
+class ExprListExecutor: public Executor {
+ public:
+  ExprListExecutor(Executor* parent): Executor(parent) {}
+
+  // Execute every expression on list
+  std::vector<std::unique_ptr<Object>> Exec(AstNode* node);
+};
+
 class ExpressionExecutor: public Executor {
  public:
+  ExpressionExecutor(Executor* parent): Executor(parent) {}
+
   // Entry point to execute expression
   std::unique_ptr<Object> Exec(AstNode* node);
 
