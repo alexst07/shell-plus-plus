@@ -6,12 +6,14 @@
 #include <unordered_map>
 #include <tuple>
 
+#include "symbol_table.h"
+
 namespace setti {
 namespace internal {
 
-class Object {
+class Object: public LeftPointer<Object> {
  public:
-  enum class ObjectType : uint8_t {
+  enum class ObjectType: uint8_t {
     INT,
     BOOL,
     REAL,
@@ -28,11 +30,15 @@ class Object {
     return type_;
   }
 
+  LeftPointer::EntryType entry_type() const noexcept {
+    return LeftPointer::EntryType::OBJECT;
+  }
+
  private:
   ObjectType type_;
 
  protected:
-  Object(ObjectType type): type_(type) {}
+  Object(ObjectType type): LeftPointer(*this), type_(type) {}
 };
 
 class IntObject: public Object {

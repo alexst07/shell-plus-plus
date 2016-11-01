@@ -14,18 +14,43 @@ namespace internal {
 
 class Object;
 
-class SymbolAttr {
+template<class Derived>
+class LeftPointer {
+ public:
+  enum class EntryType: uint8_t {
+    SYMBOL,
+    OBJECT
+  };
+
+  LeftPointer(Derived& derived): derived_(derived) {}
+
+  EntryType entry_type() const noexcept {
+    return derived_.type();
+  }
+
+ protected:
+  Derived& derived_;
+};
+
+class SymbolAttr: public LeftPointer<SymbolAttr> {
  public:
   SymbolAttr(std::unique_ptr<Object> value, bool global)
-      : value_(std::move(value))
+      : LeftPointer(*this)
+      , value_(std::move(value))
       , global_(global) {}
+
+  LeftPointer::EntryType entry_type() const noexcept {
+    return LeftPointer::EntryType::SYMBOL;
+  }
 
   inline Object* value() const noexcept {
     return value_.get();
   }
 
   SymbolAttr(SymbolAttr&& other)
-      : global_(other.global_), value_(std::move(other.value_)) {}
+      : LeftPointer(*this)
+      , global_(other.global_)
+      , value_(std::move(other.value_)) {}
 
   SymbolAttr& operator=(SymbolAttr&& other) noexcept {
     if (&other == this) {
