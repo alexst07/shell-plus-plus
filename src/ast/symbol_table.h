@@ -130,11 +130,11 @@ class SymbolTableStack {
     stack_.pop_back();
   }
 
-  SymbolTable::SymbolIterator Lookup(const std::string& name) {
+  SymbolAttr& Lookup(const std::string& name) {
     auto it_obj = stack_.back().Lookup(name);
 
     if (it_obj != stack_.back().end()) {
-      return it_obj;
+      return it_obj->second;
     }
 
     for (size_t i = (stack_.size() - 1); i >= 0 ; i++) {
@@ -142,7 +142,7 @@ class SymbolTableStack {
 
       if (it_obj != stack_.at(i).end()) {
         if (!it_obj->second.global()) {
-          return it_obj;
+          return it_obj->second;
         } else {
           throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
                              boost::format("access denied for local symbol: "
