@@ -47,6 +47,10 @@ class SymbolAttr: public LeftPointer<SymbolAttr> {
     return value_.get();
   }
 
+  inline std::unique_ptr<Object>& RefValue() {
+    return value_;
+  }
+
   SymbolAttr(SymbolAttr&& other)
       : LeftPointer(*this)
       , global_(other.global_)

@@ -26,6 +26,12 @@ class AssignExecutor: public Executor {
 
   std::unique_ptr<Object>& AssignArray(AstNode* node);
 
+  // Gets the pointer of a symbol to assign a value
+  std::unique_ptr<Object>& LeftVar(AstNode* node);
+
+  std::vector<std::reference_wrapper<std::unique_ptr<Object>>>
+  AssignList(AstNode* node);
+
   // Executes assignable values, that could be a list
   // with functions or expressions
   std::unique_ptr<Object> ExecAssignable(AstNode* node);

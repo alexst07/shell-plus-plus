@@ -63,6 +63,35 @@ std::unique_ptr<Object>& AssignExecutor::AssignArray(AstNode* node) {
   }
 }
 
+std::unique_ptr<Object>& AssignExecutor::LeftVar(AstNode* node) {
+  switch(node->type()) {
+    case AstNode::NodeType::kIdentifier:
+      return AssignIdentifier(node).RefValue();
+    break;
+
+    case AstNode::NodeType::kArray:
+      return AssignArray(node);
+    break;
+
+    default:
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("not valid left side expression"));
+  }
+}
+
+std::vector<std::reference_wrapper<std::unique_ptr<Object>>>
+AssignExecutor::AssignList(AstNode* node) {
+  ExpressionList* node_list = static_cast<ExpressionList*>(node);
+  std::vector<std::reference_wrapper<std::unique_ptr<Object>>> vec;
+
+  for (Expression* exp: node_list->children()) {
+    vec.push_back(
+        std::reference_wrapper<std::unique_ptr<Object>>(LeftVar(exp)));
+  }
+
+  return vec;
+}
+
 std::vector<std::unique_ptr<Object>> AssignExecutor::ExecAssignableList(
     AstNode* node) {
   AssignableList* assign_list_node = static_cast<AssignableList*>(node);
@@ -72,6 +101,8 @@ std::vector<std::unique_ptr<Object>> AssignExecutor::ExecAssignableList(
   for (AstNode* value: assign_list_node->children()) {
     obj_vec.push_back(std::move(ExecAssignable(value)));
   }
+
+  return obj_vec;
 }
 
 std::unique_ptr<Object> AssignExecutor::ExecAssignable(AstNode* node) {
