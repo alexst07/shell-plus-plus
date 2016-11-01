@@ -140,7 +140,10 @@ class SymbolTable {
 
 class SymbolTableStack {
  public:
-  SymbolTableStack();
+  SymbolTableStack() {
+    SymbolTable table;
+    stack_.push_back(std::move(table));
+  }
 
   inline void Push(SymbolTable&& table) {
     stack_.push_back(std::move(table));

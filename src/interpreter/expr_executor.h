@@ -16,7 +16,8 @@ namespace internal {
 
 class ExprListExecutor: public Executor {
  public:
-  ExprListExecutor(Executor* parent): Executor(parent) {}
+  ExprListExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
 
   // Execute every expression on list
   std::vector<std::unique_ptr<Object>> Exec(AstNode* node);
@@ -24,7 +25,8 @@ class ExprListExecutor: public Executor {
 
 class ExpressionExecutor: public Executor {
  public:
-  ExpressionExecutor(Executor* parent): Executor(parent) {}
+  ExpressionExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
 
   // Entry point to execute expression
   std::unique_ptr<Object> Exec(AstNode* node);

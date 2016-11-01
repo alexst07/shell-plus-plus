@@ -76,13 +76,36 @@ class RealObject: public Object {
 
 class StringObject: public Object {
  public:
-  StringObject(std::string value): Object(ObjectType::STRING), value_(value) {}
+  StringObject(std::string&& value)
+      : Object(ObjectType::STRING), value_(std::move(value)) {}
   virtual ~StringObject() {}
 
   inline const std::string& value() const noexcept { return value_; }
 
  private:
   std::string value_;
+};
+
+class ArrayObject: public Object {
+ public:
+   ArrayObject(std::vector<std::unique_ptr<Object>> value)
+      : Object(ObjectType::ARRAY), value_(std::move(value)) {}
+   virtual ~ArrayObject() {}
+
+   inline Object* at(size_t i) {
+     return value_.at(i).get();
+   }
+
+   inline std::unique_ptr<Object>& ElementRef(size_t i) {
+     return value_.at(i);
+   }
+
+   inline void set(size_t i, std::unique_ptr<Object> obj) {
+     value_[i] = std::move(obj);
+   }
+
+ private:
+  std::vector<std::unique_ptr<Object>> value_;
 };
 
 }

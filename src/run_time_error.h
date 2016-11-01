@@ -22,7 +22,8 @@ class RunTimeError : public std::exception {
     SYMBOL_NOT_FOUND,
     CMD_NOT_FOUND,
     OUT_OF_RANGE,
-    KEY_NOT_FOUND
+    KEY_NOT_FOUND,
+    INCOMPATIBLE_TYPE
   };
 
   RunTimeError();

@@ -36,8 +36,9 @@ std::unique_ptr<Object> ExpressionExecutor::ExecLiteral(AstNode* node) {
     } break;
 
     case Literal::Type::kString: {
+    std::string str = boost::get<std::string>(literal->value());
       std::unique_ptr<Object> obj(
-          new StringObject(boost::get<std::string>(literal->value())));
+          new StringObject(std::move(str)));
       return obj;
     } break;
   }
