@@ -65,19 +65,32 @@ class SymbolTable {
 
   SymbolTable() {}
 
-  inline void SetValue(const std::string& name, SymbolAttr&& symbol) {
+  void SetValue(const std::string& name, std::unique_ptr<Object> value) {
+    auto it = map_.find(name);
+    if (it != map_.end()) {
+      it->second.set_value(std::move(value));
+      return;
+    }
+
+    // declare variable always as local
+    SymbolAttr symbol(std::move(value), false);
+    it = map_.begin();
+    map_.insert (it, std::move(std::pair<std::string, SymbolAttr>(
+        name, std::move(symbol))));
+  }
+
+  bool SetValue(const std::string& name, SymbolAttr&& symbol) {
     // if the key exists only change the value
     auto it = map_.find(name);
     if (it != map_.end()) {
-      it->second = std::move(symbol);
-      return;
+      return false;
     }
 
     // if the key not exists create a new
     // max efficiency inserting assign begin to i
     it = map_.begin();
-    map_.insert (it, std::pair<std::string, SymbolAttr&&>(
-        name, std::move(symbol)));
+    map_.insert (it, std::move(std::pair<std::string, SymbolAttr>(
+        name, std::move(symbol))));
   }
 
   inline SymbolIterator Lookup(const std::string& name) {
@@ -118,18 +131,16 @@ class SymbolTableStack {
   }
 
   SymbolTable::SymbolIterator Lookup(const std::string& name) {
-    auto it = stack_.back();
-    auto it_obj = it.Lookup(name);
+    auto it_obj = stack_.back().Lookup(name);
 
-    if (it_obj != it.end()) {
+    if (it_obj != stack_.back().end()) {
       return it_obj;
     }
 
     for (size_t i = (stack_.size() - 1); i >= 0 ; i++) {
-      auto it = stack_.at(i);
-      auto it_obj = it.Lookup(name);
+      auto it_obj = stack_.at(i).Lookup(name);
 
-      if (it_obj != it.end()) {
+      if (it_obj != stack_.at(i).end()) {
         if (!it_obj->second.global()) {
           return it_obj;
         } else {
@@ -144,10 +155,14 @@ class SymbolTableStack {
                        boost::format("symbol: %1% not found")% name);
   }
 
-  void InsertEntry(const std::string& name, SymbolAttr&& symbol) {
+  bool InsertEntry(const std::string& name, SymbolAttr&& symbol) {
     // the stack has always at least one symbol table
-    auto it = stack_.back();
-    it.SetValue(name, std::move(symbol));
+    return stack_.back().SetValue(name, std::move(symbol));
+  }
+
+  void SetEntry(const std::string& name, std::unique_ptr<Object> value) {
+    // the stack has always at least one symbol table
+    stack_.back().SetValue(name, std::move(value));
   }
 
  private:
