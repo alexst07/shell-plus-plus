@@ -92,9 +92,31 @@ class StringObject: public Object {
   std::string value_;
 };
 
+class TupleObject: public Object {
+ public:
+   TupleObject(std::vector<std::unique_ptr<Object>>&& value)
+      : Object(ObjectType::ARRAY), value_(std::move(value)) {}
+   virtual ~TupleObject() {}
+
+   inline Object* at(size_t i) {
+     return value_.at(i).get();
+   }
+
+   inline std::unique_ptr<Object>& ElementRef(size_t i) {
+     return value_.at(i);
+   }
+
+   inline void set(size_t i, std::unique_ptr<Object> obj) {
+     value_[i] = std::move(obj);
+   }
+
+ private:
+  std::vector<std::unique_ptr<Object>> value_;
+};
+
 class ArrayObject: public Object {
  public:
-   ArrayObject(std::vector<std::unique_ptr<Object>> value)
+   ArrayObject(std::vector<std::unique_ptr<Object>>&& value)
       : Object(ObjectType::ARRAY), value_(std::move(value)) {}
    virtual ~ArrayObject() {}
 

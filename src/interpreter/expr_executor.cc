@@ -6,6 +6,26 @@
 namespace setti {
 namespace internal {
 
+std::vector<std::unique_ptr<Object>> AssignableListExecutor::Exec(
+    AstNode* node) {
+  AssignableList* assign_list_node = static_cast<AssignableList*>(node);
+
+  std::vector<std::unique_ptr<Object>> obj_vec;
+
+  for (AstNode* value: assign_list_node->children()) {
+    obj_vec.push_back(std::move(ExecAssignable(value)));
+  }
+
+  return obj_vec;
+}
+
+std::unique_ptr<Object> AssignableListExecutor::ExecAssignable(AstNode* node) {
+  if (AstNode::IsExpression(node->type())) {
+    ExpressionExecutor expr_exec(this, symbol_table_stack());
+    return expr_exec.Exec(node);
+  }
+}
+
 std::unique_ptr<Object> ExpressionExecutor::Exec(AstNode* node) {
   switch (node->type()) {
     case AstNode::NodeType::kLiteral: {

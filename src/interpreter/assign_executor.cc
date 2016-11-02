@@ -11,13 +11,47 @@ namespace internal {
 
 void AssignExecutor::Exec(AstNode* node) {
   AssignmentStatement* assign_node = static_cast<AssignmentStatement*>(node);
+
+  if (!assign_node->has_rvalue()) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("not valid left side expression"));
+  }
+
+  // Executes the left side of assignment
+  auto vars = AssignList(assign_node->lexp_list());
+
+  // Executes the right sid of assignment
+  AssignableListExecutor assignables(this, symbol_table_stack());
+  auto values = assignables.Exec(assign_node->rvalue_list());
+
+  // Assignment can be done only when the tuples have the same size
+  // or there is only one variable on the left side
+  // a, b, c = 1, 2, 3 or a = 1, 2, 3
+  if ((vars.size() != 1) && (vars.size() != values.size())) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("different size of tuples"));
+  }
+
+  // assignment operation for only one variable
+  // the variable assign a tuple
+  if (vars.size() == 1) {
+    if (vars[0].get().entry_type() == EntryPointer::EntryType::SYMBOL) {
+      std::unique_ptr<TupleObject> tuple_obj(
+          std::make_unique<TupleObject>(std::move(values)));
+      static_cast<SymbolAttr&>(vars[0].get()).set_value(std::move(tuple_obj));
+    }
+  } else {
+    // on this case there are the same number of variables and values
+    for (size_t i = 0; i < vars.size(); i++) {
+      static_cast<SymbolAttr&>(vars[i].get()).set_value(std::move(values[i]));
+    }
+  }
 }
 
-SymbolAttr& AssignExecutor::AssignIdentifier(AstNode* node) {
+SymbolAttr& AssignExecutor::AssignIdentifier(AstNode* node, bool create) {
   Identifier* id_node = static_cast<Identifier*>(node);
-
   const std::string& name = id_node->name();
-  return symbol_table_stack().Lookup(name);
+  return symbol_table_stack().Lookup(name, create);
 }
 
 std::unique_ptr<Object>& AssignExecutor::ObjectArray(Array& array_node,
@@ -63,53 +97,33 @@ std::unique_ptr<Object>& AssignExecutor::AssignArray(AstNode* node) {
   }
 }
 
-std::unique_ptr<Object>& AssignExecutor::LeftVar(AstNode* node) {
+EntryPointer& AssignExecutor::LeftVar(AstNode* node) {
   switch(node->type()) {
     case AstNode::NodeType::kIdentifier:
-      return AssignIdentifier(node).RefValue();
+      return *AssignIdentifier(node).RefValue();
     break;
 
     case AstNode::NodeType::kArray:
-      return AssignArray(node);
+      return *AssignArray(node);
     break;
 
     default:
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("not valid left side expression"));
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("not valid left side expression"));
   }
 }
 
-std::vector<std::reference_wrapper<std::unique_ptr<Object>>>
+std::vector<std::reference_wrapper<EntryPointer>>
 AssignExecutor::AssignList(AstNode* node) {
   ExpressionList* node_list = static_cast<ExpressionList*>(node);
-  std::vector<std::reference_wrapper<std::unique_ptr<Object>>> vec;
+  std::vector<std::reference_wrapper<EntryPointer>> vec;
 
   for (Expression* exp: node_list->children()) {
     vec.push_back(
-        std::reference_wrapper<std::unique_ptr<Object>>(LeftVar(exp)));
+        std::reference_wrapper<EntryPointer>(LeftVar(exp)));
   }
 
   return vec;
-}
-
-std::vector<std::unique_ptr<Object>> AssignExecutor::ExecAssignableList(
-    AstNode* node) {
-  AssignableList* assign_list_node = static_cast<AssignableList*>(node);
-
-  std::vector<std::unique_ptr<Object>> obj_vec;
-
-  for (AstNode* value: assign_list_node->children()) {
-    obj_vec.push_back(std::move(ExecAssignable(value)));
-  }
-
-  return obj_vec;
-}
-
-std::unique_ptr<Object> AssignExecutor::ExecAssignable(AstNode* node) {
-  if (AstNode::IsExpression(node->type())) {
-    ExpressionExecutor expr_exec(this, symbol_table_stack());
-    return expr_exec.Exec(node);
-  }
 }
 
 }

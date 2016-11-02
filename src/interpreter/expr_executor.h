@@ -14,13 +14,14 @@
 namespace setti {
 namespace internal {
 
-class ExprListExecutor: public Executor {
+class AssignableListExecutor: public Executor {
  public:
-  ExprListExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+  AssignableListExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-  // Execute every expression on list
   std::vector<std::unique_ptr<Object>> Exec(AstNode* node);
+
+  std::unique_ptr<Object> ExecAssignable(AstNode* node);
 };
 
 class ExpressionExecutor: public Executor {

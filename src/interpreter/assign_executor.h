@@ -22,14 +22,14 @@ class AssignExecutor: public Executor {
   // Entry point to execute assign operations
   void Exec(AstNode* node);
 
-  SymbolAttr& AssignIdentifier(AstNode* node);
+  SymbolAttr& AssignIdentifier(AstNode* node, bool create = false);
 
   std::unique_ptr<Object>& AssignArray(AstNode* node);
 
   // Gets the pointer of a symbol to assign a value
-  std::unique_ptr<Object>& LeftVar(AstNode* node);
+  EntryPointer& LeftVar(AstNode* node);
 
-  std::vector<std::reference_wrapper<std::unique_ptr<Object>>>
+  std::vector<std::reference_wrapper<EntryPointer>>
   AssignList(AstNode* node);
 
   // Executes assignable values, that could be a list
