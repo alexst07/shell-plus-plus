@@ -8,29 +8,10 @@
 
 #include "obj_type.h"
 #include "run_time_error.h"
+#include "obj_type.h"
 
 namespace setti {
 namespace internal {
-
-class Object;
-
-class EntryPointer {
- public:
-  enum class EntryType: uint8_t {
-    SYMBOL,
-    OBJECT
-  };
-
-  EntryType entry_type() const noexcept {
-    return type_;
-  }
-
- protected:
-  EntryPointer(EntryType type): type_(type) {}
-
- private:
-  EntryType type_;
-};
 
 class SymbolAttr: public EntryPointer {
  public:
@@ -43,6 +24,8 @@ class SymbolAttr: public EntryPointer {
       : EntryPointer(EntryPointer::EntryType::SYMBOL)
       , value_(std::unique_ptr<Object>(nullptr))
       , global_(false) {}
+
+  ~SymbolAttr() {}
 
   inline Object* value() const noexcept {
     return value_.get();
@@ -74,12 +57,15 @@ class SymbolAttr: public EntryPointer {
 
 
   inline void set_value(std::unique_ptr<Object> value) noexcept {
-    value_.reset();
     value_ = std::move(value);
   }
 
   inline bool global() const noexcept {
     return global_;
+  }
+
+  void Print() const {
+    value_->Print();
   }
 
  private:
@@ -156,6 +142,14 @@ class SymbolTable {
     return map_.begin();
   }
 
+  void Dump() const {
+    for (const auto& m: map_) {
+      std::cout << "name: " << m.first << " ";
+      m.second.Print();
+      std::cout << "\n";
+    }
+  }
+
  private:
   SymbolMap map_;
 };
@@ -193,18 +187,21 @@ class SymbolTableStack {
       return it_obj->second;
     }
 
-    for (size_t i = (stack_.size() - 1); i >= 0 ; i++) {
-      auto it_obj = stack_.at(i).Lookup(name);
+    if (stack_.size() > 1) {
+      for (size_t i = (stack_.size() - 2); i >= 0 ; i++) {
+        auto it_obj = stack_.at(i).Lookup(name);
 
-      if (it_obj != stack_.at(i).end()) {
-        if (!it_obj->second.global()) {
-          return it_obj->second;
+        if (it_obj != stack_.at(i).end()) {
+          if (!it_obj->second.global()) {
+            return it_obj->second;
+          }
         }
       }
     }
 
     if (create) {
-      return stack_.back().SetValue(name);
+      SymbolAttr& ref = stack_.back().SetValue(name);
+      return ref;
     }
 
     throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
@@ -219,6 +216,12 @@ class SymbolTableStack {
   void SetEntry(const std::string& name, std::unique_ptr<Object> value) {
     // the stack has always at least one symbol table
     stack_.back().SetValue(name, std::move(value));
+  }
+
+  void Dump() {
+    for (auto& table: stack_) {
+      table.Dump();
+    }
   }
 
  private:

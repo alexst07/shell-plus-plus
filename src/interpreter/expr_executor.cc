@@ -20,9 +20,10 @@ std::vector<std::unique_ptr<Object>> AssignableListExecutor::Exec(
 }
 
 std::unique_ptr<Object> AssignableListExecutor::ExecAssignable(AstNode* node) {
+  AssignableValue* assignable_node = static_cast<AssignableValue*>(node);
   if (AstNode::IsExpression(node->type())) {
     ExpressionExecutor expr_exec(this, symbol_table_stack());
-    return expr_exec.Exec(node);
+    return expr_exec.Exec(assignable_node->value());
   }
 }
 

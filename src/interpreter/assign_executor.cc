@@ -32,9 +32,11 @@ void AssignExecutor::Exec(AstNode* node) {
                        boost::format("different size of tuples"));
   }
 
-  // assignment operation for only one variable
-  // the variable assign a tuple
-  if (vars.size() == 1) {
+  if ((vars.size() == 1) && (values.size() == 1)) {
+    if (vars[0].get().entry_type() == EntryPointer::EntryType::SYMBOL) {
+      static_cast<SymbolAttr&>(vars[0].get()).set_value(std::move(values[0]));
+    }
+  } else if ((vars.size() == 1) && (values.size() != 1)) {
     if (vars[0].get().entry_type() == EntryPointer::EntryType::SYMBOL) {
       std::unique_ptr<TupleObject> tuple_obj(
           std::make_unique<TupleObject>(std::move(values)));
@@ -100,7 +102,7 @@ std::unique_ptr<Object>& AssignExecutor::AssignArray(AstNode* node) {
 EntryPointer& AssignExecutor::LeftVar(AstNode* node) {
   switch(node->type()) {
     case AstNode::NodeType::kIdentifier:
-      return *AssignIdentifier(node).RefValue();
+      return AssignIdentifier(node, true);
     break;
 
     case AstNode::NodeType::kArray:

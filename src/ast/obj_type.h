@@ -6,10 +6,26 @@
 #include <unordered_map>
 #include <tuple>
 
-#include "symbol_table.h"
-
 namespace setti {
 namespace internal {
+
+class EntryPointer {
+ public:
+  enum class EntryType: uint8_t {
+    SYMBOL,
+    OBJECT
+  };
+
+  EntryType entry_type() const noexcept {
+    return type_;
+  }
+
+ protected:
+  EntryPointer(EntryType type): type_(type) {}
+
+ private:
+  EntryType type_;
+};
 
 class Object: public EntryPointer {
  public:
@@ -31,6 +47,8 @@ class Object: public EntryPointer {
     return type_;
   }
 
+  virtual void Print() = 0;
+
  private:
   ObjectType type_;
 
@@ -44,6 +62,10 @@ class NullObject: public Object {
   NullObject(): Object(ObjectType::NIL) {}
   virtual ~NullObject() {}
 
+  void Print() override {
+    std::cout << "NIL";
+  }
+
   inline nullptr_t value() const noexcept { return nullptr; }
 };
 
@@ -53,6 +75,10 @@ class IntObject: public Object {
   virtual ~IntObject() {}
 
   inline int value() const noexcept { return value_; }
+
+  void Print() override {
+    std::cout << "INT: " << value_;
+  }
 
  private:
   int value_;
@@ -65,6 +91,10 @@ class BoolObject: public Object {
 
   inline bool value() const noexcept { return value_; }
 
+  void Print() override {
+    std::cout << "BOOL: " << value_;
+  }
+
  private:
   bool value_;
 };
@@ -75,6 +105,10 @@ class RealObject: public Object {
   virtual ~RealObject() {}
 
   inline float value() const noexcept { return value_; }
+
+  void Print() override {
+    std::cout << "REAL: " << value_;
+  }
 
  private:
   float value_;
@@ -87,6 +121,10 @@ class StringObject: public Object {
   virtual ~StringObject() {}
 
   inline const std::string& value() const noexcept { return value_; }
+
+  void Print() override {
+    std::cout << "STRING: " << value_;
+  }
 
  private:
   std::string value_;
@@ -110,6 +148,10 @@ class TupleObject: public Object {
      value_[i] = std::move(obj);
    }
 
+   void Print() override {
+     std::cout << "TUPLE";
+   }
+
  private:
   std::vector<std::unique_ptr<Object>> value_;
 };
@@ -130,6 +172,10 @@ class ArrayObject: public Object {
 
    inline void set(size_t i, std::unique_ptr<Object> obj) {
      value_[i] = std::move(obj);
+   }
+
+   void Print() override {
+     std::cout << "ARRAY";
    }
 
  private:

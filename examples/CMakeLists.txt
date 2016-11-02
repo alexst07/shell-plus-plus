@@ -1,2 +1,3 @@
 add_subdirectory(print_ast)
 add_subdirectory(print_tokens)
+add_subdirectory(interpreter)
