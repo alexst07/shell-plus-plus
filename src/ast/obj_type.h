@@ -11,9 +11,10 @@
 namespace setti {
 namespace internal {
 
-class Object: public LeftPointer<Object> {
+class Object: public EntryPointer {
  public:
   enum class ObjectType: uint8_t {
+    NIL,
     INT,
     BOOL,
     REAL,
@@ -30,15 +31,20 @@ class Object: public LeftPointer<Object> {
     return type_;
   }
 
-  LeftPointer::EntryType entry_type() const noexcept {
-    return LeftPointer::EntryType::OBJECT;
-  }
-
  private:
   ObjectType type_;
 
  protected:
-  Object(ObjectType type): LeftPointer(*this), type_(type) {}
+  Object(ObjectType type)
+      : EntryPointer(EntryPointer::EntryType::OBJECT), type_(type) {}
+};
+
+class NullObject: public Object {
+ public:
+  NullObject(): Object(ObjectType::NIL) {}
+  virtual ~NullObject() {}
+
+  inline nullptr_t value() const noexcept { return nullptr; }
 };
 
 class IntObject: public Object {

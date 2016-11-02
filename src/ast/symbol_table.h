@@ -14,34 +14,35 @@ namespace internal {
 
 class Object;
 
-template<class Derived>
-class LeftPointer {
+class EntryPointer {
  public:
   enum class EntryType: uint8_t {
     SYMBOL,
     OBJECT
   };
 
-  LeftPointer(Derived& derived): derived_(derived) {}
-
   EntryType entry_type() const noexcept {
-    return derived_.type();
+    return type_;
   }
 
  protected:
-  Derived& derived_;
+  EntryPointer(EntryType type): type_(type) {}
+
+ private:
+  EntryType type_;
 };
 
-class SymbolAttr: public LeftPointer<SymbolAttr> {
+class SymbolAttr: public EntryPointer {
  public:
   SymbolAttr(std::unique_ptr<Object> value, bool global)
-      : LeftPointer(*this)
+      : EntryPointer(EntryPointer::EntryType::SYMBOL)
       , value_(std::move(value))
       , global_(global) {}
 
-  LeftPointer::EntryType entry_type() const noexcept {
-    return LeftPointer::EntryType::SYMBOL;
-  }
+  SymbolAttr()
+      : EntryPointer(EntryPointer::EntryType::SYMBOL)
+      , value_(std::unique_ptr<Object>(nullptr))
+      , global_(false) {}
 
   inline Object* value() const noexcept {
     return value_.get();
@@ -52,7 +53,7 @@ class SymbolAttr: public LeftPointer<SymbolAttr> {
   }
 
   SymbolAttr(SymbolAttr&& other)
-      : LeftPointer(*this)
+      : EntryPointer(EntryPointer::EntryType::SYMBOL)
       , global_(other.global_)
       , value_(std::move(other.value_)) {}
 
@@ -93,6 +94,23 @@ class SymbolTable {
   using SymbolConstIterator = SymbolMap::const_iterator;
 
   SymbolTable() {}
+
+  // Return a reference for symbol if it exists or create a new
+  // and return the reference
+  SymbolAttr& SetValue(const std::string& name) {
+    auto it = map_.find(name);
+    if (it != map_.end()) {
+      return it->second;
+    } else {
+      it = map_.begin();
+
+      // declare a variable as local
+      SymbolAttr symbol;
+      SymbolIterator it_symbol = map_.insert (it, std::move(
+          std::pair<std::string, SymbolAttr>(name, std::move(symbol))));
+      return it_symbol->second;
+    }
+  }
 
   void SetValue(const std::string& name, std::unique_ptr<Object> value) {
     auto it = map_.find(name);
@@ -145,15 +163,18 @@ class SymbolTable {
 class SymbolTableStack {
  public:
   SymbolTableStack() {
+    // Table stack is creaeted with at leas one table symbol
     SymbolTable table;
     stack_.push_back(std::move(table));
   }
 
+  // Insert a table on the stack
   inline void Push(SymbolTable&& table) {
     stack_.push_back(std::move(table));
   }
 
-  inline void NewStack() {
+  // Create a new table on the stack
+  inline void NewTable() {
     SymbolTable table;
     stack_.push_back(std::move(table));
   }
@@ -162,7 +183,10 @@ class SymbolTableStack {
     stack_.pop_back();
   }
 
-  SymbolAttr& Lookup(const std::string& name) {
+  // Search in all stack an return the refence for the symbol if
+  // it exists, or if create = true, create a new symbol if it
+  // doesn't exists and return its reference
+  SymbolAttr& Lookup(const std::string& name, bool create) {
     auto it_obj = stack_.back().Lookup(name);
 
     if (it_obj != stack_.back().end()) {
@@ -175,12 +199,12 @@ class SymbolTableStack {
       if (it_obj != stack_.at(i).end()) {
         if (!it_obj->second.global()) {
           return it_obj->second;
-        } else {
-          throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
-                             boost::format("access denied for local symbol: "
-                                           "%1%")% name);
         }
       }
+    }
+
+    if (create) {
+      return stack_.back().SetValue(name);
     }
 
     throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
