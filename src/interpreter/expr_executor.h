@@ -19,9 +19,9 @@ class AssignableListExecutor: public Executor {
   AssignableListExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-  std::vector<std::unique_ptr<Object>> Exec(AstNode* node);
+  std::vector<ObjectPtr> Exec(AstNode* node);
 
-  std::unique_ptr<Object> ExecAssignable(AstNode* node);
+  ObjectPtr ExecAssignable(AstNode* node);
 };
 
 class ExpressionExecutor: public Executor {
@@ -30,13 +30,13 @@ class ExpressionExecutor: public Executor {
       : Executor(parent, symbol_table_stack) {}
 
   // Entry point to execute expression
-  std::unique_ptr<Object> Exec(AstNode* node);
+  ObjectPtr Exec(AstNode* node);
 
   // Executes literal const and return an object with its value
-  std::unique_ptr<Object> ExecLiteral(AstNode* node);
+  ObjectPtr ExecLiteral(AstNode* node);
 
   // Executes array instantiation
-  std::unique_ptr<Object> ExecArrayInstantiation(AstNode* node);
+  ObjectPtr ExecArrayInstantiation(AstNode* node);
 
 };
 

@@ -33,33 +33,29 @@ void AssignExecutor::Exec(AstNode* node) {
   }
 
   if ((vars.size() == 1) && (values.size() == 1)) {
-    std::shared_ptr<Object> obj_ptr(values[0].release());
-    vars[0].get() = obj_ptr;
+    vars[0].get() = values[0];
   } else if ((vars.size() == 1) && (values.size() != 1)) {
-    std::unique_ptr<TupleObject> tuple_obj(
-        std::make_unique<TupleObject>(std::move(values)));
-    std::shared_ptr<Object> obj_ptr(tuple_obj.release());
-    vars[0].get() = obj_ptr;
+    ObjectPtr tuple_obj(new TupleObject(std::move(values)));
+    vars[0].get() = tuple_obj;
   } else {
     // on this case there are the same number of variables and values
     for (size_t i = 0; i < vars.size(); i++) {
-      std::shared_ptr<Object> obj_ptr(values[i].release());
-      vars[i].get() = obj_ptr;
+      vars[i].get() = values[i];
     }
   }
 }
 
-std::shared_ptr<Object>& AssignExecutor::AssignIdentifier(AstNode* node, bool create) {
+ObjectPtr& AssignExecutor::AssignIdentifier(AstNode* node, bool create) {
   Identifier* id_node = static_cast<Identifier*>(node);
   const std::string& name = id_node->name();
   return symbol_table_stack().Lookup(name, create).Ref();
 }
 
-std::shared_ptr<Object>& AssignExecutor::ObjectArray(Array& array_node,
+ObjectPtr& AssignExecutor::ObjectArray(Array& array_node,
                                                      ArrayObject& obj) {
   // Executes index expression of array
   ExpressionExecutor expr_exec(this, symbol_table_stack());
-  std::unique_ptr<Object> index(expr_exec.Exec(array_node.index_exp()));
+  ObjectPtr index(expr_exec.Exec(array_node.index_exp()));
 
   // Array accept only integer index
   if (index->type() != Object::ObjectType::INT) {
@@ -74,14 +70,14 @@ std::shared_ptr<Object>& AssignExecutor::ObjectArray(Array& array_node,
 }
 
 // TODO: Executes for map and custon objects
-std::shared_ptr<Object>& AssignExecutor::AssignArray(AstNode* node) {
+ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
   Array* array_node = static_cast<Array*>(node);
   Expression* arr_exp = array_node->arr_exp();
 
   // Interprete case as a[1] = ?
   // where array expression is an identifier
   if (arr_exp->type() == AstNode::NodeType::kIdentifier) {
-    std::shared_ptr<Object>& obj = AssignIdentifier(arr_exp);
+    ObjectPtr& obj = AssignIdentifier(arr_exp);
 
     if (obj->type() == Object::ObjectType::ARRAY) {
       return ObjectArray(*array_node, *static_cast<ArrayObject*>(obj.get()));
@@ -89,7 +85,7 @@ std::shared_ptr<Object>& AssignExecutor::AssignArray(AstNode* node) {
   } else if (arr_exp->type() == AstNode::NodeType::kArray) {
     // Interprete case as a[1]...[1] = ?
     // where array expression is an array
-    std::shared_ptr<Object> obj = AssignArray(arr_exp);
+    ObjectPtr obj = AssignArray(arr_exp);
 
     if (obj->type() == Object::ObjectType::ARRAY) {
       return ObjectArray(*array_node, static_cast<ArrayObject&>(*obj));
@@ -97,7 +93,7 @@ std::shared_ptr<Object>& AssignExecutor::AssignArray(AstNode* node) {
   }
 }
 
-std::shared_ptr<Object>& AssignExecutor::LeftVar(AstNode* node) {
+ObjectPtr& AssignExecutor::LeftVar(AstNode* node) {
   switch(node->type()) {
     case AstNode::NodeType::kIdentifier:
       return AssignIdentifier(node, true);
@@ -113,14 +109,14 @@ std::shared_ptr<Object>& AssignExecutor::LeftVar(AstNode* node) {
   }
 }
 
-std::vector<std::reference_wrapper<std::shared_ptr<Object>>>
+std::vector<std::reference_wrapper<ObjectPtr>>
 AssignExecutor::AssignList(AstNode* node) {
   ExpressionList* node_list = static_cast<ExpressionList*>(node);
-  std::vector<std::reference_wrapper<std::shared_ptr<Object>>> vec;
+  std::vector<std::reference_wrapper<ObjectPtr>> vec;
 
   for (Expression* exp: node_list->children()) {
     vec.push_back(
-        std::reference_wrapper<std::shared_ptr<Object>>(LeftVar(exp)));
+        std::reference_wrapper<ObjectPtr>(LeftVar(exp)));
   }
 
   return vec;

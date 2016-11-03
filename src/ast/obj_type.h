@@ -57,6 +57,8 @@ class Object: public EntryPointer {
       : EntryPointer(EntryPointer::EntryType::OBJECT), type_(type) {}
 };
 
+typedef std::shared_ptr<Object> ObjectPtr;
+
 class NullObject: public Object {
  public:
   NullObject(): Object(ObjectType::NIL) {}
