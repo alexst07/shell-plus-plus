@@ -181,7 +181,7 @@ class ArrayObject: public Object {
      return value_.at(i).get();
    }
 
-   inline std::shared_ptr<Object> ElementRef(size_t i) {
+   inline std::shared_ptr<Object>& ElementRef(size_t i) {
      return value_.at(i);
    }
 

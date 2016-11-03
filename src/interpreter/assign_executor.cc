@@ -33,30 +33,29 @@ void AssignExecutor::Exec(AstNode* node) {
   }
 
   if ((vars.size() == 1) && (values.size() == 1)) {
-    if (vars[0].get().entry_type() == EntryPointer::EntryType::SYMBOL) {
-      static_cast<SymbolAttr&>(vars[0].get()).set_value(std::move(values[0]));
-    }
+    std::shared_ptr<Object> obj_ptr(values[0].release());
+    vars[0].get() = obj_ptr;
   } else if ((vars.size() == 1) && (values.size() != 1)) {
-    if (vars[0].get().entry_type() == EntryPointer::EntryType::SYMBOL) {
-      std::unique_ptr<TupleObject> tuple_obj(
-          std::make_unique<TupleObject>(std::move(values)));
-      static_cast<SymbolAttr&>(vars[0].get()).set_value(std::move(tuple_obj));
-    }
+    std::unique_ptr<TupleObject> tuple_obj(
+        std::make_unique<TupleObject>(std::move(values)));
+    std::shared_ptr<Object> obj_ptr(tuple_obj.release());
+    vars[0].get() = obj_ptr;
   } else {
     // on this case there are the same number of variables and values
     for (size_t i = 0; i < vars.size(); i++) {
-      static_cast<SymbolAttr&>(vars[i].get()).set_value(std::move(values[i]));
+      std::shared_ptr<Object> obj_ptr(values[i].release());
+      vars[i].get() = obj_ptr;
     }
   }
 }
 
-SymbolAttr& AssignExecutor::AssignIdentifier(AstNode* node, bool create) {
+std::shared_ptr<Object>& AssignExecutor::AssignIdentifier(AstNode* node, bool create) {
   Identifier* id_node = static_cast<Identifier*>(node);
   const std::string& name = id_node->name();
-  return symbol_table_stack().Lookup(name, create);
+  return symbol_table_stack().Lookup(name, create).Ref();
 }
 
-std::shared_ptr<Object> AssignExecutor::ObjectArray(Array& array_node,
+std::shared_ptr<Object>& AssignExecutor::ObjectArray(Array& array_node,
                                                      ArrayObject& obj) {
   // Executes index expression of array
   ExpressionExecutor expr_exec(this, symbol_table_stack());
@@ -75,18 +74,17 @@ std::shared_ptr<Object> AssignExecutor::ObjectArray(Array& array_node,
 }
 
 // TODO: Executes for map and custon objects
-std::shared_ptr<Object> AssignExecutor::AssignArray(AstNode* node) {
+std::shared_ptr<Object>& AssignExecutor::AssignArray(AstNode* node) {
   Array* array_node = static_cast<Array*>(node);
   Expression* arr_exp = array_node->arr_exp();
 
   // Interprete case as a[1] = ?
   // where array expression is an identifier
   if (arr_exp->type() == AstNode::NodeType::kIdentifier) {
-    SymbolAttr& symbol = AssignIdentifier(arr_exp);
-    ArrayObject* obj = static_cast<ArrayObject*>(symbol.value());
+    std::shared_ptr<Object>& obj = AssignIdentifier(arr_exp);
 
     if (obj->type() == Object::ObjectType::ARRAY) {
-      return ObjectArray(*array_node, *obj);
+      return ObjectArray(*array_node, *static_cast<ArrayObject*>(obj.get()));
     }
   } else if (arr_exp->type() == AstNode::NodeType::kArray) {
     // Interprete case as a[1]...[1] = ?
@@ -99,14 +97,14 @@ std::shared_ptr<Object> AssignExecutor::AssignArray(AstNode* node) {
   }
 }
 
-EntryPointer& AssignExecutor::LeftVar(AstNode* node) {
+std::shared_ptr<Object>& AssignExecutor::LeftVar(AstNode* node) {
   switch(node->type()) {
     case AstNode::NodeType::kIdentifier:
       return AssignIdentifier(node, true);
     break;
 
     case AstNode::NodeType::kArray:
-      return *AssignArray(node);
+      return AssignArray(node);
     break;
 
     default:
@@ -115,14 +113,14 @@ EntryPointer& AssignExecutor::LeftVar(AstNode* node) {
   }
 }
 
-std::vector<std::reference_wrapper<EntryPointer>>
+std::vector<std::reference_wrapper<std::shared_ptr<Object>>>
 AssignExecutor::AssignList(AstNode* node) {
   ExpressionList* node_list = static_cast<ExpressionList*>(node);
-  std::vector<std::reference_wrapper<EntryPointer>> vec;
+  std::vector<std::reference_wrapper<std::shared_ptr<Object>>> vec;
 
   for (Expression* exp: node_list->children()) {
     vec.push_back(
-        std::reference_wrapper<EntryPointer>(LeftVar(exp)));
+        std::reference_wrapper<std::shared_ptr<Object>>(LeftVar(exp)));
   }
 
   return vec;

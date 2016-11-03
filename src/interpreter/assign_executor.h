@@ -22,14 +22,14 @@ class AssignExecutor: public Executor {
   // Entry point to execute assign operations
   void Exec(AstNode* node);
 
-  SymbolAttr& AssignIdentifier(AstNode* node, bool create = false);
+  std::shared_ptr<Object>& AssignIdentifier(AstNode* node, bool create = false);
 
-  std::shared_ptr<Object> AssignArray(AstNode* node);
+  std::shared_ptr<Object>& AssignArray(AstNode* node);
 
   // Gets the pointer of a symbol to assign a value
-  EntryPointer& LeftVar(AstNode* node);
+  std::shared_ptr<Object>& LeftVar(AstNode* node);
 
-  std::vector<std::reference_wrapper<EntryPointer>>
+  std::vector<std::reference_wrapper<std::shared_ptr<Object>>>
   AssignList(AstNode* node);
 
   // Executes assignable values, that could be a list
@@ -39,7 +39,7 @@ class AssignExecutor: public Executor {
   // Executes assignable list, it can be function or expression
   std::vector<std::unique_ptr<Object>> ExecAssignableList(AstNode* node);
 
-  std::shared_ptr<Object> ObjectArray(Array& array_node, ArrayObject& obj);
+  std::shared_ptr<Object>& ObjectArray(Array& array_node, ArrayObject& obj);
 };
 
 }

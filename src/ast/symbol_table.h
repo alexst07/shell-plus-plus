@@ -51,6 +51,10 @@ class SymbolAttr: public EntryPointer {
   SymbolAttr(const SymbolAttr&) = delete;
   SymbolAttr& operator=(const SymbolAttr&) = delete;
 
+  std::shared_ptr<Object>& Ref() noexcept {
+    return value_;
+  }
+
 
   inline void set_value(std::unique_ptr<Object> value) noexcept {
     Object* obj = value.release();
