@@ -56,7 +56,7 @@ SymbolAttr& AssignExecutor::AssignIdentifier(AstNode* node, bool create) {
   return symbol_table_stack().Lookup(name, create);
 }
 
-std::unique_ptr<Object>& AssignExecutor::ObjectArray(Array& array_node,
+std::shared_ptr<Object> AssignExecutor::ObjectArray(Array& array_node,
                                                      ArrayObject& obj) {
   // Executes index expression of array
   ExpressionExecutor expr_exec(this, symbol_table_stack());
@@ -75,7 +75,7 @@ std::unique_ptr<Object>& AssignExecutor::ObjectArray(Array& array_node,
 }
 
 // TODO: Executes for map and custon objects
-std::unique_ptr<Object>& AssignExecutor::AssignArray(AstNode* node) {
+std::shared_ptr<Object> AssignExecutor::AssignArray(AstNode* node) {
   Array* array_node = static_cast<Array*>(node);
   Expression* arr_exp = array_node->arr_exp();
 
@@ -91,7 +91,7 @@ std::unique_ptr<Object>& AssignExecutor::AssignArray(AstNode* node) {
   } else if (arr_exp->type() == AstNode::NodeType::kArray) {
     // Interprete case as a[1]...[1] = ?
     // where array expression is an array
-    std::unique_ptr<Object>& obj = AssignArray(arr_exp);
+    std::shared_ptr<Object> obj = AssignArray(arr_exp);
 
     if (obj->type() == Object::ObjectType::ARRAY) {
       return ObjectArray(*array_node, static_cast<ArrayObject&>(*obj));

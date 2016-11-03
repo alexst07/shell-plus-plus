@@ -31,10 +31,6 @@ class SymbolAttr: public EntryPointer {
     return value_.get();
   }
 
-  inline std::unique_ptr<Object>& RefValue() {
-    return value_;
-  }
-
   SymbolAttr(SymbolAttr&& other)
       : EntryPointer(EntryPointer::EntryType::SYMBOL)
       , global_(other.global_)
@@ -57,7 +53,8 @@ class SymbolAttr: public EntryPointer {
 
 
   inline void set_value(std::unique_ptr<Object> value) noexcept {
-    value_ = std::move(value);
+    Object* obj = value.release();
+    value_ = std::shared_ptr<Object>(obj);
   }
 
   inline bool global() const noexcept {
@@ -70,7 +67,7 @@ class SymbolAttr: public EntryPointer {
 
  private:
   bool global_;
-  std::unique_ptr<Object> value_;
+  std::shared_ptr<Object> value_;
 };
 
 class SymbolTable {

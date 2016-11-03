@@ -133,19 +133,25 @@ class StringObject: public Object {
 class TupleObject: public Object {
  public:
    TupleObject(std::vector<std::unique_ptr<Object>>&& value)
-      : Object(ObjectType::ARRAY), value_(std::move(value)) {}
-   virtual ~TupleObject() {}
-
-   inline Object* at(size_t i) {
-     return value_.at(i).get();
+      : Object(ObjectType::TUPLE), value_(value.size()) {
+     for (size_t i = 0; i < value.size(); i++) {
+       Object* obj_ptr = value[i].release();
+       value_[i] = std::shared_ptr<Object>(obj_ptr);
+     }
    }
 
-   inline std::unique_ptr<Object>& ElementRef(size_t i) {
+   TupleObject(std::vector<std::shared_ptr<Object>>&& value)
+      : Object(ObjectType::TUPLE), value_(value) {}
+
+   virtual ~TupleObject() {}
+
+   inline std::shared_ptr<Object> ElementRef(size_t i) {
      return value_.at(i);
    }
 
    inline void set(size_t i, std::unique_ptr<Object> obj) {
-     value_[i] = std::move(obj);
+     Object* obj_ptr = obj.release();
+     value_[i] = std::shared_ptr<Object>(obj_ptr);
    }
 
    void Print() override {
@@ -153,25 +159,35 @@ class TupleObject: public Object {
    }
 
  private:
-  std::vector<std::unique_ptr<Object>> value_;
+  std::vector<std::shared_ptr<Object>> value_;
 };
 
 class ArrayObject: public Object {
  public:
    ArrayObject(std::vector<std::unique_ptr<Object>>&& value)
-      : Object(ObjectType::ARRAY), value_(std::move(value)) {}
+      : Object(ObjectType::ARRAY), value_(value.size()) {
+     for (size_t i = 0; i < value.size(); i++) {
+       Object* obj_ptr = value[i].release();
+       value_[i] = std::shared_ptr<Object>(obj_ptr);
+     }
+   }
+
+   ArrayObject(std::vector<std::shared_ptr<Object>>&& value)
+      : Object(ObjectType::ARRAY), value_(value) {}
+
    virtual ~ArrayObject() {}
 
    inline Object* at(size_t i) {
      return value_.at(i).get();
    }
 
-   inline std::unique_ptr<Object>& ElementRef(size_t i) {
+   inline std::shared_ptr<Object> ElementRef(size_t i) {
      return value_.at(i);
    }
 
    inline void set(size_t i, std::unique_ptr<Object> obj) {
-     value_[i] = std::move(obj);
+     Object* obj_ptr = obj.release();
+     value_[i] = std::shared_ptr<Object>(obj_ptr);
    }
 
    void Print() override {
@@ -184,7 +200,7 @@ class ArrayObject: public Object {
    }
 
  private:
-  std::vector<std::unique_ptr<Object>> value_;
+  std::vector<std::shared_ptr<Object>> value_;
 };
 
 }
