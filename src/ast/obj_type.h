@@ -175,7 +175,12 @@ class ArrayObject: public Object {
    }
 
    void Print() override {
-     std::cout << "ARRAY";
+     std::cout << "ARRAY: [ ";
+     for (const auto& e: value_) {
+       e->Print();
+       std::cout << " ";
+     }
+     std::cout << "]";
    }
 
  private:

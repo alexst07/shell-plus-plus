@@ -35,6 +35,9 @@ class ExpressionExecutor: public Executor {
   // Executes literal const and return an object with its value
   std::unique_ptr<Object> ExecLiteral(AstNode* node);
 
+  // Executes array instantiation
+  std::unique_ptr<Object> ExecArrayInstantiation(AstNode* node);
+
 };
 
 }

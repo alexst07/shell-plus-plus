@@ -32,7 +32,20 @@ std::unique_ptr<Object> ExpressionExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kLiteral: {
       return ExecLiteral(node);
     } break;
+
+    case AstNode::NodeType::kArrayInstantiation: {
+      return ExecArrayInstantiation(node);
+    } break;
   }
+}
+
+std::unique_ptr<Object> ExpressionExecutor::ExecArrayInstantiation(
+    AstNode* node) {
+  ArrayInstantiation* array_node = static_cast<ArrayInstantiation*>(node);
+  AssignableListExecutor assignable_list(this, symbol_table_stack());
+  auto vec = assignable_list.Exec(array_node->assignable_list());
+  std::unique_ptr<Object> array_obj(new ArrayObject(std::move(vec)));
+  return array_obj;
 }
 
 std::unique_ptr<Object> ExpressionExecutor::ExecLiteral(AstNode* node) {
