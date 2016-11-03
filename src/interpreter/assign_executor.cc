@@ -51,8 +51,7 @@ ObjectPtr& AssignExecutor::AssignIdentifier(AstNode* node, bool create) {
   return symbol_table_stack().Lookup(name, create).Ref();
 }
 
-ObjectPtr& AssignExecutor::ObjectArray(Array& array_node,
-                                                     ArrayObject& obj) {
+ObjectPtr& AssignExecutor::RefArray(Array& array_node, ArrayObject& obj) {
   // Executes index expression of array
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr index(expr_exec.Exec(array_node.index_exp()));
@@ -69,6 +68,23 @@ ObjectPtr& AssignExecutor::ObjectArray(Array& array_node,
   return static_cast<ArrayObject&>(obj).ElementRef(size_t(num));
 }
 
+ObjectPtr& AssignExecutor::RefTuple(Array& array_node, TupleObject& obj) {
+  // Executes index expression of tuple
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr index(expr_exec.Exec(array_node.index_exp()));
+
+  // Tuple accept only integer index
+  if (index->type() != Object::ObjectType::INT) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("tuple index must be integer"));
+  }
+
+  // Gets the value of integer object
+  int num = static_cast<IntObject*>(index.get())->value();
+
+  return static_cast<TupleObject&>(obj).ElementRef(size_t(num));
+}
+
 // TODO: Executes for map and custon objects
 ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
   Array* array_node = static_cast<Array*>(node);
@@ -80,7 +96,9 @@ ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
     ObjectPtr& obj = AssignIdentifier(arr_exp);
 
     if (obj->type() == Object::ObjectType::ARRAY) {
-      return ObjectArray(*array_node, *static_cast<ArrayObject*>(obj.get()));
+      return RefArray(*array_node, *static_cast<ArrayObject*>(obj.get()));
+    } else if (obj->type() == Object::ObjectType::TUPLE) {
+      return RefTuple(*array_node, *static_cast<TupleObject*>(obj.get()));
     }
   } else if (arr_exp->type() == AstNode::NodeType::kArray) {
     // Interprete case as a[1]...[1] = ?
@@ -88,7 +106,9 @@ ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
     ObjectPtr obj = AssignArray(arr_exp);
 
     if (obj->type() == Object::ObjectType::ARRAY) {
-      return ObjectArray(*array_node, static_cast<ArrayObject&>(*obj));
+      return RefArray(*array_node, static_cast<ArrayObject&>(*obj));
+    } else if (obj->type() == Object::ObjectType::TUPLE) {
+      return RefTuple(*array_node, static_cast<TupleObject&>(*obj));
     }
   }
 }

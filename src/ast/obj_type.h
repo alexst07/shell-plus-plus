@@ -147,7 +147,7 @@ class TupleObject: public Object {
 
    virtual ~TupleObject() {}
 
-   inline std::shared_ptr<Object> ElementRef(size_t i) {
+   inline std::shared_ptr<Object>& ElementRef(size_t i) {
      return value_.at(i);
    }
 
@@ -157,7 +157,12 @@ class TupleObject: public Object {
    }
 
    void Print() override {
-     std::cout << "TUPLE";
+     std::cout << "TUPLE: ( ";
+     for (const auto& e: value_) {
+       e->Print();
+       std::cout << " ";
+     }
+     std::cout << ")";
    }
 
  private:

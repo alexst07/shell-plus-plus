@@ -39,7 +39,9 @@ class AssignExecutor: public Executor {
   // Executes assignable list, it can be function or expression
   std::vector<std::unique_ptr<Object>> ExecAssignableList(AstNode* node);
 
-  ObjectPtr& ObjectArray(Array& array_node, ArrayObject& obj);
+  ObjectPtr& RefArray(Array& array_node, ArrayObject& obj);
+
+  ObjectPtr& RefTuple(Array& array_node, TupleObject& obj);
 };
 
 }
