@@ -33,19 +33,29 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
       return ExecLiteral(node);
     } break;
 
+    case AstNode::NodeType::kIdentifier: {
+      return ExecIdentifier(node);
+    } break;
+
     case AstNode::NodeType::kArrayInstantiation: {
       return ExecArrayInstantiation(node);
     } break;
   }
 }
 
-ObjectPtr ExpressionExecutor::ExecArrayInstantiation(
-    AstNode* node) {
+ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {
   ArrayInstantiation* array_node = static_cast<ArrayInstantiation*>(node);
   AssignableListExecutor assignable_list(this, symbol_table_stack());
   auto vec = assignable_list.Exec(array_node->assignable_list());
   std::unique_ptr<Object> array_obj(new ArrayObject(std::move(vec)));
   return array_obj;
+}
+
+ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) {
+  Identifier* id_node = static_cast<Identifier*>(node);
+  const std::string& name = id_node->name();
+  auto obj = symbol_table_stack().Lookup(name, false).Ref();
+  return PassVar(obj);
 }
 
 ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {

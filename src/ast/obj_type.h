@@ -20,6 +20,8 @@ class EntryPointer {
     return type_;
   }
 
+  EntryPointer(const EntryPointer& other): type_(other.type_) {}
+
  protected:
   EntryPointer(EntryType type): type_(type) {}
 
@@ -40,6 +42,8 @@ class Object: public EntryPointer {
     TUPLE,
     CUSTON
   };
+
+  Object(const Object& obj): EntryPointer(obj), type_(obj.type_) {}
 
   virtual ~Object() {}
 
@@ -74,7 +78,13 @@ class NullObject: public Object {
 class IntObject: public Object {
  public:
   IntObject(int value): Object(ObjectType::INT), value_(value) {}
+  IntObject(const IntObject& obj): Object(obj), value_(obj.value_) {}
   virtual ~IntObject() {}
+
+  IntObject& operator=(const IntObject& obj) {
+    value_ = obj.value_;
+    return *this;
+  }
 
   inline int value() const noexcept { return value_; }
 
@@ -89,7 +99,13 @@ class IntObject: public Object {
 class BoolObject: public Object {
  public:
   BoolObject(bool value): Object(ObjectType::BOOL), value_(value) {}
+  BoolObject(const BoolObject& obj): Object(obj), value_(obj.value_) {}
   virtual ~BoolObject() {}
+
+  BoolObject& operator=(const BoolObject& obj) {
+    value_ = obj.value_;
+    return *this;
+  }
 
   inline bool value() const noexcept { return value_; }
 
@@ -104,7 +120,13 @@ class BoolObject: public Object {
 class RealObject: public Object {
  public:
   RealObject(float value): Object(ObjectType::REAL), value_(value) {}
+  RealObject(const RealObject& obj): Object(obj), value_(obj.value_) {}
   virtual ~RealObject() {}
+
+  RealObject& operator=(const RealObject& obj) {
+    value_ = obj.value_;
+    return *this;
+  }
 
   inline float value() const noexcept { return value_; }
 
@@ -120,7 +142,14 @@ class StringObject: public Object {
  public:
   StringObject(std::string&& value)
       : Object(ObjectType::STRING), value_(std::move(value)) {}
+  StringObject(const StringObject& obj): Object(obj), value_(obj.value_) {}
+
   virtual ~StringObject() {}
+
+  StringObject& operator=(const StringObject& obj) {
+    value_ = obj.value_;
+    return *this;
+  }
 
   inline const std::string& value() const noexcept { return value_; }
 
@@ -144,6 +173,8 @@ class TupleObject: public Object {
 
    TupleObject(std::vector<std::shared_ptr<Object>>&& value)
       : Object(ObjectType::TUPLE), value_(value) {}
+
+   TupleObject(const TupleObject& obj): Object(obj), value_(obj.value_) {}
 
    virtual ~TupleObject() {}
 
@@ -181,6 +212,8 @@ class ArrayObject: public Object {
 
    ArrayObject(std::vector<std::shared_ptr<Object>>&& value)
       : Object(ObjectType::ARRAY), value_(value) {}
+
+   ArrayObject(const ArrayObject& obj): Object(obj), value_(obj.value_) {}
 
    virtual ~ArrayObject() {}
 

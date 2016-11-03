@@ -35,6 +35,41 @@ class ExpressionExecutor: public Executor {
   // Executes literal const and return an object with its value
   ObjectPtr ExecLiteral(AstNode* node);
 
+  // Lookup on symbol table and return a reference
+  // if the object is simple as integer, bool, string or real
+  // then create a copy the object and return its reference
+  // if it is a container as array, tuple, or map
+  // return only the reference of the object on symbol table
+  ObjectPtr ExecIdentifier(AstNode* node);
+
+  // Pass the variable as value or reference depending on type
+  inline ObjectPtr PassVar(ObjectPtr obj) {
+    switch (obj->type()) {
+      case Object::ObjectType::NIL:
+        return ObjectPtr(new NullObject());
+        break;
+
+      case Object::ObjectType::INT:
+        return ObjectPtr(new IntObject(static_cast<IntObject&>(*obj)));
+        break;
+
+      case Object::ObjectType::BOOL:
+        return ObjectPtr(new BoolObject(static_cast<BoolObject&>(*obj)));
+        break;
+
+      case Object::ObjectType::REAL:
+        return ObjectPtr(new RealObject(static_cast<RealObject&>(*obj)));
+        break;
+
+      case Object::ObjectType::STRING:
+        return ObjectPtr(new StringObject(static_cast<StringObject&>(*obj)));
+        break;
+
+      default:
+        return obj;
+    }
+  }
+
   // Executes array instantiation
   ObjectPtr ExecArrayInstantiation(AstNode* node);
 
