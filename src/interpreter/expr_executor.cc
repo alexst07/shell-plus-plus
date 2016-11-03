@@ -58,6 +58,46 @@ ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) {
   return PassVar(obj);
 }
 
+ObjectPtr ExpressionExecutor::ArrayAccess(Array& array_node,
+                                          ArrayObject& obj) {
+  // Executes index expression of array
+  ObjectPtr index = Exec(array_node.index_exp());
+
+  // Array accept only integer index
+  if (index->type() != Object::ObjectType::INT) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("array index must be integer"));
+  }
+
+  // Gets the value of integer object
+  int num = static_cast<IntObject*>(index.get())->value();
+
+  auto val = static_cast<ArrayObject&>(obj).Element(size_t(num));
+  return PassVar(val);
+}
+
+ObjectPtr ExpressionExecutor::TupleAccess(Array& array_node,
+                                          TupleObject& obj) {
+  // Executes index expression of array
+  ObjectPtr index = Exec(array_node.index_exp());
+
+  // Array accept only integer index
+  if (index->type() != Object::ObjectType::INT) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("array index must be integer"));
+  }
+
+  // Gets the value of integer object
+  int num = static_cast<IntObject*>(index.get())->value();
+
+  auto val = static_cast<TupleObject&>(obj).Element(size_t(num));
+  return PassVar(val);
+}
+
+ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
+
+}
+
 ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
   Literal* literal = static_cast<Literal*>(node);
   switch (literal->literal_type()) {

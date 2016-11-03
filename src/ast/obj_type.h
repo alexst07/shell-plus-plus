@@ -182,6 +182,10 @@ class TupleObject: public Object {
      return value_.at(i);
    }
 
+   inline std::shared_ptr<Object> Element(size_t i) {
+     return value_.at(i);
+   }
+
    inline void set(size_t i, std::unique_ptr<Object> obj) {
      Object* obj_ptr = obj.release();
      value_[i] = std::shared_ptr<Object>(obj_ptr);
@@ -222,6 +226,10 @@ class ArrayObject: public Object {
    }
 
    inline std::shared_ptr<Object>& ElementRef(size_t i) {
+     return value_.at(i);
+   }
+
+   inline std::shared_ptr<Object> Element(size_t i) {
      return value_.at(i);
    }
 

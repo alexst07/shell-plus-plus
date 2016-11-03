@@ -55,6 +55,9 @@ class SymbolAttr: public EntryPointer {
     return value_;
   }
 
+  std::shared_ptr<Object> SharedAccess() const noexcept {
+    return value_;
+  }
 
   inline void set_value(std::unique_ptr<Object> value) noexcept {
     Object* obj = value.release();

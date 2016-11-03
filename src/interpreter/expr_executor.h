@@ -70,6 +70,16 @@ class ExpressionExecutor: public Executor {
     }
   }
 
+  // Executes array access, it could be a language array, map, tuple or
+  // custon object
+  ObjectPtr ExecArrayAccess(AstNode* node);
+
+  // Access a position of array object
+  ObjectPtr ArrayAccess(Array& array_node, ArrayObject& obj);
+
+  // Access a position of tuple object
+  ObjectPtr TupleAccess(Array& array_node, TupleObject& obj);
+
   // Executes array instantiation
   ObjectPtr ExecArrayInstantiation(AstNode* node);
 
