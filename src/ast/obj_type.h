@@ -411,6 +411,31 @@ class ArrayObject: public Object {
   std::vector<std::shared_ptr<Object>> value_;
 };
 
+class MapObject: public Object {
+ public:
+   MapObject(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value)
+      : Object(ObjectType::MAP) {
+     for (size_t i = 0; i < value.size(); i++) {
+       // max efficiency inserting
+       auto it = value_.begin();
+       value_.insert(it, std::pair<size_t, std::pair<ObjectPtr, ObjectPtr>>(
+           value[i].first->Hash(), std::move(value[i])));
+     }
+   }
+
+   MapObject(std::map<size_t, std::pair<ObjectPtr, ObjectPtr>>&& value)
+      : Object(ObjectType::MAP), value_(std::move(value)) {}
+
+   virtual void Print() = 0;
+
+   virtual std::size_t Hash() const = 0;
+
+   virtual bool operator==(const Object& obj) const = 0;
+
+ private:
+  std::map<size_t, std::pair<ObjectPtr, ObjectPtr>> value_;
+};
+
 }
 }
 
