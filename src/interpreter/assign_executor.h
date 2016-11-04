@@ -14,6 +14,11 @@
 namespace setti {
 namespace internal {
 
+// Class to execute assignment operation
+//
+// on this class some methods return reference for shared_ptr
+// it is not common in C++, but on this case, the objective
+// is not increment the counter, but change the variable
 class AssignExecutor: public Executor {
  public:
   AssignExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)

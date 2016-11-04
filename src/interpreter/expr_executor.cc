@@ -37,6 +37,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
       return ExecIdentifier(node);
     } break;
 
+    case AstNode::NodeType::kArray: {
+      return ExecArrayAccess(node);
+    } break;
+
     case AstNode::NodeType::kArrayInstantiation: {
       return ExecArrayInstantiation(node);
     } break;
@@ -84,7 +88,7 @@ ObjectPtr ExpressionExecutor::TupleAccess(Array& array_node,
   // Array accept only integer index
   if (index->type() != Object::ObjectType::INT) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("array index must be integer"));
+                       boost::format("tuple index must be integer"));
   }
 
   // Gets the value of integer object
@@ -95,7 +99,19 @@ ObjectPtr ExpressionExecutor::TupleAccess(Array& array_node,
 }
 
 ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
+  Array* array_node = static_cast<Array*>(node);
+  Expression* arr_exp = array_node->arr_exp();
 
+  ObjectPtr array_obj = Exec(arr_exp);
+
+  if (array_obj->type() == Object::ObjectType::ARRAY) {
+    return ArrayAccess(*array_node, static_cast<ArrayObject&>(*array_obj));
+  } else if (array_obj->type() == Object::ObjectType::TUPLE) {
+    return TupleAccess(*array_node, static_cast<TupleObject&>(*array_obj));
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("operator [] not overload for object"));
+  }
 }
 
 ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
