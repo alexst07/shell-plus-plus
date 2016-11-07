@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_map>
 #include <tuple>
+#include <list>
 
 #include "run_time_error.h"
 
@@ -413,27 +414,71 @@ class ArrayObject: public Object {
 
 class MapObject: public Object {
  public:
-   MapObject(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value)
-      : Object(ObjectType::MAP) {
-     for (size_t i = 0; i < value.size(); i++) {
-       // max efficiency inserting
-       auto it = value_.begin();
-       value_.insert(it, std::pair<size_t, std::pair<ObjectPtr, ObjectPtr>>(
-           value[i].first->Hash(), std::move(value[i])));
-     }
-   }
+  using Map =
+      std::unordered_map<size_t, std::list<std::pair<ObjectPtr, ObjectPtr>>>;
 
-   MapObject(std::map<size_t, std::pair<ObjectPtr, ObjectPtr>>&& value)
+  using Pair = std::pair<size_t, std::list<std::pair<ObjectPtr, ObjectPtr>>>;
+
+  MapObject(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value)
+      : Object(ObjectType::MAP) {
+    for (size_t i = 0; i < value.size(); i++) {
+      // max efficiency inserting
+      auto it = value_.begin();
+      std::list<std::pair<ObjectPtr, ObjectPtr>> list;
+      list.push_back(std::move(value[i]));
+      value_.insert(it, Pair(value[i].first->Hash(), std::move(list)));
+    }
+  }
+
+  MapObject(Map&& value)
       : Object(ObjectType::MAP), value_(std::move(value)) {}
 
-   virtual void Print() = 0;
+  std::size_t Hash() const override {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("map object has no hash method"));
+  }
 
-   virtual std::size_t Hash() const = 0;
+  bool operator==(const Object& obj) const override {
+    using ls = std::list<std::pair<ObjectPtr, ObjectPtr>>;
+    const MapObject& map = static_cast<const MapObject&>(obj);
 
-   virtual bool operator==(const Object& obj) const = 0;
+    for (struct {Map::const_iterator a; Map::const_iterator b;} loop
+             = { value_.begin(), map.value_.begin() };
+         (loop.a != value_.end()) && (loop.b != map.value_.end());
+         loop.a++, loop.b++) {
+      for (struct {ls::const_iterator la; ls::const_iterator lb;} l
+               = { loop.a->second.begin(), loop.b->second.begin() };
+           (l.la != loop.a->second.end()) && (l.lb != loop.b->second.end());
+           l.la++, l.lb++) {
+        if (*l.la != *l.lb) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  inline bool Exists(ObjectPtr obj_index) {
+    size_t hash = obj_index->Hash();
+
+    auto it = value_.find(hash);
+
+    if (it != value_.end()) {
+      for (auto& e: it->second) {
+        if (*e.first == *obj_index) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  virtual void Print() = 0;
 
  private:
-  std::map<size_t, std::pair<ObjectPtr, ObjectPtr>> value_;
+   Map value_;
 };
 
 }
