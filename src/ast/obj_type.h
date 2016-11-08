@@ -459,6 +459,28 @@ class MapObject: public Object {
     return true;
   }
 
+  inline std::shared_ptr<Object>& ElementRef(size_t i) {
+    return value_.at(i);
+  }
+
+  // Return a tuple object with the element and a bool object
+  std::shared_ptr<Object> Element(ObjectPtr obj_index) {
+    // if the index not exists on the map return a tuple object
+    // with null and bool object
+    if (!Exists(obj_index)) {
+      std::vector<std::shared_ptr<Object>> vet_tuple{
+          ObjectPtr(ObjectPtr(new NullObject()), new BoolObject(false))};
+
+      ObjectPtr obj_ret(New TupleObject(std::move(vet_tuple)));
+      return obj_ret;
+    }
+
+
+    // if the index exists on map, search the object on the list, to confirm
+    // that is not a false hash match
+
+  }
+
   inline bool Exists(ObjectPtr obj_index) {
     size_t hash = obj_index->Hash();
 
