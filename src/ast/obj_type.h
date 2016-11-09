@@ -459,26 +459,76 @@ class MapObject: public Object {
     return true;
   }
 
-  inline std::shared_ptr<Object>& ElementRef(size_t i) {
-    return value_.at(i);
+  // Return the reference for an object on the map, if there is no
+  // entry for this index, create a new empty with this entry and
+  // return its reference
+  inline ObjectPtr& ElementRef(ObjectPtr obj_index) {
+    if (Exists(obj_index)) {
+      size_t hash = obj_index->Hash();
+      auto it = value_.find(hash);
+      return it->second.back().second;
+    } else {
+      return Insert_(obj_index);
+    }
   }
 
   // Return a tuple object with the element and a bool object
   std::shared_ptr<Object> Element(ObjectPtr obj_index) {
-    // if the index not exists on the map return a tuple object
-    // with null and bool object
-    if (!Exists(obj_index)) {
+    size_t hash = obj_index->Hash();
+
+    auto it = value_.find(hash);
+
+    // return a tuple with null object and false bool object
+    auto ret_null = []() {
       std::vector<std::shared_ptr<Object>> vet_tuple{
           ObjectPtr(ObjectPtr(new NullObject()), new BoolObject(false))};
 
-      ObjectPtr obj_ret(New TupleObject(std::move(vet_tuple)));
+      ObjectPtr obj_ret(new TupleObject(std::move(vet_tuple)));
       return obj_ret;
-    }
+    };
 
+    // if the index not exists on the map return a tuple object
+    // with null and bool object
+    if (it == value_.end()) {
+      return ret_null();
+    }
 
     // if the index exists on map, search the object on the list, to confirm
     // that is not a false hash match
+    for (auto& e: it->second) {
+      // when the obj_index match with any index on the list, create a tuple
+      // object to return
+      if (*e.first == *obj_index) {
+        std::vector<std::shared_ptr<Object>> vet_tuple{
+            ObjectPtr(e.second, new BoolObject(true))};
 
+        ObjectPtr obj_ret(new TupleObject(std::move(vet_tuple)));
+        return obj_ret;
+      } else {
+        return ret_null();
+      }
+    }
+  }
+
+
+  // Create, this method doesn't do any kind of verification
+  // the caller method must check if the entry exists on map or not
+  inline ObjectPtr& Insert_(ObjectPtr obj_index) {
+    size_t hash = obj_index->Hash();
+
+    auto it = value_.find(hash);
+    ObjectPtr obj(nullptr);
+
+    // if the hash doesn't exists create a entry with a list
+    if (it == value_.end()) {
+      std::list<std::pair<ObjectPtr, ObjectPtr>> list;
+      list.push_back(std::pair<ObjectPtr, ObjectPtr>(obj_index, obj));
+      value_.insert(Pair(hash, list));
+    } else {
+      it->second.push_back(std::pair<ObjectPtr, ObjectPtr>(obj_index, obj));
+    }
+
+    return value_.find(hash)->second.back().second;
   }
 
   inline bool Exists(ObjectPtr obj_index) {
