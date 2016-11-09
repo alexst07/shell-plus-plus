@@ -269,6 +269,10 @@ class TupleObject: public Object {
      return value_.at(i);
    }
 
+   inline size_t Size() const noexcept {
+     return value_.size();
+   }
+
    inline void set(size_t i, std::unique_ptr<Object> obj) {
      Object* obj_ptr = obj.release();
      value_[i] = std::shared_ptr<Object>(obj_ptr);

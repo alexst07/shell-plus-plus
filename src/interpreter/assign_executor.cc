@@ -26,8 +26,9 @@ void AssignExecutor::Exec(AstNode* node) {
 
   // Assignment can be done only when the tuples have the same size
   // or there is only one variable on the left side
-  // a, b, c = 1, 2, 3 or a = 1, 2, 3
-  if ((vars.size() != 1) && (vars.size() != values.size())) {
+  // a, b, c = 1, 2, 3; a = 1, 2, 3; a, b = f
+  if ((vars.size() != 1) && (values.size() != 1) &&
+      (vars.size() != values.size())) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("different size of tuples"));
   }
@@ -37,6 +38,25 @@ void AssignExecutor::Exec(AstNode* node) {
   } else if ((vars.size() == 1) && (values.size() != 1)) {
     ObjectPtr tuple_obj(new TupleObject(std::move(values)));
     vars[0].get() = tuple_obj;
+  } else if ((vars.size() != 1) && (values.size() == 1)) {
+    // only tuple object is accept on this case
+    if (values[0]->type() != Object::ObjectType::TUPLE) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("expect tuple object as rvalue"));
+    }
+
+    // numbers of variables must be equal the number of tuple elements
+    TupleObject &tuple_obj = static_cast<TupleObject&>(*values[0]);
+    if (vars.size() != tuple_obj.Size()) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("numbers of variables: %1% and"
+                        "numbers of tuples: %2% are "
+                        "incompatibles")% vars.size() % tuple_obj.Size());
+    }
+
+    for (size_t i = 0; i < vars.size(); i++) {
+      vars[i].get() = tuple_obj.Element(i);
+    }
   } else {
     // on this case there are the same number of variables and values
     for (size_t i = 0; i < vars.size(); i++) {
