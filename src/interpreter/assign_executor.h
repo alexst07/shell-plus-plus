@@ -32,7 +32,7 @@ class AssignExecutor: public Executor {
   ObjectPtr& AssignArray(AstNode* node);
 
   // Gets the pointer of a symbol to assign a value
-  ObjectPtr& LeftVar(AstNode* node);
+  ObjectPtr& AssignmentAcceptorExpr(AstNode* node);
 
   std::vector<std::reference_wrapper<ObjectPtr>>
   AssignList(AstNode* node);

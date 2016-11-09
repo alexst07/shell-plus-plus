@@ -110,30 +110,16 @@ ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
   Array* array_node = static_cast<Array*>(node);
   Expression* arr_exp = array_node->arr_exp();
 
-  // Interprete case as a[1] = ?
-  // where array expression is an identifier
-  if (arr_exp->type() == AstNode::NodeType::kIdentifier) {
-    ObjectPtr& obj = AssignIdentifier(arr_exp);
+  ObjectPtr& obj = AssignmentAcceptorExpr(arr_exp);
 
-    if (obj->type() == Object::ObjectType::ARRAY) {
-      return RefArray(*array_node, *static_cast<ArrayObject*>(obj.get()));
-    } else if (obj->type() == Object::ObjectType::TUPLE) {
-      return RefTuple(*array_node, *static_cast<TupleObject*>(obj.get()));
-    }
-  } else if (arr_exp->type() == AstNode::NodeType::kArray) {
-    // Interprete case as a[1]...[1] = ?
-    // where array expression is an array
-    ObjectPtr obj = AssignArray(arr_exp);
-
-    if (obj->type() == Object::ObjectType::ARRAY) {
-      return RefArray(*array_node, static_cast<ArrayObject&>(*obj));
-    } else if (obj->type() == Object::ObjectType::TUPLE) {
-      return RefTuple(*array_node, static_cast<TupleObject&>(*obj));
-    }
+  if (obj->type() == Object::ObjectType::ARRAY) {
+    return RefArray(*array_node, *static_cast<ArrayObject*>(obj.get()));
+  } else if (obj->type() == Object::ObjectType::TUPLE) {
+    return RefTuple(*array_node, *static_cast<TupleObject*>(obj.get()));
   }
 }
 
-ObjectPtr& AssignExecutor::LeftVar(AstNode* node) {
+ObjectPtr& AssignExecutor::AssignmentAcceptorExpr(AstNode* node) {
   switch(node->type()) {
     case AstNode::NodeType::kIdentifier:
       return AssignIdentifier(node, true);
@@ -156,7 +142,7 @@ AssignExecutor::AssignList(AstNode* node) {
 
   for (Expression* exp: node_list->children()) {
     vec.push_back(
-        std::reference_wrapper<ObjectPtr>(LeftVar(exp)));
+        std::reference_wrapper<ObjectPtr>(AssignmentAcceptorExpr(exp)));
   }
 
   return vec;
