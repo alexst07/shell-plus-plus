@@ -44,6 +44,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kArrayInstantiation: {
       return ExecArrayInstantiation(node);
     } break;
+
+    case AstNode::NodeType::kDictionaryInstantiation: {
+      return ExecMapInstantiation(node);
+    }
   }
 }
 
@@ -53,6 +57,27 @@ ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {
   auto vec = assignable_list.Exec(array_node->assignable_list());
   std::unique_ptr<Object> array_obj(new ArrayObject(std::move(vec)));
   return array_obj;
+}
+
+ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {
+  DictionaryInstantiation* map_node =
+      static_cast<DictionaryInstantiation*>(node);
+
+  std::vector<std::pair<ObjectPtr, ObjectPtr>> map_vec;
+  auto children_vec = map_node->children();
+
+  // traverses the vector assembling the vector of pairs of objects
+  for (auto& key_value: children_vec) {
+    ObjectPtr obj_key(Exec(key_value->key()));
+    AssignableListExecutor assignable(this, symbol_table_stack());
+    ObjectPtr obj_value(assignable.ExecAssignable(key_value->value()));
+    std::pair<ObjectPtr, ObjectPtr> pair(obj_key, obj_value);
+    map_vec.push_back(std::move(pair));
+  }
+
+  // creates the map object
+  ObjectPtr map(new MapObject(std::move(map_vec)));
+  return map;
 }
 
 ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) {
@@ -139,7 +164,6 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
     } break;
   }
 }
-
 
 }
 }

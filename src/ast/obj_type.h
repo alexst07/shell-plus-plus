@@ -419,18 +419,17 @@ class ArrayObject: public Object {
 class MapObject: public Object {
  public:
   using Map =
-      std::unordered_map<size_t, std::list<std::pair<ObjectPtr, ObjectPtr>>>;
+      std::unordered_map<size_t, std::vector<std::pair<ObjectPtr, ObjectPtr>>>;
 
-  using Pair = std::pair<size_t, std::list<std::pair<ObjectPtr, ObjectPtr>>>;
+  using Pair = std::pair<size_t, std::vector<std::pair<ObjectPtr, ObjectPtr>>>;
 
   MapObject(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value)
       : Object(ObjectType::MAP) {
-    for (size_t i = 0; i < value.size(); i++) {
-      // max efficiency inserting
-      auto it = value_.begin();
-      std::list<std::pair<ObjectPtr, ObjectPtr>> list;
-      list.push_back(std::move(value[i]));
-      value_.insert(it, Pair(value[i].first->Hash(), std::move(list)));
+    for (auto& e: value) {
+      std::vector<std::pair<ObjectPtr, ObjectPtr>> list;
+      list.push_back(e);
+      value_.insert(std::pair<size_t, std::vector<std::pair<ObjectPtr,
+          ObjectPtr>>>(e.first->Hash(), list));
     }
   }
 
@@ -443,7 +442,7 @@ class MapObject: public Object {
   }
 
   bool operator==(const Object& obj) const override {
-    using ls = std::list<std::pair<ObjectPtr, ObjectPtr>>;
+    using ls = std::vector<std::pair<ObjectPtr, ObjectPtr>>;
     const MapObject& map = static_cast<const MapObject&>(obj);
 
     for (struct {Map::const_iterator a; Map::const_iterator b;} loop
@@ -525,7 +524,7 @@ class MapObject: public Object {
 
     // if the hash doesn't exists create a entry with a list
     if (it == value_.end()) {
-      std::list<std::pair<ObjectPtr, ObjectPtr>> list;
+      std::vector<std::pair<ObjectPtr, ObjectPtr>> list;
       list.push_back(std::pair<ObjectPtr, ObjectPtr>(obj_index, obj));
       value_.insert(Pair(hash, list));
     } else {
@@ -551,7 +550,19 @@ class MapObject: public Object {
     return false;
   }
 
-  virtual void Print() = 0;
+  void Print() override {
+    std::cout << "ARRAY: { ";
+    for (auto& list: value_) {
+      for (auto& pair: list.second) {
+        std::cout << "(";
+        pair.first->Print();
+        std::cout << ", ";
+        pair.second->Print();
+        std::cout << ")";
+      }
+    }
+    std::cout << "} ";
+  }
 
  private:
    Map value_;
