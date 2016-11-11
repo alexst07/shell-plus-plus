@@ -29,7 +29,7 @@ class RunTimeError : public std::exception {
   RunTimeError();
 
   RunTimeError(ErrorCode code, const boost::format& msg)
-      : code_(code), msg_(msg) {}
+      : code_(code), msg_(boost::str(msg)) {}
 
   virtual ~RunTimeError() noexcept  = default;
 
@@ -37,11 +37,11 @@ class RunTimeError : public std::exception {
    * @return the error description and the context as a text string.
    */
   virtual const char* what() const noexcept {
-    msg_.str().c_str();
+    msg_.c_str();
   }
 
   ErrorCode code_;
-  const boost::format& msg_;
+  std::string msg_;
 };
 
 }
