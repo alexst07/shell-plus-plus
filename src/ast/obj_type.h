@@ -117,8 +117,7 @@ class IntObject: public Object {
 
   bool operator==(const Object& obj) const override {
     if (obj.type() != ObjectType::INT) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("operator == valid only with int"));
+      return false;
     }
 
     int value = static_cast<const IntObject&>(obj).value_;
@@ -154,8 +153,7 @@ class BoolObject: public Object {
 
   bool operator==(const Object& obj) const override {
     if (obj.type() != ObjectType::BOOL) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("operator == valid only with bool"));
+      return false;
     }
 
     bool value = static_cast<const BoolObject&>(obj).value_;
@@ -191,8 +189,7 @@ class RealObject: public Object {
 
   bool operator==(const Object& obj) const override {
     if (obj.type() != ObjectType::REAL) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("operator == valid only with real"));
+      return false;
     }
 
     float value = static_cast<const RealObject&>(obj).value_;
@@ -230,8 +227,7 @@ class StringObject: public Object {
 
   bool operator==(const Object& obj) const override {
     if (obj.type() != ObjectType::STRING) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("operator == valid only with string"));
+      return false;
     }
 
     std::string value = static_cast<const StringObject&>(obj).value_;
@@ -356,8 +352,7 @@ class TupleObject: public Object {
 
    bool operator==(const Object& obj) const override {
      if (obj.type() != ObjectType::TUPLE) {
-       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                          boost::format("operator == valid only with tuple"));
+       return false;
      }
 
      const TupleObject& tuple_obj = static_cast<const TupleObject&>(obj);
@@ -442,8 +437,7 @@ class ArrayObject: public Object {
 
    bool operator==(const Object& obj) const override {
      if (obj.type() != ObjectType::ARRAY) {
-       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                          boost::format("operator == valid only with array"));
+       return false;
      }
 
      const ArrayObject& array_obj = static_cast<const ArrayObject&>(obj);
@@ -502,6 +496,10 @@ class MapObject: public Object {
   }
 
   bool operator==(const Object& obj) const override {
+    if (obj.type() != ObjectType::MAP) {
+      return false;
+    }
+
     using ls = std::vector<std::pair<ObjectPtr, ObjectPtr>>;
     const MapObject& map = static_cast<const MapObject&>(obj);
 
