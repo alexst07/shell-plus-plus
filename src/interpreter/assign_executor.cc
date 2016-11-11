@@ -49,7 +49,7 @@ void AssignExecutor::Exec(AstNode* node) {
     TupleObject &tuple_obj = static_cast<TupleObject&>(*values[0]);
     if (vars.size() != tuple_obj.Size()) {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-          boost::format("numbers of variables: %1% and"
+          boost::format("numbers of variables: %1% and "
                         "numbers of tuples: %2% are "
                         "incompatibles")% vars.size() % tuple_obj.Size());
     }

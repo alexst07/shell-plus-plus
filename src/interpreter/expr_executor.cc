@@ -123,6 +123,14 @@ ObjectPtr ExpressionExecutor::TupleAccess(Array& array_node,
   return PassVar(val);
 }
 
+ObjectPtr ExpressionExecutor::MapAccess(Array& array_node, MapObject& obj) {
+  // Executes index expression of array
+  ObjectPtr index = Exec(array_node.index_exp());
+
+  auto val = static_cast<MapObject&>(obj).Element(index);
+  return PassVar(val);
+}
+
 ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
   Array* array_node = static_cast<Array*>(node);
   Expression* arr_exp = array_node->arr_exp();
@@ -133,6 +141,8 @@ ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
     return ArrayAccess(*array_node, static_cast<ArrayObject&>(*array_obj));
   } else if (array_obj->type() == Object::ObjectType::TUPLE) {
     return TupleAccess(*array_node, static_cast<TupleObject&>(*array_obj));
+  } else if (array_obj->type() == Object::ObjectType::MAP) {
+    return MapAccess(*array_node, static_cast<MapObject&>(*array_obj));
   } else {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("operator [] not overload for object"));

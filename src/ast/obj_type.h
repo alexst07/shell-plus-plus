@@ -255,7 +255,7 @@ class TupleObject: public Object {
    }
 
    TupleObject(std::vector<std::shared_ptr<Object>>&& value)
-      : Object(ObjectType::TUPLE), value_(value) {}
+      : Object(ObjectType::TUPLE), value_(std::move(value)) {}
 
    TupleObject(const TupleObject& obj): Object(obj), value_(obj.value_) {}
 
@@ -445,10 +445,12 @@ class MapObject: public Object {
     using ls = std::vector<std::pair<ObjectPtr, ObjectPtr>>;
     const MapObject& map = static_cast<const MapObject&>(obj);
 
+    // for to compare two maps
     for (struct {Map::const_iterator a; Map::const_iterator b;} loop
              = { value_.begin(), map.value_.begin() };
          (loop.a != value_.end()) && (loop.b != map.value_.end());
          loop.a++, loop.b++) {
+      // for to compare the lists inside the maps
       for (struct {ls::const_iterator la; ls::const_iterator lb;} l
                = { loop.a->second.begin(), loop.b->second.begin() };
            (l.la != loop.a->second.end()) && (l.lb != loop.b->second.end());
@@ -503,7 +505,7 @@ class MapObject: public Object {
       // object to return
       if (*e.first == *obj_index) {
         std::vector<std::shared_ptr<Object>> vet_tuple{
-            ObjectPtr(e.second, new BoolObject(true))};
+            e.second, ObjectPtr(new BoolObject(true))};
 
         ObjectPtr obj_ret(new TupleObject(std::move(vet_tuple)));
         return obj_ret;
@@ -551,7 +553,7 @@ class MapObject: public Object {
   }
 
   void Print() override {
-    std::cout << "ARRAY: { ";
+    std::cout << "MAP: { ";
     for (auto& list: value_) {
       for (auto& pair: list.second) {
         std::cout << "(";

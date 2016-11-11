@@ -80,6 +80,9 @@ class ExpressionExecutor: public Executor {
   // Access a position of tuple object
   ObjectPtr TupleAccess(Array& array_node, TupleObject& obj);
 
+  // Access a position of tuple object
+  ObjectPtr MapAccess(Array& array_node, MapObject& obj);
+
   // Executes array instantiation
   ObjectPtr ExecArrayInstantiation(AstNode* node);
 
