@@ -15,5 +15,9 @@ int main(int argc, char **argv) {
   std::string name = argv[1];
 
   Interpreter i;
-  i.Exec(name);
+  try {
+    i.Exec(name);
+  } catch (setti::internal::RunTimeError& e) {
+    std::cout << "Error: " << e.what() << "\n";
+  }
 }
