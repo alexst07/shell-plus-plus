@@ -47,6 +47,8 @@ class AssignExecutor: public Executor {
   ObjectPtr& RefArray(Array& array_node, ArrayObject& obj);
 
   ObjectPtr& RefTuple(Array& array_node, TupleObject& obj);
+
+  ObjectPtr& RefMap(Array& array_node, MapObject& obj);
 };
 
 }

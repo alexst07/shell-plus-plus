@@ -105,6 +105,14 @@ ObjectPtr& AssignExecutor::RefTuple(Array& array_node, TupleObject& obj) {
   return static_cast<TupleObject&>(obj).ElementRef(size_t(num));
 }
 
+ObjectPtr& AssignExecutor::RefMap(Array& array_node, MapObject& obj) {
+  // Executes index expression of map
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr index(expr_exec.Exec(array_node.index_exp()));
+
+  return static_cast<MapObject&>(obj).ElementRef(index);
+}
+
 // TODO: Executes for map and custon objects
 ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
   Array* array_node = static_cast<Array*>(node);
@@ -116,6 +124,8 @@ ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
     return RefArray(*array_node, *static_cast<ArrayObject*>(obj.get()));
   } else if (obj->type() == Object::ObjectType::TUPLE) {
     return RefTuple(*array_node, *static_cast<TupleObject*>(obj.get()));
+  } else if (obj->type() == Object::ObjectType::MAP) {
+    return RefMap(*array_node, *static_cast<MapObject*>(obj.get()));
   }
 }
 
