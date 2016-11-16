@@ -43,6 +43,7 @@ class Object: public EntryPointer {
     ARRAY,
     MAP,
     TUPLE,
+    FUNC,
     CUSTON
   };
 
@@ -568,6 +569,28 @@ class MapObject: public Object {
 
  private:
    Map value_;
+};
+
+class FuncObject: public Object {
+ public:
+  FuncObject(): Object(ObjectType::FUNC) {}
+  virtual ~FuncObject() {}
+
+  std::size_t Hash() const override {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("func object has no hash method"));
+  }
+
+  bool operator==(const Object& obj) const override {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("func object has no compare method"));
+  }
+
+  virtual ObjectPtr Call(std::vector<ObjectPtr>&& params) = 0;
+
+  void Print() override {
+    std::cout << "FUNC";
+  }
 };
 
 }

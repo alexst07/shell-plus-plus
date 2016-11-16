@@ -47,7 +47,11 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
 
     case AstNode::NodeType::kDictionaryInstantiation: {
       return ExecMapInstantiation(node);
-    }
+    } break;
+
+    case AstNode::NodeType::kFunctionCall: {
+      return ExecFuncCall(static_cast<FunctionCall*>(node));
+    } break;
   }
 }
 
@@ -147,6 +151,20 @@ ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("operator [] not overload for object"));
   }
+}
+
+ObjectPtr ExpressionExecutor::ExecFuncCall(FunctionCall* node) {
+  ObjectPtr fobj = Exec(node->func_exp());
+
+  if (fobj->type() != Object::ObjectType::FUNC) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("object is not callable"));
+  }
+
+  AssignableListExecutor assignable_list(this, symbol_table_stack());
+  auto vec = assignable_list.Exec(node->rvalue_list());
+
+  return static_cast<FuncObject&>(*fobj).Call(std::move(vec));
 }
 
 ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {

@@ -4,6 +4,7 @@
 #include <boost/variant.hpp>
 
 #include "assign_executor.h"
+#include "expr_executor.h"
 
 namespace setti {
 namespace internal {
@@ -23,6 +24,13 @@ void StmtExecutor::Exec(AstNode* node) {
       AssignExecutor exec(this, symbol_table_stack());
       return exec.Exec(node);
     } break;
+
+    case AstNode::NodeType::kExpressionStatement: {
+      ExpressionExecutor exec(this, symbol_table_stack());
+      exec.Exec(static_cast<ExpressionStatement&>(*node).exp());
+      return;
+    } break;
+
   }
 }
 

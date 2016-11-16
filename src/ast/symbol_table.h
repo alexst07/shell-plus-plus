@@ -15,9 +15,9 @@ namespace internal {
 
 class SymbolAttr: public EntryPointer {
  public:
-  SymbolAttr(std::unique_ptr<Object> value, bool global)
+  SymbolAttr(std::shared_ptr<Object> value, bool global)
       : EntryPointer(EntryPointer::EntryType::SYMBOL)
-      , value_(std::move(value))
+      , value_(value)
       , global_(global) {}
 
   SymbolAttr()

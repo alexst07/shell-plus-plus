@@ -26,9 +26,31 @@ class RootExecutor: public Executor {
   }
 };
 
+// Temporary declaration of functions
+class PrintFunc: public FuncObject {
+ public:
+  PrintFunc(): FuncObject() {}
+
+  ObjectPtr Call(std::vector<ObjectPtr>&& params) {
+    std::cout << "Print:\n";
+
+    for (auto& e: params) {
+      std::cout << ">> ";
+      e->Print();
+      std::cout << "\n";
+    }
+
+    return ObjectPtr(new NullObject);
+  }
+};
+
 class Interpreter {
  public:
-  Interpreter() = default;
+  Interpreter() {
+    ObjectPtr obj(new PrintFunc);
+    SymbolAttr symbol(obj, true);
+    symbol_table_.InsertEntry("print", std::move(symbol));
+  }
 
   void Exec(std::string name) {
     std::ifstream file(name);

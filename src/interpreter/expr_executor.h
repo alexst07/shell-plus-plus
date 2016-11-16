@@ -89,6 +89,9 @@ class ExpressionExecutor: public Executor {
   // Executes map instantiation
   ObjectPtr ExecMapInstantiation(AstNode* node);
 
+  // Executes function call
+  ObjectPtr ExecFuncCall(FunctionCall* node);
+
 };
 
 }
