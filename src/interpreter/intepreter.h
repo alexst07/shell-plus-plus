@@ -17,8 +17,10 @@ namespace internal {
 
 class RootExecutor: public Executor {
  public:
+  // the last parameter on Executor constructor means this is the
+  // root executor
   RootExecutor(SymbolTableStack& symbol_table_stack)
-      : Executor(nullptr, symbol_table_stack) {}
+      : Executor(nullptr, symbol_table_stack, true) {}
 
   void Exec(AstNode* node) {
     StmtListExecutor executor(this, symbol_table_stack());

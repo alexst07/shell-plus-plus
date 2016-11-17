@@ -17,7 +17,13 @@ class Executor {
  public:
   Executor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : parent_(parent)
-      , symbol_table_stack_(symbol_table_stack){}
+      , symbol_table_stack_(symbol_table_stack)
+      , is_root_(false) {}
+
+  Executor(Executor* parent, SymbolTableStack& symbol_table_stack, bool is_root)
+      : parent_(parent)
+      , symbol_table_stack_(symbol_table_stack)
+      , is_root_(is_root) {}
 
  protected:
   Executor* parent() const noexcept {
@@ -28,9 +34,14 @@ class Executor {
     return symbol_table_stack_;
   }
 
+  inline bool is_root() const{
+    return is_root_;
+  }
+
  private:
   Executor* parent_;
   SymbolTableStack& symbol_table_stack_;
+  bool is_root_;
 };
 
 }

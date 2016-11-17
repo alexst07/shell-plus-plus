@@ -77,6 +77,9 @@ class SymbolAttr: public EntryPointer {
   std::shared_ptr<Object> value_;
 };
 
+class SymbolTable;
+typedef std::shared_ptr<SymbolTable> SymbolTablePtr;
+
 class SymbolTable {
  public:
   using SymbolMap = std::unordered_map<std::string, SymbolAttr>;
@@ -84,6 +87,10 @@ class SymbolTable {
   using SymbolConstIterator = SymbolMap::const_iterator;
 
   SymbolTable() {}
+
+  static SymbolTablePtr Create() {
+    return SymbolTablePtr(new SymbolTable);
+  }
 
   // Return a reference for symbol if it exists or create a new
   // and return the reference
@@ -162,18 +169,18 @@ class SymbolTableStack {
  public:
   SymbolTableStack() {
     // Table stack is creaeted with at leas one table symbol
-    SymbolTable table;
+    SymbolTablePtr table(new SymbolTable);
     stack_.push_back(std::move(table));
   }
 
   // Insert a table on the stack
-  inline void Push(SymbolTable&& table) {
-    stack_.push_back(std::move(table));
+  inline void Push(SymbolTablePtr table) {
+    stack_.push_back(table);
   }
 
   // Create a new table on the stack
   inline void NewTable() {
-    SymbolTable table;
+    SymbolTablePtr table(new SymbolTable);
     stack_.push_back(std::move(table));
   }
 
@@ -185,17 +192,17 @@ class SymbolTableStack {
   // it exists, or if create = true, create a new symbol if it
   // doesn't exists and return its reference
   SymbolAttr& Lookup(const std::string& name, bool create) {
-    auto it_obj = stack_.back().Lookup(name);
+    auto it_obj = stack_.back()->Lookup(name);
 
-    if (it_obj != stack_.back().end()) {
+    if (it_obj != stack_.back()->end()) {
       return it_obj->second;
     }
 
     if (stack_.size() > 1) {
       for (size_t i = (stack_.size() - 2); i >= 0 ; i++) {
-        auto it_obj = stack_.at(i).Lookup(name);
+        auto it_obj = stack_.at(i)->Lookup(name);
 
-        if (it_obj != stack_.at(i).end()) {
+        if (it_obj != stack_.at(i)->end()) {
           if (!it_obj->second.global()) {
             return it_obj->second;
           }
@@ -204,7 +211,7 @@ class SymbolTableStack {
     }
 
     if (create) {
-      SymbolAttr& ref = stack_.back().SetValue(name);
+      SymbolAttr& ref = stack_.back()->SetValue(name);
       return ref;
     }
 
@@ -214,22 +221,22 @@ class SymbolTableStack {
 
   bool InsertEntry(const std::string& name, SymbolAttr&& symbol) {
     // the stack has always at least one symbol table
-    return stack_.back().SetValue(name, std::move(symbol));
+    return stack_.back()->SetValue(name, std::move(symbol));
   }
 
   void SetEntry(const std::string& name, std::unique_ptr<Object> value) {
     // the stack has always at least one symbol table
-    stack_.back().SetValue(name, std::move(value));
+    stack_.back()->SetValue(name, std::move(value));
   }
 
   void Dump() {
     for (auto& table: stack_) {
-      table.Dump();
+      table->Dump();
     }
   }
 
  private:
-  std::vector<SymbolTable> stack_;
+  std::vector<SymbolTablePtr> stack_;
 };
 
 }
