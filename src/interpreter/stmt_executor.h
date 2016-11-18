@@ -22,6 +22,14 @@ class StmtListExecutor: public Executor {
   void Exec(AstNode* node);
 };
 
+class FuncDeclExecutor: public Executor {
+ public:
+  FuncDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(AstNode* node);
+};
+
 class StmtExecutor: public Executor {
  public:
   StmtExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
@@ -29,6 +37,20 @@ class StmtExecutor: public Executor {
 
   // Entry point to execute expression
   void Exec(AstNode* node);
+};
+
+class BlockExecutor: public Executor {
+ public:
+  // the last parameter on Executor constructor means this is NOT the
+  // root executor
+  BlockExecutor(SymbolTableStack& symbol_table_stack)
+      : Executor(nullptr, symbol_table_stack, false) {}
+
+  void Exec(AstNode* node) {
+    Block* block_node = static_cast<Block*>(node);
+    StmtListExecutor executor(this, symbol_table_stack());
+    executor.Exec(block_node->stmt_list());
+  }
 };
 
 }

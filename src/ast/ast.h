@@ -1,4 +1,4 @@
-﻿#ifndef SETTI_AST_H
+#ifndef SETTI_AST_H
 #define SETTI_AST_H
 
 #include <string>

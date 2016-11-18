@@ -5,6 +5,7 @@
 
 #include "expr_executor.h"
 #include "ast/symbol_table.h"
+#include "func_object.h"
 
 namespace setti {
 namespace internal {

@@ -22,7 +22,7 @@ class SymbolAttr: public EntryPointer {
 
   SymbolAttr()
       : EntryPointer(EntryPointer::EntryType::SYMBOL)
-      , value_(std::unique_ptr<Object>(nullptr))
+      , value_(std::shared_ptr<Object>(nullptr))
       , global_(false) {}
 
   ~SymbolAttr() {}
@@ -59,9 +59,8 @@ class SymbolAttr: public EntryPointer {
     return value_;
   }
 
-  inline void set_value(std::unique_ptr<Object> value) noexcept {
-    Object* obj = value.release();
-    value_ = std::shared_ptr<Object>(obj);
+  inline void set_value(std::shared_ptr<Object> value) noexcept {
+    value_ = value;
   }
 
   inline bool global() const noexcept {
@@ -109,7 +108,7 @@ class SymbolTable {
     }
   }
 
-  void SetValue(const std::string& name, std::unique_ptr<Object> value) {
+  void SetValue(const std::string& name, std::shared_ptr<Object> value) {
     auto it = map_.find(name);
     if (it != map_.end()) {
       it->second.set_value(std::move(value));
@@ -224,7 +223,7 @@ class SymbolTableStack {
     return stack_.back()->SetValue(name, std::move(symbol));
   }
 
-  void SetEntry(const std::string& name, std::unique_ptr<Object> value) {
+  void SetEntry(const std::string& name, std::shared_ptr<Object> value) {
     // the stack has always at least one symbol table
     stack_.back()->SetValue(name, std::move(value));
   }

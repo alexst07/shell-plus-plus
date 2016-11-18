@@ -23,7 +23,8 @@ class RunTimeError : public std::exception {
     CMD_NOT_FOUND,
     OUT_OF_RANGE,
     KEY_NOT_FOUND,
-    INCOMPATIBLE_TYPE
+    INCOMPATIBLE_TYPE,
+    FUNC_PARAMS
   };
 
   RunTimeError();
