@@ -16,8 +16,17 @@ void StmtListExecutor::Exec(AstNode* node) {
   StmtExecutor stmt_exec(this, symbol_table_stack());
 
   for (AstNode* stmt: stmt_list->children()) {
-    stmt_exec.Exec(stmt);
+    if (stop_flag_ == StopFlag::kGo) {
+      stmt_exec.Exec(stmt);
+    } else {
+      return;
+    }
   }
+}
+
+void StmtListExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+  stop_flag_ = flag;
 }
 
 void FuncDeclExecutor::Exec(AstNode* node) {
@@ -41,7 +50,7 @@ void FuncDeclExecutor::Exec(AstNode* node) {
                        boost::format("only last parameter can be variadic"));
   }
 
-  SymbolTableStack st_stack = symbol_table_stack();
+  SymbolTableStack st_stack(symbol_table_stack());
 
   ObjectPtr fobj(new FuncDeclObject(
       fdecl_node->name()->name(), fdecl_node->block(), std::move(st_stack),
@@ -49,6 +58,10 @@ void FuncDeclExecutor::Exec(AstNode* node) {
       fdecl_node->variadic()));
 
   symbol_table_stack().SetEntry(fdecl_node->name()->name(), fobj);
+}
+
+void FuncDeclExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
 }
 
 void StmtExecutor::Exec(AstNode* node) {
@@ -69,7 +82,41 @@ void StmtExecutor::Exec(AstNode* node) {
       fdecl_executor.Exec(node);
     } break;
 
+    case AstNode::NodeType::kReturnStatement: {
+      ReturnExecutor ret_executor(this, symbol_table_stack());
+      ret_executor.Exec(node);
+    } break;
+
   }
+}
+
+void StmtExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+void ReturnExecutor::Exec(AstNode* node) {
+  ReturnStatement* ret_node = static_cast<ReturnStatement*>(node);
+
+  if (!ret_node->is_void()) {
+    AssignableListExecutor assign_list(this, symbol_table_stack());
+    std::vector<ObjectPtr> vret = assign_list.Exec(ret_node->assign_list());
+
+    // convert vector to tuple object and insert it on symbol table
+    // with reserved name
+    ObjectPtr tuple_obj(new TupleObject(std::move(vret)));
+    symbol_table_stack().SetEntry("%return", tuple_obj);
+  } else {
+    // return null
+    ObjectPtr null_obj(new NullObject);
+    symbol_table_stack().SetEntry("%return", null_obj);
+  }
+
+  // set stop return
+  parent()->set_stop(StopFlag::kReturn);
+}
+
+void ReturnExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
 }
 
 }

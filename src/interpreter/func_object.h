@@ -18,19 +18,25 @@ namespace internal {
 class FuncDeclObject: public FuncObject {
  public:
   FuncDeclObject(const std::string& id, AstNode* start_node,
-                 SymbolTableStack&& symbol_table,
+                 const SymbolTableStack& symbol_table,
                  std::vector<std::string>&& params,
                  std::vector<ObjectPtr>&& default_values,
                  bool variadic)
       : FuncObject()
       , id_(id)
       , start_node_(start_node)
-      , symbol_table_(std::move(symbol_table))
+      , symbol_table_(true)
       , params_(std::move(params))
       , default_values_(std::move(default_values))
-      , variadic_(variadic) {}
+      , variadic_(variadic) {
+    symbol_table_.Push(symbol_table.MainTable());
+    SymbolTablePtr table = SymbolTable::Create();
 
-  ObjectPtr Call(std::vector<ObjectPtr>&& params) override {
+    // main symbol of function
+    symbol_table_.Push(table, true);
+  }
+
+  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override {
     if (variadic_) {
       if (params.size() < (params_.size() - 1)) {
         throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
@@ -73,8 +79,18 @@ class FuncDeclObject: public FuncObject {
     }
 
     // Executes the function using the ast nodes
-    BlockExecutor executor(symbol_table_);
+    BlockExecutor executor(parent, symbol_table_);
     executor.Exec(start_node_);
+
+    ObjectPtr obj_ret;
+    bool bool_ret = false;
+    std::tie(obj_ret, bool_ret) = symbol_table_.LookupObj("%return");
+
+    if (bool_ret) {
+      return obj_ret;
+    } else {
+      return ObjectPtr(new NullObject);
+    }
   }
 
  private:

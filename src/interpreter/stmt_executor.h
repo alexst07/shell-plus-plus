@@ -17,9 +17,14 @@ namespace internal {
 class StmtListExecutor: public Executor {
  public:
   StmtListExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack) {}
+      : Executor(parent, symbol_table_stack), stop_flag_(StopFlag::kGo) {}
 
   void Exec(AstNode* node);
+
+  void set_stop(StopFlag flag) override;
+
+ private:
+  StopFlag stop_flag_;
 };
 
 class FuncDeclExecutor: public Executor {
@@ -28,6 +33,8 @@ class FuncDeclExecutor: public Executor {
       : Executor(parent, symbol_table_stack) {}
 
   void Exec(AstNode* node);
+
+  void set_stop(StopFlag flag) override;
 };
 
 class StmtExecutor: public Executor {
@@ -37,20 +44,37 @@ class StmtExecutor: public Executor {
 
   // Entry point to execute expression
   void Exec(AstNode* node);
+
+  void set_stop(StopFlag flag) override;
 };
 
 class BlockExecutor: public Executor {
  public:
   // the last parameter on Executor constructor means this is NOT the
   // root executor
-  BlockExecutor(SymbolTableStack& symbol_table_stack)
-      : Executor(nullptr, symbol_table_stack, false) {}
+  BlockExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack, false) {}
 
   void Exec(AstNode* node) {
     Block* block_node = static_cast<Block*>(node);
     StmtListExecutor executor(this, symbol_table_stack());
     executor.Exec(block_node->stmt_list());
   }
+
+  void set_stop(StopFlag flag) override {
+    parent()->set_stop(flag);
+  }
+};
+
+class ReturnExecutor: public Executor {
+ public:
+  ReturnExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  // Entry point to execute expression
+  void Exec(AstNode* node);
+
+  void set_stop(StopFlag flag) override;
 };
 
 }

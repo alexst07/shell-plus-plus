@@ -15,6 +15,13 @@ namespace internal {
 
 class Executor {
  public:
+  enum class StopFlag {
+    kGo,
+    kReturn,
+    kBreak,
+    kThrow
+  };
+
   Executor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : parent_(parent)
       , symbol_table_stack_(symbol_table_stack)
@@ -25,11 +32,13 @@ class Executor {
       , symbol_table_stack_(symbol_table_stack)
       , is_root_(is_root) {}
 
- protected:
+  virtual void set_stop(StopFlag flag) = 0;
+
   Executor* parent() const noexcept {
     return parent_;
   }
 
+ protected:
   SymbolTableStack& symbol_table_stack() {
     return symbol_table_stack_;
   }

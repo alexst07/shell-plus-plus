@@ -26,6 +26,10 @@ class RootExecutor: public Executor {
     StmtListExecutor executor(this, symbol_table_stack());
     executor.Exec(node);
   }
+
+  void set_stop(StopFlag flag) override {
+
+  }
 };
 
 // Temporary declaration of functions
@@ -33,14 +37,12 @@ class PrintFunc: public FuncObject {
  public:
   PrintFunc(): FuncObject() {}
 
-  ObjectPtr Call(std::vector<ObjectPtr>&& params) {
-    std::cout << "Print:\n";
-
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params) {
     for (auto& e: params) {
-      std::cout << ">> ";
       e->Print();
-      std::cout << "\n";
     }
+
+    std::cout << "\n";
 
     return ObjectPtr(new NullObject);
   }

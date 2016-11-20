@@ -22,6 +22,8 @@ class AssignableListExecutor: public Executor {
   std::vector<ObjectPtr> Exec(AstNode* node);
 
   ObjectPtr ExecAssignable(AstNode* node);
+
+  void set_stop(StopFlag flag) override;
 };
 
 class ExpressionExecutor: public Executor {
@@ -41,34 +43,6 @@ class ExpressionExecutor: public Executor {
   // if it is a container as array, tuple, or map
   // return only the reference of the object on symbol table
   ObjectPtr ExecIdentifier(AstNode* node);
-
-  // Pass the variable as value or reference depending on type
-  inline ObjectPtr PassVar(ObjectPtr obj) {
-    switch (obj->type()) {
-      case Object::ObjectType::NIL:
-        return ObjectPtr(new NullObject());
-        break;
-
-      case Object::ObjectType::INT:
-        return ObjectPtr(new IntObject(static_cast<IntObject&>(*obj)));
-        break;
-
-      case Object::ObjectType::BOOL:
-        return ObjectPtr(new BoolObject(static_cast<BoolObject&>(*obj)));
-        break;
-
-      case Object::ObjectType::REAL:
-        return ObjectPtr(new RealObject(static_cast<RealObject&>(*obj)));
-        break;
-
-      case Object::ObjectType::STRING:
-        return ObjectPtr(new StringObject(static_cast<StringObject&>(*obj)));
-        break;
-
-      default:
-        return obj;
-    }
-  }
 
   // Executes array access, it could be a language array, map, tuple or
   // custon object
@@ -92,7 +66,48 @@ class ExpressionExecutor: public Executor {
   // Executes function call
   ObjectPtr ExecFuncCall(FunctionCall* node);
 
+  void set_stop(StopFlag flag) override;
+
 };
+
+class FuncCallExecutor: public Executor {
+ public:
+  FuncCallExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  // Entry point to execute expression
+  ObjectPtr Exec(FunctionCall* node);
+
+  void set_stop(StopFlag flag) override;
+};
+
+// Pass the variable as value or reference depending on type
+inline ObjectPtr PassVar(ObjectPtr obj) {
+  switch (obj->type()) {
+    case Object::ObjectType::NIL:
+      return ObjectPtr(new NullObject());
+      break;
+
+    case Object::ObjectType::INT:
+      return ObjectPtr(new IntObject(static_cast<IntObject&>(*obj)));
+      break;
+
+    case Object::ObjectType::BOOL:
+      return ObjectPtr(new BoolObject(static_cast<BoolObject&>(*obj)));
+      break;
+
+    case Object::ObjectType::REAL:
+      return ObjectPtr(new RealObject(static_cast<RealObject&>(*obj)));
+      break;
+
+    case Object::ObjectType::STRING:
+      return ObjectPtr(new StringObject(static_cast<StringObject&>(*obj)));
+      break;
+
+    default:
+      return obj;
+  }
+}
 
 }
 }

@@ -27,6 +27,10 @@ ObjectPtr AssignableListExecutor::ExecAssignable(AstNode* node) {
   }
 }
 
+void AssignableListExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
 ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
   switch (node->type()) {
     case AstNode::NodeType::kLiteral: {
@@ -154,17 +158,8 @@ ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
 }
 
 ObjectPtr ExpressionExecutor::ExecFuncCall(FunctionCall* node) {
-  ObjectPtr fobj = Exec(node->func_exp());
-
-  if (fobj->type() != Object::ObjectType::FUNC) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("object is not callable"));
-  }
-
-  AssignableListExecutor assignable_list(this, symbol_table_stack());
-  auto vec = assignable_list.Exec(node->rvalue_list());
-
-  return static_cast<FuncObject&>(*fobj).Call(std::move(vec));
+  FuncCallExecutor fcall_exec(this, symbol_table_stack());
+  return fcall_exec.Exec(node);
 }
 
 ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
@@ -190,6 +185,31 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
       ObjectPtr obj(new StringObject(std::move(str)));
       return obj;
     } break;
+  }
+}
+
+void ExpressionExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr fobj = expr_exec.Exec(node->func_exp());
+
+  if (fobj->type() != Object::ObjectType::FUNC) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("object is not callable"));
+  }
+
+  AssignableListExecutor assignable_list(this, symbol_table_stack());
+  auto vec = assignable_list.Exec(node->rvalue_list());
+
+  return static_cast<FuncObject&>(*fobj).Call(this, std::move(vec));
+}
+
+void FuncCallExecutor::set_stop(StopFlag flag) {
+  if (flag == StopFlag::kThrow) {
+    parent()->set_stop(flag);
   }
 }
 

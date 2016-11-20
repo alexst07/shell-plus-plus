@@ -159,5 +159,9 @@ AssignExecutor::AssignList(AstNode* node) {
   return vec;
 }
 
+void AssignExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
 }
 }

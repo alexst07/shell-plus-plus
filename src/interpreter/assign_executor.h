@@ -49,6 +49,8 @@ class AssignExecutor: public Executor {
   ObjectPtr& RefTuple(Array& array_node, TupleObject& obj);
 
   ObjectPtr& RefMap(Array& array_node, MapObject& obj);
+
+  void set_stop(StopFlag flag) override;
 };
 
 }

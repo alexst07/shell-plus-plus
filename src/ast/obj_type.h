@@ -12,6 +12,8 @@
 namespace setti {
 namespace internal {
 
+class Executor;
+
 class EntryPointer {
  public:
   enum class EntryType: uint8_t {
@@ -643,7 +645,7 @@ class FuncObject: public Object {
                        boost::format("func object has no compare method"));
   }
 
-  virtual ObjectPtr Call(std::vector<ObjectPtr>&& params) = 0;
+  virtual ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) = 0;
 
   void Print() override {
     std::cout << "FUNC";
