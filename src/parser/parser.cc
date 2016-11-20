@@ -1,4 +1,4 @@
-﻿#include "parser.h"
+#include "parser.h"
 
 #include <sstream>
 
@@ -1255,9 +1255,12 @@ ParserResult<Expression> Parser::LiteralExp() {
   } else if (token.Is(TokenKind::REAL_LITERAL)) {
     return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
                                                         Literal::kReal));
-  } else if (token.IsAny(TokenKind::KW_TRUE, TokenKind::KW_FALSE)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
-                                                        Literal::kBool));
+  } else if (token.Is(TokenKind::KW_TRUE)) {
+    Token::Value value = true;
+    return ParserResult<Expression>(factory_.NewLiteral(value, Literal::kBool));
+  } else if (token.Is(TokenKind::KW_FALSE)) {
+    Token::Value value = false;
+    return ParserResult<Expression>(factory_.NewLiteral(value, Literal::kBool));
   } else {
     ErrorMsg(boost::format("primary expression expected, got %1%")
         % Token::TokenValueToStr(token.GetValue()));

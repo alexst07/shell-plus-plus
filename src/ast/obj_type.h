@@ -47,6 +47,7 @@ class Object: public EntryPointer {
     MAP,
     TUPLE,
     FUNC,
+    TYPE,
     CUSTON
   };
 
@@ -649,6 +650,80 @@ class FuncObject: public Object {
 
   void Print() override {
     std::cout << "FUNC";
+  }
+};
+
+
+class TypeObject: public Object {
+ public:
+  TypeObject(const std::string& name)
+    : Object(ObjectType::TYPE), name_(name) {}
+
+  virtual ~TypeObject() {}
+
+  std::size_t Hash() const override {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type object has no hash method"));
+  }
+
+  bool operator==(const Object& obj) const override {
+    if (obj.type() != ObjectType::TYPE) {
+      return false;
+    }
+
+    const TypeObject& type_obj = static_cast<const TypeObject&>(obj);
+
+    if (name_ == type_obj.name_) {
+      return true;
+    }
+
+    return false;
+  }
+
+  virtual ObjectPtr Constructor(Executor* parent,
+                                std::vector<ObjectPtr>&& params) = 0;
+
+  const std::string& name() const noexcept {
+    return name_;
+  }
+
+  void Print() override {
+    std::cout << "TYPE(" << name_ << ")";
+  }
+
+ private:
+  std::string name_;
+};
+
+class NullType: public TypeObject {
+ public:
+  NullType(): TypeObject("null_t") {}
+  virtual ~NullType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override {
+    if (params.size() > 0) {
+      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                         boost::format("null_t() takes no arguments"));
+    }
+
+    return ObjectPtr(new NullObject);
+  }
+};
+
+class BoolType: public TypeObject {
+ public:
+  BoolType(): TypeObject("bool") {}
+  virtual ~BoolType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override {
+    if (params.size() != 1) {
+      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                         boost::format("bool() takes exactly 1 argument"));
+    }
+
+    return params[0];
   }
 };
 
