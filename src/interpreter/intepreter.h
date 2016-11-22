@@ -54,6 +54,41 @@ class Interpreter {
     ObjectPtr obj(new PrintFunc);
     SymbolAttr symbol(obj, true);
     symbol_table_.InsertEntry("print", std::move(symbol));
+
+    ObjectPtr type_null(new NullType);
+    SymbolAttr symbol_null(type_null, true);
+    symbol_table_.InsertEntry(static_cast<const NullType&>(*type_null).name(),
+                              std::move(symbol_null));
+
+    ObjectPtr type_int(new IntType);
+    SymbolAttr symbol_int(type_int, true);
+    symbol_table_.InsertEntry(static_cast<const IntType&>(*type_int).name(),
+                              std::move(symbol_int));
+
+    ObjectPtr type_real(new IntType);
+    SymbolAttr symbol_real(type_real, true);
+    symbol_table_.InsertEntry(static_cast<const RealType&>(*type_real).name(),
+                              std::move(symbol_real));
+
+    ObjectPtr type_str(new StringType);
+    SymbolAttr symbol_str(type_str, true);
+    symbol_table_.InsertEntry(static_cast<const StringType&>(*type_str).name(),
+                              std::move(symbol_str));
+
+    ObjectPtr type_array(new ArrayType);
+    SymbolAttr symbol_array(type_array, true);
+    symbol_table_.InsertEntry(static_cast<const ArrayType&>(*type_array).name(),
+                              std::move(symbol_array));
+
+    ObjectPtr type_tuple(new TupleType);
+    SymbolAttr symbol_tuple(type_tuple, true);
+    symbol_table_.InsertEntry(static_cast<const TupleType&>(*type_tuple).name(),
+                              std::move(symbol_tuple));
+
+    ObjectPtr type_map(new MapType);
+    SymbolAttr symbol_map(type_map, true);
+    symbol_table_.InsertEntry(static_cast<const MapType&>(*type_map).name(),
+                              std::move(symbol_map));
   }
 
   void Exec(std::string name) {

@@ -65,8 +65,42 @@ class Object: public EntryPointer {
 
   virtual bool operator==(const Object& obj) const = 0;
 
+  virtual bool ObjBool() const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no bool interface"));
+  }
+
+  virtual bool ObjString() const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no string interface"));
+  }
+
+  virtual bool ObjInt() const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no int interface"));
+  }
+
+  virtual bool ObjReal() const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no real interface"));
+  }
+
+  virtual bool ObjCmd() const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no cmd interface"));
+  }
+
+  virtual std::shared_ptr<Object> Copy() const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no copy method"));
+  }
+
  private:
+  // enum type
   ObjectType type_;
+
+  // type of object, it is other object
+  std::shared_ptr<Object> obj_type_;
 
  protected:
   Object(ObjectType type)
@@ -212,6 +246,10 @@ class StringObject: public Object {
  public:
   StringObject(std::string&& value)
       : Object(ObjectType::STRING), value_(std::move(value)) {}
+
+  StringObject(const std::string& value)
+      : Object(ObjectType::STRING), value_(value) {}
+
   StringObject(const StringObject& obj): Object(obj), value_(obj.value_) {}
 
   virtual ~StringObject() {}
@@ -723,8 +761,200 @@ class BoolType: public TypeObject {
                          boost::format("bool() takes exactly 1 argument"));
     }
 
-    return params[0];
+    bool b = params[0]->ObjBool();
+    ObjectPtr bool_obj(new BoolObject(b));
+
+    return bool_obj;
   }
+};
+
+class IntType: public TypeObject {
+ public:
+  IntType(): TypeObject("int") {}
+  virtual ~IntType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override {
+    if (params.size() != 1) {
+      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                         boost::format("int() takes exactly 1 argument"));
+    }
+
+    switch (params[0]->type()) {
+      case ObjectType::INT: {
+        ObjectPtr obj_int(new IntObject(static_cast<IntObject&>(
+            *params[0]).value()));
+        return obj_int;
+      } break;
+
+      case ObjectType::STRING: {
+        const StringObject& str_obj =
+            static_cast<const StringObject&>(*params[0]);
+        int v = Type2Int(str_obj.value());
+        ObjectPtr obj_int(new IntObject(v));
+        return obj_int;
+      } break;
+
+      case ObjectType::REAL: {
+        const RealObject& real_obj =
+            static_cast<const RealObject&>(*params[0]);
+        int v = Type2Int(real_obj.value());
+        ObjectPtr obj_int(new IntObject(v));
+        return obj_int;
+      } break;
+
+      default:
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                           boost::format("invalid conversion to int"));
+    }
+  }
+
+ private:
+  int Type2Int(float v) {
+    return static_cast<int>(v);
+  }
+
+  int Type2Int(const std::string& v) {
+    try {
+      return std::stoi(v);
+    } catch (std::exception&) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("invalid string to int"));
+    }
+  }
+};
+
+class RealType: public TypeObject {
+ public:
+  RealType(): TypeObject("real") {}
+  virtual ~RealType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override {
+    if (params.size() != 1) {
+      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                         boost::format("real() takes exactly 1 argument"));
+    }
+
+    switch (params[0]->type()) {
+      case ObjectType::REAL: {
+        ObjectPtr obj_real(new RealObject(static_cast<RealObject&>(
+            *params[0]).value()));
+        return obj_real;
+      } break;
+
+      case ObjectType::STRING: {
+        const StringObject& str_obj =
+            static_cast<const StringObject&>(*params[0]);
+        int v = Type2Real(str_obj.value());
+        ObjectPtr obj_real(new RealObject(v));
+        return obj_real;
+      } break;
+
+      case ObjectType::INT: {
+        const IntObject& int_obj =
+            static_cast<const IntObject&>(*params[0]);
+        float v = Type2Real(int_obj.value());
+        ObjectPtr obj_real(new RealObject(v));
+        return obj_real;
+      } break;
+
+      default:
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                           boost::format("invalid conversion to real"));
+    }
+  }
+
+ private:
+  float Type2Real(int v) {
+    return static_cast<float>(v);
+  }
+
+  float Type2Real(const std::string& v) {
+    try {
+      return std::stof(v);
+    } catch (std::exception&) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("invalid string to int"));
+    }
+  }
+};
+
+class StringType: public TypeObject {
+ public:
+  StringType(): TypeObject("string") {}
+  virtual ~StringType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override {
+    if (params.size() != 1) {
+      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                         boost::format("real() takes exactly 1 argument"));
+    }
+
+    switch (params[0]->type()) {
+      case ObjectType::STRING: {
+        ObjectPtr obj_str(new StringObject(static_cast<StringObject&>(
+            *params[0]).value()));
+        return obj_str;
+      } break;
+
+      case ObjectType::REAL: {
+        const RealObject& obj_real =
+            static_cast<const RealObject&>(*params[0]);
+        std::string v = std::to_string(obj_real.value());
+        ObjectPtr obj_str(new StringObject(v));
+        return obj_str;
+      } break;
+
+      case ObjectType::INT: {
+        const IntObject& int_obj =
+            static_cast<const IntObject&>(*params[0]);
+        std::string v = std::to_string(int_obj.value());
+        ObjectPtr obj_str(new StringObject(v));
+        return obj_str;
+      } break;
+
+      default:
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                           boost::format("invalid conversion to string"));
+    }
+  }
+};
+
+class ContainerType: public TypeObject {
+ public:
+  ContainerType(const std::string& name): TypeObject(name) {}
+  virtual ~ContainerType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override {
+    if (params.size() != 1) {
+      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                         boost::format("%1%() takes exactly 1 argument")
+                         %name());
+    }
+
+    return params[0]->Copy();
+  }
+};
+
+class ArrayType: public ContainerType {
+ public:
+  ArrayType(): ContainerType("array") {}
+  virtual ~ArrayType() {}
+};
+
+class MapType: public ContainerType {
+ public:
+  MapType(): ContainerType("map") {}
+  virtual ~MapType() {}
+};
+
+class TupleType: public ContainerType {
+ public:
+  TupleType(): ContainerType("tuple") {}
+  virtual ~TupleType() {}
 };
 
 }
