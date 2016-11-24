@@ -196,15 +196,25 @@ ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr fobj = expr_exec.Exec(node->func_exp());
 
-  if (fobj->type() != Object::ObjectType::FUNC) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("object is not callable"));
-  }
-
   AssignableListExecutor assignable_list(this, symbol_table_stack());
   auto vec = assignable_list.Exec(node->rvalue_list());
 
-  return static_cast<FuncObject&>(*fobj).Call(this, std::move(vec));
+  switch (fobj->type()) {
+    case Object::ObjectType::FUNC: {
+      return static_cast<FuncObject&>(*fobj).Call(this, std::move(vec));
+      break;
+    }
+
+    case Object::ObjectType::TYPE: {
+      return static_cast<TypeObject&>(*fobj).Constructor(this, std::move(vec));
+      break;
+    }
+
+    default: {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("object is not callable"));
+    }
+  }
 }
 
 void FuncCallExecutor::set_stop(StopFlag flag) {

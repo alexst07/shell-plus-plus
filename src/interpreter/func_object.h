@@ -21,8 +21,8 @@ class FuncDeclObject: public FuncObject {
                  const SymbolTableStack& symbol_table,
                  std::vector<std::string>&& params,
                  std::vector<ObjectPtr>&& default_values,
-                 bool variadic)
-      : FuncObject()
+                 bool variadic, ObjectPtr obj_type)
+      : FuncObject(obj_type)
       , id_(id)
       , start_node_(start_node)
       , symbol_table_(true)
