@@ -6,114 +6,20 @@
 #include <unordered_map>
 #include <tuple>
 #include <list>
+#include <iostream>
 
 #include "run_time_error.h"
+#include "ast/ast.h"
+#include "symbol_table.h"
+#include "abstract-obj.h"
 
 namespace setti {
 namespace internal {
 
-class Executor;
-
-class EntryPointer {
- public:
-  enum class EntryType: uint8_t {
-    SYMBOL,
-    OBJECT
-  };
-
-  EntryType entry_type() const noexcept {
-    return type_;
-  }
-
-  EntryPointer(const EntryPointer& other): type_(other.type_) {}
-
- protected:
-  EntryPointer(EntryType type): type_(type) {}
-
- private:
-  EntryType type_;
-};
-
-class Object: public EntryPointer {
- public:
-  enum class ObjectType: uint8_t {
-    NIL,
-    INT,
-    BOOL,
-    REAL,
-    STRING,
-    SLICE,
-    ARRAY,
-    MAP,
-    TUPLE,
-    FUNC,
-    TYPE,
-    CUSTON
-  };
-
-  Object(const Object& obj)
-      : EntryPointer(obj), type_(obj.type_), obj_type_(obj_type) {}
-
-  virtual ~Object() {}
-
-  inline ObjectType type() const {
-    return type_;
-  }
-
-  virtual void Print() = 0;
-
-  virtual std::size_t Hash() const = 0;
-
-  virtual bool operator==(const Object& obj) const = 0;
-
-  virtual bool ObjBool() const {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no bool interface"));
-  }
-
-  virtual bool ObjString() const {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no string interface"));
-  }
-
-  virtual bool ObjInt() const {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no int interface"));
-  }
-
-  virtual bool ObjCmd() const {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no cmd interface"));
-  }
-
-  virtual std::shared_ptr<Object> Copy() const {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no copy method"));
-  }
-
-  std::shared_ptr<Object> ObjType() const noexcept {
-    return obj_type_;
-  }
-
- private:
-  // enum type
-  ObjectType type_;
-
-  // type of object, it is other object
-  std::shared_ptr<Object> obj_type_;
-
- protected:
-  Object(ObjectType type, std::shared_ptr<Object> obj_type)
-      : EntryPointer(EntryPointer::EntryType::OBJECT)
-      , type_(type)
-      , obj_type_(obj_type) {}
-};
-
-typedef std::shared_ptr<Object> ObjectPtr;
-
 class NullObject: public Object {
  public:
-  NullObject(ObjectPtr obj_type): Object(ObjectType::NIL, obj_type) {}
+  NullObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::NIL, obj_type, std::move(sym_table)) {}
 
   virtual ~NullObject() {}
 
@@ -139,8 +45,9 @@ class NullObject: public Object {
 
 class IntObject: public Object {
  public:
-  IntObject(int value, ObjectPtr obj_type)
-      : Object(ObjectType::INT, obj_type), value_(value) {}
+  IntObject(int value, ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::INT, obj_type, std::move(sym_table))
+      , value_(value) {}
 
   IntObject(const IntObject& obj): Object(obj), value_(obj.value_) {}
 
@@ -178,8 +85,9 @@ class IntObject: public Object {
 
 class BoolObject: public Object {
  public:
-  BoolObject(bool value, ObjectPtr obj_type)
-      : Object(ObjectType::BOOL, obj_type), value_(value) {}
+  BoolObject(bool value, ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::BOOL, obj_type, std::move(sym_table))
+      , value_(value) {}
 
   BoolObject(const BoolObject& obj): Object(obj), value_(obj.value_) {}
 
@@ -217,8 +125,9 @@ class BoolObject: public Object {
 
 class RealObject: public Object {
  public:
-  RealObject(float value, ObjectPtr obj_type)
-      : Object(ObjectType::REAL, obj_type), value_(value) {}
+  RealObject(float value, ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::REAL, obj_type, std::move(sym_table))
+      , value_(value) {}
 
   RealObject(const RealObject& obj): Object(obj), value_(obj.value_) {}
 
@@ -256,11 +165,15 @@ class RealObject: public Object {
 
 class StringObject: public Object {
  public:
-  StringObject(std::string&& value, ObjectPtr obj_type)
-      : Object(ObjectType::STRING, obj_type), value_(std::move(value)) {}
+  StringObject(std::string&& value, ObjectPtr obj_type,
+               SymbolTableStack&& sym_table)
+      : Object(ObjectType::STRING, obj_type, std::move(sym_table))
+      , value_(std::move(value)) {}
 
-  StringObject(const std::string& value, ObjectPtr obj_type)
-      : Object(ObjectType::STRING, obj_type), value_(value) {}
+  StringObject(const std::string& value, ObjectPtr obj_type,
+               SymbolTableStack&& sym_table)
+      : Object(ObjectType::STRING, obj_type, std::move(sym_table))
+      , value_(value) {}
 
   StringObject(const StringObject& obj): Object(obj), value_(obj.value_) {}
 
@@ -298,8 +211,9 @@ class StringObject: public Object {
 
 class SliceObject: public Object {
  public:
-  SliceObject(ObjectPtr obj_start, ObjectPtr obj_type)
-      : Object(ObjectType::SLICE, obj_type) {
+  SliceObject(ObjectPtr obj_start, ObjectPtr obj_end, ObjectPtr obj_type,
+              SymbolTableStack&& sym_table)
+      : Object(ObjectType::SLICE, obj_type, std::move(sym_table)) {
     if (obj_start->type() != ObjectType::INT ||
         obj_end->type() != ObjectType::INT) {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -355,16 +269,20 @@ class SliceObject: public Object {
 
 class TupleObject: public Object {
  public:
-   TupleObject(std::vector<std::unique_ptr<Object>>&& value, ObjectPtr obj_type)
-      : Object(ObjectType::TUPLE, obj_type), value_(value.size()) {
+   TupleObject(std::vector<std::unique_ptr<Object>>&& value,
+               ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::TUPLE, obj_type, std::move(sym_table)),
+        value_(value.size()) {
      for (size_t i = 0; i < value.size(); i++) {
        Object* obj_ptr = value[i].release();
        value_[i] = std::shared_ptr<Object>(obj_ptr);
      }
    }
 
-   TupleObject(std::vector<std::shared_ptr<Object>>&& value, ObjectPtr obj_type)
-      : Object(ObjectType::TUPLE, obj_type), value_(std::move(value)) {}
+   TupleObject(std::vector<std::shared_ptr<Object>>&& value, ObjectPtr obj_type,
+               SymbolTableStack&& sym_table)
+      : Object(ObjectType::TUPLE, obj_type, std::move(sym_table))
+      , value_(std::move(value)) {}
 
    TupleObject(const TupleObject& obj): Object(obj), value_(obj.value_) {}
 
@@ -440,16 +358,20 @@ class TupleObject: public Object {
 
 class ArrayObject: public Object {
  public:
-   ArrayObject(std::vector<std::unique_ptr<Object>>&& value, ObjectPtr obj_type)
-      : Object(ObjectType::ARRAY, obj_type), value_(value.size()) {
+   ArrayObject(std::vector<std::unique_ptr<Object>>&& value,
+               ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::ARRAY, obj_type, std::move(sym_table))
+      , value_(value.size()) {
      for (size_t i = 0; i < value.size(); i++) {
        Object* obj_ptr = value[i].release();
        value_[i] = std::shared_ptr<Object>(obj_ptr);
      }
    }
 
-   ArrayObject(std::vector<std::shared_ptr<Object>>&& value)
-      : Object(ObjectType::ARRAY), value_(value) {}
+   ArrayObject(std::vector<std::shared_ptr<Object>>&& value, ObjectPtr obj_type,
+               SymbolTableStack&& sym_table)
+      : Object(ObjectType::ARRAY, obj_type, std::move(sym_table))
+      , value_(value) {}
 
    ArrayObject(const ArrayObject& obj): Object(obj), value_(obj.value_) {}
 
@@ -472,43 +394,9 @@ class ArrayObject: public Object {
      value_[i] = std::shared_ptr<Object>(obj_ptr);
    }
 
-   std::size_t Hash() const override {
-     if (value_.empty()) {
-       throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
-                          boost::format("hash of empty array is not valid"));
-     }
+   std::size_t Hash() const override;
 
-     size_t hash = 0;
-
-     // Executes xor operation with hash of each element of array
-     for (auto& e: value_) {
-       hash ^= e->Hash();
-     }
-
-     return hash;
-   }
-
-   bool operator==(const Object& obj) const override {
-     if (obj.type() != ObjectType::ARRAY) {
-       return false;
-     }
-
-     const ArrayObject& array_obj = static_cast<const ArrayObject&>(obj);
-
-     // If the tuples have different size, they are different
-     if (array_obj.value_.size() != value_.size()) {
-       return false;
-     }
-
-     bool r = true;
-
-     // Test each element on tuple
-     for (size_t i = 0; i < value_.size(); i++) {
-       r = r && (array_obj.value_[i] == value_[i]);
-     }
-
-     return r;
-   }
+   bool operator==(const Object& obj) const override;
 
    void Print() override {
      std::cout << "ARRAY: [ ";
@@ -531,50 +419,18 @@ class MapObject: public Object {
   using Pair = std::pair<size_t, std::vector<std::pair<ObjectPtr, ObjectPtr>>>;
 
   MapObject(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value,
-            ObjectPtr obj_type)
-      : Object(ObjectType::MAP, obj_type) {
-    for (auto& e: value) {
-      std::vector<std::pair<ObjectPtr, ObjectPtr>> list;
-      list.push_back(e);
-      value_.insert(std::pair<size_t, std::vector<std::pair<ObjectPtr,
-          ObjectPtr>>>(e.first->Hash(), list));
-    }
-  }
+            ObjectPtr obj_type, SymbolTableStack&& sym_table);
 
-  MapObject(Map&& value)
-      : Object(ObjectType::MAP), value_(std::move(value)) {}
+  MapObject(Map&& value, ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::MAP, obj_type, std::move(sym_table))
+      , value_(std::move(value)) {}
 
   std::size_t Hash() const override {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("map object has no hash method"));
   }
 
-  bool operator==(const Object& obj) const override {
-    if (obj.type() != ObjectType::MAP) {
-      return false;
-    }
-
-    using ls = std::vector<std::pair<ObjectPtr, ObjectPtr>>;
-    const MapObject& map = static_cast<const MapObject&>(obj);
-
-    // for to compare two maps
-    for (struct {Map::const_iterator a; Map::const_iterator b;} loop
-             = { value_.begin(), map.value_.begin() };
-         (loop.a != value_.end()) && (loop.b != map.value_.end());
-         loop.a++, loop.b++) {
-      // for to compare the lists inside the maps
-      for (struct {ls::const_iterator la; ls::const_iterator lb;} l
-               = { loop.a->second.begin(), loop.b->second.begin() };
-           (l.la != loop.a->second.end()) && (l.lb != loop.b->second.end());
-           l.la++, l.lb++) {
-        if (*l.la != *l.lb) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
+  bool operator==(const Object& obj) const override;
 
   // Return the reference for an object on the map, if there is no
   // entry for this index, create a new empty with this entry and
@@ -590,79 +446,13 @@ class MapObject: public Object {
   }
 
   // Return a tuple object with the element and a bool object
-  std::shared_ptr<Object> Element(ObjectPtr obj_index) {
-    size_t hash = obj_index->Hash();
-
-    auto it = value_.find(hash);
-
-    // return a tuple with null object and false bool object
-    auto ret_null = []() {
-      std::vector<std::shared_ptr<Object>> vet_tuple{
-          ObjectPtr(ObjectPtr(new NullObject()), new BoolObject(false))};
-
-      ObjectPtr obj_ret(new TupleObject(std::move(vet_tuple)));
-      return obj_ret;
-    };
-
-    // if the index not exists on the map return a tuple object
-    // with null and bool object
-    if (it == value_.end()) {
-      return ret_null();
-    }
-
-    // if the index exists on map, search the object on the list, to confirm
-    // that is not a false hash match
-    for (auto& e: it->second) {
-      // when the obj_index match with any index on the list, create a tuple
-      // object to return
-      if (*e.first == *obj_index) {
-        std::vector<std::shared_ptr<Object>> vet_tuple{
-            e.second, ObjectPtr(new BoolObject(true))};
-
-        ObjectPtr obj_ret(new TupleObject(std::move(vet_tuple)));
-        return obj_ret;
-      } else {
-        return ret_null();
-      }
-    }
-  }
-
+  std::shared_ptr<Object> Element(ObjectPtr obj_index);
 
   // Create, this method doesn't do any kind of verification
   // the caller method must check if the entry exists on map or not
-  inline ObjectPtr& Insert_(ObjectPtr obj_index) {
-    size_t hash = obj_index->Hash();
+  ObjectPtr& Insert_(ObjectPtr obj_index);
 
-    auto it = value_.find(hash);
-    ObjectPtr obj(nullptr);
-
-    // if the hash doesn't exists create a entry with a list
-    if (it == value_.end()) {
-      std::vector<std::pair<ObjectPtr, ObjectPtr>> list;
-      list.push_back(std::pair<ObjectPtr, ObjectPtr>(obj_index, obj));
-      value_.insert(Pair(hash, list));
-    } else {
-      it->second.push_back(std::pair<ObjectPtr, ObjectPtr>(obj_index, obj));
-    }
-
-    return value_.find(hash)->second.back().second;
-  }
-
-  inline bool Exists(ObjectPtr obj_index) {
-    size_t hash = obj_index->Hash();
-
-    auto it = value_.find(hash);
-
-    if (it != value_.end()) {
-      for (auto& e: it->second) {
-        if (*e.first == *obj_index) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
+  bool Exists(ObjectPtr obj_index);
 
   void Print() override {
     std::cout << "MAP: { ";
@@ -684,7 +474,8 @@ class MapObject: public Object {
 
 class FuncObject: public Object {
  public:
-  FuncObject(ObjectPtr obj_type): Object(ObjectType::FUNC, obj_type) {}
+  FuncObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::FUNC, obj_type, std::move(sym_table)) {}
 
   virtual ~FuncObject() {}
 
@@ -705,11 +496,44 @@ class FuncObject: public Object {
   }
 };
 
+class FuncDeclObject: public FuncObject {
+ public:
+  FuncDeclObject(const std::string& id, AstNode* start_node,
+                 const SymbolTableStack& symbol_table,
+                 std::vector<std::string>&& params,
+                 std::vector<ObjectPtr>&& default_values,
+                 bool variadic, ObjectPtr obj_type,
+                 SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , id_(id)
+      , start_node_(start_node)
+      , symbol_table_(true)
+      , params_(std::move(params))
+      , default_values_(std::move(default_values))
+      , variadic_(variadic) {
+    symbol_table_.Push(symbol_table.MainTable());
+    SymbolTablePtr table = SymbolTable::Create();
+
+    // main symbol of function
+    symbol_table_.Push(table, true);
+  }
+
+  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override;
+
+ private:
+  std::string id_;
+  AstNode* start_node_;
+  SymbolTableStack symbol_table_;
+  std::vector<std::string> params_;
+  std::vector<ObjectPtr> default_values_;
+  bool variadic_;
+};
 
 class TypeObject: public Object {
  public:
-  TypeObject(const std::string& name, ObjectPtr obj_type)
-    : Object(ObjectType::TYPE, obj_type), name_(name) {}
+  TypeObject(const std::string& name, ObjectPtr obj_type,
+             SymbolTableStack&& sym_table)
+    : Object(ObjectType::TYPE, obj_type, std::move(sym_table)), name_(name) {}
 
   virtual ~TypeObject() {}
 
@@ -747,81 +571,47 @@ class TypeObject: public Object {
   std::string name_;
 };
 
+class Type: public TypeObject {
+ public:
+  Type(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("type", obj_type, std::move(sym_table)) {}
+
+  virtual ~Type() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override;
+};
+
 class NullType: public TypeObject {
  public:
-  NullType(ObjectPtr obj_type): TypeObject("null_t", obj_type) {}
+  NullType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("null_t", obj_type, std::move(sym_table)) {}
+
   virtual ~NullType() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override {
-    if (params.size() > 0) {
-      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
-                         boost::format("null_t() takes no arguments"));
-    }
-
-    return ObjectPtr(new NullObject);
-  }
+                        std::vector<ObjectPtr>&& params) override;
 };
 
 class BoolType: public TypeObject {
  public:
-  BoolType(ObjectPtr obj_type): TypeObject("bool", obj_type) {}
+  BoolType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("bool", obj_type, std::move(sym_table)) {}
   virtual ~BoolType() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override {
-    if (params.size() != 1) {
-      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
-                         boost::format("bool() takes exactly 1 argument"));
-    }
-
-    bool b = params[0]->ObjBool();
-    ObjectPtr bool_obj(new BoolObject(b));
-
-    return bool_obj;
-  }
+                        std::vector<ObjectPtr>&& params) override;
 };
 
 class IntType: public TypeObject {
  public:
-  IntType(ObjectPtr obj_type): TypeObject("int", obj_type) {}
+  IntType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("int", obj_type, std::move(sym_table)) {}
+
   virtual ~IntType() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override {
-    if (params.size() != 1) {
-      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
-                         boost::format("int() takes exactly 1 argument"));
-    }
-
-    switch (params[0]->type()) {
-      case ObjectType::INT: {
-        ObjectPtr obj_int(new IntObject(static_cast<IntObject&>(
-            *params[0]).value()));
-        return obj_int;
-      } break;
-
-      case ObjectType::STRING: {
-        const StringObject& str_obj =
-            static_cast<const StringObject&>(*params[0]);
-        int v = Type2Int(str_obj.value());
-        ObjectPtr obj_int(new IntObject(v));
-        return obj_int;
-      } break;
-
-      case ObjectType::REAL: {
-        const RealObject& real_obj =
-            static_cast<const RealObject&>(*params[0]);
-        int v = Type2Int(real_obj.value());
-        ObjectPtr obj_int(new IntObject(v));
-        return obj_int;
-      } break;
-
-      default:
-        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                           boost::format("invalid conversion to int"));
-    }
-  }
+                        std::vector<ObjectPtr>&& params) override;
 
  private:
   int Type2Int(float v) {
@@ -840,44 +630,13 @@ class IntType: public TypeObject {
 
 class RealType: public TypeObject {
  public:
-  RealType(ObjectPtr obj_type): TypeObject("real", obj_type) {}
+  RealType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("real", obj_type, std::move(sym_table)) {}
+
   virtual ~RealType() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override {
-    if (params.size() != 1) {
-      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
-                         boost::format("real() takes exactly 1 argument"));
-    }
-
-    switch (params[0]->type()) {
-      case ObjectType::REAL: {
-        ObjectPtr obj_real(new RealObject(static_cast<RealObject&>(
-            *params[0]).value()));
-        return obj_real;
-      } break;
-
-      case ObjectType::STRING: {
-        const StringObject& str_obj =
-            static_cast<const StringObject&>(*params[0]);
-        int v = Type2Real(str_obj.value());
-        ObjectPtr obj_real(new RealObject(v));
-        return obj_real;
-      } break;
-
-      case ObjectType::INT: {
-        const IntObject& int_obj =
-            static_cast<const IntObject&>(*params[0]);
-        float v = Type2Real(int_obj.value());
-        ObjectPtr obj_real(new RealObject(v));
-        return obj_real;
-      } break;
-
-      default:
-        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                           boost::format("invalid conversion to real"));
-    }
-  }
+                        std::vector<ObjectPtr>&& params) override;
 
  private:
   float Type2Real(int v) {
@@ -896,50 +655,20 @@ class RealType: public TypeObject {
 
 class StringType: public TypeObject {
  public:
-  StringType(ObjectPtr obj_type): TypeObject("string", obj_type) {}
+  StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("string", obj_type, std::move(sym_table)) {}
+
   virtual ~StringType() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override {
-    if (params.size() != 1) {
-      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
-                         boost::format("real() takes exactly 1 argument"));
-    }
-
-    switch (params[0]->type()) {
-      case ObjectType::STRING: {
-        ObjectPtr obj_str(new StringObject(static_cast<StringObject&>(
-            *params[0]).value()));
-        return obj_str;
-      } break;
-
-      case ObjectType::REAL: {
-        const RealObject& obj_real =
-            static_cast<const RealObject&>(*params[0]);
-        std::string v = std::to_string(obj_real.value());
-        ObjectPtr obj_str(new StringObject(v));
-        return obj_str;
-      } break;
-
-      case ObjectType::INT: {
-        const IntObject& int_obj =
-            static_cast<const IntObject&>(*params[0]);
-        std::string v = std::to_string(int_obj.value());
-        ObjectPtr obj_str(new StringObject(v));
-        return obj_str;
-      } break;
-
-      default:
-        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                           boost::format("invalid conversion to string"));
-    }
-  }
+                        std::vector<ObjectPtr>&& params) override;
 };
 
 class ContainerType: public TypeObject {
  public:
-  ContainerType(const std::string& name, ObjectPtr obj_type)
-      : TypeObject(name, obj_type) {}
+  ContainerType(const std::string& name, ObjectPtr obj_type,
+                SymbolTableStack&& sym_table)
+      : TypeObject(name, obj_type, std::move(sym_table)) {}
 
   virtual ~ContainerType() {}
 
@@ -957,86 +686,42 @@ class ContainerType: public TypeObject {
 
 class ArrayType: public ContainerType {
  public:
-  ArrayType(ObjectPtr obj_type): ContainerType("array", obj_type) {}
+  ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : ContainerType("array", obj_type, std::move(sym_table)) {}
 
   virtual ~ArrayType() {}
 };
 
 class MapType: public ContainerType {
  public:
-  MapType(ObjectPtr obj_type): ContainerType("map", obj_type) {}
+  MapType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : ContainerType("map", obj_type, std::move(sym_table)) {}
 
   virtual ~MapType() {}
 };
 
 class TupleType: public ContainerType {
  public:
-  TupleType(ObjectPtr obj_type): ContainerType("tuple", obj_type) {}
+  TupleType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : ContainerType("tuple", obj_type, std::move(sym_table)) {}
+
   virtual ~TupleType() {}
 };
 
-class ObjectFactory {
+class FuncType: public TypeObject {
  public:
-  ObjectFactory(const SymbolTableStack& symbol_table)
-      :symbol_table_(symbol_table) {}
+  FuncType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("func", obj_type, std::move(sym_table)) {}
 
-  ObjectPtr NewNull() {
-    auto obj_type = symbol_table_.Lookup("null_t", false).SharedAccess();
-    return ObjectPtr(new NullObject(), obj_type);
+  virtual ~FuncType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& /*params*/) override {
+      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                         boost::format("func() not contructable"));
+
+    return ObjectPtr(nullptr);
   }
-
-  ObjectPtr NewBool(bool v) {
-    auto obj_type = symbol_table_.Lookup("bool", false).SharedAccess();
-    return ObjectPtr(new BoolObject(v), obj_type);
-  }
-
-  ObjectPtr NewInt(int v) {
-    auto obj_type = symbol_table_.Lookup("int", false).SharedAccess();
-    return ObjectPtr(new IntObject(v), obj_type);
-  }
-
-  ObjectPtr NewReal(float v) {
-    auto obj_type = symbol_table_.Lookup("real", false).SharedAccess();
-    return ObjectPtr(new RealObject(v), obj_type);
-  }
-
-  ObjectPtr NewString(const std::string str) {
-    auto obj_type = symbol_table_.Lookup("string", false).SharedAccess();
-    return ObjectPtr(new StringObject(str), obj_type);
-  }
-
-  ObjectPtr NewString(std::string&& str) {
-    auto obj_type = symbol_table_.Lookup("string", false).SharedAccess();
-    return ObjectPtr(new StringObject(std::move(str)), obj_type);
-  }
-
-  ObjectPtr NewTuple(std::vector<std::unique_ptr<Object>>&& value) {
-    auto obj_type = symbol_table_.Lookup("tuple", false).SharedAccess();
-    return ObjectPtr(new TupleObject(std::move(value)), obj_type);
-  }
-
-  ObjectPtr NewTuple(std::vector<std::shared_ptr<Object>>&& value) {
-    auto obj_type = symbol_table_.Lookup("tuple", false).SharedAccess();
-    return ObjectPtr(new TupleObject(value), obj_type);
-  }
-
-  ObjectPtr NewArray(std::vector<std::unique_ptr<Object>>&& value) {
-    auto obj_type = symbol_table_.Lookup("array", false).SharedAccess();
-    return ObjectPtr(new ArrayObject(std::move(value)), obj_type);
-  }
-
-  ObjectPtr NewArray(std::vector<std::shared_ptr<Object>>&& value) {
-    auto obj_type = symbol_table_.Lookup("array", false).SharedAccess();
-    return ObjectPtr(new ArrayObject(value), obj_type);
-  }
-
-  ObjectPtr NewMap(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value) {
-    auto obj_type = symbol_table_.Lookup("map", false).SharedAccess();
-    return ObjectPtr(new MapObject(value), obj_type);
-  }
-
- private:
-  const SymbolTableStack& symbol_table_;
 };
 
 }

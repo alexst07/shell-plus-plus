@@ -1,5 +1,5 @@
-#ifndef SETI_EXCEPTION_H
-#define SETI_EXCEPTION_H
+#ifndef SETI_RUN_TIME_ERROR_H
+#define SETI_RUN_TIME_ERROR_H
 
 #include <exception>
 #include <string>
@@ -48,4 +48,4 @@ class RunTimeError : public std::exception {
 }
 }
 
-#endif  // SETI_EXCEPTION_H
+#endif  // SETI_RUN_TIME_ERROR_H

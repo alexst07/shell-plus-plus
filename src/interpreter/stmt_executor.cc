@@ -52,10 +52,12 @@ void FuncDeclExecutor::Exec(AstNode* node) {
 
   SymbolTableStack st_stack(symbol_table_stack());
 
-  ObjectPtr fobj(new FuncDeclObject(
-      fdecl_node->name()->name(), fdecl_node->block(), std::move(st_stack),
-      std::move(param_names), std::move(default_values),
-      fdecl_node->variadic()));
+  ObjectPtr fobj(obj_factory_.NewFuncDeclObject(fdecl_node->name()->name(),
+                                                fdecl_node->block(),
+                                                std::move(st_stack),
+                                                std::move(param_names),
+                                                std::move(default_values),
+                                                fdecl_node->variadic()));
 
   symbol_table_stack().SetEntry(fdecl_node->name()->name(), fobj);
 }
@@ -103,11 +105,11 @@ void ReturnExecutor::Exec(AstNode* node) {
 
     // convert vector to tuple object and insert it on symbol table
     // with reserved name
-    ObjectPtr tuple_obj(new TupleObject(std::move(vret)));
+    ObjectPtr tuple_obj(obj_factory_.NewTuple(std::move(vret)));
     symbol_table_stack().SetEntry("%return", tuple_obj);
   } else {
     // return null
-    ObjectPtr null_obj(new NullObject);
+    ObjectPtr null_obj(obj_factory_.NewNull());
     symbol_table_stack().SetEntry("%return", null_obj);
   }
 

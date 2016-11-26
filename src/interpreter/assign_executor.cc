@@ -4,7 +4,6 @@
 #include <boost/variant.hpp>
 
 #include "expr_executor.h"
-#include "ast/symbol_table.h"
 #include "func_object.h"
 
 namespace setti {
@@ -37,7 +36,7 @@ void AssignExecutor::Exec(AstNode* node) {
   if ((vars.size() == 1) && (values.size() == 1)) {
     vars[0].get() = values[0];
   } else if ((vars.size() == 1) && (values.size() != 1)) {
-    ObjectPtr tuple_obj(new TupleObject(std::move(values)));
+    ObjectPtr tuple_obj(obj_factory_.NewTuple(std::move(values)));
     vars[0].get() = tuple_obj;
   } else if ((vars.size() != 1) && (values.size() == 1)) {
     // only tuple object is accept on this case

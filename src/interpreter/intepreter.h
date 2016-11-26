@@ -11,6 +11,7 @@
 #include "executor.h"
 #include "parser/parser.h"
 #include "parser/lexer.h"
+#include "object-factory.h"
 
 namespace setti {
 namespace internal {
@@ -35,7 +36,9 @@ class RootExecutor: public Executor {
 // Temporary declaration of functions
 class PrintFunc: public FuncObject {
  public:
-  PrintFunc(): FuncObject() {}
+  PrintFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
 
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params) {
     for (auto& e: params) {
@@ -44,51 +47,24 @@ class PrintFunc: public FuncObject {
 
     std::cout << "\n";
 
-    return ObjectPtr(new NullObject);
+    return obj_factory_.NewNull();
   }
+
+ private:
+  ObjectFactory obj_factory_;
 };
 
 class Interpreter {
  public:
-  Interpreter() {
-    ObjectPtr obj(new PrintFunc);
+  Interpreter(): obj_factory(symbol_table_) {
+    AlocTypes(symbol_table_);
+
+    SymbolTableStack sym_stack(false);
+    sym_stack.Push(symbol_table_.MainTable());
+    auto func_type = symbol_table_.Lookup("func", false).SharedAccess();
+    ObjectPtr obj(new PrintFunc(func_type, std::move(sym_stack)));
     SymbolAttr symbol(obj, true);
     symbol_table_.InsertEntry("print", std::move(symbol));
-
-    ObjectPtr type_null(new NullType);
-    SymbolAttr symbol_null(type_null, true);
-    symbol_table_.InsertEntry(static_cast<const NullType&>(*type_null).name(),
-                              std::move(symbol_null));
-
-    ObjectPtr type_int(new IntType);
-    SymbolAttr symbol_int(type_int, true);
-    symbol_table_.InsertEntry(static_cast<const IntType&>(*type_int).name(),
-                              std::move(symbol_int));
-
-    ObjectPtr type_real(new IntType);
-    SymbolAttr symbol_real(type_real, true);
-    symbol_table_.InsertEntry(static_cast<const RealType&>(*type_real).name(),
-                              std::move(symbol_real));
-
-    ObjectPtr type_str(new StringType);
-    SymbolAttr symbol_str(type_str, true);
-    symbol_table_.InsertEntry(static_cast<const StringType&>(*type_str).name(),
-                              std::move(symbol_str));
-
-    ObjectPtr type_array(new ArrayType);
-    SymbolAttr symbol_array(type_array, true);
-    symbol_table_.InsertEntry(static_cast<const ArrayType&>(*type_array).name(),
-                              std::move(symbol_array));
-
-    ObjectPtr type_tuple(new TupleType);
-    SymbolAttr symbol_tuple(type_tuple, true);
-    symbol_table_.InsertEntry(static_cast<const TupleType&>(*type_tuple).name(),
-                              std::move(symbol_tuple));
-
-    ObjectPtr type_map(new MapType);
-    SymbolAttr symbol_map(type_map, true);
-    symbol_table_.InsertEntry(static_cast<const MapType&>(*type_map).name(),
-                              std::move(symbol_map));
   }
 
   void Exec(std::string name) {
@@ -111,12 +87,11 @@ class Interpreter {
         std::cout << msg << "\n";
       }
     }
-
-    symbol_table_.Dump();
   }
 
  private:
   SymbolTableStack symbol_table_;
+  ObjectFactory obj_factory;
 };
 
 }

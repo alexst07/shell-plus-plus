@@ -6,23 +6,21 @@
 #include <unordered_map>
 #include <boost/format.hpp>
 
-#include "obj_type.h"
 #include "run_time_error.h"
-#include "obj_type.h"
 
 namespace setti {
 namespace internal {
 
-class SymbolAttr: public EntryPointer {
+class Object;
+
+class SymbolAttr {
  public:
   SymbolAttr(std::shared_ptr<Object> value, bool global)
-      : EntryPointer(EntryPointer::EntryType::SYMBOL)
-      , value_(value)
+      : value_(value)
       , global_(global) {}
 
   SymbolAttr()
-      : EntryPointer(EntryPointer::EntryType::SYMBOL)
-      , value_(std::shared_ptr<Object>(nullptr))
+      : value_(std::shared_ptr<Object>(nullptr))
       , global_(false) {}
 
   ~SymbolAttr() {}
@@ -32,8 +30,7 @@ class SymbolAttr: public EntryPointer {
   }
 
   SymbolAttr(SymbolAttr&& other)
-      : EntryPointer(EntryPointer::EntryType::SYMBOL)
-      , global_(other.global_)
+      : global_(other.global_)
       , value_(std::move(other.value_)) {}
 
   SymbolAttr& operator=(SymbolAttr&& other) noexcept {
@@ -65,10 +62,6 @@ class SymbolAttr: public EntryPointer {
 
   inline bool global() const noexcept {
     return global_;
-  }
-
-  void Print() const {
-    value_->Print();
   }
 
  private:
@@ -152,14 +145,6 @@ class SymbolTable {
     return map_.begin();
   }
 
-  void Dump() const {
-    for (const auto& m: map_) {
-      std::cout << "name: " << m.first << " ";
-      m.second.Print();
-      std::cout << "\n";
-    }
-  }
-
  private:
   SymbolMap map_;
 };
@@ -231,11 +216,12 @@ class SymbolTableStack {
                        boost::format("symbol %1% not found")% name);
   }
 
-  std::tuple<ObjectPtr,bool> LookupObj(const std::string& name) {
+  std::tuple<std::shared_ptr<Object>,bool> LookupObj(const std::string& name) {
     auto it_obj = stack_.back()->Lookup(name);
 
     if (it_obj != stack_.back()->end()) {
-      return std::tuple<ObjectPtr,bool>(it_obj->second.SharedAccess(), true);
+      return std::tuple<std::shared_ptr<Object>,bool>(
+            it_obj->second.SharedAccess(), true);
     }
 
     if (stack_.size() > 1) {
@@ -244,14 +230,15 @@ class SymbolTableStack {
 
         if (it_obj != stack_.at(i)->end()) {
           if (it_obj->second.global()) {
-            return std::tuple<ObjectPtr,bool>(it_obj->second.SharedAccess(),
-                                              true);
+            return std::tuple<std::shared_ptr<Object>,bool>(
+                  it_obj->second.SharedAccess(), true);
           }
         }
       }
     }
 
-    return std::tuple<ObjectPtr,bool>(ObjectPtr(nullptr), false);
+    return std::tuple<std::shared_ptr<Object>,bool>(
+          std::shared_ptr<Object>(nullptr), false);
   }
 
   bool InsertEntry(const std::string& name, SymbolAttr&& symbol) {
@@ -266,12 +253,6 @@ class SymbolTableStack {
 
   SymbolTablePtr MainTable() const noexcept {
     return main_table_;
-  }
-
-  void Dump() {
-    for (auto& table: stack_) {
-      table->Dump();
-    }
   }
 
  private:

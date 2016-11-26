@@ -8,8 +8,9 @@
 #include <tuple>
 
 #include "ast/ast.h"
-#include "ast/obj_type.h"
+#include "obj_type.h"
 #include "executor.h"
+#include "object-factory.h"
 
 namespace setti {
 namespace internal {
@@ -29,7 +30,8 @@ class AssignableListExecutor: public Executor {
 class ExpressionExecutor: public Executor {
  public:
   ExpressionExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack) {}
+      : Executor(parent, symbol_table_stack)
+      , obj_factory(symbol_table_stack) {}
 
   // Entry point to execute expression
   ObjectPtr Exec(AstNode* node);
@@ -68,6 +70,8 @@ class ExpressionExecutor: public Executor {
 
   void set_stop(StopFlag flag) override;
 
+ private:
+  ObjectFactory obj_factory;
 };
 
 class FuncCallExecutor: public Executor {
@@ -82,26 +86,27 @@ class FuncCallExecutor: public Executor {
 };
 
 // Pass the variable as value or reference depending on type
-inline ObjectPtr PassVar(ObjectPtr obj) {
+inline ObjectPtr PassVar(ObjectPtr obj, SymbolTableStack& symbol_table_stack) {
+  ObjectFactory obj_factory(symbol_table_stack);
   switch (obj->type()) {
     case Object::ObjectType::NIL:
-      return ObjectPtr(new NullObject());
+      return obj_factory.NewNull();
       break;
 
     case Object::ObjectType::INT:
-      return ObjectPtr(new IntObject(static_cast<IntObject&>(*obj)));
+      return obj_factory.NewInt(static_cast<IntObject&>(*obj).value());
       break;
 
     case Object::ObjectType::BOOL:
-      return ObjectPtr(new BoolObject(static_cast<BoolObject&>(*obj)));
+      return obj_factory.NewBool(static_cast<BoolObject&>(*obj).value());
       break;
 
     case Object::ObjectType::REAL:
-      return ObjectPtr(new RealObject(static_cast<RealObject&>(*obj)));
+      return obj_factory.NewReal(static_cast<RealObject&>(*obj).value());
       break;
 
     case Object::ObjectType::STRING:
-      return ObjectPtr(new StringObject(static_cast<StringObject&>(*obj)));
+      return obj_factory.NewString(static_cast<StringObject&>(*obj).value());
       break;
 
     default:

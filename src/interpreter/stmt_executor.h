@@ -8,8 +8,9 @@
 #include <tuple>
 
 #include "ast/ast.h"
-#include "ast/obj_type.h"
+#include "obj_type.h"
 #include "executor.h"
+#include "object-factory.h"
 
 namespace setti {
 namespace internal {
@@ -30,11 +31,15 @@ class StmtListExecutor: public Executor {
 class FuncDeclExecutor: public Executor {
  public:
   FuncDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack) {}
+      : Executor(parent, symbol_table_stack)
+      , obj_factory_(symbol_table_stack) {}
 
   void Exec(AstNode* node);
 
   void set_stop(StopFlag flag) override;
+
+ private:
+  ObjectFactory obj_factory_;
 };
 
 class StmtExecutor: public Executor {
@@ -69,12 +74,16 @@ class BlockExecutor: public Executor {
 class ReturnExecutor: public Executor {
  public:
   ReturnExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack) {}
+      : Executor(parent, symbol_table_stack)
+      , obj_factory_(symbol_table_stack) {}
 
   // Entry point to execute expression
   void Exec(AstNode* node);
 
   void set_stop(StopFlag flag) override;
+
+ private:
+  ObjectFactory obj_factory_;
 };
 
 }

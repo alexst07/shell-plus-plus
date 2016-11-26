@@ -63,7 +63,7 @@ ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {
   ArrayInstantiation* array_node = static_cast<ArrayInstantiation*>(node);
   AssignableListExecutor assignable_list(this, symbol_table_stack());
   auto vec = assignable_list.Exec(array_node->assignable_list());
-  std::unique_ptr<Object> array_obj(new ArrayObject(std::move(vec)));
+  std::shared_ptr<Object> array_obj(obj_factory.NewArray(std::move(vec)));
   return array_obj;
 }
 
@@ -84,7 +84,7 @@ ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {
   }
 
   // creates the map object
-  ObjectPtr map(new MapObject(std::move(map_vec)));
+  ObjectPtr map(obj_factory.NewMap(std::move(map_vec)));
   return map;
 }
 
@@ -92,7 +92,7 @@ ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) {
   Identifier* id_node = static_cast<Identifier*>(node);
   const std::string& name = id_node->name();
   auto obj = symbol_table_stack().Lookup(name, false).Ref();
-  return PassVar(obj);
+  return PassVar(obj, symbol_table_stack());
 }
 
 ObjectPtr ExpressionExecutor::ArrayAccess(Array& array_node,
@@ -110,7 +110,7 @@ ObjectPtr ExpressionExecutor::ArrayAccess(Array& array_node,
   int num = static_cast<IntObject*>(index.get())->value();
 
   auto val = static_cast<ArrayObject&>(obj).Element(size_t(num));
-  return PassVar(val);
+  return PassVar(val, symbol_table_stack());
 }
 
 ObjectPtr ExpressionExecutor::TupleAccess(Array& array_node,
@@ -128,7 +128,7 @@ ObjectPtr ExpressionExecutor::TupleAccess(Array& array_node,
   int num = static_cast<IntObject*>(index.get())->value();
 
   auto val = static_cast<TupleObject&>(obj).Element(size_t(num));
-  return PassVar(val);
+  return PassVar(val, symbol_table_stack());
 }
 
 ObjectPtr ExpressionExecutor::MapAccess(Array& array_node, MapObject& obj) {
@@ -136,7 +136,7 @@ ObjectPtr ExpressionExecutor::MapAccess(Array& array_node, MapObject& obj) {
   ObjectPtr index = Exec(array_node.index_exp());
 
   auto val = static_cast<MapObject&>(obj).Element(index);
-  return PassVar(val);
+  return PassVar(val, symbol_table_stack());
 }
 
 ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
@@ -166,23 +166,23 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
   Literal* literal = static_cast<Literal*>(node);
   switch (literal->literal_type()) {
     case Literal::Type::kInteger: {
-      ObjectPtr obj(new IntObject(boost::get<int>(literal->value())));
+      ObjectPtr obj(obj_factory.NewInt(boost::get<int>(literal->value())));
       return obj;
     } break;
 
     case Literal::Type::kBool: {
-      ObjectPtr obj(new BoolObject(boost::get<bool>(literal->value())));
+      ObjectPtr obj(obj_factory.NewBool(boost::get<bool>(literal->value())));
       return obj;
     } break;
 
     case Literal::Type::kReal: {
-      ObjectPtr obj(new RealObject(boost::get<float>(literal->value())));
+      ObjectPtr obj(obj_factory.NewReal(boost::get<float>(literal->value())));
       return obj;
     } break;
 
     case Literal::Type::kString: {
     std::string str = boost::get<std::string>(literal->value());
-      ObjectPtr obj(new StringObject(std::move(str)));
+      ObjectPtr obj(obj_factory.NewString(std::move(str)));
       return obj;
     } break;
   }

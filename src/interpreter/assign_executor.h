@@ -7,9 +7,10 @@
 #include <tuple>
 
 #include "ast/ast.h"
-#include "ast/obj_type.h"
+#include "obj_type.h"
 #include "executor.h"
-#include "ast/symbol_table.h"
+#include "symbol_table.h"
+#include "object-factory.h"
 
 namespace setti {
 namespace internal {
@@ -22,7 +23,8 @@ namespace internal {
 class AssignExecutor: public Executor {
  public:
   AssignExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack) {}
+      : Executor(parent, symbol_table_stack)
+      , obj_factory_(symbol_table_stack) {}
 
   // Entry point to execute assign operations
   void Exec(AstNode* node);
@@ -51,6 +53,9 @@ class AssignExecutor: public Executor {
   ObjectPtr& RefMap(Array& array_node, MapObject& obj);
 
   void set_stop(StopFlag flag) override;
+
+ private:
+  ObjectFactory obj_factory_;
 };
 
 }
