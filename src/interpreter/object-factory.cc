@@ -51,7 +51,7 @@ void AlocTypes(SymbolTableStack& symbol_table) {
                            std::move(symbol_map));
 
   ObjectPtr type_func = obj_factory.NewFuncType();
-  SymbolAttr symbol_func(type_map, true);
+  SymbolAttr symbol_func(type_func, true);
   symbol_table.InsertEntry(static_cast<const FuncType&>(*type_func).name(),
                            std::move(symbol_func));
 }
