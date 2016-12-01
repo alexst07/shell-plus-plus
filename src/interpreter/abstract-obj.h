@@ -64,9 +64,119 @@ class Object {
                        boost::format("type has no cmd interface"));
   }
 
+  virtual std::shared_ptr<Object> Add(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no + operator"));
+  }
+
+  virtual std::shared_ptr<Object> Sub(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no - operator"));
+  }
+
+  virtual std::shared_ptr<Object> Mult(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no * operator"));
+  }
+
+  virtual std::shared_ptr<Object> Div(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no / operator"));
+  }
+
+  virtual std::shared_ptr<Object> DivMod(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no % operator"));
+  }
+
+  virtual std::shared_ptr<Object> RightShift(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no >> operator"));
+  }
+
+  virtual std::shared_ptr<Object> LeftShift(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no << operator"));
+  }
+
+  virtual std::shared_ptr<Object> Lesser(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no < operator"));
+  }
+
+  virtual std::shared_ptr<Object> Greater(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no > operator"));
+  }
+
   virtual std::shared_ptr<Object> Copy() const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no copy method"));
+  }
+
+  virtual std::shared_ptr<Object> LessEqual(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no >= operator"));
+  }
+
+  virtual std::shared_ptr<Object> GreatEqual(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no <= operator"));
+  }
+
+  virtual std::shared_ptr<Object> Equal(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no == operator"));
+  }
+
+  virtual std::shared_ptr<Object> NotEqual(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no == operator"));
+  }
+
+  virtual std::shared_ptr<Object> BitAnd(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no & operator"));
+  }
+
+  virtual std::shared_ptr<Object> BitOr(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no | operator"));
+  }
+
+  virtual std::shared_ptr<Object> BitXor(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no ^ operator"));
+  }
+
+  virtual std::shared_ptr<Object> BitNot(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no ~ operator"));
+  }
+
+  virtual std::shared_ptr<Object> And(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no && operator"));
+  }
+
+  virtual std::shared_ptr<Object> Or(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no && operator"));
+  }
+
+  virtual std::shared_ptr<Object> UnaryAdd(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no unary + operator"));
+  }
+
+  virtual std::shared_ptr<Object> UnarySub(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no unary - operator"));
+  }
+
+  virtual std::shared_ptr<Object> Not(std::shared_ptr<Object>) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no unary - operator"));
   }
 
   std::shared_ptr<Object> ObjType() const noexcept {
