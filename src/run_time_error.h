@@ -24,7 +24,8 @@ class RunTimeError : public std::exception {
     OUT_OF_RANGE,
     KEY_NOT_FOUND,
     INCOMPATIBLE_TYPE,
-    FUNC_PARAMS
+    FUNC_PARAMS,
+    ZERO_DIV
   };
 
   RunTimeError();

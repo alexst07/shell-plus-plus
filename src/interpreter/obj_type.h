@@ -12,6 +12,7 @@
 #include "ast/ast.h"
 #include "symbol_table.h"
 #include "abstract-obj.h"
+#include "int-object.h"
 
 namespace setti {
 namespace internal {
@@ -43,45 +44,7 @@ class NullObject: public Object {
   inline nullptr_t value() const noexcept { return nullptr; }
 };
 
-class IntObject: public Object {
- public:
-  IntObject(int value, ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::INT, obj_type, std::move(sym_table))
-      , value_(value) {}
 
-  IntObject(const IntObject& obj): Object(obj), value_(obj.value_) {}
-
-  virtual ~IntObject() {}
-
-  IntObject& operator=(const IntObject& obj) {
-    value_ = obj.value_;
-    return *this;
-  }
-
-  inline int value() const noexcept { return value_; }
-
-  std::size_t Hash() const override {
-    std::hash<int> int_hash;
-    return int_hash(value_);
-  }
-
-  bool operator==(const Object& obj) const override {
-    if (obj.type() != ObjectType::INT) {
-      return false;
-    }
-
-    int value = static_cast<const IntObject&>(obj).value_;
-
-    return value_ == value;
-  }
-
-  void Print() override {
-    std::cout << "INT: " << value_;
-  }
-
- private:
-  int value_;
-};
 
 class BoolObject: public Object {
  public:
