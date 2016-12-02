@@ -118,6 +118,11 @@ class ObjectFactory {
     return ObjectPtr(new RealType(obj_type, std::move(SymTableStack())));
   }
 
+  ObjectPtr NewBoolType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return ObjectPtr(new BoolType(obj_type, std::move(SymTableStack())));
+  }
+
   ObjectPtr NewStringType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return ObjectPtr(new StringType(obj_type, std::move(SymTableStack())));

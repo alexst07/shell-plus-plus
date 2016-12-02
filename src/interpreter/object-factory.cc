@@ -30,6 +30,12 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertEntry(static_cast<const RealType&>(*type_real).name(),
                            std::move(symbol_real));
 
+  ObjectPtr type_bool = obj_factory.NewBoolType();
+  SymbolAttr symbol_bool(type_bool, true);
+  symbol_table.InsertEntry(static_cast<const RealType&>(*type_bool).name(),
+                           std::move(symbol_bool));
+
+
   ObjectPtr type_str = obj_factory.NewStringType();
   SymbolAttr symbol_str(type_str, true);
   symbol_table.InsertEntry(static_cast<const StringType&>(*type_str).name(),
