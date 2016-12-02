@@ -17,35 +17,6 @@
 namespace setti {
 namespace internal {
 
-class NullObject: public Object {
- public:
-  NullObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::NIL, obj_type, std::move(sym_table)) {}
-
-  virtual ~NullObject() {}
-
-  std::size_t Hash() const override {
-    throw RunTimeError(RunTimeError::ErrorCode::NULL_ACCESS,
-                       boost::format("null object has no hash method"));
-  }
-
-  bool operator==(const Object& obj) const override {
-    if (obj.type() == ObjectType::NIL) {
-      return true;
-    }
-
-    return false;
-  }
-
-  void Print() override {
-    std::cout << "NIL";
-  }
-
-  inline nullptr_t value() const noexcept { return nullptr; }
-};
-
-
-
 class BoolObject: public Object {
  public:
   BoolObject(bool value, ObjectPtr obj_type, SymbolTableStack&& sym_table)

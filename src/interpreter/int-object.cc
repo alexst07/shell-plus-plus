@@ -86,7 +86,29 @@ ObjectPtr IntObject::Mult(ObjectPtr obj) {
 }
 
 ObjectPtr IntObject::Div(ObjectPtr obj) {
-  return OperationObj(obj, 3);
+  switch (obj->type()) {
+    case ObjectType::INT: {
+      IntObject& int_obj = static_cast<IntObject&>(*obj);
+      float r = static_cast<float>(value_)/ int_obj.value_;
+      ObjectFactory obj_factory(symbol_table_stack());
+      if ((value_% int_obj.value_) != 0) {
+        return obj_factory.NewReal(r);
+      } else {
+        return obj_factory.NewInt(static_cast<int>(r));
+      }
+    } break;
+
+    case ObjectType::REAL: {
+      RealObject& real_obj = static_cast<RealObject&>(*obj);
+      float r = static_cast<float>(value_)/ real_obj.value();
+      ObjectFactory obj_factory(symbol_table_stack());
+      return obj_factory.NewReal(r);
+    } break;
+
+    default:
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("type not supported"));
+  }
 }
 
 ObjectPtr IntObject::DivMod(ObjectPtr obj) {
