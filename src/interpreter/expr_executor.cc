@@ -56,6 +56,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kFunctionCall: {
       return ExecFuncCall(static_cast<FunctionCall*>(node));
     } break;
+
+    case AstNode::NodeType::kBinaryOperation:
+      return ExecBinOp(static_cast<BinaryOperation*>(node));
+      break;
   }
 }
 
@@ -186,6 +190,90 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
       return obj;
     } break;
   }
+}
+
+ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
+  // Executes the left and right side of the expression
+  ObjectPtr left = Exec(static_cast<AstNode*>(node->left()));
+  ObjectPtr right = Exec(static_cast<AstNode*>(node->right()));
+
+  ObjectPtr res;
+
+  switch (node->kind()) {
+    case TokenKind::ADD:
+      res = left->Add(right);
+      break;
+
+    case TokenKind::SUB:
+      res = left->Sub(right);
+      break;
+
+    case TokenKind::MUL:
+      res = left->Mult(right);
+      break;
+
+    case TokenKind::DIV:
+      res = left->Div(right);
+      break;
+
+    case TokenKind::MOD:
+      res = left->DivMod(right);
+      break;
+
+    case TokenKind::SAR:
+      res = left->RightShift(right);
+      break;
+
+    case TokenKind::SHL:
+      res = left->LeftShift(right);
+      break;
+
+    case TokenKind::BIT_AND:
+      res = left->BitAnd(right);
+      break;
+
+    case TokenKind::BIT_OR:
+      res = left->BitOr(right);
+      break;
+
+    case TokenKind::BIT_XOR:
+      res = left->BitXor(right);
+      break;
+
+    case TokenKind::AND:
+      res = left->And(right);
+      break;
+
+    case TokenKind::OR:
+      res = left->Or(right);
+      break;
+
+    case TokenKind::EQUAL:
+      res = left->Equal(right);
+      break;
+
+    case TokenKind::NOT_EQUAL:
+      res = left->NotEqual(right);
+      break;
+
+    case TokenKind::LESS_THAN:
+      res = left->Lesser(right);
+      break;
+
+    case TokenKind::GREATER_THAN:
+      res = left->Greater(right);
+      break;
+
+    case TokenKind::LESS_EQ:
+      res = left->LessEqual(right);
+      break;
+
+    case TokenKind::GREATER_EQ:
+      res = left->GreatEqual(right);
+      break;
+  }
+
+  return res;
 }
 
 void ExpressionExecutor::set_stop(StopFlag flag) {

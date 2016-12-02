@@ -68,6 +68,9 @@ class ExpressionExecutor: public Executor {
   // Executes function call
   ObjectPtr ExecFuncCall(FunctionCall* node);
 
+  // Executes binary operation
+  ObjectPtr ExecBinOp(BinaryOperation* node);
+
   void set_stop(StopFlag flag) override;
 
  private:
