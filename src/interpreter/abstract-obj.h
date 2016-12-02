@@ -44,22 +44,22 @@ class Object {
 
   virtual bool operator==(const Object& obj) const = 0;
 
-  virtual bool ObjBool() const {
+  virtual std::shared_ptr<Object> ObjBool() const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no bool interface"));
   }
 
-  virtual bool ObjString() const {
+  virtual std::shared_ptr<Object> ObjString() const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no string interface"));
   }
 
-  virtual bool ObjInt() const {
+  virtual std::shared_ptr<Object> ObjInt() const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no int interface"));
   }
 
-  virtual bool ObjCmd() const {
+  virtual std::shared_ptr<Object> ObjCmd() const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no cmd interface"));
   }

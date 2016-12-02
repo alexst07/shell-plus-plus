@@ -244,12 +244,7 @@ ObjectPtr BoolType::Constructor(Executor* /*parent*/,
                        boost::format("bool() takes exactly 1 argument"));
   }
 
-  bool b = params[0]->ObjBool();
-
-  ObjectFactory obj_factory(symbol_table_stack());
-  ObjectPtr bool_obj(obj_factory.NewBool(b));
-
-  return bool_obj;
+  return params[0]->ObjBool();
 }
 
 ObjectPtr IntType::Constructor(Executor* /*parent*/,

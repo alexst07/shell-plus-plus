@@ -9,6 +9,99 @@
 namespace setti {
 namespace internal {
 
+ObjectPtr NullObject::Equal(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (obj->type() == ObjectType::NIL) {
+    return obj_factory.NewBool(true);
+  } else {
+    return obj_factory.NewBool(false);
+  }
+}
+
+ObjectPtr NullObject::NotEqual(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (obj->type() == ObjectType::NIL) {
+    return obj_factory.NewBool(false);
+  } else {
+    return obj_factory.NewBool(true);
+  }
+}
+
+ObjectPtr NullObject::And(ObjectPtr /*obj*/) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(false);
+}
+
+ObjectPtr NullObject::Or(ObjectPtr obj) {
+  return obj->ObjBool();
+}
+
+ObjectPtr BoolObject::Equal(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (obj->type() == ObjectType::BOOL) {
+    bool value = static_cast<const BoolObject&>(*obj).value_;
+    return obj_factory.NewBool(value_ == value);
+  } else {
+    ObjectPtr obj_bool = obj->ObjBool();
+    bool value = static_cast<const BoolObject&>(*obj_bool).value_;
+    return obj_factory.NewBool(value_ == value);
+  }
+}
+
+ObjectPtr BoolObject::NotEqual(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (obj->type() == ObjectType::BOOL) {
+    bool value = static_cast<const BoolObject&>(*obj).value_;
+    return obj_factory.NewBool(value_ != value);
+  } else {
+    ObjectPtr obj_bool = obj->ObjBool();
+    bool value = static_cast<const BoolObject&>(*obj_bool).value_;
+    return obj_factory.NewBool(value_ != value);
+  }
+}
+
+ObjectPtr BoolObject::And(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (value_ == false) {
+    return obj_factory.NewBool(false);
+  }
+
+  if (obj->type() == ObjectType::BOOL) {
+    bool value = static_cast<const BoolObject&>(*obj).value_;
+    ObjectFactory obj_factory(symbol_table_stack());
+    return obj_factory.NewBool(value);
+  } else {
+    ObjectPtr obj_bool = obj->ObjBool();
+    bool value = static_cast<const BoolObject&>(*obj_bool).value_;
+    ObjectFactory obj_factory(symbol_table_stack());
+    return obj_factory.NewBool(value);
+  }
+}
+
+ObjectPtr BoolObject::Or(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (value_ == true) {
+    return obj_factory.NewBool(true);
+  }
+
+  if (obj->type() == ObjectType::BOOL) {
+    bool value = static_cast<const BoolObject&>(*obj).value_;
+    ObjectFactory obj_factory(symbol_table_stack());
+    return obj_factory.NewBool(value);
+  } else {
+    ObjectPtr obj_bool = obj->ObjBool();
+    bool value = static_cast<const BoolObject&>(*obj_bool).value_;
+    ObjectFactory obj_factory(symbol_table_stack());
+    return obj_factory.NewBool(value);
+  }
+}
+
 ObjectPtr IntObject::OperationObj(ObjectPtr obj, int op) {
   switch (obj->type()) {
     case ObjectType::INT: {

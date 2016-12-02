@@ -36,7 +36,7 @@ class NullObject: public Object {
 
   ObjectPtr NotEqual(ObjectPtr obj) override;
 
-  ObjectPtr And(ObjectPtr obj) override;
+  ObjectPtr And(ObjectPtr) override;
 
   ObjectPtr Or(ObjectPtr obj) override;
 
@@ -45,6 +45,54 @@ class NullObject: public Object {
   }
 
   inline nullptr_t value() const noexcept { return nullptr; }
+};
+
+class BoolObject: public Object {
+ public:
+  BoolObject(bool value, ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::BOOL, obj_type, std::move(sym_table))
+      , value_(value) {}
+
+  BoolObject(const BoolObject& obj): Object(obj), value_(obj.value_) {}
+
+  virtual ~BoolObject() {}
+
+  BoolObject& operator=(const BoolObject& obj) {
+    value_ = obj.value_;
+    return *this;
+  }
+
+  inline bool value() const noexcept { return value_; }
+
+  std::size_t Hash() const override {
+    std::hash<bool> bool_hash;
+    return bool_hash(value_);
+  }
+
+  bool operator==(const Object& obj) const override {
+    if (obj.type() != ObjectType::BOOL) {
+      return false;
+    }
+
+    bool value = static_cast<const BoolObject&>(obj).value_;
+
+    return value_ == value;
+  }
+
+  ObjectPtr Equal(ObjectPtr obj) override;
+
+  ObjectPtr NotEqual(ObjectPtr obj) override;
+
+  ObjectPtr And(ObjectPtr obj) override;
+
+  ObjectPtr Or(ObjectPtr obj) override;
+
+  void Print() override {
+    std::cout << "BOOL: " << value_;
+  }
+
+ private:
+  bool value_;
 };
 
 class IntObject: public Object {
