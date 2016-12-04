@@ -164,9 +164,9 @@ ObjectPtr IntObject::OperationObjComp(ObjectPtr obj, int op) {
 
     case ObjectType::REAL: {
       RealObject& real_obj = static_cast<RealObject&>(*obj);
-      float r = OperationArit(value_, real_obj.value(), op);
+      bool r = OperationComp(value_, real_obj.value(), op);
       ObjectFactory obj_factory(symbol_table_stack());
-      return obj_factory.NewReal(r);
+      return obj_factory.NewBool(r);
     } break;
 
     default:

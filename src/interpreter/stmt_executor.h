@@ -97,6 +97,17 @@ class IfElseExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
+class WhileExecutor: public Executor {
+ public:
+  WhileExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  // Entry point to execute while
+  void Exec(WhileStatement* node);
+
+  void set_stop(StopFlag flag) override;
+};
+
 }
 }
 

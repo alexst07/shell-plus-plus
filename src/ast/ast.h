@@ -1244,7 +1244,7 @@ class WhileStatement: public Statement {
   WhileStatement(std::unique_ptr<Expression> exp,
               std::unique_ptr<Statement> block,
               Position position)
-      : Statement(NodeType::kIfStatement, position)
+      : Statement(NodeType::kWhileStatement, position)
       , exp_(std::move(exp))
       , block_(std::move(block)) {}
 };

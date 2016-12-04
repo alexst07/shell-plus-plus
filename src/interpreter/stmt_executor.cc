@@ -94,6 +94,10 @@ void StmtExecutor::Exec(AstNode* node) {
       ifelse_executor.Exec(static_cast<IfStatement*>(node));
     } break;
 
+    case AstNode::NodeType::kWhileStatement: {
+      WhileExecutor while_executor(this, symbol_table_stack());
+      while_executor.Exec(static_cast<WhileStatement*>(node));
+    } break;
   }
 }
 
@@ -144,6 +148,27 @@ void IfElseExecutor::Exec(IfStatement* node) {
 }
 
 void IfElseExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+void WhileExecutor::Exec(WhileStatement* node) {
+  // Executes if expresion
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+
+  auto fn_exp = [&expr_exec](Expression* exp)-> bool {
+    ObjectPtr obj_exp = expr_exec.Exec(exp);
+    bool cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
+    return cond;
+  };
+
+  BlockExecutor block_exec(this, symbol_table_stack());
+
+  while (fn_exp(node->exp())) {
+    block_exec.Exec(node->block());
+  }
+}
+
+void WhileExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 
