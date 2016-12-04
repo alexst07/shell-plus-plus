@@ -291,6 +291,135 @@ class IntObject: public Object {
   int value_;
 };
 
+class RealObject: public Object {
+ public:
+  RealObject(float value, ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::REAL, obj_type, std::move(sym_table))
+      , value_(value) {}
+
+  RealObject(const RealObject& obj): Object(obj), value_(obj.value_) {}
+
+  virtual ~RealObject() {}
+
+  RealObject& operator=(const RealObject& obj) {
+    value_ = obj.value_;
+    return *this;
+  }
+
+  inline float value() const noexcept { return value_; }
+
+  std::size_t Hash() const override {
+    std::hash<float> float_hash;
+    return float_hash(value_);
+  }
+
+  bool operator==(const Object& obj) const override {
+    if (obj.type() != ObjectType::REAL) {
+      return false;
+    }
+
+    float value = static_cast<const RealObject&>(obj).value_;
+
+    return value_ == value;
+  }
+
+  ObjectPtr OperationObj(ObjectPtr obj, int op);
+
+  ObjectPtr OperationObjComp(ObjectPtr obj, int op);
+
+  ObjectPtr Add(ObjectPtr obj) override;
+
+  ObjectPtr Sub(ObjectPtr obj) override;
+
+  ObjectPtr Mult(ObjectPtr obj) override;
+
+  ObjectPtr Div(ObjectPtr obj) override;
+
+  ObjectPtr Lesser(ObjectPtr obj) override;
+
+  ObjectPtr Greater(ObjectPtr obj) override;
+
+  ObjectPtr Copy() override;
+
+  ObjectPtr LessEqual(ObjectPtr obj) override;
+
+  ObjectPtr GreatEqual(ObjectPtr obj) override;
+
+  ObjectPtr Equal(ObjectPtr obj) override;
+
+  ObjectPtr NotEqual(ObjectPtr obj) override;
+
+  ObjectPtr UnaryAdd() override;
+
+  ObjectPtr UnarySub() override;
+
+  void Print() override {
+    std::cout << "REAL: " << value_;
+  }
+
+ private:
+  float OperationArit(float a, float b, int op) {
+    switch (op) {
+      case 0:
+        return a + b;
+        break;
+
+      case 1:
+        return a - b;
+        break;
+
+      case 2:
+        return a * b;
+        break;
+
+      case 3:
+        if (b == static_cast<float>(0)) {
+          throw RunTimeError(RunTimeError::ErrorCode::ZERO_DIV,
+                             boost::format("zero div indetermined"));
+        }
+
+        return a / b;
+        break;
+
+      default:
+        return a;
+    }
+  }
+
+  bool OperationComp(float a, float b, int op) {
+    switch (op) {
+      case 0:
+        return a < b;
+        break;
+
+      case 1:
+        return a > b;
+        break;
+
+      case 2:
+        return a <= b;
+        break;
+
+      case 3:
+        return a >= b;
+        break;
+
+      case 4:
+        return a == b;
+        break;
+
+      case 5:
+        return a != b;
+        break;
+
+      default:
+        return false;
+    }
+  }
+
+  float value_;
+};
+
 }
 }
 

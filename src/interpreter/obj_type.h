@@ -17,46 +17,6 @@
 namespace setti {
 namespace internal {
 
-class RealObject: public Object {
- public:
-  RealObject(float value, ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::REAL, obj_type, std::move(sym_table))
-      , value_(value) {}
-
-  RealObject(const RealObject& obj): Object(obj), value_(obj.value_) {}
-
-  virtual ~RealObject() {}
-
-  RealObject& operator=(const RealObject& obj) {
-    value_ = obj.value_;
-    return *this;
-  }
-
-  inline float value() const noexcept { return value_; }
-
-  std::size_t Hash() const override {
-    std::hash<float> float_hash;
-    return float_hash(value_);
-  }
-
-  bool operator==(const Object& obj) const override {
-    if (obj.type() != ObjectType::REAL) {
-      return false;
-    }
-
-    float value = static_cast<const RealObject&>(obj).value_;
-
-    return value_ == value;
-  }
-
-  void Print() override {
-    std::cout << "REAL: " << value_;
-  }
-
- private:
-  float value_;
-};
-
 class StringObject: public Object {
  public:
   StringObject(std::string&& value, ObjectPtr obj_type,

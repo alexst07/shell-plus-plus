@@ -102,6 +102,10 @@ ObjectPtr BoolObject::Or(ObjectPtr obj) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Int Object
+////////////////////////////////////////////////////////////////////////////////
+
 ObjectPtr IntObject::OperationObj(ObjectPtr obj, int op) {
   switch (obj->type()) {
     case ObjectType::INT: {
@@ -182,7 +186,14 @@ ObjectPtr IntObject::Div(ObjectPtr obj) {
   switch (obj->type()) {
     case ObjectType::INT: {
       IntObject& int_obj = static_cast<IntObject&>(*obj);
-      float r = static_cast<float>(value_)/ int_obj.value_;
+      float b = int_obj.value();
+
+      if (b == 0) {
+        throw RunTimeError(RunTimeError::ErrorCode::ZERO_DIV,
+                           boost::format("zero div indetermined"));
+      }
+
+      float r = static_cast<float>(value_)/ b;
       ObjectFactory obj_factory(symbol_table_stack());
       if ((value_% int_obj.value_) != 0) {
         return obj_factory.NewReal(r);
@@ -193,7 +204,14 @@ ObjectPtr IntObject::Div(ObjectPtr obj) {
 
     case ObjectType::REAL: {
       RealObject& real_obj = static_cast<RealObject&>(*obj);
-      float r = static_cast<float>(value_)/ real_obj.value();
+      float b = real_obj.value();
+
+      if (b == static_cast<float>(0)) {
+        throw RunTimeError(RunTimeError::ErrorCode::ZERO_DIV,
+                           boost::format("zero div indetermined"));
+      }
+
+      float r = static_cast<float>(value_)/ b;
       ObjectFactory obj_factory(symbol_table_stack());
       return obj_factory.NewReal(r);
     } break;
@@ -268,6 +286,110 @@ ObjectPtr IntObject::UnarySub() {
   int r = -value_;
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewInt(r);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Real Object
+////////////////////////////////////////////////////////////////////////////////
+ObjectPtr RealObject::OperationObj(ObjectPtr obj, int op) {
+  switch (obj->type()) {
+    case ObjectType::INT: {
+      IntObject& int_obj = static_cast<IntObject&>(*obj);
+      float r = OperationArit(value_, static_cast<float>(int_obj.value()), op);
+      ObjectFactory obj_factory(symbol_table_stack());
+      return obj_factory.NewReal(r);
+    } break;
+
+    case ObjectType::REAL: {
+      RealObject& real_obj = static_cast<RealObject&>(*obj);
+      float r = OperationArit(value_, real_obj.value_, op);
+      ObjectFactory obj_factory(symbol_table_stack());
+      return obj_factory.NewReal(r);
+    } break;
+
+    default:
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("type not supported"));
+  }
+}
+
+ObjectPtr RealObject::OperationObjComp(ObjectPtr obj, int op) {
+  switch (obj->type()) {
+    case ObjectType::INT: {
+      IntObject& int_obj = static_cast<IntObject&>(*obj);
+      bool r = OperationComp(value_, static_cast<float>(int_obj.value()), op);
+      ObjectFactory obj_factory(symbol_table_stack());
+      return obj_factory.NewBool(r);
+    } break;
+
+    case ObjectType::REAL: {
+      RealObject& real_obj = static_cast<RealObject&>(*obj);
+      float r = OperationArit(value_, real_obj.value_, op);
+      ObjectFactory obj_factory(symbol_table_stack());
+      return obj_factory.NewReal(r);
+    } break;
+
+    default:
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("type not supported"));
+  }
+}
+
+ObjectPtr RealObject::Copy() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewReal(value_);
+}
+
+ObjectPtr RealObject::Add(ObjectPtr obj) {
+  return OperationObj(obj, 0);
+}
+
+ObjectPtr RealObject::Sub(ObjectPtr obj) {
+  return OperationObj(obj, 1);
+}
+
+ObjectPtr RealObject::Mult(ObjectPtr obj) {
+  return OperationObj(obj, 2);
+}
+
+ObjectPtr RealObject::Div(ObjectPtr obj) {
+  return OperationObj(obj, 3);
+}
+
+ObjectPtr RealObject::Lesser(ObjectPtr obj) {
+  return OperationObjComp(obj, 0);
+}
+
+ObjectPtr RealObject::Greater(ObjectPtr obj) {
+  return OperationObjComp(obj, 1);
+}
+
+ObjectPtr RealObject::LessEqual(ObjectPtr obj) {
+  return OperationObjComp(obj, 2);
+}
+
+ObjectPtr RealObject::GreatEqual(ObjectPtr obj) {
+  return OperationObjComp(obj, 3);
+}
+
+ObjectPtr RealObject::Equal(ObjectPtr obj) {
+  return OperationObjComp(obj, 4);
+}
+
+ObjectPtr RealObject::NotEqual(ObjectPtr obj) {
+  return OperationObjComp(obj, 5);
+}
+
+ObjectPtr RealObject::UnaryAdd() {
+  float r = +value_;
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewReal(r);
+}
+
+ObjectPtr RealObject::UnarySub() {
+  float r = -value_;
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewReal(r);
 }
 
 }
