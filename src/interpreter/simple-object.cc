@@ -1,4 +1,4 @@
-#include "int-object.h"
+#include "simple-object.h"
 
 #include <string>
 #include <boost/variant.hpp>
@@ -324,9 +324,9 @@ ObjectPtr RealObject::OperationObjComp(ObjectPtr obj, int op) {
 
     case ObjectType::REAL: {
       RealObject& real_obj = static_cast<RealObject&>(*obj);
-      float r = OperationArit(value_, real_obj.value_, op);
+      bool r = OperationComp(value_, real_obj.value_, op);
       ObjectFactory obj_factory(symbol_table_stack());
-      return obj_factory.NewReal(r);
+      return obj_factory.NewBool(r);
     } break;
 
     default:
