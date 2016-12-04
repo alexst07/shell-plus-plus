@@ -9,6 +9,11 @@
 namespace setti {
 namespace internal {
 
+ObjectPtr NullObject::ObjBool() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(false);
+}
+
 ObjectPtr NullObject::Equal(ObjectPtr obj) {
   ObjectFactory obj_factory(symbol_table_stack());
 
@@ -36,6 +41,11 @@ ObjectPtr NullObject::And(ObjectPtr /*obj*/) {
 
 ObjectPtr NullObject::Or(ObjectPtr obj) {
   return obj->ObjBool();
+}
+
+ObjectPtr BoolObject::ObjBool() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(value_);
 }
 
 ObjectPtr BoolObject::Equal(ObjectPtr obj) {

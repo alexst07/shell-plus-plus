@@ -44,7 +44,7 @@ class Object {
 
   virtual bool operator==(const Object& obj) const = 0;
 
-  virtual std::shared_ptr<Object> ObjBool() const {
+  virtual std::shared_ptr<Object> ObjBool() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no bool interface"));
   }

@@ -32,6 +32,8 @@ class NullObject: public Object {
     return false;
   }
 
+  ObjectPtr ObjBool() override;
+
   ObjectPtr Equal(ObjectPtr obj) override;
 
   ObjectPtr NotEqual(ObjectPtr obj) override;
@@ -78,6 +80,8 @@ class BoolObject: public Object {
 
     return value_ == value;
   }
+
+  ObjectPtr ObjBool() override;
 
   ObjectPtr Equal(ObjectPtr obj) override;
 

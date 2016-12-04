@@ -86,6 +86,17 @@ class ReturnExecutor: public Executor {
   ObjectFactory obj_factory_;
 };
 
+class IfElseExecutor: public Executor {
+ public:
+  IfElseExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  // Entry point to execute expression
+  void Exec(IfStatement* node);
+
+  void set_stop(StopFlag flag) override;
+};
+
 }
 }
 

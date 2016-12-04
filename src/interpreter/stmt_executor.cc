@@ -89,6 +89,11 @@ void StmtExecutor::Exec(AstNode* node) {
       ret_executor.Exec(node);
     } break;
 
+    case AstNode::NodeType::kIfStatement: {
+      IfElseExecutor ifelse_executor(this, symbol_table_stack());
+      ifelse_executor.Exec(static_cast<IfStatement*>(node));
+    } break;
+
   }
 }
 
@@ -118,6 +123,27 @@ void ReturnExecutor::Exec(AstNode* node) {
 }
 
 void ReturnExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+void IfElseExecutor::Exec(IfStatement* node) {
+  // Executes if expresion
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr obj_exp = expr_exec.Exec(node->exp());
+  bool cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
+
+  BlockExecutor block_exec(this, symbol_table_stack());
+
+  if (cond) {
+    block_exec.Exec(node->then_block());
+  } else {
+    if (node->has_else()) {
+      block_exec.Exec(node->else_block());
+    }
+  }
+}
+
+void IfElseExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 
