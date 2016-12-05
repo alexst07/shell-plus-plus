@@ -14,6 +14,7 @@
 #include "abstract-obj.h"
 #include "simple-object.h"
 #include "str-object.h"
+#include "array-object.h"
 
 namespace setti {
 namespace internal {
@@ -159,61 +160,6 @@ class TupleObject: public Object {
        std::cout << " ";
      }
      std::cout << ")";
-   }
-
- private:
-  std::vector<std::shared_ptr<Object>> value_;
-};
-
-class ArrayObject: public Object {
- public:
-   ArrayObject(std::vector<std::unique_ptr<Object>>&& value,
-               ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::ARRAY, obj_type, std::move(sym_table))
-      , value_(value.size()) {
-     for (size_t i = 0; i < value.size(); i++) {
-       Object* obj_ptr = value[i].release();
-       value_[i] = std::shared_ptr<Object>(obj_ptr);
-     }
-   }
-
-   ArrayObject(std::vector<std::shared_ptr<Object>>&& value, ObjectPtr obj_type,
-               SymbolTableStack&& sym_table)
-      : Object(ObjectType::ARRAY, obj_type, std::move(sym_table))
-      , value_(value) {}
-
-   ArrayObject(const ArrayObject& obj): Object(obj), value_(obj.value_) {}
-
-   virtual ~ArrayObject() {}
-
-   inline Object* at(size_t i) {
-     return value_.at(i).get();
-   }
-
-   inline std::shared_ptr<Object>& ElementRef(size_t i) {
-     return value_.at(i);
-   }
-
-   inline std::shared_ptr<Object> Element(size_t i) {
-     return value_.at(i);
-   }
-
-   inline void set(size_t i, std::unique_ptr<Object> obj) {
-     Object* obj_ptr = obj.release();
-     value_[i] = std::shared_ptr<Object>(obj_ptr);
-   }
-
-   std::size_t Hash() const override;
-
-   bool operator==(const Object& obj) const override;
-
-   void Print() override {
-     std::cout << "ARRAY: [ ";
-     for (const auto& e: value_) {
-       e->Print();
-       std::cout << " ";
-     }
-     std::cout << "]";
    }
 
  private:
@@ -468,6 +414,17 @@ class StringType: public TypeObject {
       : TypeObject("string", obj_type, std::move(sym_table)) {}
 
   virtual ~StringType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override;
+};
+
+class ArrayIterType: public TypeObject {
+ public:
+  ArrayIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("array_iter", obj_type, std::move(sym_table)) {}
+
+  virtual ~ArrayIterType() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
                         std::vector<ObjectPtr>&& params) override;

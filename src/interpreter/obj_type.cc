@@ -9,44 +9,6 @@
 namespace setti {
 namespace internal {
 
-std::size_t ArrayObject::Hash() const {
-  if (value_.empty()) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("hash of empty array is not valid"));
-  }
-
-  size_t hash = 0;
-
-  // Executes xor operation with hash of each element of array
-  for (auto& e: value_) {
-    hash ^= e->Hash();
-  }
-
-  return hash;
-}
-
-bool ArrayObject::operator==(const Object& obj) const {
-  if (obj.type() != ObjectType::ARRAY) {
-    return false;
-  }
-
-  const ArrayObject& array_obj = static_cast<const ArrayObject&>(obj);
-
-  // If the tuples have different size, they are different
-  if (array_obj.value_.size() != value_.size()) {
-    return false;
-  }
-
-  bool r = true;
-
-  // Test each element on tuple
-  for (size_t i = 0; i < value_.size(); i++) {
-    r = r && (array_obj.value_[i] == value_[i]);
-  }
-
-  return r;
-}
-
 MapObject::MapObject(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value,
                      ObjectPtr obj_type, SymbolTableStack&& sym_table)
     : Object(ObjectType::MAP, obj_type, std::move(sym_table)) {
@@ -381,6 +343,22 @@ ObjectPtr StringType::Constructor(Executor* /*parent*/,
   }
 }
 
+ObjectPtr ArrayIterType::Constructor(Executor* /*parent*/,
+                                     std::vector<ObjectPtr>&& params) {
+  if (params.size() != 1) {
+    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                       boost::format("array_iter() takes exactly 1 argument"));
+  }
+
+  if (params[0]->type() != ObjectType::ARRAY) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("invalid type for array_iter"));
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj(obj_factory.NewArrayIter(params[0]));
+  return obj;
+}
 
 }
 }

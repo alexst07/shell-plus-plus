@@ -29,6 +29,7 @@ class Object {
     TUPLE,
     FUNC,
     TYPE,
+    ARRAY_ITER,
     CUSTON
   };
 
@@ -40,9 +41,15 @@ class Object {
 
   virtual void Print() = 0;
 
-  virtual std::size_t Hash() const = 0;
+  virtual std::size_t Hash() const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no hash interface"));
+  }
 
-  virtual bool operator==(const Object& obj) const = 0;
+  virtual bool operator==(const Object& obj) const {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no print method"));
+  }
 
   virtual std::shared_ptr<Object> ObjBool() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -62,6 +69,12 @@ class Object {
   virtual std::shared_ptr<Object> ObjCmd() const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no cmd interface"));
+  }
+
+  // This method must receive the self object to apply the iterator
+  virtual std::shared_ptr<Object> ObjIter(std::shared_ptr<Object>) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no iter interface"));
   }
 
   virtual std::shared_ptr<Object> Add(std::shared_ptr<Object>) {
@@ -112,6 +125,11 @@ class Object {
   virtual std::shared_ptr<Object> Copy() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no copy method"));
+  }
+
+  virtual std::shared_ptr<Object> Next() {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no next method"));
   }
 
   virtual std::shared_ptr<Object> LessEqual(std::shared_ptr<Object>) {
@@ -177,6 +195,17 @@ class Object {
   virtual std::shared_ptr<Object> Not() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no unary - operator"));
+  }
+
+
+  virtual std::shared_ptr<Object> Begin() {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no begin method"));
+  }
+
+  virtual std::shared_ptr<Object> End() {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no end method"));
   }
 
   std::shared_ptr<Object> ObjType() const noexcept {

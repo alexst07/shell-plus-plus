@@ -83,6 +83,12 @@ class ObjectFactory {
                                      std::move(SymTableStack())));
   }
 
+  ObjectPtr NewArrayIter(ObjectPtr array) {
+    auto obj_type = symbol_table_.Lookup("array_iter", false).SharedAccess();
+    return ObjectPtr(new ArrayIterObject(array, obj_type,
+                                         std::move(SymTableStack())));
+  }
+
   ObjectPtr NewMap(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value) {
     auto obj_type = symbol_table_.Lookup("map", false).SharedAccess();
     return ObjectPtr(new MapObject(std::move(value), obj_type,
@@ -129,6 +135,11 @@ class ObjectFactory {
   }
 
   ObjectPtr NewArrayType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return ObjectPtr(new ArrayType(obj_type, std::move(SymTableStack())));
+  }
+
+  ObjectPtr NewArrayIterType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return ObjectPtr(new ArrayType(obj_type, std::move(SymTableStack())));
   }
