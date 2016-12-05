@@ -10,6 +10,8 @@
 #include "symbol_table.h"
 #include "abstract-obj.h"
 #include "obj_type.h"
+#include "str-object.h"
+#include "array-object.h"
 
 namespace setti {
 namespace internal {

@@ -8,14 +8,69 @@
 #include <list>
 
 #include "run_time_error.h"
-#include "symbol_table.h"
 #include "obj_type.h"
-#include "stmt_executor.h"
 
 namespace setti {
 namespace internal {
 
+class FuncObject: public Object {
+ public:
+  FuncObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::FUNC, obj_type, std::move(sym_table)) {}
+
+  virtual ~FuncObject() {}
+
+  std::size_t Hash() const override {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("func object has no hash method"));
+  }
+
+  bool operator==(const Object& obj) const override {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("func object has no compare method"));
+  }
+
+  virtual ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) = 0;
+
+  void Print() override {
+    std::cout << "FUNC";
+  }
+};
+
+class FuncDeclObject: public FuncObject {
+ public:
+  FuncDeclObject(const std::string& id, AstNode* start_node,
+                 const SymbolTableStack& symbol_table,
+                 std::vector<std::string>&& params,
+                 std::vector<ObjectPtr>&& default_values,
+                 bool variadic, ObjectPtr obj_type,
+                 SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , id_(id)
+      , start_node_(start_node)
+      , symbol_table_(true)
+      , params_(std::move(params))
+      , default_values_(std::move(default_values))
+      , variadic_(variadic) {
+    symbol_table_.Push(symbol_table.MainTable());
+    SymbolTablePtr table = SymbolTable::Create();
+
+    // main symbol of function
+    symbol_table_.Push(table, true);
+  }
+
+  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override;
+
+ private:
+  std::string id_;
+  AstNode* start_node_;
+  SymbolTableStack symbol_table_;
+  std::vector<std::string> params_;
+  std::vector<ObjectPtr> default_values_;
+  bool variadic_;
+};
+
 }
 }
 
-#endif
+#endif  // SETI_FUNC_OBJ_H

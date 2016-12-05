@@ -7,7 +7,8 @@
 #include "run_time_error.h"
 #include "ast/ast.h"
 #include "symbol_table.h"
-#include "abstract-obj.h"
+#include "obj_type.h"
+#include "func_object.h"
 
 namespace setti {
 namespace internal {
@@ -64,6 +65,14 @@ class StringObject: public Object {
 
  private:
   std::string value_;
+};
+
+class StringGetterFunc: public FuncObject {
+ public:
+  StringGetterFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
 };
 
 }

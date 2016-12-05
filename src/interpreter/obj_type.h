@@ -13,8 +13,7 @@
 #include "symbol_table.h"
 #include "abstract-obj.h"
 #include "simple-object.h"
-#include "str-object.h"
-#include "array-object.h"
+#include "func_object.h"
 
 namespace setti {
 namespace internal {
@@ -227,68 +226,13 @@ class MapObject: public Object {
    Map value_;
 };
 
-class FuncObject: public Object {
- public:
-  FuncObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::FUNC, obj_type, std::move(sym_table)) {}
-
-  virtual ~FuncObject() {}
-
-  std::size_t Hash() const override {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("func object has no hash method"));
-  }
-
-  bool operator==(const Object& obj) const override {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("func object has no compare method"));
-  }
-
-  virtual ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) = 0;
-
-  void Print() override {
-    std::cout << "FUNC";
-  }
-};
-
-class FuncDeclObject: public FuncObject {
- public:
-  FuncDeclObject(const std::string& id, AstNode* start_node,
-                 const SymbolTableStack& symbol_table,
-                 std::vector<std::string>&& params,
-                 std::vector<ObjectPtr>&& default_values,
-                 bool variadic, ObjectPtr obj_type,
-                 SymbolTableStack&& sym_table)
-      : FuncObject(obj_type, std::move(sym_table))
-      , id_(id)
-      , start_node_(start_node)
-      , symbol_table_(true)
-      , params_(std::move(params))
-      , default_values_(std::move(default_values))
-      , variadic_(variadic) {
-    symbol_table_.Push(symbol_table.MainTable());
-    SymbolTablePtr table = SymbolTable::Create();
-
-    // main symbol of function
-    symbol_table_.Push(table, true);
-  }
-
-  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override;
-
- private:
-  std::string id_;
-  AstNode* start_node_;
-  SymbolTableStack symbol_table_;
-  std::vector<std::string> params_;
-  std::vector<ObjectPtr> default_values_;
-  bool variadic_;
-};
-
 class TypeObject: public Object {
  public:
   TypeObject(const std::string& name, ObjectPtr obj_type,
              SymbolTableStack&& sym_table)
-    : Object(ObjectType::TYPE, obj_type, std::move(sym_table)), name_(name) {}
+      : Object(ObjectType::TYPE, obj_type, std::move(sym_table))
+      , name_(name)
+      , sym_tab_statck_(true) {}
 
   virtual ~TypeObject() {}
 
@@ -318,12 +262,24 @@ class TypeObject: public Object {
     return name_;
   }
 
+  bool RegiterMethod(const std::string& name, ObjectPtr obj) {
+    SymbolAttr sym_entry(obj, true);
+    return sym_tab_statck_.InsertEntry(name, std::move(sym_entry));
+  }
+
+  ObjectPtr CallObject(const std::string& name) {
+    return symbol_table_stack().Lookup(name, false).SharedAccess();
+  }
+
   void Print() override {
     std::cout << "TYPE(" << name_ << ")";
   }
 
  private:
   std::string name_;
+  SymbolTableStack sym_tab_statck_;
+  ObjectPtr parent_;
+  std::vector<ObjectPtr> interfaces_;
 };
 
 class Type: public TypeObject {

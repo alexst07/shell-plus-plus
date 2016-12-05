@@ -53,5 +53,16 @@ ObjectPtr StringObject::Copy() {
   return obj_factory.NewString(value_);
 }
 
+ObjectPtr StringGetterFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  StringObject& str_obj = static_cast<StringObject&>(*params[0]);
+  IntObject& int_obj = static_cast<IntObject&>(*params[1]);
+
+  char c = str_obj.value()[int_obj.value()];
+  ObjectFactory obj_factory(symbol_table_stack());
+  std::string cstr(&c, 1);
+  return obj_factory.NewString(cstr);
+}
+
 }
 }
