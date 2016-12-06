@@ -53,6 +53,12 @@ ObjectPtr StringObject::Copy() {
   return obj_factory.NewString(value_);
 }
 
+std::shared_ptr<Object> StringObject::Arrow(std::shared_ptr<Object> self,
+                              const std::string& name) {
+  ObjectPtr obj_type = ObjType();
+  return static_cast<TypeObject&>(*obj_type).CallObject(name, self);
+}
+
 ObjectPtr StringGetterFunc::Call(Executor* /*parent*/,
                                  std::vector<ObjectPtr>&& params) {
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);

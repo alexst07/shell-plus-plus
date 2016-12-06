@@ -112,6 +112,21 @@ bool MapObject::Exists(ObjectPtr obj_index) {
   return false;
 }
 
+ObjectPtr TypeObject::CallObject(const std::string& name,
+                                 ObjectPtr self_param) {
+  ObjectPtr obj = sym_tab_statck_->Lookup(name, false).SharedAccess();
+
+  if (obj->type() == ObjectType::FUNC) {
+    ObjectFactory obj_factory(*sym_tab_statck_);
+
+    // the function wrapper insert the object self_param as the first param
+    // it works like self argument
+    return ObjectPtr(obj_factory.NewWrapperFunc(obj, self_param));
+  }
+
+  return obj;
+}
+
 ObjectPtr Type::Constructor(Executor* /*parent*/,
                             std::vector<ObjectPtr>&& params) {
   if (params.size() != 1) {

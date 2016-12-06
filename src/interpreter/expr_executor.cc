@@ -60,6 +60,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kBinaryOperation:
       return ExecBinOp(static_cast<BinaryOperation*>(node));
       break;
+
+    case AstNode::NodeType::kAttribute:
+      return ExecAttribute(static_cast<Attribute*>(node));
+      break;
   }
 }
 
@@ -274,6 +278,13 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
   }
 
   return res;
+}
+
+ObjectPtr ExpressionExecutor::ExecAttribute(Attribute* node) {
+  ObjectPtr exp = Exec(node->exp());
+  std::string name = node->id()->name();
+
+  return exp->Arrow(exp, name);
 }
 
 void ExpressionExecutor::set_stop(StopFlag flag) {

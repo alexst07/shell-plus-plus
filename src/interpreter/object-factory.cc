@@ -35,12 +35,6 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertEntry(static_cast<const RealType&>(*type_bool).name(),
                            std::move(symbol_bool));
 
-
-  ObjectPtr type_str = obj_factory.NewStringType();
-  SymbolAttr symbol_str(type_str, true);
-  symbol_table.InsertEntry(static_cast<const StringType&>(*type_str).name(),
-                           std::move(symbol_str));
-
   ObjectPtr type_array = obj_factory.NewArrayType();
   SymbolAttr symbol_array(type_array, true);
   symbol_table.InsertEntry(static_cast<const ArrayType&>(*type_array).name(),
@@ -65,6 +59,16 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   SymbolAttr symbol_func(type_func, true);
   symbol_table.InsertEntry(static_cast<const FuncType&>(*type_func).name(),
                            std::move(symbol_func));
+
+  ObjectPtr type_str = obj_factory.NewStringType();
+  SymbolTableStack sym_stack(false);
+  sym_stack.Push(symbol_table.MainTable());
+  auto func_type = symbol_table.Lookup("func", false).SharedAccess();
+  ObjectPtr obj_func_at(new StringGetterFunc(func_type, std::move(sym_stack)));
+  static_cast<TypeObject&>(*type_str).RegiterMethod("at", obj_func_at);
+  SymbolAttr symbol_str(type_str, true);
+  symbol_table.InsertEntry(static_cast<const StringType&>(*type_str).name(),
+                           std::move(symbol_str));
 }
 
 }

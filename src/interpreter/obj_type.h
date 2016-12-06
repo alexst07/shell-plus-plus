@@ -232,7 +232,10 @@ class TypeObject: public Object {
              SymbolTableStack&& sym_table)
       : Object(ObjectType::TYPE, obj_type, std::move(sym_table))
       , name_(name)
-      , sym_tab_statck_(true) {}
+      , sym_tab_statck_(std::make_shared<SymbolTableStack>(true)) {
+    sym_tab_statck_->Push(symbol_table_stack().MainTable());
+    sym_tab_statck_->NewTable();
+  }
 
   virtual ~TypeObject() {}
 
@@ -258,17 +261,15 @@ class TypeObject: public Object {
   virtual ObjectPtr Constructor(Executor* parent,
                                 std::vector<ObjectPtr>&& params) = 0;
 
+  ObjectPtr CallObject(const std::string& name, ObjectPtr self_param);
+
   const std::string& name() const noexcept {
     return name_;
   }
 
   bool RegiterMethod(const std::string& name, ObjectPtr obj) {
     SymbolAttr sym_entry(obj, true);
-    return sym_tab_statck_.InsertEntry(name, std::move(sym_entry));
-  }
-
-  ObjectPtr CallObject(const std::string& name) {
-    return symbol_table_stack().Lookup(name, false).SharedAccess();
+    return sym_tab_statck_->InsertEntry(name, std::move(sym_entry));
   }
 
   void Print() override {
@@ -277,7 +278,7 @@ class TypeObject: public Object {
 
  private:
   std::string name_;
-  SymbolTableStack sym_tab_statck_;
+  std::shared_ptr<SymbolTableStack> sym_tab_statck_;
   ObjectPtr parent_;
   std::vector<ObjectPtr> interfaces_;
 };

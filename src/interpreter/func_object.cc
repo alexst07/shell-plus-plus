@@ -9,6 +9,13 @@
 namespace setti {
 namespace internal {
 
+ObjectPtr FuncWrapperObject::Call(Executor* parent,
+                                  std::vector<ObjectPtr>&& params) {
+  FuncObject& func_obj = static_cast<FuncObject&>(*func_);
+  params.insert(params.begin(), self_);
+  return func_obj.Call(parent, std::move(params));
+}
+
 ObjectPtr FuncDeclObject::Call(Executor* parent,
                                std::vector<ObjectPtr>&& params) {
   if (variadic_) {

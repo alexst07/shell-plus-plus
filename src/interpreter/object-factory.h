@@ -110,6 +110,11 @@ class ObjectFactory {
                                         std::move(SymTableStack())));
   }
 
+  ObjectPtr NewWrapperFunc(ObjectPtr func, ObjectPtr self) {
+    auto obj_type = symbol_table_.Lookup("func", false).SharedAccess();
+    return ObjectPtr(new FuncWrapperObject(obj_type, func, self,
+                                           std::move(SymTableStack())));
+  }
 
   ObjectPtr NewNullType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();

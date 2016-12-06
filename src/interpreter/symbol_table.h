@@ -1,6 +1,7 @@
 #ifndef SETI_SYMBOL_TABLE_H
 #define SETI_SYMBOL_TABLE_H
 
+#include <iostream>
 #include <string>
 #include <memory>
 #include <unordered_map>
@@ -145,11 +146,17 @@ class SymbolTable {
     return map_.begin();
   }
 
+  void Dump() {
+    for (const auto& e: map_) {
+      std::cout << e.first << "\n";
+    }
+  }
+
  private:
   SymbolMap map_;
 };
-
 class SymbolTableStack {
+
  public:
   SymbolTableStack(bool no_table = false) {
     if (no_table) {
@@ -253,6 +260,14 @@ class SymbolTableStack {
 
   SymbolTablePtr MainTable() const noexcept {
     return main_table_;
+  }
+
+  void Dump() {
+    std::cout << "Table: " << this << " Num: " << stack_.size() << "\n";
+    for (auto& e: stack_) {
+      std::cout << "------\n";
+      e->Dump();
+    }
   }
 
  private:

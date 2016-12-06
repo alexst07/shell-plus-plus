@@ -59,6 +59,9 @@ class StringObject: public Object {
 
   ObjectPtr Copy() override;
 
+  std::shared_ptr<Object> Arrow(std::shared_ptr<Object> self,
+                                const std::string& name) override;
+
   void Print() override {
     std::cout << "STRING: " << value_;
   }

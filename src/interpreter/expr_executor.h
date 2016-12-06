@@ -71,6 +71,9 @@ class ExpressionExecutor: public Executor {
   // Executes binary operation
   ObjectPtr ExecBinOp(BinaryOperation* node);
 
+  // Executes attribute
+  ObjectPtr ExecAttribute(Attribute* node);
+
   void set_stop(StopFlag flag) override;
 
  private:

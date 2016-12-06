@@ -37,6 +37,23 @@ class FuncObject: public Object {
   }
 };
 
+class FuncWrapperObject: public FuncObject {
+ public:
+  FuncWrapperObject(ObjectPtr obj_type, ObjectPtr func, ObjectPtr self,
+                    SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , func_(func)
+      , self_(self) {}
+
+  virtual ~FuncWrapperObject() {}
+
+  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override;
+
+ private:
+  ObjectPtr func_;
+  ObjectPtr self_;
+};
+
 class FuncDeclObject: public FuncObject {
  public:
   FuncDeclObject(const std::string& id, AstNode* start_node,
