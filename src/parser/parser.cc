@@ -281,6 +281,13 @@ ParserResult<Statement> Parser::ParserBlock() {
 
   ParserResult<StatementList> stmt_list(ParserStmtList());
 
+  // handle empty block
+  if (ValidToken() == TokenKind::RBRACE) {
+    Advance();
+    ValidToken();
+    return ParserResult<Statement>(factory_.NewBlock(stmt_list.MoveAstNode()));
+  }
+
   if (!stmt_list) {
     return ParserResult<Statement>();
   }

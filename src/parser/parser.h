@@ -1,4 +1,4 @@
-﻿#ifndef SETTI_PARSER_H
+#ifndef SETTI_PARSER_H
 #define SETTI_PARSER_H
 
 #include <string>
@@ -207,6 +207,10 @@ class Parser {
   ParserResult<Statement> ParserCmdAndOr();
   ParserResult<Statement> ParserCmdFull();
   ParserResult<FunctionDeclaration> ParserFunctionDeclaration(bool lambda);
+
+  // parser methods from class or interface
+  // the method can be abastract or not
+  ParserResult<FunctionDeclaration> ParserMethodDeclaration();
 
   std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>
   ParserParamsList();

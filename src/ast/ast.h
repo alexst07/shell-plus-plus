@@ -16,10 +16,13 @@ namespace setti {
 namespace internal {
 
 #define DECLARATION_NODE_LIST(V) \
+  V(ClassDeclaration)            \
+  V(InterfaceDeclaration)        \
   V(VariableDeclaration)         \
   V(FunctionDeclaration)         \
   V(FunctionParam)               \
-  V(CmdDeclaration)
+  V(CmdDeclaration)              \
+  V(ClassBlock)
 
 #define ITERATION_NODE_LIST(V) \
   V(DoWhileStatement)          \
@@ -618,6 +621,14 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
     return block_.get();
   }
 
+  bool has_block() const noexcept {
+    if (block_) {
+      return true;
+    }
+
+    return false;
+  }
+
  private:
   friend class AstNodeFactory;
 
@@ -704,6 +715,14 @@ class Block: public Statement {
 
   StatementList* stmt_list() const noexcept {
     return stmt_list_.get();
+  }
+
+  bool is_empty() const noexcept {
+    if (stmt_list_->num_children() == 0) {
+      return true;
+    }
+
+    return false;
   }
 
  private:
