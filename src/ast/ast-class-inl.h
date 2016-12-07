@@ -179,6 +179,14 @@ class ClassDeclaration: public Declaration {
     return id_parent_.get();
   }
 
+  bool has_parent() const noexcept {
+    if (id_parent_) {
+      return true;
+    }
+
+    return false;
+  }
+
   ClassBlock* block() const noexcept {
     return block_.get();
   }

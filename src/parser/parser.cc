@@ -12,13 +12,17 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
   } else if (token_ == TokenKind::KW_CMD) {
     ParserResult<Declaration> cmd(ParserCmdDeclaration());
     return ParserResult<Statement>(cmd.MoveAstNode<Statement>());
+  } else if (token_ == TokenKind::KW_CLASS) {
+    ParserResult<Declaration> class_decl(ParserClassDecl());
+    return ParserResult<Statement>(class_decl.MoveAstNode<Statement>());
   }
 
   return ParserResult<Statement>(); // error
 }
 
 bool Parser::IsStmtDecl() {
-  return token_.IsAny(TokenKind::KW_FUNC, TokenKind::KW_CMD);
+  return token_.IsAny(TokenKind::KW_FUNC, TokenKind::KW_CMD,
+                      TokenKind::KW_CLASS);
 }
 
 ParserResult<Declaration> Parser::ParserCmdDeclaration() {

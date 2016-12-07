@@ -554,16 +554,21 @@ class AstPrinter: public AstVisitor {
     level_++;
     class_block->decl_list()->Accept(this);
     level_--;
+    Level();
     std::cout << "<end>\n";
   }
 
   void virtual VisitClassDeclaration(ClassDeclaration* class_decl) {
     Level();
-    std::cout << "<class name: " << class_decl->name() << " parent: "
-              << class_decl->id_parent() << ">\n";
+    std::string parent = class_decl->has_parent()?
+          class_decl->id_parent()->name(): "null";
+
+    std::cout << "<class name: " << class_decl->name()->name() << " parent: "
+              << parent << ">\n";
     level_++;
     auto vec = class_decl->interfaces();
     level_++;
+    Level();
     std::cout << "<interfaces>\n";
     for (const auto c: vec) {
       c->Accept(this);

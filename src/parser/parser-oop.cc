@@ -13,7 +13,7 @@ ParserResult<Declaration> Parser::ParserMethodDeclaration() {
   std::unique_ptr<Identifier> id;
 
   if (token_ != TokenKind::IDENTIFIER) {
-    ErrorMsg(boost::format("expected identifier"));
+    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
     return ParserResult<Declaration>(); // Error
   }
 
@@ -83,11 +83,24 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
         decl_list.push_back(func.MoveAstNode());
       } break;
 
+      case TokenKind::KW_CLASS: {
+        ParserResult<Declaration> class_decl(ParserClassDecl());
+        decl_list.push_back(class_decl.MoveAstNode());
+      } break;
+
       default:
         ErrorMsg(boost::format("declaration expected"));
         return ParserResult<ClassBlock>(); // Error
     }
   }
+
+  if (ValidToken() != TokenKind::RBRACE) {
+    ErrorMsg(boost::format("expected } token, got %1%")% TokenValueStr());
+      return ParserResult<ClassBlock>(); // Error
+  }
+
+  Advance();
+  ValidToken();
 
   std::unique_ptr<ClassDeclList> class_list(factory_.NewClassDeclList(
       std::move(decl_list)));
@@ -104,16 +117,24 @@ std::vector<std::unique_ptr<Identifier>> Parser::ParserInterfaceList() {
   ValidToken();
 
   if (token_ != TokenKind::IDENTIFIER) {
-    ErrorMsg(boost::format("expected identifier"));
+    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
   }
 
   std::vector<std::unique_ptr<Identifier>> id_list;
 
-  do {
+  for (;;) {
     ParserResult<Expression> ns_id(ParserScopeIdentifier());
     id_list.push_back(ns_id.MoveAstNode<Identifier>());
     ValidToken();
-  } while (token_ != TokenKind::COMMA);
+
+    // stay on loop while there is comma token beetwen the ids
+    TokenKind kind = token_.GetKind();
+    if (kind == TokenKind::COMMA) {
+      Advance();
+    } else {
+      break;
+    }
+  }
 
   return id_list;
 }
@@ -127,7 +148,7 @@ ParserResult<Declaration> Parser::ParserClassDecl() {
   std::unique_ptr<Identifier> parent;
 
   if (token_ != TokenKind::IDENTIFIER) {
-    ErrorMsg(boost::format("expected identifier"));
+    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
     return ParserResult<Declaration>(); // Error
   }
 
@@ -140,8 +161,11 @@ ParserResult<Declaration> Parser::ParserClassDecl() {
   // if lparen the class has a parent class
   // if not lparen and COLON the class implements interface
   if (token_ == TokenKind::LPAREN) {
+    Advance();
+    ValidToken();
+
     if (token_ != TokenKind::IDENTIFIER) {
-      ErrorMsg(boost::format("expected identifier"));
+      ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
       return ParserResult<Declaration>(); // Error
     }
 
@@ -152,7 +176,7 @@ ParserResult<Declaration> Parser::ParserClassDecl() {
     ValidToken();
 
     if (token_ != TokenKind::RPAREN) {
-      ErrorMsg(boost::format("expected token )"));
+      ErrorMsg(boost::format("expected token ) got %1%")% TokenValueStr());
       return ParserResult<Declaration>(); // Error
     }
 
@@ -166,8 +190,9 @@ ParserResult<Declaration> Parser::ParserClassDecl() {
     interfaces = std::move(ParserInterfaceList());
   }
 
+  ValidToken();
   if (token_ != TokenKind::LBRACE) {
-    ErrorMsg(boost::format("expected token {"));
+    ErrorMsg(boost::format("expected token { got %1%")% TokenValueStr());
     return ParserResult<Declaration>(); // Error
   }
 
