@@ -210,7 +210,15 @@ class Parser {
 
   // parser methods from class or interface
   // the method can be abastract or not
-  ParserResult<FunctionDeclaration> ParserMethodDeclaration();
+  ParserResult<Declaration> ParserMethodDeclaration();
+
+  // parser every declartion accpted by class
+  ParserResult<ClassBlock> ParserClassBlock();
+
+  // parser class declaration
+  ParserResult<ClassDeclaration> ParserClassDecl();
+
+  std::vector<std::unique_ptr<Identifier>> ParserInterfaceList();
 
   std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>
   ParserParamsList();
