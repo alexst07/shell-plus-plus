@@ -216,7 +216,7 @@ class Parser {
   ParserResult<ClassBlock> ParserClassBlock();
 
   // parser class declaration
-  ParserResult<ClassDeclaration> ParserClassDecl();
+  ParserResult<Declaration> ParserClassDecl();
 
   std::vector<std::unique_ptr<Identifier>> ParserInterfaceList();
 

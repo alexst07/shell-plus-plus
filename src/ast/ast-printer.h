@@ -1,4 +1,4 @@
-﻿#ifndef SETTI_AST_TRAVERSAL_VISITOR_H
+#ifndef SETTI_AST_TRAVERSAL_VISITOR_H
 #define SETTI_AST_TRAVERSAL_VISITOR_H
 
 #include <string>
@@ -535,6 +535,42 @@ class AstPrinter: public AstVisitor {
     if (slice->has_end_exp()) {
       slice->end_exp()->Accept(this);
     }
+    level_--;
+  }
+
+  void virtual VisitClassDeclList(ClassDeclList* class_decl_list) {
+    if (!class_decl_list->IsEmpty()) {
+      auto vec = class_decl_list->children();
+
+      for (const auto c: vec) {
+        c->Accept(this);
+      }
+    }
+  }
+
+  void virtual VisitClassBlock(ClassBlock* class_block) {
+    Level();
+    std::cout << "<begin>\n";
+    level_++;
+    class_block->decl_list()->Accept(this);
+    level_--;
+    std::cout << "<end>\n";
+  }
+
+  void virtual VisitClassDeclaration(ClassDeclaration* class_decl) {
+    Level();
+    std::cout << "<class name: " << class_decl->name() << " parent: "
+              << class_decl->id_parent() << ">\n";
+    level_++;
+    auto vec = class_decl->interfaces();
+    level_++;
+    std::cout << "<interfaces>\n";
+    for (const auto c: vec) {
+      c->Accept(this);
+    }
+    level_--;
+
+    class_decl->block()->Accept(this);
     level_--;
   }
 };

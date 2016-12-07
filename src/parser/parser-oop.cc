@@ -77,23 +77,23 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
   while (token_.IsNot(TokenKind::EOS, TokenKind::RBRACE)) {
     ValidToken();
 
-    switch (token_) {
+    switch (token_.GetKind()) {
       case TokenKind::KW_FUNC: {
         ParserResult<Declaration> func(ParserMethodDeclaration());
         decl_list.push_back(func.MoveAstNode());
       } break;
 
       default:
-        ErrorMsg(boost::format("function expected"));
-        return ParserResult<Statement>(); // Error
+        ErrorMsg(boost::format("declaration expected"));
+        return ParserResult<ClassBlock>(); // Error
     }
   }
 
-  std::unique_ptr<NewClassDeclList> decl_list(factory_.NewClassDeclList(
+  std::unique_ptr<ClassDeclList> class_list(factory_.NewClassDeclList(
       std::move(decl_list)));
 
   ParserResult<ClassBlock> class_block(factory_.NewClassBlock(
-      std::move(decl_list)));
+      std::move(class_list)));
 
   return class_block;
 }
@@ -105,13 +105,12 @@ std::vector<std::unique_ptr<Identifier>> Parser::ParserInterfaceList() {
 
   if (token_ != TokenKind::IDENTIFIER) {
     ErrorMsg(boost::format("expected identifier"));
-    return ParserResult<Declaration>(); // Error
   }
 
   std::vector<std::unique_ptr<Identifier>> id_list;
 
   do {
-    ParserResult<Expression> ns_id(ParserScopeIdentifier);
+    ParserResult<Expression> ns_id(ParserScopeIdentifier());
     id_list.push_back(ns_id.MoveAstNode<Identifier>());
     ValidToken();
   } while (token_ != TokenKind::COMMA);
@@ -119,7 +118,7 @@ std::vector<std::unique_ptr<Identifier>> Parser::ParserInterfaceList() {
   return id_list;
 }
 
-ParserResult<ClassDeclaration> Parser::ParserClassDecl() {
+ParserResult<Declaration> Parser::ParserClassDecl() {
   // advance class keyword
   Advance();
   ValidToken();
@@ -175,9 +174,9 @@ ParserResult<ClassDeclaration> Parser::ParserClassDecl() {
   ParserResult<ClassBlock> class_block(ParserClassBlock());
 
   // TODO: implement final keyword for class
-  ParserResult<ClassDeclaration> class_decl(factory_.NewClassDeclaration(
+  ParserResult<Declaration> class_decl(factory_.NewClassDeclaration(
       std::move(class_name), std::move(parent), std::move(interfaces),
-      std::move(class_block), false));
+      std::move(class_block.MoveAstNode()), false));
 
   return class_decl;
 }
