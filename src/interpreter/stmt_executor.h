@@ -30,7 +30,26 @@ class StmtListExecutor: public Executor {
 
 class FuncDeclExecutor: public Executor {
  public:
-  FuncDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+  FuncDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack,
+                   bool method = false)
+      : Executor(parent, symbol_table_stack)
+      , obj_factory_(symbol_table_stack)
+      , method_(method) {}
+
+  void Exec(AstNode* node);
+
+  ObjectPtr FuncObj(AstNode* node);
+
+  void set_stop(StopFlag flag) override;
+
+ private:
+  ObjectFactory obj_factory_;
+  bool method_;
+};
+
+class ClassDeclExecutor: public Executor {
+ public:
+  ClassDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack)
       , obj_factory_(symbol_table_stack) {}
 

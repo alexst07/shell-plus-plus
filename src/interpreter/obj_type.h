@@ -18,6 +18,34 @@
 namespace setti {
 namespace internal {
 
+class DeclClassObject: public Object {
+ public:
+  DeclClassObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::NIL, obj_type, std::move(sym_table)) {
+    sym_table.NewTable();
+  }
+
+  virtual ~DeclClassObject() {}
+
+  std::size_t Hash() const override {
+  }
+
+  bool operator==(const Object& obj) const override {
+
+  }
+
+  void Print() override {
+//    std::cout << static_cast<TypeObject&>(*ObjType()).name();
+  }
+
+  SymbolTableStack& SymTable() {
+    return symbol_table_stack();
+  }
+
+ private:
+
+};
+
 class SliceObject: public Object {
  public:
   SliceObject(ObjectPtr obj_start, ObjectPtr obj_end, ObjectPtr obj_type,
@@ -261,6 +289,8 @@ class TypeObject: public Object {
   virtual ObjectPtr Constructor(Executor* parent,
                                 std::vector<ObjectPtr>&& params) = 0;
 
+  // call a calleble object passing the self object
+  // this method is useful to execute member method from objects
   ObjectPtr CallObject(const std::string& name, ObjectPtr self_param);
 
   const std::string& name() const noexcept {
@@ -289,6 +319,18 @@ class Type: public TypeObject {
       : TypeObject("type", obj_type, std::move(sym_table)) {}
 
   virtual ~Type() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override;
+};
+
+class DeclClassType: public TypeObject {
+ public:
+  DeclClassType(const std::string& name, ObjectPtr obj_type,
+             SymbolTableStack&& sym_table)
+      : TypeObject(name, obj_type, std::move(sym_table)) {}
+
+  virtual ~DeclClassType() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
                         std::vector<ObjectPtr>&& params) override;

@@ -22,6 +22,7 @@ class ObjectFactory {
       :symbol_table_(symbol_table) {}
 
   SymbolTableStack SymTableStack() {
+    // create a symbol table on the start
     SymbolTableStack table_stack(false);
     auto main_tab = symbol_table_.MainTable();
     table_stack.Push(main_tab, true);
@@ -97,6 +98,13 @@ class ObjectFactory {
                                    std::move(SymTableStack())));
   }
 
+  ObjectPtr NewDeclObject(const std::string& name_type) {
+    auto obj_type = symbol_table_.Lookup(name_type, false).SharedAccess();
+    SymbolTableStack sym_stack = SymTableStack();
+    sym_stack.NewTable();
+    return ObjectPtr(new DeclClassObject(obj_type, std::move(sym_stack)));
+  }
+
   ObjectPtr NewFuncDeclObject(const std::string& id, AstNode* start_node,
                               const SymbolTableStack& symbol_table,
                               std::vector<std::string>&& params,
@@ -164,6 +172,14 @@ class ObjectFactory {
   ObjectPtr NewFuncType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return ObjectPtr(new FuncType(obj_type, std::move(SymTableStack())));
+  }
+
+  ObjectPtr NewDeclType(const std::string& name_type) {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    SymbolTableStack sym_stack = SymTableStack();
+    sym_stack.NewTable();
+    return ObjectPtr(new DeclClassType(name_type, obj_type,
+                                       std::move(sym_stack)));
   }
 
   ObjectPtr NewType() {

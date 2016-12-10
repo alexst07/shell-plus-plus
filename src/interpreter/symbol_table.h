@@ -79,10 +79,10 @@ class SymbolTable {
   using SymbolIterator = SymbolMap::iterator;
   using SymbolConstIterator = SymbolMap::const_iterator;
 
-  SymbolTable() {}
+  SymbolTable(bool is_func = false): is_func_(is_func) {}
 
-  static SymbolTablePtr Create() {
-    return SymbolTablePtr(new SymbolTable);
+  static SymbolTablePtr Create(bool is_func = false) {
+    return SymbolTablePtr(new SymbolTable(is_func));
   }
 
   // Return a reference for symbol if it exists or create a new
@@ -152,11 +152,16 @@ class SymbolTable {
     }
   }
 
+  bool IsFunc() const noexcept {
+    return is_func_;
+  }
+
  private:
   SymbolMap map_;
+  bool is_func_;
 };
-class SymbolTableStack {
 
+class SymbolTableStack {
  public:
   SymbolTableStack(bool no_table = false) {
     if (no_table) {
@@ -167,6 +172,11 @@ class SymbolTableStack {
     SymbolTablePtr table(new SymbolTable);
     main_table_ = table;
     stack_.push_back(std::move(table));
+  }
+
+  SymbolTableStack(const SymbolTableStack& st) {
+    stack_ = st.stack_;
+    main_table_ = st.main_table_;
   }
 
   // Insert a table on the stack
@@ -207,9 +217,7 @@ class SymbolTableStack {
         auto it_obj = stack_.at(i)->Lookup(name);
 
         if (it_obj != stack_.at(i)->end()) {
-          if (it_obj->second.global()) {
-            return it_obj->second;
-          }
+          return it_obj->second;
         }
       }
     }
@@ -258,6 +266,15 @@ class SymbolTableStack {
     stack_.back()->SetValue(name, std::move(value));
   }
 
+  void SetEntryOnFunc(const std::string& name, std::shared_ptr<Object> value) {
+    // search the last function table inserted
+    for (int i = stack_.size() - 1; i >= 0; i--) {
+      if (stack_.at(i)->IsFunc()) {
+        stack_.at(i)->SetValue(name, std::move(value));
+      }
+    }
+  }
+
   SymbolTablePtr MainTable() const noexcept {
     return main_table_;
   }
@@ -279,4 +296,3 @@ class SymbolTableStack {
 }
 
 #endif  // SETI_SYMBOL_TABLE_H
-

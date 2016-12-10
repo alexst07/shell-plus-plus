@@ -30,6 +30,8 @@ class Object {
     FUNC,
     TYPE,
     ARRAY_ITER,
+    DECL_TYPE,
+    DECL_OBJ,
     CUSTON
   };
 

@@ -69,11 +69,7 @@ class FuncDeclObject: public FuncObject {
       , params_(std::move(params))
       , default_values_(std::move(default_values))
       , variadic_(variadic) {
-    symbol_table_.Push(symbol_table.MainTable());
-    SymbolTablePtr table = SymbolTable::Create();
-
-    // main symbol of function
-    symbol_table_.Push(table, true);
+    symbol_table_.Push(symbol_table.MainTable(), true);
   }
 
   ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override;

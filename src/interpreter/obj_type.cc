@@ -143,6 +143,18 @@ ObjectPtr Type::Constructor(Executor* /*parent*/,
   }
 }
 
+// constructor for declared class call __init__ method from
+// symbol table, and create an DeclClassObject, this object
+// has a symbol table stack to store attributes
+ObjectPtr DeclClassType::Constructor(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj(obj_factory.NewDeclObject(this->name()));
+  ObjectPtr obj_init = CallObject("__init__", obj);
+  static_cast<FuncObject&>(*obj_init).Call(nullptr, std::move(params));
+  return obj;
+}
+
 ObjectPtr NullType::Constructor(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
   if (params.size() > 0) {

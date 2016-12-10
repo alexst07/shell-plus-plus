@@ -29,12 +29,18 @@ void StmtListExecutor::set_stop(StopFlag flag) {
   stop_flag_ = flag;
 }
 
-void FuncDeclExecutor::Exec(AstNode* node) {
+ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
   FunctionDeclaration* fdecl_node = static_cast<FunctionDeclaration*>(node);
   auto vec = fdecl_node->children();
   size_t variadic_count = 0;
   std::vector<std::string> param_names;
   std::vector<ObjectPtr> default_values;
+
+  // if the method is declared inside class
+  // insert the parameter this
+  if (method_) {
+    param_names.push_back(std::string("this"));
+  }
 
   for (FunctionParam* param: vec) {
     if (param->variadic()) {
@@ -44,6 +50,7 @@ void FuncDeclExecutor::Exec(AstNode* node) {
     param_names.push_back(param->id()->name());
   }
 
+  // only the last parameter can be variadic
   if ((variadic_count > 1) ||
       (variadic_count == 1) && (!fdecl_node->variadic())) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -59,10 +66,65 @@ void FuncDeclExecutor::Exec(AstNode* node) {
                                                 std::move(default_values),
                                                 fdecl_node->variadic()));
 
-  symbol_table_stack().SetEntry(fdecl_node->name()->name(), fobj);
+  return fobj;
+}
+
+void FuncDeclExecutor::Exec(AstNode* node) {
+  FunctionDeclaration* fdecl_node = static_cast<FunctionDeclaration*>(node);
+
+  ObjectPtr fobj(FuncObj(node));
+
+  // global symbol
+  SymbolAttr entry(fobj, true);
+
+  symbol_table_stack().InsertEntry(fdecl_node->name()->name(),
+                                   std::move(entry));
 }
 
 void FuncDeclExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+void ClassDeclExecutor::Exec(AstNode* node) {
+  ClassDeclaration* class_decl_node = static_cast<ClassDeclaration*>(node);
+
+  // handle class block
+  ClassBlock* block = class_decl_node->block();
+  ClassDeclList* decl_list = block->decl_list();
+
+  ObjectPtr type_obj = obj_factory_.NewDeclType(
+        class_decl_node->name()->name());
+
+  SymbolTableStack sym_stack(true);
+  sym_stack.Push(symbol_table_stack().MainTable());
+  sym_stack.NewTable();
+
+  // insert all declared methods on symbol table
+  std::vector<Declaration*> decl_vec = decl_list->children();
+
+  // the last argument specify that is a method inside the class
+  FuncDeclExecutor fexec(this, sym_stack, true);
+
+  for (auto decl: decl_vec) {
+    if (decl->type() == AstNode::NodeType::kFunctionDeclaration) {
+      // insert method on symbol table of class
+      FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(decl);
+
+      // handle no abstract method
+      if (fdecl->has_block()) {
+        ObjectPtr obj_func(fexec.FuncObj(decl));
+        static_cast<TypeObject&>(*type_obj).RegiterMethod(fdecl->name()->name(),
+                                                          obj_func);
+      }
+    }
+  }
+
+  SymbolAttr symbol_obj(type_obj, true);
+  symbol_table_stack().InsertEntry(class_decl_node->name()->name(),
+                                   std::move(symbol_obj));
+}
+
+void ClassDeclExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 
@@ -98,6 +160,12 @@ void StmtExecutor::Exec(AstNode* node) {
       WhileExecutor while_executor(this, symbol_table_stack());
       while_executor.Exec(static_cast<WhileStatement*>(node));
     } break;
+
+    case AstNode::NodeType::kClassDeclaration: {
+      ClassDeclExecutor class_decl_executor(this, symbol_table_stack());
+      class_decl_executor.Exec(static_cast<ClassDeclaration*>(node));
+      break;
+    }
   }
 }
 
@@ -112,14 +180,19 @@ void ReturnExecutor::Exec(AstNode* node) {
     AssignableListExecutor assign_list(this, symbol_table_stack());
     std::vector<ObjectPtr> vret = assign_list.Exec(ret_node->assign_list());
 
-    // convert vector to tuple object and insert it on symbol table
-    // with reserved name
-    ObjectPtr tuple_obj(obj_factory_.NewTuple(std::move(vret)));
-    symbol_table_stack().SetEntry("%return", tuple_obj);
+    // if vret there is only one element, return this element
+    if (vret.size() == 1) {
+      symbol_table_stack().SetEntryOnFunc("%return", vret[0]);
+    } else {
+      // convert vector to tuple object and insert it on symbol table
+      // with reserved name
+      ObjectPtr tuple_obj(obj_factory_.NewTuple(std::move(vret)));
+      symbol_table_stack().SetEntryOnFunc("%return", tuple_obj);
+    }
   } else {
     // return null
     ObjectPtr null_obj(obj_factory_.NewNull());
-    symbol_table_stack().SetEntry("%return", null_obj);
+    symbol_table_stack().SetEntryOnFunc("%return", null_obj);
   }
 
   // set stop return
@@ -136,6 +209,9 @@ void IfElseExecutor::Exec(IfStatement* node) {
   ObjectPtr obj_exp = expr_exec.Exec(node->exp());
   bool cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
 
+  // create a new table for if else scope
+  symbol_table_stack().NewTable();
+
   BlockExecutor block_exec(this, symbol_table_stack());
 
   if (cond) {
@@ -145,6 +221,9 @@ void IfElseExecutor::Exec(IfStatement* node) {
       block_exec.Exec(node->else_block());
     }
   }
+
+  // remove the scope
+  symbol_table_stack().Pop();
 }
 
 void IfElseExecutor::set_stop(StopFlag flag) {

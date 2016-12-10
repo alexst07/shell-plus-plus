@@ -18,6 +18,12 @@ ObjectPtr FuncWrapperObject::Call(Executor* parent,
 
 ObjectPtr FuncDeclObject::Call(Executor* parent,
                                std::vector<ObjectPtr>&& params) {
+  // it is the table function
+  SymbolTablePtr table = SymbolTable::Create(true);
+
+  // main symbol of function
+  symbol_table_.Push(table, false);
+
   if (variadic_) {
     if (params.size() < (params_.size() - 1)) {
       throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
@@ -69,6 +75,8 @@ ObjectPtr FuncDeclObject::Call(Executor* parent,
   ObjectPtr obj_ret;
   bool bool_ret = false;
   std::tie(obj_ret, bool_ret) = symbol_table_.LookupObj("%return");
+
+  symbol_table_.Pop();
 
   if (bool_ret) {
     return obj_ret;
