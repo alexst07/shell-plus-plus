@@ -23,7 +23,7 @@ class ObjectFactory {
 
   SymbolTableStack SymTableStack() {
     // create a symbol table on the start
-    SymbolTableStack table_stack(false);
+    SymbolTableStack table_stack(true);
     auto main_tab = symbol_table_.MainTable();
     table_stack.Push(main_tab, true);
 
@@ -176,10 +176,12 @@ class ObjectFactory {
 
   ObjectPtr NewDeclType(const std::string& name_type) {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    SymbolTableStack sym_stack = SymTableStack();
-    sym_stack.NewTable();
+    SymbolTableStack table_stack(true);
+    table_stack.Append(symbol_table_);
+    table_stack.SetFirstAsMain();
+    table_stack.NewTable();
     return ObjectPtr(new DeclClassType(name_type, obj_type,
-                                       std::move(sym_stack)));
+                                       std::move(table_stack)));
   }
 
   ObjectPtr NewType() {

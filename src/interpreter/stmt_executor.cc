@@ -95,15 +95,11 @@ void ClassDeclExecutor::Exec(AstNode* node) {
   ObjectPtr type_obj = obj_factory_.NewDeclType(
         class_decl_node->name()->name());
 
-  SymbolTableStack sym_stack(true);
-  sym_stack.Push(symbol_table_stack().MainTable());
-  sym_stack.NewTable();
-
   // insert all declared methods on symbol table
   std::vector<Declaration*> decl_vec = decl_list->children();
 
   // the last argument specify that is a method inside the class
-  FuncDeclExecutor fexec(this, sym_stack, true);
+  FuncDeclExecutor fexec(this, symbol_table_stack(), true);
 
   for (auto decl: decl_vec) {
     if (decl->type() == AstNode::NodeType::kFunctionDeclaration) {
@@ -112,9 +108,8 @@ void ClassDeclExecutor::Exec(AstNode* node) {
 
       // handle no abstract method
       if (fdecl->has_block()) {
-        ObjectPtr obj_func(fexec.FuncObj(decl));
         static_cast<TypeObject&>(*type_obj).RegiterMethod(fdecl->name()->name(),
-                                                          obj_func);
+                                                          fexec.FuncObj(decl));
       }
     }
   }
@@ -240,11 +235,17 @@ void WhileExecutor::Exec(WhileStatement* node) {
     return cond;
   };
 
+  // create a new table for while scope
+  symbol_table_stack().NewTable();
+
   BlockExecutor block_exec(this, symbol_table_stack());
 
   while (fn_exp(node->exp())) {
     block_exec.Exec(node->block());
   }
+
+  // remove the scope
+  symbol_table_stack().Pop();
 }
 
 void WhileExecutor::set_stop(StopFlag flag) {

@@ -146,13 +146,50 @@ ObjectPtr Type::Constructor(Executor* /*parent*/,
 // constructor for declared class call __init__ method from
 // symbol table, and create an DeclClassObject, this object
 // has a symbol table stack to store attributes
-ObjectPtr DeclClassType::Constructor(Executor* /*parent*/,
+ObjectPtr DeclClassType::Constructor(Executor* parent,
                                 std::vector<ObjectPtr>&& params) {
   ObjectFactory obj_factory(symbol_table_stack());
-  ObjectPtr obj(obj_factory.NewDeclObject(this->name()));
-  ObjectPtr obj_init = CallObject("__init__", obj);
-  static_cast<FuncObject&>(*obj_init).Call(nullptr, std::move(params));
+  ObjectPtr obj_self(obj_factory.NewDeclObject(this->name()));
+
+  symbol_table_stack().Dump();
+
+  ObjectPtr obj_init = symbol_table_stack().Lookup("__init__", false)
+      .SharedAccess();
+
+  if (obj_init->type() == ObjectType::FUNC) {
+    params.insert(params.begin(), obj_self);
+    static_cast<FuncObject&>(*obj_init).Call(parent, std::move(params));
+  }
+
+  return obj_self;
+}
+
+ObjectPtr DeclClassType::CallObject(const std::string& name,
+                                 ObjectPtr self_param) {
+  ObjectPtr obj = symbol_table_stack().Lookup(name, false).SharedAccess();
+
+  if (obj->type() == ObjectType::FUNC) {
+    ObjectFactory obj_factory(symbol_table_stack());
+
+    // the function wrapper insert the object self_param as the first param
+    // it works like self argument
+    return ObjectPtr(obj_factory.NewWrapperFunc(obj, self_param));
+  }
+
   return obj;
+}
+
+std::shared_ptr<Object> DeclClassObject::Arrow(std::shared_ptr<Object> self,
+                              const std::string& name) {
+  SymbolTableStack& st =
+      static_cast<DeclClassType&>(*ObjType()).SymTableStack();
+  ObjectPtr att_obj = st.Lookup(name, false).SharedAccess();
+
+  if (att_obj->type() == ObjectType::FUNC) {
+    return static_cast<DeclClassType&>(*ObjType()).CallObject(name, self);
+  }
+
+  return att_obj;
 }
 
 ObjectPtr NullType::Constructor(Executor* /*parent*/,

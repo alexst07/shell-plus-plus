@@ -279,6 +279,16 @@ class SymbolTableStack {
     return main_table_;
   }
 
+  void Append(const SymbolTableStack& stack) {
+    for (auto table: stack.stack_) {
+      stack_.push_back(table);
+    }
+  }
+
+  void SetFirstAsMain() {
+    main_table_ = *stack_.begin();
+  }
+
   void Dump() {
     std::cout << "Table: " << this << " Num: " << stack_.size() << "\n";
     for (auto& e: stack_) {

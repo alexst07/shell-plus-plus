@@ -21,7 +21,7 @@ namespace internal {
 class DeclClassObject: public Object {
  public:
   DeclClassObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::NIL, obj_type, std::move(sym_table)) {
+      : Object(ObjectType::DECL_OBJ, obj_type, std::move(sym_table)) {
     sym_table.NewTable();
   }
 
@@ -33,6 +33,9 @@ class DeclClassObject: public Object {
   bool operator==(const Object& obj) const override {
 
   }
+
+  std::shared_ptr<Object> Arrow(std::shared_ptr<Object> self,
+                                const std::string& name) override;
 
   void Print() override {
 //    std::cout << static_cast<TypeObject&>(*ObjType()).name();
@@ -261,7 +264,7 @@ class TypeObject: public Object {
       : Object(ObjectType::TYPE, obj_type, std::move(sym_table))
       , name_(name)
       , sym_tab_statck_(std::make_shared<SymbolTableStack>(true)) {
-    sym_tab_statck_->Push(symbol_table_stack().MainTable());
+    sym_tab_statck_->Push(symbol_table_stack().MainTable(), true);
     sym_tab_statck_->NewTable();
   }
 
@@ -291,13 +294,13 @@ class TypeObject: public Object {
 
   // call a calleble object passing the self object
   // this method is useful to execute member method from objects
-  ObjectPtr CallObject(const std::string& name, ObjectPtr self_param);
+  virtual ObjectPtr CallObject(const std::string& name, ObjectPtr self_param);
 
   const std::string& name() const noexcept {
     return name_;
   }
 
-  bool RegiterMethod(const std::string& name, ObjectPtr obj) {
+  virtual bool RegiterMethod(const std::string& name, ObjectPtr obj) {
     SymbolAttr sym_entry(obj, true);
     return sym_tab_statck_->InsertEntry(name, std::move(sym_entry));
   }
@@ -332,7 +335,18 @@ class DeclClassType: public TypeObject {
 
   virtual ~DeclClassType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
+  bool RegiterMethod(const std::string& name, ObjectPtr obj) override {
+    SymbolAttr sym_entry(obj, true);
+    return symbol_table_stack().InsertEntry(name, std::move(sym_entry));
+  }
+
+  ObjectPtr CallObject(const std::string& name, ObjectPtr self_param) override;
+
+  SymbolTableStack& SymTableStack() noexcept {
+    return symbol_table_stack();
+  }
+
+  ObjectPtr Constructor(Executor* parent,
                         std::vector<ObjectPtr>&& params) override;
 };
 
