@@ -134,7 +134,11 @@ ObjectPtr Type::Constructor(Executor* /*parent*/,
                        boost::format("type() takes exactly 1 argument"));
   }
 
+  // get the type of object passed
   ObjectPtr obj_type = params[0]->ObjType();
+
+  // if the object is null so it is a type, because when created
+  // type has no type, because it will be itself
   if (!obj_type) {
     ObjectFactory obj_factory(symbol_table_stack());
     return ObjectPtr(obj_factory.NewType());
@@ -150,8 +154,6 @@ ObjectPtr DeclClassType::Constructor(Executor* parent,
                                 std::vector<ObjectPtr>&& params) {
   ObjectFactory obj_factory(symbol_table_stack());
   ObjectPtr obj_self(obj_factory.NewDeclObject(this->name()));
-
-  symbol_table_stack().Dump();
 
   ObjectPtr obj_init = symbol_table_stack().Lookup("__init__", false)
       .SharedAccess();
@@ -179,6 +181,13 @@ ObjectPtr DeclClassType::CallObject(const std::string& name,
   return obj;
 }
 
+std::shared_ptr<Object> DeclClassType::Arrow(std::shared_ptr<Object> self,
+                              const std::string& name) {
+  ObjectPtr att_obj = symbol_table_stack().Lookup(name, false).SharedAccess();
+
+  return att_obj;
+}
+
 std::shared_ptr<Object> DeclClassObject::Arrow(std::shared_ptr<Object> self,
                               const std::string& name) {
   SymbolTableStack& st =
@@ -188,6 +197,15 @@ std::shared_ptr<Object> DeclClassObject::Arrow(std::shared_ptr<Object> self,
   if (att_obj->type() == ObjectType::FUNC) {
     return static_cast<DeclClassType&>(*ObjType()).CallObject(name, self);
   }
+
+  return att_obj;
+}
+
+std::shared_ptr<Object>& DeclClassObject::ArrowAssign(
+    std::shared_ptr<Object> /*self*/, const std::string& name) {
+  SymbolTableStack& st =
+      static_cast<DeclClassType&>(*ObjType()).SymTableStack();
+  ObjectPtr& att_obj = st.Lookup(name, true).Ref();
 
   return att_obj;
 }

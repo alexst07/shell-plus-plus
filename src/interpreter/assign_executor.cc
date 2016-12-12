@@ -113,6 +113,16 @@ ObjectPtr& AssignExecutor::RefMap(Array& array_node, MapObject& obj) {
   return static_cast<MapObject&>(obj).ElementRef(index);
 }
 
+ObjectPtr& AssignExecutor::AssignAtrribute(AstNode* node) {
+  Attribute* att_node = static_cast<Attribute*>(node);
+  Expression* att_exp = att_node->exp();
+
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr exp_obj(expr_exec.Exec(att_exp));
+
+  return exp_obj->ArrowAssign(exp_obj, att_node->id()->name());
+}
+
 // TODO: Executes for map and custon objects
 ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
   Array* array_node = static_cast<Array*>(node);
@@ -133,11 +143,15 @@ ObjectPtr& AssignExecutor::AssignmentAcceptorExpr(AstNode* node) {
   switch(node->type()) {
     case AstNode::NodeType::kIdentifier:
       return AssignIdentifier(node, true);
-    break;
+      break;
 
     case AstNode::NodeType::kArray:
       return AssignArray(node);
-    break;
+      break;
+
+    case AstNode::NodeType::kAttribute:
+      return AssignAtrribute(node);
+      break;
 
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,

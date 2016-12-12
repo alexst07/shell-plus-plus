@@ -37,6 +37,9 @@ class DeclClassObject: public Object {
   std::shared_ptr<Object> Arrow(std::shared_ptr<Object> self,
                                 const std::string& name) override;
 
+  std::shared_ptr<Object>& ArrowAssign(std::shared_ptr<Object>,
+                                        const std::string& name) override;
+
   void Print() override {
 //    std::cout << static_cast<TypeObject&>(*ObjType()).name();
   }
@@ -341,6 +344,9 @@ class DeclClassType: public TypeObject {
   }
 
   ObjectPtr CallObject(const std::string& name, ObjectPtr self_param) override;
+
+  std::shared_ptr<Object> Arrow(std::shared_ptr<Object> self,
+                                const std::string& name) override;
 
   SymbolTableStack& SymTableStack() noexcept {
     return symbol_table_stack();

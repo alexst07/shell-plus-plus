@@ -111,6 +111,13 @@ void ClassDeclExecutor::Exec(AstNode* node) {
         static_cast<TypeObject&>(*type_obj).RegiterMethod(fdecl->name()->name(),
                                                           fexec.FuncObj(decl));
       }
+    } else if (decl->type() == AstNode::NodeType::kClassDeclaration) {
+      ClassDeclaration* class_decl = static_cast<ClassDeclaration*>(decl);
+
+      // insert inner class on type_obj symbol table, insted of its own
+      ClassDeclExecutor class_exec(this, static_cast<DeclClassType&>(
+          *type_obj).SymTableStack());
+      class_exec.Exec(class_decl);
     }
   }
 

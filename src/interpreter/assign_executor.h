@@ -33,6 +33,8 @@ class AssignExecutor: public Executor {
 
   ObjectPtr& AssignArray(AstNode* node);
 
+  ObjectPtr& AssignAtrribute(AstNode* node);
+
   // Gets the pointer of a symbol to assign a value
   ObjectPtr& AssignmentAcceptorExpr(AstNode* node);
 
@@ -51,6 +53,8 @@ class AssignExecutor: public Executor {
   ObjectPtr& RefTuple(Array& array_node, TupleObject& obj);
 
   ObjectPtr& RefMap(Array& array_node, MapObject& obj);
+
+  ObjectPtr& RefArrow(Attribute& att_node, ObjectPtr& obj);
 
   void set_stop(StopFlag flag) override;
 

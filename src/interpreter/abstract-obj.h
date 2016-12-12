@@ -216,6 +216,13 @@ class Object {
                        boost::format("type has no arrow method"));
   }
 
+  // this method must be used when arrow operation is on left side
+  virtual std::shared_ptr<Object>& ArrowAssign(std::shared_ptr<Object>,
+                                        const std::string&) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no arrow method"));
+  }
+
   std::shared_ptr<Object> ObjType() const noexcept {
     return obj_type_;
   }
