@@ -25,6 +25,10 @@ void StmtListExecutor::Exec(AstNode* node) {
 }
 
 void StmtListExecutor::set_stop(StopFlag flag) {
+  if (parent() == nullptr) {
+    return;
+  }
+
   parent()->set_stop(flag);
   stop_flag_ = flag;
 }
@@ -82,6 +86,10 @@ void FuncDeclExecutor::Exec(AstNode* node) {
 }
 
 void FuncDeclExecutor::set_stop(StopFlag flag) {
+  if (parent() == nullptr) {
+    return;
+  }
+
   parent()->set_stop(flag);
 }
 
@@ -127,6 +135,10 @@ void ClassDeclExecutor::Exec(AstNode* node) {
 }
 
 void ClassDeclExecutor::set_stop(StopFlag flag) {
+  if (parent() == nullptr) {
+    return;
+  }
+
   parent()->set_stop(flag);
 }
 
@@ -172,6 +184,10 @@ void StmtExecutor::Exec(AstNode* node) {
 }
 
 void StmtExecutor::set_stop(StopFlag flag) {
+  if (parent() == nullptr) {
+    return;
+  }
+
   parent()->set_stop(flag);
 }
 

@@ -210,6 +210,26 @@ std::shared_ptr<Object>& DeclClassObject::ArrowAssign(
   return att_obj;
 }
 
+// TODO: insert some protection avoid __add__ method with more than 1
+// parameter or none parameter
+ObjectPtr DeclClassObject::Add(ObjectPtr obj) {
+  SymbolTableStack& st =
+      static_cast<DeclClassType&>(*ObjType()).SymTableStack();
+  ObjectPtr func_obj = st.Lookup("__add__", false).SharedAccess();
+
+  if (func_obj->type() != ObjectType::FUNC) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("symbol __add__ must be func"));
+  }
+
+  // insert self object on parameters list
+  std::vector<ObjectPtr> params;
+  params.push_back(self_.lock());
+  params.push_back(obj);
+
+  return static_cast<FuncObject&>(*func_obj).Call(nullptr, std::move(params));
+}
+
 ObjectPtr NullType::Constructor(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
   if (params.size() > 0) {

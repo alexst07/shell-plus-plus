@@ -86,6 +86,10 @@ class BlockExecutor: public Executor {
   }
 
   void set_stop(StopFlag flag) override {
+    if (parent() == nullptr) {
+      return;
+    }
+
     parent()->set_stop(flag);
   }
 };

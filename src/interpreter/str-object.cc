@@ -10,28 +10,28 @@ namespace setti {
 namespace internal {
 
 ObjectPtr StringObject::Equal(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
   if (obj->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type not supported"));
+    return obj_factory.NewBool(false);
   }
 
   StringObject& obj_str = static_cast<StringObject&>(*obj);
   bool r = value_ == obj_str.value_;
 
-  ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewBool(r);
 }
 
 ObjectPtr StringObject::NotEqual(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
   if (obj->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type not supported"));
+    return obj_factory.NewBool(true);
   }
 
   StringObject& obj_str = static_cast<StringObject&>(*obj);
   bool r = value_ != obj_str.value_;
 
-  ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewBool(r);
 }
 

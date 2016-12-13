@@ -102,7 +102,9 @@ class ObjectFactory {
     auto obj_type = symbol_table_.Lookup(name_type, false).SharedAccess();
     SymbolTableStack sym_stack = SymTableStack();
     sym_stack.NewTable();
-    return ObjectPtr(new DeclClassObject(obj_type, std::move(sym_stack)));
+    ObjectPtr obj(new DeclClassObject(obj_type, std::move(sym_stack)));
+    static_cast<DeclClassObject&>(*obj).SetSelf(obj);
+    return obj;
   }
 
   ObjectPtr NewFuncDeclObject(const std::string& id, AstNode* start_node,

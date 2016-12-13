@@ -40,6 +40,8 @@ class DeclClassObject: public Object {
   std::shared_ptr<Object>& ArrowAssign(std::shared_ptr<Object>,
                                         const std::string& name) override;
 
+  ObjectPtr Add(ObjectPtr obj) override;
+
   void Print() override {
 //    std::cout << static_cast<TypeObject&>(*ObjType()).name();
   }
@@ -48,8 +50,12 @@ class DeclClassObject: public Object {
     return symbol_table_stack();
   }
 
- private:
+  void SetSelf(ObjectPtr self_obj) {
+    self_ = self_obj;
+  }
 
+ private:
+  std::weak_ptr<Object> self_;
 };
 
 class SliceObject: public Object {
