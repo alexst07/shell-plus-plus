@@ -158,7 +158,7 @@ class ObjectFactory {
 
   ObjectPtr NewArrayIterType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new ArrayType(obj_type, std::move(SymTableStack())));
+    return ObjectPtr(new ArrayIterType(obj_type, std::move(SymTableStack())));
   }
 
   ObjectPtr NewTupleType() {

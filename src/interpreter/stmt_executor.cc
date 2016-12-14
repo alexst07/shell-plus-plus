@@ -175,6 +175,11 @@ void StmtExecutor::Exec(AstNode* node) {
       while_executor.Exec(static_cast<WhileStatement*>(node));
     } break;
 
+    case AstNode::NodeType::kForInStatement: {
+      ForInExecutor for_executor(this, symbol_table_stack());
+      for_executor.Exec(static_cast<ForInStatement*>(node));
+    } break;
+
     case AstNode::NodeType::kClassDeclaration: {
       ClassDeclExecutor class_decl_executor(this, symbol_table_stack());
       class_decl_executor.Exec(static_cast<ClassDeclaration*>(node));
@@ -272,6 +277,120 @@ void WhileExecutor::Exec(WhileStatement* node) {
 }
 
 void WhileExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+void ForInExecutor::Assign(std::vector<std::reference_wrapper<ObjectPtr>>& vars,
+                           std::vector<ObjectPtr>& it_values) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  // Assignment can be done only when the tuples have the same size
+  // or there is only one variable on the test side
+  // a, b, c = 1, 2, 3; a = 1, 2, 3; a, b = f
+  if ((vars.size() != 1) && (it_values.size() != 1) &&
+      (vars.size() != it_values.size())) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("different size of tuples"));
+  }
+
+  if ((vars.size() == 1) && (it_values.size() == 1)) {
+    vars[0].get() = it_values[0]->Next();
+  } else if ((vars.size() == 1) && (it_values.size() != 1)) {
+    std::vector<ObjectPtr> values;
+
+    // Call next method from every iterator
+    for (auto& v: it_values) {
+      values.push_back(v->Next());
+    }
+
+    ObjectPtr tuple_obj(obj_factory.NewTuple(std::move(values)));
+    vars[0].get() = tuple_obj;
+  } else if ((vars.size() != 1) && (it_values.size() == 1)) {
+    // get iterator point element
+    ObjectPtr obj_ptr = it_values[0]->Next();
+
+    // only tuple object is accept on this case
+    if (obj_ptr->type() != Object::ObjectType::TUPLE) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("expect tuple object as test"));
+    }
+
+    // numbers of variables must be equal the number of tuple elements
+    TupleObject &tuple_obj = static_cast<TupleObject&>(*obj_ptr);
+    if (vars.size() != tuple_obj.Size()) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("numbers of variables: %1% and "
+                        "numbers of tuples: %2% are "
+                        "incompatibles")% vars.size() % tuple_obj.Size());
+    }
+
+    for (size_t i = 0; i < vars.size(); i++) {
+      vars[i].get() = tuple_obj.Element(i);
+    }
+  } else {
+    // on this case there are the same number of variables and values
+    for (size_t i = 0; i < vars.size(); i++) {
+      vars[i].get() = it_values[i]->Next();
+    }
+  }
+}
+
+void ForInExecutor::Exec(ForInStatement* node) {
+  // create a new table for while scope
+  symbol_table_stack().NewTable();
+
+  AssignExecutor assign_exec(this, symbol_table_stack());
+
+  // Executes the left side of for statemente
+  auto vars = assign_exec.AssignList(node->exp_list());
+
+  // Executes the test side of for statemente
+  ExprListExecutor expr_list(this, symbol_table_stack());
+  auto containers = expr_list.Exec(node->test_list());
+
+  std::vector<ObjectPtr> it_values;
+
+  // get iterator of each object
+  for (auto& it: containers) {
+    ObjectPtr obj(it->ObjIter(it));
+    it_values.push_back(obj);
+  }
+
+  auto fn_exp = [&]()-> bool {
+    // check if all items on it_values has next
+    for (auto& it: it_values) {
+      // as it is a reference, change the pointer inside it_values
+      ObjectPtr has_next_obj = it->HasNext();
+
+      if (has_next_obj->type() != Object::ObjectType::BOOL) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                           boost::format("expect bool from __has_next__"));
+      }
+
+      bool v = static_cast<BoolObject&>(*has_next_obj).value();
+      if (!v) {
+        return false;
+      }
+    }
+
+    // assign the it_values->Next to vars references to be used inside
+    // block of for statemente
+    Assign(vars, it_values);
+
+    return true;
+  };
+
+  BlockExecutor block_exec(this, symbol_table_stack());
+
+  while (fn_exp()) {
+    block_exec.Exec(node->block());
+  }
+
+  // remove the scope
+  symbol_table_stack().Pop();
+}
+
+void ForInExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 

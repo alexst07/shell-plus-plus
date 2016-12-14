@@ -33,11 +33,18 @@ class ArrayIterObject: public Object {
 
   ObjectPtr Next() override;
 
+  ObjectPtr HasNext() override;
+
   void Print() override {
     std::cout << "ARRAY ITER: ";
   }
 
  private:
+  // it uses the array object and position insted of c++ iterator
+  // because the iterator object has need a shared_reference
+  // of object, because the array could be removed from memory
+  // if the object was created inside a loop for example
+  // and the iterator could be used outside this loop
   ObjectPtr array_obj_;
   size_t pos_;
 };

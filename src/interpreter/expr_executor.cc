@@ -291,6 +291,25 @@ void ExpressionExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 
+std::vector<ObjectPtr> ExprListExecutor::Exec(
+    AstNode* node) {
+  ExpressionList* expr_list_node = static_cast<ExpressionList*>(node);
+
+  std::vector<ObjectPtr> obj_vec;
+
+  ExpressionExecutor expr_executor(this, symbol_table_stack());
+  std::vector<Expression*> expr_vec = expr_list_node->children();
+  for (AstNode* value: expr_vec) {
+    obj_vec.push_back(std::move(expr_executor.Exec(value)));
+  }
+
+  return obj_vec;
+}
+
+void ExprListExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
 ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr fobj = expr_exec.Exec(node->func_exp());

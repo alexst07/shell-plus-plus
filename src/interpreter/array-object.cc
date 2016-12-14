@@ -35,6 +35,13 @@ ObjectPtr ArrayIterObject::Next() {
   return array_obj.Element(pos_++);
 }
 
+ObjectPtr ArrayIterObject::HasNext() {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  bool v = pos_ == static_cast<ArrayObject&>(*array_obj_).ArraySize();
+  return obj_factory.NewBool(!v);
+}
+
 std::size_t ArrayObject::Hash() const {
   if (value_.empty()) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,

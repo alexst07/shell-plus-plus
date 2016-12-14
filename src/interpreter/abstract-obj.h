@@ -134,6 +134,11 @@ class Object {
                        boost::format("type has no next method"));
   }
 
+  virtual std::shared_ptr<Object> HasNext() {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no has_next method"));
+  }
+
   virtual std::shared_ptr<Object> LessEqual(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no >= operator"));

@@ -131,6 +131,20 @@ class WhileExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
+class ForInExecutor: public Executor {
+ public:
+  ForInExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  // Entry point to execute for in
+  void Exec(ForInStatement *node);
+
+  void Assign(std::vector<std::reference_wrapper<ObjectPtr>>& vars,
+              std::vector<ObjectPtr>& it_values);
+
+  void set_stop(StopFlag flag) override;
+};
+
 }
 }
 
