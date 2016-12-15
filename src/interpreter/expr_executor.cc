@@ -336,6 +336,10 @@ ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
 }
 
 void FuncCallExecutor::set_stop(StopFlag flag) {
+  // only throw is passed to outside function
+  // breaks, continues, are not allowed inside
+  // functions, and return is consumed by
+  // function
   if (flag == StopFlag::kThrow) {
     parent()->set_stop(flag);
   }

@@ -95,6 +95,10 @@ class AstNodeFactory {
     return std::unique_ptr<BreakStatement>(new BreakStatement(fn_pos_()));
   }
 
+  inline std::unique_ptr<ContinueStatement> NewContinueStatement() {
+    return std::unique_ptr<ContinueStatement>(new ContinueStatement(fn_pos_()));
+  }
+
   inline std::unique_ptr<DefaultStatement> NewDefaultStatement() {
     return std::unique_ptr<DefaultStatement>(new DefaultStatement(fn_pos_()));
   }

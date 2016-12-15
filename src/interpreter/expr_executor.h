@@ -99,6 +99,15 @@ class FuncCallExecutor: public Executor {
   ObjectPtr Exec(FunctionCall* node);
 
   void set_stop(StopFlag flag) override;
+
+ protected:
+  bool inside_loop() override {
+    return false;
+  }
+
+  bool inside_switch() override {
+    return false;
+  }
 };
 
 // Pass the variable as value or reference depending on type

@@ -129,6 +129,18 @@ class WhileExecutor: public Executor {
   void Exec(WhileStatement* node);
 
   void set_stop(StopFlag flag) override;
+
+ protected:
+  bool inside_loop() override {
+    return true;
+  }
+
+  bool inside_switch() override {
+    return false;
+  }
+
+ private:
+  StopFlag stop_flag_;
 };
 
 class ForInExecutor: public Executor {
@@ -141,6 +153,38 @@ class ForInExecutor: public Executor {
 
   void Assign(std::vector<std::reference_wrapper<ObjectPtr>>& vars,
               std::vector<ObjectPtr>& it_values);
+
+  void set_stop(StopFlag flag) override;
+
+ protected:
+  bool inside_loop() override {
+    return true;
+  }
+
+  bool inside_switch() override {
+    return false;
+  }
+
+ private:
+  StopFlag stop_flag_;
+};
+
+class BreakExecutor: public Executor {
+ public:
+  BreakExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(BreakStatement *node);
+
+  void set_stop(StopFlag flag) override;
+};
+
+class ContinueExecutor: public Executor {
+ public:
+  ContinueExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(ContinueStatement *node);
 
   void set_stop(StopFlag flag) override;
 };

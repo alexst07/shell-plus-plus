@@ -19,6 +19,7 @@ class Executor {
     kGo,
     kReturn,
     kBreak,
+    kContinue,
     kThrow
   };
 
@@ -45,6 +46,29 @@ class Executor {
 
   inline bool is_root() const{
     return is_root_;
+  }
+
+  // this method is used for decide if some statement
+  // can be called on that moment, for example
+  // break statement can be called only inside loops
+  // and switch control
+  virtual bool inside_loop() {
+    if (parent_ != nullptr) {
+      return inside_loop();
+    }
+
+    return false;
+  }
+
+  // this method is used by switch control flow
+  // because some statement can be called only
+  // inside a switch block
+  virtual bool inside_switch() {
+    if (parent_ != nullptr) {
+      return inside_switch();
+    }
+
+    return false;
   }
 
  private:

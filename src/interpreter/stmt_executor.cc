@@ -16,6 +16,11 @@ void StmtListExecutor::Exec(AstNode* node) {
   StmtExecutor stmt_exec(this, symbol_table_stack());
 
   for (AstNode* stmt: stmt_list->children()) {
+    // when stop flag is set inside some control struct of function
+    // it don't pass ahead this point, because this struct must
+    // set parent only if it will not use the flag
+    // for example: loops must not set this flag for continue and
+    // break, but must set this flag for return and throw
     if (stop_flag_ == StopFlag::kGo) {
       stmt_exec.Exec(stmt);
     } else {
@@ -25,12 +30,13 @@ void StmtListExecutor::Exec(AstNode* node) {
 }
 
 void StmtListExecutor::set_stop(StopFlag flag) {
+  stop_flag_ = flag;
+
   if (parent() == nullptr) {
     return;
   }
 
   parent()->set_stop(flag);
-  stop_flag_ = flag;
 }
 
 ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
@@ -40,7 +46,7 @@ ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
   std::vector<std::string> param_names;
   std::vector<ObjectPtr> default_values;
 
-  // if the method is declared inside class
+  // if the method is declared inside of a class
   // insert the parameter this
   if (method_) {
     param_names.push_back(std::string("this"));
@@ -183,8 +189,17 @@ void StmtExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kClassDeclaration: {
       ClassDeclExecutor class_decl_executor(this, symbol_table_stack());
       class_decl_executor.Exec(static_cast<ClassDeclaration*>(node));
-      break;
-    }
+    } break;
+
+    case AstNode::NodeType::kBreakStatement: {
+      BreakExecutor break_executor(this, symbol_table_stack());
+      break_executor.Exec(static_cast<BreakStatement*>(node));
+    } break;
+
+    case AstNode::NodeType::kContinueStatement: {
+      ContinueExecutor continue_executor(this, symbol_table_stack());
+      continue_executor.Exec(static_cast<ContinueStatement*>(node));
+    } break;
   }
 }
 
@@ -257,7 +272,13 @@ void WhileExecutor::Exec(WhileStatement* node) {
   // Executes if expresion
   ExpressionExecutor expr_exec(this, symbol_table_stack());
 
-  auto fn_exp = [&expr_exec](Expression* exp)-> bool {
+  auto fn_exp = [&](Expression* exp)-> bool {
+    // if break was called or throw or return must exit from loop
+    if (stop_flag_ == StopFlag::kBreak || stop_flag_ == StopFlag::kThrow ||
+        stop_flag_ == StopFlag::kReturn) {
+      return false;
+    }
+
     ObjectPtr obj_exp = expr_exec.Exec(exp);
     bool cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
     return cond;
@@ -277,7 +298,15 @@ void WhileExecutor::Exec(WhileStatement* node) {
 }
 
 void WhileExecutor::set_stop(StopFlag flag) {
-  parent()->set_stop(flag);
+  stop_flag_ = flag;
+
+  if (parent() == nullptr) {
+    return;
+  }
+
+  if (flag != StopFlag::kBreak && flag != StopFlag::kContinue) {
+    parent()->set_stop(flag);
+  }
 }
 
 void ForInExecutor::Assign(std::vector<std::reference_wrapper<ObjectPtr>>& vars,
@@ -357,6 +386,12 @@ void ForInExecutor::Exec(ForInStatement* node) {
   }
 
   auto fn_exp = [&]()-> bool {
+    // if break was called or throw or return must exit from loop
+    if (stop_flag_ == StopFlag::kBreak || stop_flag_ == StopFlag::kThrow ||
+        stop_flag_ == StopFlag::kReturn) {
+      return false;
+    }
+
     // check if all items on it_values has next
     for (auto& it: it_values) {
       // as it is a reference, change the pointer inside it_values
@@ -391,6 +426,32 @@ void ForInExecutor::Exec(ForInStatement* node) {
 }
 
 void ForInExecutor::set_stop(StopFlag flag) {
+  stop_flag_ = flag;
+
+  if (parent() == nullptr) {
+    return;
+  }
+
+  if (flag != StopFlag::kBreak && flag != StopFlag::kContinue) {
+    parent()->set_stop(flag);
+  }
+}
+
+void BreakExecutor::Exec(BreakStatement* /*node*/) {
+  // set stop break
+  parent()->set_stop(StopFlag::kBreak);
+}
+
+void BreakExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+void ContinueExecutor::Exec(ContinueStatement* /*node*/) {
+  // set stop break
+  parent()->set_stop(StopFlag::kContinue);
+}
+
+void ContinueExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 

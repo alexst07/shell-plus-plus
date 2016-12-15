@@ -364,6 +364,8 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserWhileStmt();
   } else if (token_ == TokenKind::KW_BREAK) {
     return ParserBreakStmt();
+  } else if (token_ == TokenKind::KW_CONTINUE) {
+    return ParserContinueStmt();
   } else if (token_ == TokenKind::KW_RETURN) {
     return ParserReturnStmt();
   } else if (token_ == TokenKind::KW_CASE) {
@@ -625,6 +627,13 @@ ParserResult<Statement> Parser::ParserBreakStmt() {
   Advance();
 
   return ParserResult<Statement>(factory_.NewBreakStatement());
+}
+
+ParserResult<Statement> Parser::ParserContinueStmt() {
+  // advance continue token
+  Advance();
+
+  return ParserResult<Statement>(factory_.NewContinueStatement());
 }
 
 ParserResult<Statement> Parser::ParserDefaultStmt() {

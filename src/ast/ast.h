@@ -1144,6 +1144,21 @@ class BreakStatement: public Statement {
       : Statement(NodeType::kBreakStatement, position) {}
 };
 
+class ContinueStatement: public Statement {
+ public:
+  virtual ~ContinueStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitContinueStatement(this);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  ContinueStatement(Position position)
+      : Statement(NodeType::kContinueStatement, position) {}
+};
+
 class DefaultStatement: public Statement {
  public:
   virtual ~DefaultStatement() {}
