@@ -33,7 +33,11 @@ class Executor {
       , symbol_table_stack_(symbol_table_stack)
       , is_root_(is_root) {}
 
-  virtual void set_stop(StopFlag flag) = 0;
+  virtual void set_stop(StopFlag flag) {
+    if (parent_ != nullptr) {
+      parent_->set_stop(flag);
+    }
+  }
 
   Executor* parent() const noexcept {
     return parent_;

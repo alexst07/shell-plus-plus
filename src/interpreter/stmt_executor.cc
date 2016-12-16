@@ -7,6 +7,7 @@
 #include "assign_executor.h"
 #include "expr_executor.h"
 #include "func_object.h"
+#include "cmd-executor.h"
 
 namespace setti {
 namespace internal {
@@ -199,6 +200,11 @@ void StmtExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kContinueStatement: {
       ContinueExecutor continue_executor(this, symbol_table_stack());
       continue_executor.Exec(static_cast<ContinueStatement*>(node));
+    } break;
+
+    case AstNode::NodeType::kCmdFull: {
+      CmdExecutor cmd_full(this, symbol_table_stack());
+      cmd_full.Exec(static_cast<CmdFull*>(node));
     } break;
   }
 }

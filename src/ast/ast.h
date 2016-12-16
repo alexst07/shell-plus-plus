@@ -606,7 +606,7 @@ class SubShell: public Cmd {
   std::unique_ptr<Block> block_;
 
   SubShell(std::unique_ptr<Block> block,  Position position)
-      : Cmd(NodeType::kCmdFull, position)
+      : Cmd(NodeType::kSubShell, position)
       , block_(std::move(block)) {}
 };
 
