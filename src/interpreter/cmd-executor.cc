@@ -4,16 +4,17 @@ namespace setti {
 namespace internal {
 
 int CmdExecutor::Exec(CmdFull *node) {
+  CmdData cmd_data;
+
   switch (node->cmd()->type()) {
     case AstNode::NodeType::kSimpleCmd: {
       SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
+      cmd_data = simple_cmd.Exec(static_cast<SimpleCmd*>(node->cmd()));
+    } break;
 
-      std::vector<std::string> cmd_str =
-          simple_cmd.Exec(static_cast<SimpleCmd*>(node->cmd()));
-
-      for (auto c: cmd_str) {
-        std::cout << c << "|";
-      }
+    case AstNode::NodeType::kCmdIoRedirectList: {
+      CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
+      cmd_data = cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()));
     } break;
   }
 }
@@ -52,7 +53,7 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
   return cmd;
 }
 
-std::tuple<std::string, int> CmdIoRedirectExecutor::Exec(CmdIoRedirect *node) {
+CmdIoData CmdIoRedirectExecutor::Exec(CmdIoRedirect *node) {
   FilePathCmd* file_path = node->file_path_cmd();
   std::vector<AstNode*> pieces = file_path->children();
   std::string str_part = "";
@@ -79,7 +80,70 @@ std::tuple<std::string, int> CmdIoRedirectExecutor::Exec(CmdIoRedirect *node) {
     }
   }
 
-  return std::tuple<std::string, int>(str_part, out);
+  CmdIoData cmd_io;
+  cmd_io.content_ = str_part;
+  cmd_io.all_ = node->all();
+  cmd_io.n_iface_ = out;
+  cmd_io.in_out_ = SelectDirection(node->kind());
+
+  return cmd_io;
+}
+
+CmdIoData::Direction CmdIoRedirectExecutor::SelectDirection(TokenKind kind) {
+  switch (kind) {
+    case TokenKind::SHL:
+    case TokenKind::LESS_THAN:
+      return CmdIoData::Direction::IN;
+      break;
+
+    case TokenKind::GREATER_THAN:
+      return CmdIoData::Direction::OUT;
+      break;
+
+    case TokenKind::SAR:
+      return CmdIoData::Direction::OUT_APPEND;
+      break;
+
+    case TokenKind::SSHL:
+      return CmdIoData::Direction::IN_VARIABLE;
+      break;
+
+    case TokenKind::SSAR:
+      return CmdIoData::Direction::OUT_VARIABLE;
+      break;
+
+   default:
+      return CmdIoData::Direction::OUT;
+  }
+}
+
+CmdIoRedirectData CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node) {
+  std::vector<CmdIoRedirect*> cmd_io_list = node->children();
+  CmdIoListData cmd_io_ls_data;
+
+  CmdIoRedirectExecutor cmd_io_exec(this, symbol_table_stack());
+
+  // get list of files for input or output
+  for (CmdIoRedirect* cmd_io: cmd_io_list) {
+    cmd_io_ls_data.push_back(std::move(cmd_io_exec.Exec(cmd_io)));
+  }
+
+  CmdIoRedirectData cmd_io_redirect;
+  cmd_io_redirect.io_list_ = std::move(cmd_io_ls_data);
+
+  switch (node->cmd()->type()) {
+    case AstNode::NodeType::kSimpleCmd: {
+      SimpleCmdExecutor simple_cmd_exec(this, symbol_table_stack());
+      cmd_io_redirect.cmd_ =
+          simple_cmd_exec.Exec(static_cast<SimpleCmd*>(node->cmd()));
+    } break;
+  }
+
+  return cmd_io_redirect;
+}
+
+CmdPipeListData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
+
 }
 
 }

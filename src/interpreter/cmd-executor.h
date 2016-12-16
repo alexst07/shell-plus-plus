@@ -1,9 +1,10 @@
-#ifndef SETI_CMD_EXEC_H
-#define SETI_CMD_EXEC_H
+#ifndef SETI_CMD_EXECUTOR_H
+#define SETI_CMD_EXECUTOR_H
 
 #include <tuple>
 
 #include "executor.h"
+#include "cmd-exec.h"
 
 namespace setti {
 namespace internal {
@@ -29,12 +30,31 @@ class CmdIoRedirectExecutor: public Executor {
   CmdIoRedirectExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-  std::tuple<std::string, int> Exec(CmdIoRedirect *node);
+  CmdIoData Exec(CmdIoRedirect *node);
+
+  CmdIoData::Direction SelectDirection(TokenKind kind);
 };
 
+class CmdIoRedirectListExecutor: public Executor {
+ public:
+  CmdIoRedirectListExecutor(Executor* parent,
+                            SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  CmdIoRedirectData Exec(CmdIoRedirectList *node);
+};
+
+class CmdPipeSequenceExecutor: public Executor {
+ public:
+  CmdPipeSequenceExecutor(Executor* parent,
+                            SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  CmdPipeListData Exec(CmdPipeSequence *node);
+};
 
 }
 }
 
-#endif  // SETI_CMD_EXEC_H
+#endif  // SETI_CMD_EXECUTOR_H
 

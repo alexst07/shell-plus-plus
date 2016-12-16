@@ -5,23 +5,60 @@
 #include <memory>
 #include <stack>
 #include <list>
+#include <functional>
+#include <boost/variant.hpp>
+
+#include "interpreter/abstract-obj.h"
 
 namespace setti {
 namespace internal {
 
+typedef std::vector<std::string> SimpleCmdData;
+
 struct CmdIoData {
-  std::string file_;
-  int out_;
+  using ObjectRef = std::reference_wrapper<ObjectPtr>;
+
+  enum class Direction {
+    IN,
+    IN_VARIABLE,
+    OUT,
+    OUT_APPEND,
+    OUT_VARIABLE
+  };
+
+  // it is handle as file or variable content depending
+  // of direction option
+  boost::variant<std::string, ObjectRef> content_;
+  bool all_;
+  int n_iface_;
+  Direction in_out_;
 };
 
-typedef CmdIoListData std::list<CmdIoData>;
+typedef std::list<CmdIoData> CmdIoListData;
 
 struct CmdIoRedirectData {
   CmdIoListData io_list_;
-  std::string cmd_;
+  SimpleCmdData cmd_;
 };
 
-typedef CmdPipeListData std::stack<CmdIoListData>;
+class CmdPipeListData {
+ public:
+  CmdPipeListData() = default;
+  ~CmdPipeListData() = default;
+
+  void Push(CmdIoRedirectData&& cmd) {
+    boost::variant<CmdIoRedirectData, std::string> v(std::move(cmd));
+    pipe_list_.push(std::move(v));
+  }
+
+  void Push(std::string&& cmd) {
+    boost::variant<CmdIoRedirectData, std::string> v(std::move(cmd));
+    pipe_list_.push(std::move(v));
+  }
+
+ private:
+  std::stack<boost::variant<CmdIoRedirectData, std::string>> pipe_list_;
+};
 
 class CmdOperationData {
  public:
@@ -43,9 +80,10 @@ class CmdOperationData {
   std::stack<Operation> op_;
 };
 
-class CmdExec {
 
-};
+  typedef boost::variant<SimpleCmdData, CmdIoRedirectData,
+                 CmdPipeListData, CmdOperationData> CmdData;
+
 
 }
 }

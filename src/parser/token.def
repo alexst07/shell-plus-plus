@@ -1,4 +1,4 @@
-﻿
+
 #ifndef TOKEN
 #define TOKEN(kw, str)
 #endif
@@ -151,6 +151,8 @@ PUNCTUATOR(BIT_XOR,         "^")
 PUNCTUATOR(BIT_AND,         "&")
 PUNCTUATOR(SHL,             "<<")
 PUNCTUATOR(SAR,             ">>")
+PUNCTUATOR(SSHL,            "<<<")
+PUNCTUATOR(SSAR,            ">>>")
 PUNCTUATOR(ADD,             "+")
 PUNCTUATOR(SUB,             "-")
 PUNCTUATOR(MUL,             "*")
