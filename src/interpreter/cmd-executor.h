@@ -14,12 +14,13 @@ class CmdExecutor: public Executor {
   CmdExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-  std::tuple<int, std::string> ExecGetResult(CmdFull *node,
-                                             bool get_result = true);
+  std::tuple<int, std::string> ExecGetResult(CmdFull *node);
+
   void Exec(CmdFull *node);
 
-  std::tuple<int, std::string> ExecSimpleCmd(SimpleCmd *node, bool background,
-                                             bool get_output);
+  void ExecSimpleCmd(SimpleCmd *node, bool background);
+
+  std::tuple<int, std::string> ExecSimpleCmdWithResult(SimpleCmd *node);
 
   std::string CmdOutput() const;
 

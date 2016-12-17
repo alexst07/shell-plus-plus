@@ -3,6 +3,8 @@
 #include <string>
 #include <boost/variant.hpp>
 
+#include "cmd-executor.h"
+
 namespace setti {
 namespace internal {
 
@@ -63,6 +65,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
 
     case AstNode::NodeType::kAttribute:
       return ExecAttribute(static_cast<Attribute*>(node));
+      break;
+
+    case AstNode::NodeType::kCmdExpression:
+      return ExecCmdExpr(static_cast<CmdExpression*>(node));
       break;
   }
 }
@@ -285,6 +291,18 @@ ObjectPtr ExpressionExecutor::ExecAttribute(Attribute* node) {
   std::string name = node->id()->name();
 
   return exp->Arrow(exp, name);
+}
+
+ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
+  CmdExecutor cmd_full(this, symbol_table_stack());
+  std::tuple<int, std::string> res(cmd_full.ExecGetResult(
+      static_cast<CmdFull*>(node->cmd())));
+
+  // create command object
+  std::string str = std::get<1>(res);
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj(obj_factory.NewString(std::move(str)));
+  return obj;
 }
 
 void ExpressionExecutor::set_stop(StopFlag flag) {

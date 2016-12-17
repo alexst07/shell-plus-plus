@@ -9,13 +9,20 @@ namespace setti {
 namespace internal {
 
 int ExecCmd(std::vector<std::string>&& args) {
-  std::unique_ptr<char*[]> p_args(new char*[args.size()]);
+  char** p_args = new char*[args.size() + 1];
 
   for (size_t i = 0; i < args.size(); i++) {
     p_args[i] = const_cast<char*>(args[i].data());
+    std::cout << "::" << p_args[i];
   }
 
-  return execvp(p_args.get()[0], p_args.get());
+  p_args[args.size()] = NULL;
+
+  int ret = execvp(p_args[0], p_args);
+
+  delete p_args;
+
+  return ret;
 }
 
 int WaitCmd(int pid) {

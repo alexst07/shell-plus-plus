@@ -74,6 +74,9 @@ class ExpressionExecutor: public Executor {
   // Executes attribute
   ObjectPtr ExecAttribute(Attribute* node);
 
+  // Executes cmd expression
+  ObjectPtr ExecCmdExpr(CmdExpression* node);
+
   void set_stop(StopFlag flag) override;
 
  private:

@@ -1,19 +1,18 @@
 #include "cmd-executor.h"
 
 #include <unistd.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 namespace setti {
 namespace internal {
 
-std::tuple<int, std::string> CmdExecutor::ExecGetResult(CmdFull *node,
-                                                        bool get_result) {
+std::tuple<int, std::string> CmdExecutor::ExecGetResult(CmdFull *node) {
   CmdData cmd_data;
-  bool background = node->background();
 
   switch (node->cmd()->type()) {
     case AstNode::NodeType::kSimpleCmd: {
-      return ExecSimpleCmd(static_cast<SimpleCmd*>(node->cmd()), background,
-                           get_result);
+      return ExecSimpleCmdWithResult(static_cast<SimpleCmd*>(node->cmd()));
     } break;
 
     case AstNode::NodeType::kCmdIoRedirectList: {
@@ -24,21 +23,19 @@ std::tuple<int, std::string> CmdExecutor::ExecGetResult(CmdFull *node,
 }
 
 void CmdExecutor::Exec(CmdFull *node) {
-  ExecGetResult(node, false);
+  bool background = node->background();
+
+  switch (node->cmd()->type()) {
+    case AstNode::NodeType::kSimpleCmd: {
+      return ExecSimpleCmd(static_cast<SimpleCmd*>(node->cmd()), background);
+    } break;
+  }
 }
 
-std::tuple<int, std::string> CmdExecutor::ExecSimpleCmd(SimpleCmd *node,
-                                                        bool background,
-                                                        bool get_output) {
+void CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool background) {
   SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
-  std::vector<std::string> cmd_args =
-      simple_cmd.Exec(node);
 
-  // status will be 0 if the command is executed on background
-  int status = 0;
-
-  // str_out will be empty if the command is executed on background
-  std::string str_out;
+  std::vector<std::string> cmd_args = simple_cmd.Exec(node);
 
   pid_t pid;
   pid = fork();
@@ -48,8 +45,52 @@ std::tuple<int, std::string> CmdExecutor::ExecSimpleCmd(SimpleCmd *node,
   }
 
   if (!background) {
-    status = WaitCmd(pid);
+    WaitCmd(pid);
   }
+}
+
+std::tuple<int, std::string> CmdExecutor::ExecSimpleCmdWithResult(
+    SimpleCmd *node) {
+  SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
+  std::vector<std::string> cmd_args =
+      simple_cmd.Exec(node);
+
+  // status will be 0 if the command is executed on background
+  int status = 0;
+
+  // str_out will be empty if the command is executed on background
+  std::string str_out = "";
+
+  const int READ = 0;
+  const int WRITE = 1;
+
+  int pipettes[2];
+
+  pipe(pipettes);
+
+  pid_t pid;
+  pid = fork();
+
+  if (pid == 0) {  
+    close(pipettes[READ]);
+    dup2(pipettes[WRITE], STDOUT_FILENO);
+    ExecCmd(std::move(cmd_args));
+  }
+
+  status = WaitCmd(pid);
+  close(pipettes[WRITE]);
+
+  char buf[512];
+  int rd = 0;
+
+  fcntl(pipettes[READ], F_SETFL, O_NONBLOCK);
+
+  while ((rd = read(pipettes[READ], buf, 512)) > 0) {
+    buf[rd] = '\0';
+    str_out += buf;
+  }
+
+  close(pipettes[READ]);
 
   return std::tuple<int, std::string>(status, str_out);
 }
