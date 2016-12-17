@@ -1,15 +1,19 @@
 #include "cmd-executor.h"
 
+#include <unistd.h>
+
 namespace setti {
 namespace internal {
 
-int CmdExecutor::Exec(CmdFull *node) {
+std::tuple<int, std::string> CmdExecutor::ExecGetResult(CmdFull *node,
+                                                        bool get_result) {
   CmdData cmd_data;
+  bool background = node->background();
 
   switch (node->cmd()->type()) {
     case AstNode::NodeType::kSimpleCmd: {
-      SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
-      cmd_data = simple_cmd.Exec(static_cast<SimpleCmd*>(node->cmd()));
+      return ExecSimpleCmd(static_cast<SimpleCmd*>(node->cmd()), background,
+                           get_result);
     } break;
 
     case AstNode::NodeType::kCmdIoRedirectList: {
@@ -17,6 +21,37 @@ int CmdExecutor::Exec(CmdFull *node) {
       cmd_data = cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()));
     } break;
   }
+}
+
+void CmdExecutor::Exec(CmdFull *node) {
+  ExecGetResult(node, false);
+}
+
+std::tuple<int, std::string> CmdExecutor::ExecSimpleCmd(SimpleCmd *node,
+                                                        bool background,
+                                                        bool get_output) {
+  SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
+  std::vector<std::string> cmd_args =
+      simple_cmd.Exec(node);
+
+  // status will be 0 if the command is executed on background
+  int status = 0;
+
+  // str_out will be empty if the command is executed on background
+  std::string str_out;
+
+  pid_t pid;
+  pid = fork();
+
+  if (pid == 0) {
+    ExecCmd(std::move(cmd_args));
+  }
+
+  if (!background) {
+    status = WaitCmd(pid);
+  }
+
+  return std::tuple<int, std::string>(status, str_out);
 }
 
 std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {

@@ -85,6 +85,10 @@ class CmdOperationData {
                  CmdPipeListData, CmdOperationData> CmdData;
 
 
+int ExecCmd(std::vector<std::string> &&args);
+
+int WaitCmd(int pid);
+
 }
 }
 
