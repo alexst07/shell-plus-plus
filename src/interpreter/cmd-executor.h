@@ -52,7 +52,19 @@ class CmdIoRedirectListExecutor: public Executor {
                             SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-  CmdIoRedirectData Exec(CmdIoRedirectList *node);
+  int Exec(CmdIoRedirectList *node, bool background);
+
+  std::tuple<int, std::string> Exec(CmdIoRedirectList *node);
+
+  CmdIoRedirectData PrepareData(CmdIoRedirectList *node);
+
+  int SelectFile(CmdIoData::Direction direction, const std::string& file_name);
+
+  void CopyStdIo(int fd, CmdIoData::Direction direction, int iface, bool all);
+
+  int ExecCmdIo(CmdIoRedirectData&& io_data, bool background);
+
+  std::tuple<int, std::string> ExecCmdIoWithResult(CmdIoRedirectData&& io_data);
 };
 
 class CmdPipeSequenceExecutor: public Executor {

@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <climits>
+#include <cstdio>
 
 namespace setti {
 namespace internal {
@@ -17,7 +19,7 @@ std::tuple<int, std::string> CmdExecutor::ExecGetResult(CmdFull *node) {
 
     case AstNode::NodeType::kCmdIoRedirectList: {
       CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
-      cmd_data = cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()));
+      return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()));
     } break;
   }
 }
@@ -28,6 +30,11 @@ void CmdExecutor::Exec(CmdFull *node) {
   switch (node->cmd()->type()) {
     case AstNode::NodeType::kSimpleCmd: {
       return ExecSimpleCmd(static_cast<SimpleCmd*>(node->cmd()), background);
+    } break;
+
+    case AstNode::NodeType::kCmdIoRedirectList: {
+      CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
+      cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()), background);
     } break;
   }
 }
@@ -68,6 +75,8 @@ std::tuple<int, std::string> CmdExecutor::ExecSimpleCmdWithResult(
 
   pipe(pipettes);
 
+  fcntl(pipettes[READ], F_SETFL, fcntl(pipettes[READ], F_GETFL) | O_NONBLOCK);
+
   pid_t pid;
   pid = fork();
 
@@ -80,12 +89,13 @@ std::tuple<int, std::string> CmdExecutor::ExecSimpleCmdWithResult(
   status = WaitCmd(pid);
   close(pipettes[WRITE]);
 
-  char buf[512];
+  char buf[PIPE_BUF];
   int rd = 0;
 
-  fcntl(pipettes[READ], F_SETFL, O_NONBLOCK);
 
-  while ((rd = read(pipettes[READ], buf, 512)) > 0) {
+  rd = read(pipettes[READ], buf, PIPE_BUF);
+
+  if (rd > 0) {
     buf[rd] = '\0';
     str_out += buf;
   }
@@ -94,6 +104,8 @@ std::tuple<int, std::string> CmdExecutor::ExecSimpleCmdWithResult(
 
   return std::tuple<int, std::string>(status, str_out);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
   std::vector<AstNode*> pieces = node->children();
@@ -128,6 +140,8 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
 
   return cmd;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 CmdIoData CmdIoRedirectExecutor::Exec(CmdIoRedirect *node) {
   FilePathCmd* file_path = node->file_path_cmd();
@@ -193,7 +207,10 @@ CmdIoData::Direction CmdIoRedirectExecutor::SelectDirection(TokenKind kind) {
   }
 }
 
-CmdIoRedirectData CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node) {
+////////////////////////////////////////////////////////////////////////////////
+
+CmdIoRedirectData CmdIoRedirectListExecutor::PrepareData(
+    CmdIoRedirectList *node) {
   std::vector<CmdIoRedirect*> cmd_io_list = node->children();
   CmdIoListData cmd_io_ls_data;
 
@@ -217,6 +234,139 @@ CmdIoRedirectData CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node) {
 
   return cmd_io_redirect;
 }
+
+int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
+  CmdIoRedirectData cmd_io_redirect = PrepareData(node);
+  return ExecCmdIo(std::move(cmd_io_redirect), background);
+}
+
+std::tuple<int, std::string> CmdIoRedirectListExecutor::Exec(
+    CmdIoRedirectList *node) {
+  CmdIoRedirectData cmd_io_redirect = PrepareData(node);
+  return ExecCmdIoWithResult(std::move(cmd_io_redirect));
+}
+
+int CmdIoRedirectListExecutor::SelectFile(CmdIoData::Direction direction,
+                                          const std::string& file_name) {
+  int fd;
+
+  if (direction == CmdIoData::Direction::OUT) {
+    fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
+              S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+  } else if (direction == CmdIoData::Direction::OUT_APPEND) {
+    fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND,
+              S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+  } else if (direction == CmdIoData::Direction::IN) {
+    fd = open(file_name.c_str(), O_RDONLY,
+              S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+  }
+
+  return fd;
+}
+
+void CmdIoRedirectListExecutor::CopyStdIo(int fd,
+                                          CmdIoData::Direction direction,
+                                          int iface,
+                                          bool all) {
+  if (direction == CmdIoData::Direction::OUT ||
+      direction == CmdIoData::Direction::OUT_APPEND) {
+    if (all) {
+      dup2(fd, STDOUT_FILENO);
+      dup2(fd, STDERR_FILENO);
+    } else {
+      if (iface == 0 || iface == 1) {
+        dup2(fd, STDOUT_FILENO);
+      } else if (iface == 2) {
+        dup2(fd, STDERR_FILENO);
+      }
+    }
+  } else if (direction == CmdIoData::Direction::IN) {
+    dup2(fd, STDIN_FILENO);
+  }
+}
+
+int CmdIoRedirectListExecutor::ExecCmdIo(CmdIoRedirectData&& io_data,
+                                          bool background) {
+  pid_t pid;
+  pid = fork();
+  std::vector<int> fds;
+  int status = 0;
+
+  if (pid == 0) {
+    for (auto& l: io_data.io_list_) {
+      std::string str_file = boost::get<std::string>(l.content_);
+
+      int fd = SelectFile(l.in_out_, str_file);
+
+      fds.push_back(fd);
+
+      CopyStdIo(fd, l.in_out_, l.n_iface_, l.all_);
+    }
+
+    ExecCmd(std::move(io_data.cmd_));
+  }
+
+  if (!background) {
+    status = WaitCmd(pid);
+  }
+
+  return status;
+}
+
+std::tuple<int, std::string> CmdIoRedirectListExecutor::ExecCmdIoWithResult(
+    CmdIoRedirectData&& io_data) {
+  std::vector<int> fds;
+  int status = 0;
+  std::string str_out = "";
+
+  const int READ = 0;
+  const int WRITE = 1;
+
+  int pipettes[2];
+
+  fcntl(pipettes[READ], F_SETFL, fcntl(pipettes[READ], F_GETFL) | O_NONBLOCK);
+
+  pipe(pipettes);
+
+  pid_t pid;
+  pid = fork();
+
+  if (pid == 0) {
+    close(pipettes[READ]);
+    dup2(pipettes[WRITE], STDOUT_FILENO);
+
+    for (auto& l: io_data.io_list_) {
+      std::string str_file = boost::get<std::string>(l.content_);
+
+      int fd = SelectFile(l.in_out_, str_file);
+
+      fds.push_back(fd);
+
+      CopyStdIo(fd, l.in_out_, l.n_iface_, l.all_);
+    }
+
+    ExecCmd(std::move(io_data.cmd_));
+  }
+
+  status = WaitCmd(pid);
+  close(pipettes[WRITE]);
+
+  char buf[PIPE_BUF];
+  int rd = 0;
+
+  rd = read(pipettes[READ], buf, PIPE_BUF);
+
+  if (rd > 0) {
+    buf[rd] = '\0';
+    str_out += buf;
+  }
+
+  close(pipettes[READ]);
+
+  return std::tuple<int, std::string>(status, str_out);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 CmdPipeListData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
 
