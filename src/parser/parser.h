@@ -195,8 +195,8 @@ class Parser {
   ParserResult<Statement> ParserIfStmt();
   ParserResult<Statement> ParserWhileStmt();
   ParserResult<Statement> ParserSwitchStmt();
-  ParserResult<Statement> ParserCaseStmt();
-  ParserResult<Statement> ParserDefaultStmt();
+  std::unique_ptr<CaseStatement> ParserCaseStmt();
+  std::unique_ptr<DefaultStatement> ParserDefaultStmt();
   ParserResult<ExpressionList> ParserPostExpList();
   ParserResult<Statement> ParserForInStmt();
   ParserResult<Expression> ParserExpCmd();

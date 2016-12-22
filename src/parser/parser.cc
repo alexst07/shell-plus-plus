@@ -225,12 +225,9 @@ ParserResult<Statement> Parser::ParserIfStmt() {
 }
 
 ParserResult<Statement> Parser::ParserSwitchStmt() {
-  if (token_ != TokenKind::KW_SWITCH) {
-    ErrorMsg(boost::format("expected switch token, got %1%")% TokenValueStr());
-    return ParserResult<Statement>(); // Error
-  }
-
   ParserResult<Expression> exp;
+  std::vector<std::unique_ptr<CaseStatement>> case_list;
+  std::unique_ptr<DefaultStatement> default_stmt;
 
   Advance();
 
@@ -240,38 +237,51 @@ ParserResult<Statement> Parser::ParserSwitchStmt() {
     exp = std::move(ParserOrExp());
   }
 
-  ValidToken();
-
-  ParserResult<Statement> block(ParserBlock());
-
-  if (!block || !exp) {
-    return ParserResult<Statement>();
+  if (token_ != TokenKind::LBRACE) {
+    ErrorMsg(boost::format("expected { token"));
+    return ParserResult<Statement>(); // Error
   }
+
+  Advance();
+
+  // parser switch block
+  while (ValidToken().IsAny(TokenKind::KW_CASE, TokenKind::KW_DEFAULT)) {
+    if (token_ == TokenKind::KW_CASE) {
+      case_list.push_back(std::move(ParserCaseStmt()));
+    } else if (token_ == TokenKind::KW_DEFAULT) {
+      default_stmt = std::move(ParserDefaultStmt());
+    } else {
+      ErrorMsg(boost::format("expected case or default"));
+      return ParserResult<Statement>(); // Error
+    }
+  }
+
+  if (token_ != TokenKind::RBRACE) {
+    ErrorMsg(boost::format("expected } token"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
 
   return ParserResult<Statement>(factory_.NewSwitchStatement(exp.MoveAstNode(),
-      block.MoveAstNode()));
+      std::move(case_list), std::move(default_stmt)));
 }
 
-ParserResult<Statement> Parser::ParserCaseStmt() {
-  if (token_ != TokenKind::KW_CASE) {
-    ErrorMsg(boost::format("expected case token, got %1%")% TokenValueStr());
-    return ParserResult<Statement>(); // Error
-  }
-
+std::unique_ptr<CaseStatement> Parser::ParserCaseStmt() {
   Advance();
   ValidToken();
 
-  ParserResult<Expression> exp(ParserOrExp());
-
-  if (ValidToken() != TokenKind::COLON) {
-    ErrorMsg(boost::format("expected ':' token, got %1%")% TokenValueStr());
-    return ParserResult<Statement>(); // Error
-  }
-
-  Advance();
+  ParserResult<ExpressionList> exp_list(ParserExpList());
   ValidToken();
 
-  return ParserResult<Statement>(factory_.NewCaseStatement(exp.MoveAstNode()));
+  if (token_ != TokenKind::LBRACE) {
+    ErrorMsg(boost::format("expected { token"));
+  }
+
+  std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
+
+  return std::unique_ptr<CaseStatement>(factory_.NewCaseStatement(
+      exp_list.MoveAstNode(), std::move(block)));
 }
 
 ParserResult<Statement> Parser::ParserBlock() {
@@ -368,10 +378,6 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserContinueStmt();
   } else if (token_ == TokenKind::KW_RETURN) {
     return ParserReturnStmt();
-  } else if (token_ == TokenKind::KW_CASE) {
-    return ParserCaseStmt();
-  } else if (token_ == TokenKind::KW_DEFAULT) {
-    return ParserDefaultStmt();
   } else if (token_ == TokenKind::KW_SWITCH) {
     return ParserSwitchStmt();
   } else if (token_ == TokenKind::KW_FOR) {
@@ -636,22 +642,13 @@ ParserResult<Statement> Parser::ParserContinueStmt() {
   return ParserResult<Statement>(factory_.NewContinueStatement());
 }
 
-ParserResult<Statement> Parser::ParserDefaultStmt() {
-  if (token_ != TokenKind::KW_DEFAULT) {
-    ErrorMsg(boost::format("expected default token, got %1%")% TokenValueStr());
-      return ParserResult<Statement>(); // Error
-  }
-
+std::unique_ptr<DefaultStatement> Parser::ParserDefaultStmt() {
   Advance();
 
-  if (token_ != TokenKind::COLON) {
-    ErrorMsg(boost::format("expected ':' token, got %1%")% TokenValueStr());
-      return ParserResult<Statement>(); // Error
-  }
+  std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
 
-  Advance();
-
-  return ParserResult<Statement>(factory_.NewDefaultStatement());
+  return std::unique_ptr<DefaultStatement>(
+        factory_.NewDefaultStatement(std::move(block)));
 }
 
 ParserResult<Statement> Parser::ParserSimpleStmt() {

@@ -255,7 +255,9 @@ class AstPrinter: public AstVisitor {
     std::cout << "<case_stmt>\n";
     level_++;
 
-    case_stmt->exp()->Accept(this);
+    case_stmt->exp_list()->Accept(this);
+    case_stmt->block()->Accept(this);
+
     level_--;
   }
 
@@ -267,6 +269,9 @@ class AstPrinter: public AstVisitor {
   void virtual VisitDefaultStatement(DefaultStatement* default_stmt) {
     Level();
     std::cout << "<default>\n";
+    level_++;
+    default_stmt->block()->Accept(this);
+    level_--;
   }
 
   void virtual VisitCmdPiece(CmdPiece* cmd_piece) {
@@ -340,9 +345,14 @@ class AstPrinter: public AstVisitor {
     }
 
     Level();
-    std::cout << "<block>\n";
+    std::cout << "<block_switch>\n";
     level_++;
-    switch_stmt->block()->Accept(this);
+    std::vector<CaseStatement*> case_list = switch_stmt->case_list();
+    for (auto& c: case_list) {
+      c->Accept(this);
+    }
+
+    switch_stmt->default_stmt()->Accept(this);
     level_--;
 
     level_--;

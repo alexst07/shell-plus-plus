@@ -99,8 +99,10 @@ class AstNodeFactory {
     return std::unique_ptr<ContinueStatement>(new ContinueStatement(fn_pos_()));
   }
 
-  inline std::unique_ptr<DefaultStatement> NewDefaultStatement() {
-    return std::unique_ptr<DefaultStatement>(new DefaultStatement(fn_pos_()));
+  inline std::unique_ptr<DefaultStatement> NewDefaultStatement(
+      std::unique_ptr<Block> block) {
+    return std::unique_ptr<DefaultStatement>(new DefaultStatement(
+        std::move(block), fn_pos_()));
   }
 
   inline std::unique_ptr<IfStatement> NewIfStatement(
@@ -121,9 +123,11 @@ class AstNodeFactory {
 
   inline std::unique_ptr<SwitchStatement> NewSwitchStatement(
       std::unique_ptr<Expression> exp,
-      std::unique_ptr<Statement> block) {
+      std::vector<std::unique_ptr<CaseStatement>>&& case_list,
+      std::unique_ptr<DefaultStatement> default_stmt) {
     return std::unique_ptr<SwitchStatement>(new SwitchStatement(
-        std::move(exp), std::move(block), fn_pos_()));
+        std::move(exp), std::move(case_list), std::move(default_stmt),
+        fn_pos_()));
   }
 
   inline std::unique_ptr<ForInStatement> NewForInStatement(
@@ -136,9 +140,10 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<CaseStatement> NewCaseStatement(
-      std::unique_ptr<Expression> exp) {
+      std::unique_ptr<ExpressionList> exp_list,
+      std::unique_ptr<Block> block) {
     return std::unique_ptr<CaseStatement>(new CaseStatement(
-        std::move(exp), fn_pos_()));
+        std::move(exp_list), std::move(block), fn_pos_()));
   }
 
   inline std::unique_ptr<CmdPiece> NewCmdPiece(const Token& token) {

@@ -220,9 +220,7 @@ class Declaration: public Statement {
 };
 
 // Interface class to assignable
-class AssignableInterface {
-
-};
+class AssignableInterface {};
 
 class Expression: public Statement, public AssignableInterface {
  public:
@@ -667,7 +665,7 @@ class CmdAndOr: public Cmd {
   std::unique_ptr<Cmd> cmd_right_;
 
   CmdAndOr(TokenKind token_kind, std::unique_ptr<Cmd> cmd_left,
-                  std::unique_ptr<Cmd> cmd_right, Position position)
+           std::unique_ptr<Cmd> cmd_right, Position position)
       : Cmd(NodeType::kCmdAndOr, position)
       , token_kind_(token_kind)
       , cmd_left_(std::move(cmd_left))
@@ -940,8 +938,18 @@ class SwitchStatement: public Statement {
     return exp_.get();
   }
 
-  Statement* block() const noexcept {
-    return block_.get();
+  std::vector<CaseStatement*> case_list() noexcept {
+    std::vector<CaseStatement*> vec;
+
+    for (auto&& e: case_list_) {
+      vec.push_back(e.get());
+    }
+
+    return vec;
+  }
+
+  DefaultStatement* default_stmt() const noexcept {
+    return default_stmt_.get();
   }
 
   bool has_exp() const noexcept {
@@ -956,14 +964,17 @@ class SwitchStatement: public Statement {
   friend class AstNodeFactory;
 
   std::unique_ptr<Expression> exp_;
-  std::unique_ptr<Statement> block_;
+  std::vector<std::unique_ptr<CaseStatement>> case_list_;
+  std::unique_ptr<DefaultStatement> default_stmt_;
 
   SwitchStatement(std::unique_ptr<Expression> exp,
-                  std::unique_ptr<Statement> block,
+                  std::vector<std::unique_ptr<CaseStatement>>&& case_list,
+                  std::unique_ptr<DefaultStatement> default_stmt,
                   Position position)
       : Statement(NodeType::kSwitchStatement, position)
       , exp_(std::move(exp))
-      , block_(std::move(block)) {}
+      , case_list_(std::move(case_list))
+      , default_stmt_(std::move(default_stmt)) {}
 };
 
 class CaseStatement: public Statement {
@@ -974,19 +985,26 @@ class CaseStatement: public Statement {
     visitor->VisitCaseStatement(this);
   }
 
-  Expression* exp() const noexcept {
-    return exp_.get();
+  ExpressionList* exp_list() const noexcept {
+    return exp_list_.get();
+  }
+
+  Block* block() const noexcept {
+    return block_.get();
   }
 
  private:
   friend class AstNodeFactory;
 
-  std::unique_ptr<Expression> exp_;
+  std::unique_ptr<ExpressionList> exp_list_;
+  std::unique_ptr<Block> block_;
 
-  CaseStatement(std::unique_ptr<Expression> exp,
+  CaseStatement(std::unique_ptr<ExpressionList> exp_list,
+                std::unique_ptr<Block> block,
                 Position position)
       : Statement(NodeType::kCaseStatement, position)
-      , exp_(std::move(exp)) {}
+      , exp_list_(std::move(exp_list))
+      , block_(std::move(block)) {}
 };
 
 class IfStatement: public Statement {
@@ -1167,11 +1185,18 @@ class DefaultStatement: public Statement {
     visitor->VisitDefaultStatement(this);
   }
 
+  Block* block() const noexcept {
+    return block_.get();
+  }
+
  private:
   friend class AstNodeFactory;
 
-  DefaultStatement(Position position)
-      : Statement(NodeType::kBreakStatement, position) {}
+  std::unique_ptr<Block> block_;
+
+  DefaultStatement(std::unique_ptr<Block> block, Position position)
+      : Statement(NodeType::kBreakStatement, position)
+      , block_(std::move(block)) {}
 };
 
 class BinaryOperation: public Expression {
@@ -1472,5 +1497,3 @@ class Literal: public Expression {
 #include "ast-factory-inl.h"
 
 #endif  // SETTI_AST_H
-
-
