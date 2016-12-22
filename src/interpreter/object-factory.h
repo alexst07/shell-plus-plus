@@ -12,6 +12,7 @@
 #include "obj_type.h"
 #include "str-object.h"
 #include "array-object.h"
+#include "cmd-object.h"
 
 namespace setti {
 namespace internal {
@@ -60,6 +61,20 @@ class ObjectFactory {
     auto obj_type = symbol_table_.Lookup("string", false).SharedAccess();
     return ObjectPtr(new StringObject(std::move(str), obj_type,
                                       std::move(SymTableStack())));
+  }
+
+  ObjectPtr NewCmdObj(int status, std::string&& str_stdout,
+                      std::string&& str_stderr) {
+    auto obj_type = symbol_table_.Lookup("cmdobj", false).SharedAccess();
+    return ObjectPtr(new CmdObject(status, std::move(str_stdout),
+                                   std::move(str_stderr), obj_type,
+                                   std::move(SymTableStack())));
+  }
+
+  ObjectPtr NewCmdIter(std::string delim, int outerr, ObjectPtr cmd_obj) {
+    auto obj_type = symbol_table_.Lookup("cmd_iter", false).SharedAccess();
+    return ObjectPtr(new CmdIterObject(delim, outerr, cmd_obj, obj_type,
+                                         std::move(SymTableStack())));
   }
 
   ObjectPtr NewTuple(std::vector<std::unique_ptr<Object>>&& value) {
@@ -149,6 +164,16 @@ class ObjectFactory {
   ObjectPtr NewStringType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return ObjectPtr(new StringType(obj_type, std::move(SymTableStack())));
+  }
+
+  ObjectPtr NewCmdType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return ObjectPtr(new CmdType(obj_type, std::move(SymTableStack())));
+  }
+
+  ObjectPtr NewCmdIterType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return ObjectPtr(new CmdIterType(obj_type, std::move(SymTableStack())));
   }
 
   ObjectPtr NewArrayType() {

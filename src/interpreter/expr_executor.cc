@@ -299,9 +299,11 @@ ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
       static_cast<CmdFull*>(node->cmd())));
 
   // create command object
+  int status = std::get<0>(res);
   std::string str = std::get<1>(res);
   ObjectFactory obj_factory(symbol_table_stack());
-  ObjectPtr obj(obj_factory.NewString(std::move(str)));
+  ObjectPtr obj(obj_factory.NewCmdObj(status, std::move(str),
+                                      std::move(std::string(""))));
   return obj;
 }
 

@@ -402,5 +402,17 @@ ObjectPtr ArrayIterType::Constructor(Executor* /*parent*/,
   return obj;
 }
 
+ObjectPtr CmdType::Constructor(Executor* /*parent*/,
+                               std::vector<ObjectPtr>&& /*params*/) {
+  throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                     boost::format("cmdobj is not constructable"));
+}
+
+ObjectPtr CmdIterType::Constructor(Executor* /*parent*/,
+                                     std::vector<ObjectPtr>&& /*params*/) {
+  throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                     boost::format("cmd_iter is not constructable"));
+}
+
 }
 }

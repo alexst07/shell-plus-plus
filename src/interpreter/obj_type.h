@@ -444,6 +444,26 @@ class StringType: public TypeObject {
                         std::vector<ObjectPtr>&& params) override;
 };
 
+class CmdType: public TypeObject {
+ public:
+  CmdType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("cmdobj", obj_type, std::move(sym_table)) {}
+
+  virtual ~CmdType() {}
+
+  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&&) override;
+};
+
+class CmdIterType: public TypeObject {
+ public:
+  CmdIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("cmd_iter", obj_type, std::move(sym_table)) {}
+
+  virtual ~CmdIterType() {}
+
+  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&&) override;
+};
+
 class ArrayIterType: public TypeObject {
  public:
   ArrayIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)

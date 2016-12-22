@@ -40,6 +40,16 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertEntry(static_cast<const ArrayType&>(*type_array).name(),
                            std::move(symbol_array));
 
+  ObjectPtr type_cmd = obj_factory.NewCmdType();
+  SymbolAttr symbol_cmd(type_cmd, true);
+  symbol_table.InsertEntry(static_cast<const CmdType&>(*type_cmd).name(),
+                           std::move(symbol_cmd));
+
+  ObjectPtr type_cmd_iter = obj_factory.NewCmdIterType();
+  SymbolAttr symbol_cmd_iter(type_cmd_iter, true);
+  symbol_table.InsertEntry(static_cast<const CmdIterType&>(
+                           *type_cmd_iter).name(), std::move(symbol_cmd_iter));
+
   ObjectPtr type_array_iter = obj_factory.NewArrayIterType();
   SymbolAttr symbol_array_iter(type_array_iter, true);
   symbol_table.InsertEntry(static_cast<const ArrayIterType&>(

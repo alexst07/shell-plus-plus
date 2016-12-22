@@ -28,8 +28,10 @@ class Object {
     MAP,
     TUPLE,
     FUNC,
+    CMD,
     TYPE,
     ARRAY_ITER,
+    CMD_ITER,
     DECL_TYPE,
     DECL_OBJ,
     CUSTON
