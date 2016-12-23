@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <stack>
 #include <boost/format.hpp>
 
 #include "run_time_error.h"

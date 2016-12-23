@@ -4,10 +4,12 @@
 #include <iostream>
 #include <boost/variant.hpp>
 
+#include "scope-executor.h"
 #include "assign_executor.h"
 #include "expr_executor.h"
 #include "func_object.h"
 #include "cmd-executor.h"
+#include "utils/scope-exit.h"
 
 namespace setti {
 namespace internal {
@@ -211,6 +213,11 @@ void StmtExecutor::Exec(AstNode* node) {
       SwitchExecutor switch_stmt(this, symbol_table_stack());
       switch_stmt.Exec(static_cast<SwitchStatement*>(node));
     } break;
+
+    case AstNode::NodeType::kDeferStatement: {
+      DeferExecutor defer(this, symbol_table_stack());
+      defer.Exec(static_cast<DeferStatement*>(node));
+    }
   }
 }
 
@@ -298,14 +305,18 @@ void WhileExecutor::Exec(WhileStatement* node) {
   // create a new table for while scope
   symbol_table_stack().NewTable();
 
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    // remove the scope
+    symbol_table_stack().Pop();
+  });
+  IgnoreUnused(cleanup);
+
   BlockExecutor block_exec(this, symbol_table_stack());
 
   while (fn_exp(node->exp())) {
     block_exec.Exec(node->block());
   }
-
-  // remove the scope
-  symbol_table_stack().Pop();
 }
 
 void WhileExecutor::set_stop(StopFlag flag) {
@@ -379,6 +390,13 @@ void ForInExecutor::Exec(ForInStatement* node) {
   // create a new table for while scope
   symbol_table_stack().NewTable();
 
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    // remove the scope
+    symbol_table_stack().Pop();
+  });
+  IgnoreUnused(cleanup);
+
   AssignExecutor assign_exec(this, symbol_table_stack());
 
   // Executes the left side of for statemente
@@ -431,9 +449,6 @@ void ForInExecutor::Exec(ForInStatement* node) {
   while (fn_exp()) {
     block_exec.Exec(node->block());
   }
-
-  // remove the scope
-  symbol_table_stack().Pop();
 }
 
 void ForInExecutor::set_stop(StopFlag flag) {
@@ -512,6 +527,17 @@ void SwitchExecutor::Exec(SwitchStatement* node) {
     // compare each expression with switch expression
     if (MatchAnyExp(obj_exp_switch, std::move(obj_res_list))) {
       any_case_executed = true;
+
+      // create a new table for while scope
+      symbol_table_stack().NewTable();
+
+      // scope exit case an excpetion thrown
+      auto cleanup = MakeScopeExit([&]() {
+        // remove the scope
+        symbol_table_stack().Pop();
+      });
+      IgnoreUnused(cleanup);
+
       // if any expression match with case expression, executes case's block
       block_exec.Exec(c->block());
     }
@@ -525,6 +551,19 @@ void SwitchExecutor::Exec(SwitchStatement* node) {
 }
 
 void SwitchExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+void DeferExecutor::Exec(DeferStatement *node) {
+  // push the statement on main block parent
+  Executor* exec = GetMainExecutor();
+
+  if (exec != nullptr) {
+    static_cast<ScopeExecutor*>(exec)->PushDeferStmt(node->stmt());
+  }
+}
+
+void DeferExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 

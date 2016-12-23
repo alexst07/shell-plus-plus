@@ -43,6 +43,14 @@ class Executor {
     return parent_;
   }
 
+  virtual Executor* GetMainExecutor() {
+    if (parent_ != nullptr) {
+      return parent_->GetMainExecutor();
+    }
+
+    return nullptr;
+  }
+
  protected:
   SymbolTableStack& symbol_table_stack() {
     return symbol_table_stack_;
@@ -58,7 +66,7 @@ class Executor {
   // and switch control
   virtual bool inside_loop() {
     if (parent_ != nullptr) {
-      return inside_loop();
+      return parent_->inside_loop();
     }
 
     return false;
@@ -69,10 +77,18 @@ class Executor {
   // inside a switch block
   virtual bool inside_switch() {
     if (parent_ != nullptr) {
-      return inside_switch();
+      return parent_->inside_switch();
     }
 
     return false;
+  }
+
+  virtual Executor* GetBlockParent() {
+    if (parent_ != nullptr) {
+      return parent_->GetBlockParent();
+    }
+
+    return nullptr;
   }
 
  private:
@@ -85,5 +101,3 @@ class Executor {
 }
 
 #endif  // SETI_EXECUTOR_H
-
-

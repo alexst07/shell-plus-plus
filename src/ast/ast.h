@@ -1226,7 +1226,7 @@ class DeferStatement: public Statement {
   std::unique_ptr<Statement> stmt_;
 
   DeferStatement(std::unique_ptr<Statement> stmt, Position position)
-      : Statement(NodeType::kBreakStatement, position)
+      : Statement(NodeType::kDeferStatement, position)
       , stmt_(std::move(stmt)) {}
 };
 

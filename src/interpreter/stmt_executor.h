@@ -72,28 +72,6 @@ class StmtExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
-class BlockExecutor: public Executor {
- public:
-  // the last parameter on Executor constructor means this is NOT the
-  // root executor
-  BlockExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack, false) {}
-
-  void Exec(AstNode* node) {
-    Block* block_node = static_cast<Block*>(node);
-    StmtListExecutor executor(this, symbol_table_stack());
-    executor.Exec(block_node->stmt_list());
-  }
-
-  void set_stop(StopFlag flag) override {
-    if (parent() == nullptr) {
-      return;
-    }
-
-    parent()->set_stop(flag);
-  }
-};
-
 class ReturnExecutor: public Executor {
  public:
   ReturnExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
@@ -212,6 +190,16 @@ class SwitchExecutor: public Executor {
   bool MatchAnyExp(ObjectPtr exp, std::vector<ObjectPtr> &&exp_list);
 
   StopFlag stop_flag_;
+};
+
+class DeferExecutor: public Executor {
+ public:
+  DeferExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(DeferStatement *node);
+
+  void set_stop(StopFlag flag) override;
 };
 
 }

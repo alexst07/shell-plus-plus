@@ -74,6 +74,8 @@ class FuncDeclObject: public FuncObject {
 
   ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override;
 
+  void HandleArguments(std::vector<ObjectPtr>&& params);
+
  private:
   std::string id_;
   AstNode* start_node_;

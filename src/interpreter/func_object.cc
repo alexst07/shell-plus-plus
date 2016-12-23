@@ -4,7 +4,9 @@
 #include <boost/variant.hpp>
 
 #include "object-factory.h"
+#include "scope-executor.h"
 #include "stmt_executor.h"
+#include "utils/scope-exit.h"
 
 namespace setti {
 namespace internal {
@@ -16,14 +18,7 @@ ObjectPtr FuncWrapperObject::Call(Executor* parent,
   return func_obj.Call(parent, std::move(params));
 }
 
-ObjectPtr FuncDeclObject::Call(Executor* parent,
-                               std::vector<ObjectPtr>&& params) {
-  // it is the table function
-  SymbolTablePtr table = SymbolTable::Create(true);
-
-  // main symbol of function
-  symbol_table_.Push(table, false);
-
+void FuncDeclObject::HandleArguments(std::vector<ObjectPtr>&& params) {
   if (variadic_) {
     if (params.size() < (params_.size() - 1)) {
       throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
@@ -67,16 +62,33 @@ ObjectPtr FuncDeclObject::Call(Executor* parent,
                              default_values_[i - no_values_params]);
     }
   }
+}
+
+ObjectPtr FuncDeclObject::Call(Executor* parent,
+                               std::vector<ObjectPtr>&& params) {
+  // it is the table function
+  SymbolTablePtr table = SymbolTable::Create(true);
+
+  // main symbol of function
+  symbol_table_.Push(table, false);
+
+  BlockExecutor executor(parent, symbol_table_, true);
+
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    executor.ExecuteDeferStack();
+    symbol_table_.Pop();
+  });
+  IgnoreUnused(cleanup);
+
+  HandleArguments(std::move(params));
 
   // Executes the function using the ast nodes
-  BlockExecutor executor(parent, symbol_table_);
   executor.Exec(start_node_);
 
   ObjectPtr obj_ret;
   bool bool_ret = false;
   std::tie(obj_ret, bool_ret) = symbol_table_.LookupObj("%return");
-
-  symbol_table_.Pop();
 
   if (bool_ret) {
     return obj_ret;
