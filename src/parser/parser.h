@@ -189,6 +189,8 @@ class Parser {
   ParserResult<Statement> ParserSimpleStmt();
   ParserResult<StatementList> ParserStmtList();
   ParserResult<Statement> ParserBlock();
+  std::unique_ptr<Statement> ParserDeferableStmt();
+  ParserResult<Statement> ParserDeferStmt();
   ParserResult<Statement> ParserBreakStmt();
   ParserResult<Statement> ParserContinueStmt();
   ParserResult<Statement> ParserReturnStmt();

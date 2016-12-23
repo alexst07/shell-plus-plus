@@ -560,6 +560,16 @@ class AstPrinter: public AstVisitor {
     }
   }
 
+  void virtual VisitDeferStatement(DeferStatement* defer) {
+    Level();
+    std::cout << "<defer>\n";
+    level_++;
+    defer->stmt()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "<end>\n";
+  }
+
   void virtual VisitClassBlock(ClassBlock* class_block) {
     Level();
     std::cout << "<begin>\n";

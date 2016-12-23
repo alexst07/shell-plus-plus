@@ -91,6 +91,44 @@ Parser::ParserParamsList() {
       std::move(vec_params), true); // Error
 }
 
+ParserResult<Statement> Parser::ParserDeferStmt() {
+  Advance();
+  ValidToken();
+
+  if (token_ == TokenKind::KW_DEFER) {
+    ErrorMsg(boost::format("defer not allowed inside defer"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  std::unique_ptr<Statement> stmt(ParserDeferableStmt());
+
+  return ParserResult<Statement>(factory_.NewDeferStatement(std::move(stmt)));
+}
+
+std::unique_ptr<Statement> Parser::ParserDeferableStmt() {
+  std::unique_ptr<Statement> stmt;
+
+  if (token_ == TokenKind::KW_IF) {
+    stmt = ParserIfStmt().MoveAstNode();
+  } else if (token_ == TokenKind::KW_WHILE) {
+    stmt = ParserWhileStmt().MoveAstNode();
+  } else if (token_ == TokenKind::KW_CONTINUE) {
+    stmt = ParserContinueStmt().MoveAstNode();
+  } else if (token_ == TokenKind::KW_SWITCH) {
+    stmt = ParserSwitchStmt().MoveAstNode();
+  } else if (token_ == TokenKind::KW_FOR) {
+    stmt = ParserForInStmt().MoveAstNode();
+  } else if (token_ == TokenKind::LBRACE) {
+    stmt = ParserBlock().MoveAstNode();
+  } else if (MatchLangStmt()) {
+    stmt = ParserSimpleStmt().MoveAstNode();
+  } else {
+    stmt = ParserCmdFull().MoveAstNode();
+  }
+
+  return stmt;
+}
+
 ParserResult<FunctionDeclaration> Parser::ParserFunctionDeclaration(
     bool lambda) {
   if (token_ != TokenKind::KW_FUNC) {
@@ -382,6 +420,8 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserSwitchStmt();
   } else if (token_ == TokenKind::KW_FOR) {
     return ParserForInStmt();
+  } else if (token_ == TokenKind::KW_DEFER) {
+    return ParserDeferStmt();
   } else if (token_ == TokenKind::LBRACE) {
     return ParserBlock();
   } else if (IsStmtDecl()) {

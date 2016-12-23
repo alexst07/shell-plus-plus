@@ -290,6 +290,12 @@ class AstNodeFactory {
       std::move(block), is_final, fn_pos_()));
   }
 
+  inline std::unique_ptr<DeferStatement> NewDeferStatement(
+      std::unique_ptr<Statement> stmt) {
+    return std::unique_ptr<DeferStatement>(new DeferStatement(std::move(stmt),
+        fn_pos_()));
+  }
+
  private:
   std::function<Position()> fn_pos_;
 };

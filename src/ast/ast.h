@@ -50,6 +50,7 @@ namespace internal {
   V(DefaultStatement)             \
   V(TryCatchStatement)            \
   V(TryFinallyStatement)          \
+  V(DeferStatement)               \
   V(DebuggerStatement)
 
 #define LITERAL_NODE_LIST(V) \
@@ -1205,6 +1206,28 @@ class DefaultStatement: public Statement {
   DefaultStatement(std::unique_ptr<Block> block, Position position)
       : Statement(NodeType::kBreakStatement, position)
       , block_(std::move(block)) {}
+};
+
+class DeferStatement: public Statement {
+ public:
+  virtual ~DeferStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitDeferStatement(this);
+  }
+
+  Statement* stmt() const noexcept {
+    return stmt_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Statement> stmt_;
+
+  DeferStatement(std::unique_ptr<Statement> stmt, Position position)
+      : Statement(NodeType::kBreakStatement, position)
+      , stmt_(std::move(stmt)) {}
 };
 
 class BinaryOperation: public Expression {
