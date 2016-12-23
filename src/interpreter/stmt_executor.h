@@ -189,6 +189,31 @@ class ContinueExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
+class SwitchExecutor: public Executor {
+ public:
+  SwitchExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  // Entry point to execute while
+  void Exec(SwitchStatement* node);
+
+  void set_stop(StopFlag flag) override;
+
+ protected:
+  bool inside_loop() override {
+    return false;
+  }
+
+  bool inside_switch() override {
+    return true;
+  }
+
+ private:
+  bool MatchAnyExp(ObjectPtr exp, std::vector<ObjectPtr> &&exp_list);
+
+  StopFlag stop_flag_;
+};
+
 }
 }
 

@@ -206,6 +206,11 @@ void StmtExecutor::Exec(AstNode* node) {
       CmdExecutor cmd_full(this, symbol_table_stack());
       cmd_full.Exec(static_cast<CmdFull*>(node));
     } break;
+
+    case AstNode::NodeType::kSwitchStatement: {
+      SwitchExecutor switch_stmt(this, symbol_table_stack());
+      switch_stmt.Exec(static_cast<SwitchStatement*>(node));
+    } break;
   }
 }
 
@@ -458,6 +463,68 @@ void ContinueExecutor::Exec(ContinueStatement* /*node*/) {
 }
 
 void ContinueExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+bool SwitchExecutor::MatchAnyExp(ObjectPtr exp,
+                                 std::vector<ObjectPtr> &&exp_list) {
+  // compare each expression from list with exp
+  for (auto& e: exp_list) {
+    ObjectPtr res(exp->Equal(e));
+
+    if (res->type() != Object::ObjectType::BOOL) {
+      continue;
+    }
+
+    BoolObject& obj_test = static_cast<BoolObject&>(*res);
+
+    if (obj_test.value()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void SwitchExecutor::Exec(SwitchStatement* node) {
+  BlockExecutor block_exec(this, symbol_table_stack());
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr obj_exp_switch;
+
+  if (node->has_exp()) {
+     obj_exp_switch = expr_exec.Exec(node->exp());
+  } else {
+    // if the switch doesn't have expression, compare with true
+    ObjectFactory obj_factory(symbol_table_stack());
+    obj_exp_switch = obj_factory.NewBool(true);
+  }
+
+  // flag to mark if any case statement was executed
+  bool any_case_executed = false;
+
+  // executes each case and compare each expression
+  std::vector<CaseStatement*> case_list = node->case_list();
+
+  for (auto& c: case_list) {
+    ExprListExecutor expr_list_exec(this, symbol_table_stack());
+    std::vector<ObjectPtr> obj_res_list = expr_list_exec.Exec(c->exp_list());
+
+    // compare each expression with switch expression
+    if (MatchAnyExp(obj_exp_switch, std::move(obj_res_list))) {
+      any_case_executed = true;
+      // if any expression match with case expression, executes case's block
+      block_exec.Exec(c->block());
+    }
+  }
+
+  // if any case was not executed, so execute the default clause
+  // if switch statement has one
+  if (!any_case_executed && node->has_default()) {
+    block_exec.Exec(node->default_stmt()->block());
+  }
+}
+
+void SwitchExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 

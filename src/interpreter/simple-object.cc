@@ -169,9 +169,10 @@ ObjectPtr IntObject::OperationObjComp(ObjectPtr obj, int op) {
       return obj_factory.NewBool(r);
     } break;
 
-    default:
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("type not supported"));
+    default: {
+      ObjectFactory obj_factory(symbol_table_stack());
+      return obj_factory.NewBool(false);
+    }
   }
 }
 

@@ -952,6 +952,14 @@ class SwitchStatement: public Statement {
     return default_stmt_.get();
   }
 
+  bool has_default() const noexcept {
+    if (default_stmt_) {
+      return true;
+    }
+
+    return false;
+  }
+
   bool has_exp() const noexcept {
     if (exp_) {
       return true;
