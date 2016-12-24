@@ -24,7 +24,7 @@ class ObjectFactory {
 
   SymbolTableStack SymTableStack() {
     // create a symbol table on the start
-    SymbolTableStack table_stack(true);
+    SymbolTableStack table_stack;
     auto main_tab = symbol_table_.MainTable();
     table_stack.Push(main_tab, true);
 
@@ -43,7 +43,7 @@ class ObjectFactory {
 
   ObjectPtr NewInt(int v) {
     auto obj_type = symbol_table_.Lookup("int", false).SharedAccess();
-    return ObjectPtr(new IntObject(v, obj_type, std::move(SymTableStack())));
+    return std::make_shared<IntObject>(v, obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewReal(float v) {
@@ -143,69 +143,68 @@ class ObjectFactory {
 
   ObjectPtr NewNullType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new NullType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<NullType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewIntType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new IntType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<IntType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewRealType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new RealType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<RealType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewBoolType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new BoolType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<BoolType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewStringType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new StringType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<StringType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewCmdType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new CmdType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<CmdType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewCmdIterType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new CmdIterType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<CmdIterType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewArrayType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new ArrayType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<ArrayType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewArrayIterType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new ArrayIterType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<ArrayIterType>(obj_type,
+                                           std::move(SymTableStack()));
   }
 
   ObjectPtr NewTupleType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new TupleType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<TupleType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewMapType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new MapType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<MapType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewFuncType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    return ObjectPtr(new FuncType(obj_type, std::move(SymTableStack())));
+    return std::make_shared<FuncType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewDeclType(const std::string& name_type) {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    SymbolTableStack table_stack(true);
-    table_stack.Append(symbol_table_);
-    table_stack.SetFirstAsMain();
+    SymbolTableStack table_stack(symbol_table_);
     table_stack.NewTable();
     return ObjectPtr(new DeclClassType(name_type, obj_type,
                                        std::move(table_stack)));

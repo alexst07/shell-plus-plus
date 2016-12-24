@@ -352,7 +352,10 @@ class AstPrinter: public AstVisitor {
       c->Accept(this);
     }
 
-    switch_stmt->default_stmt()->Accept(this);
+    if (switch_stmt->has_default()) {
+      switch_stmt->default_stmt()->Accept(this);
+    }
+
     level_--;
 
     level_--;

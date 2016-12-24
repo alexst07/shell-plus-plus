@@ -127,8 +127,10 @@ class SymbolTable {
     // if the key not exists create a new
     // max efficiency inserting assign begin to i
     it = map_.begin();
-    map_.insert (it, std::move(std::pair<std::string, SymbolAttr>(
+    map_.insert(it, std::move(std::pair<std::string, SymbolAttr>(
         name, std::move(symbol))));
+
+    return true;
   }
 
   inline SymbolIterator Lookup(const std::string& name) {
@@ -157,22 +159,54 @@ class SymbolTable {
     return is_func_;
   }
 
+  void Clear() {
+    map_.clear();
+  }
+
  private:
   SymbolMap map_;
   bool is_func_;
 };
 
-class SymbolTableStack {
+class SymbolTableStackBase {
  public:
-  SymbolTableStack(bool no_table = false) {
-    if (no_table) {
-      return;
-    }
+  // Insert a table on the stack
+  virtual void Push(SymbolTablePtr table, bool is_main = false) = 0;
 
-    // Table stack is creaeted with at least one table symbol
-    SymbolTablePtr table(new SymbolTable);
-    main_table_ = table;
-    stack_.push_back(std::move(table));
+  // Create a new table on the stack
+  virtual void NewTable(bool is_main = false) = 0;
+
+  virtual void Pop() = 0;
+
+  // Search in all stack an return the refence for the symbol if
+  // it exists, or if create = true, create a new symbol if it
+  // doesn't exists and return its reference
+  virtual SymbolAttr& Lookup(const std::string& name, bool create) = 0;
+
+  virtual std::tuple<std::shared_ptr<Object>,bool> LookupObj(
+      const std::string& name) = 0;
+
+  virtual bool InsertEntry(const std::string& name, SymbolAttr&& symbol) = 0;
+
+  virtual void SetEntry(const std::string& name,
+                        std::shared_ptr<Object> value) = 0;
+
+  virtual void SetEntryOnFunc(const std::string& name,
+                              std::shared_ptr<Object> value) = 0;
+
+  virtual SymbolTablePtr MainTable() const noexcept = 0;
+
+  virtual void SetFirstAsMain() = 0;
+
+  virtual void Dump() = 0;
+};
+
+class SymbolTableStack: public SymbolTableStackBase {
+ public:
+  SymbolTableStack(SymbolTablePtr symbol_table = SymbolTablePtr(nullptr)) {
+    if (symbol_table) {
+      main_table_ = symbol_table;
+    }
   }
 
   SymbolTableStack(const SymbolTableStack& st) {
@@ -181,9 +215,10 @@ class SymbolTableStack {
   }
 
   // Insert a table on the stack
-  inline void Push(SymbolTablePtr table, bool is_main = false) {
+  void Push(SymbolTablePtr table, bool is_main = false) override {
     if (is_main) {
       main_table_ = table;
+      return;
     }
 
     stack_.push_back(table);
@@ -207,25 +242,29 @@ class SymbolTableStack {
   // it exists, or if create = true, create a new symbol if it
   // doesn't exists and return its reference
   SymbolAttr& Lookup(const std::string& name, bool create) {
-    auto it_obj = stack_.back()->Lookup(name);
+    for (int i = (stack_.size() - 1); i >= 0 ; i--) {
+      auto it_obj = stack_.at(i)->Lookup(name);
 
-    if (it_obj != stack_.back()->end()) {
-      return it_obj->second;
-    }
-
-    if (stack_.size() > 1) {
-      for (int i = (stack_.size() - 2); i >= 0 ; i--) {
-        auto it_obj = stack_.at(i)->Lookup(name);
-
-        if (it_obj != stack_.at(i)->end()) {
-          return it_obj->second;
-        }
+      if (it_obj != stack_.at(i)->end()) {
+        return it_obj->second;
       }
     }
 
+    // search on main table if no symbol was found
+    auto it_obj = main_table_.lock()->Lookup(name);
+
+    if (it_obj != main_table_.lock()->end()) {
+      return it_obj->second;
+    }
+
     if (create) {
-      SymbolAttr& ref = stack_.back()->SetValue(name);
-      return ref;
+      if (stack_.size() > 0) {
+        SymbolAttr& ref = stack_.back()->SetValue(name);
+        return ref;
+      } else {
+        SymbolAttr& ref = main_table_.lock()->SetValue(name);
+        return ref;
+      }
     }
 
     throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
@@ -233,23 +272,22 @@ class SymbolTableStack {
   }
 
   std::tuple<std::shared_ptr<Object>,bool> LookupObj(const std::string& name) {
-    auto it_obj = stack_.back()->Lookup(name);
+    for (int i = (stack_.size() - 1); i >= 0 ; i--) {
+      auto it_obj = stack_.at(i)->Lookup(name);
 
-    if (it_obj != stack_.back()->end()) {
-      return std::tuple<std::shared_ptr<Object>,bool>(
-            it_obj->second.SharedAccess(), true);
+      if (it_obj != stack_.at(i)->end()) {
+        return std::tuple<std::shared_ptr<Object>,bool>(
+              it_obj->second.SharedAccess(), true);
+      }
     }
 
-    if (stack_.size() > 1) {
-      for (int i = (stack_.size() - 2); i >= 0 ; i--) {
-        auto it_obj = stack_.at(i)->Lookup(name);
+    // search on main table if no symbol was found
+    auto it_obj = main_table_.lock()->Lookup(name);
 
-        if (it_obj != stack_.at(i)->end()) {
-          if (it_obj->second.global()) {
-            return std::tuple<std::shared_ptr<Object>,bool>(
-                  it_obj->second.SharedAccess(), true);
-          }
-        }
+    if (it_obj != main_table_.lock()->end()) {
+      if (it_obj->second.global()) {
+      return std::tuple<std::shared_ptr<Object>,bool>(
+            it_obj->second.SharedAccess(), true);
       }
     }
 
@@ -258,13 +296,19 @@ class SymbolTableStack {
   }
 
   bool InsertEntry(const std::string& name, SymbolAttr&& symbol) {
-    // the stack has always at least one symbol table
-    return stack_.back()->SetValue(name, std::move(symbol));
+    if (stack_.size() > 0) {
+      return stack_.back()->SetValue(name, std::move(symbol));
+    }
+
+    return main_table_.lock()->SetValue(name, std::move(symbol));
   }
 
   void SetEntry(const std::string& name, std::shared_ptr<Object> value) {
-    // the stack has always at least one symbol table
-    stack_.back()->SetValue(name, std::move(value));
+    if (stack_.size() > 0) {
+      stack_.back()->SetValue(name, std::move(value));
+    }
+
+    main_table_.lock()->SetValue(name, std::move(value));
   }
 
   void SetEntryOnFunc(const std::string& name, std::shared_ptr<Object> value) {
@@ -277,7 +321,7 @@ class SymbolTableStack {
   }
 
   SymbolTablePtr MainTable() const noexcept {
-    return main_table_;
+    return main_table_.lock();
   }
 
   void Append(const SymbolTableStack& stack) {
@@ -291,6 +335,8 @@ class SymbolTableStack {
   }
 
   void Dump() {
+    std::cout << "main table copy: " << main_table_.use_count() << "\n";
+    main_table_.lock()->Dump();
     std::cout << "Table: " << this << " Num: " << stack_.size() << "\n";
     for (auto& e: stack_) {
       std::cout << "------\n";
@@ -300,7 +346,7 @@ class SymbolTableStack {
 
  private:
   std::vector<SymbolTablePtr> stack_;
-  SymbolTablePtr main_table_;
+  std::weak_ptr<SymbolTable> main_table_;
 };
 
 }

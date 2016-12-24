@@ -40,15 +40,25 @@ class PrintFunc: public FuncObject {
 
 class Interpreter {
  public:
-  Interpreter(): obj_factory(symbol_table_) {
-    AlocTypes(symbol_table_);
+  Interpreter()
+      : symbol_table_(SymbolTablePtr(new SymbolTable))
+      , symbol_table_stack_(symbol_table_)
+      , obj_factory(symbol_table_stack_) {
+    AlocTypes(symbol_table_stack_);
 
-    SymbolTableStack sym_stack(false);
-    sym_stack.Push(symbol_table_.MainTable());
-    auto func_type = symbol_table_.Lookup("func", false).SharedAccess();
+    symbol_table_stack_.Dump();
+
+    SymbolTableStack sym_stack;
+    sym_stack.Push(symbol_table_stack_.MainTable());
+    auto func_type = symbol_table_stack_.Lookup("func", false).SharedAccess();
     ObjectPtr obj(new PrintFunc(func_type, std::move(sym_stack)));
     SymbolAttr symbol(obj, true);
-    symbol_table_.InsertEntry("print", std::move(symbol));
+    symbol_table_stack_.InsertEntry("print", std::move(symbol));
+  }
+
+  ~Interpreter() {
+    // avoid errors of memory leak using sanytise flag
+    symbol_table_.~shared_ptr();
   }
 
   void Exec(std::string name) {
@@ -62,7 +72,7 @@ class Interpreter {
     auto res = p.AstGen();
 
     if (p.nerrors() == 0) {
-      RootExecutor executor(symbol_table_);
+      RootExecutor executor(symbol_table_stack_);
       executor.Exec(res.NodePtr());
     } else {
       std::cout << "Parser error analysis:\n";
@@ -71,10 +81,13 @@ class Interpreter {
         std::cout << msg << "\n";
       }
     }
+
+//    symbol_table_->Clear();
   }
 
  private:
-  SymbolTableStack symbol_table_;
+  SymbolTablePtr symbol_table_;
+  SymbolTableStack symbol_table_stack_;
   ObjectFactory obj_factory;
 };
 

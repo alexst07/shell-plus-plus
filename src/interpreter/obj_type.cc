@@ -114,10 +114,10 @@ bool MapObject::Exists(ObjectPtr obj_index) {
 
 ObjectPtr TypeObject::CallObject(const std::string& name,
                                  ObjectPtr self_param) {
-  ObjectPtr obj = sym_tab_statck_->Lookup(name, false).SharedAccess();
+  ObjectPtr obj = symbol_table_stack().Lookup(name, false).SharedAccess();
 
   if (obj->type() == ObjectType::FUNC) {
-    ObjectFactory obj_factory(*sym_tab_statck_);
+    ObjectFactory obj_factory(symbol_table_stack());
 
     // the function wrapper insert the object self_param as the first param
     // it works like self argument

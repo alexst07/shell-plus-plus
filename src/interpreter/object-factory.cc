@@ -32,7 +32,7 @@ void AlocTypes(SymbolTableStack& symbol_table) {
 
   ObjectPtr type_bool = obj_factory.NewBoolType();
   SymbolAttr symbol_bool(type_bool, true);
-  symbol_table.InsertEntry(static_cast<const RealType&>(*type_bool).name(),
+  symbol_table.InsertEntry(static_cast<const BoolType&>(*type_bool).name(),
                            std::move(symbol_bool));
 
   ObjectPtr type_array = obj_factory.NewArrayType();
@@ -71,8 +71,8 @@ void AlocTypes(SymbolTableStack& symbol_table) {
                            std::move(symbol_func));
 
   ObjectPtr type_str = obj_factory.NewStringType();
-  SymbolTableStack sym_stack(false);
-  sym_stack.Push(symbol_table.MainTable());
+  SymbolTableStack sym_stack;
+  sym_stack.Push(symbol_table.MainTable(), true);
   auto func_type = symbol_table.Lookup("func", false).SharedAccess();
   ObjectPtr obj_func_at(new StringGetterFunc(func_type, std::move(sym_stack)));
   static_cast<TypeObject&>(*type_str).RegiterMethod("at", obj_func_at);

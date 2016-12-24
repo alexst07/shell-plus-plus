@@ -65,7 +65,7 @@ class FuncDeclObject: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , id_(id)
       , start_node_(start_node)
-      , symbol_table_(true)
+      , symbol_table_()
       , params_(std::move(params))
       , default_values_(std::move(default_values))
       , variadic_(variadic) {

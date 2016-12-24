@@ -271,10 +271,8 @@ class TypeObject: public Object {
   TypeObject(const std::string& name, ObjectPtr obj_type,
              SymbolTableStack&& sym_table)
       : Object(ObjectType::TYPE, obj_type, std::move(sym_table))
-      , name_(name)
-      , sym_tab_statck_(std::make_shared<SymbolTableStack>(true)) {
-    sym_tab_statck_->Push(symbol_table_stack().MainTable(), true);
-    sym_tab_statck_->NewTable();
+      , name_(name) {
+    symbol_table_stack().NewTable();
   }
 
   virtual ~TypeObject() {}
@@ -311,7 +309,7 @@ class TypeObject: public Object {
 
   virtual bool RegiterMethod(const std::string& name, ObjectPtr obj) {
     SymbolAttr sym_entry(obj, true);
-    return sym_tab_statck_->InsertEntry(name, std::move(sym_entry));
+    return symbol_table_stack().InsertEntry(name, std::move(sym_entry));
   }
 
   void Print() override {
@@ -320,9 +318,8 @@ class TypeObject: public Object {
 
  private:
   std::string name_;
-  std::shared_ptr<SymbolTableStack> sym_tab_statck_;
-  ObjectPtr parent_;
-  std::vector<ObjectPtr> interfaces_;
+  std::weak_ptr<Object> parent_;
+  std::vector<std::weak_ptr<Object>> interfaces_;
 };
 
 class Type: public TypeObject {

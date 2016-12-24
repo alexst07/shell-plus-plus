@@ -231,7 +231,7 @@ class Object {
   }
 
   std::shared_ptr<Object> ObjType() const noexcept {
-    return obj_type_;
+    return obj_type_.lock();
   }
 
  private:
@@ -239,7 +239,7 @@ class Object {
   ObjectType type_;
 
   // type of object, it is other object
-  std::shared_ptr<Object> obj_type_;
+  std::weak_ptr<Object> obj_type_;
 
   SymbolTableStack sym_table_;
 
