@@ -25,7 +25,8 @@ class RunTimeError : public std::exception {
     KEY_NOT_FOUND,
     INCOMPATIBLE_TYPE,
     FUNC_PARAMS,
-    ZERO_DIV
+    ZERO_DIV,
+    INVALID_OPCODE
   };
 
   RunTimeError();
@@ -39,7 +40,7 @@ class RunTimeError : public std::exception {
    * @return the error description and the context as a text string.
    */
   virtual const char* what() const noexcept {
-    msg_.c_str();
+    return msg_.c_str();
   }
 
   ErrorCode code_;

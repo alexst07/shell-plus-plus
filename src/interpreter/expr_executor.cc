@@ -27,6 +27,9 @@ ObjectPtr AssignableListExecutor::ExecAssignable(AstNode* node) {
     ExpressionExecutor expr_exec(this, symbol_table_stack());
     return expr_exec.Exec(assignable_node->value());
   }
+
+  throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                     boost::format("incompatible expression on assignable"));
 }
 
 void AssignableListExecutor::set_stop(StopFlag flag) {
@@ -70,6 +73,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kCmdExpression:
       return ExecCmdExpr(static_cast<CmdExpression*>(node));
       break;
+
+    default:
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("invalid expression opcode"));
   }
 }
 
@@ -281,6 +288,11 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
     case TokenKind::GREATER_EQ:
       res = left->GreatEqual(right);
       break;
+
+    default: {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("invalid bin operation opcode"));
+    }
   }
 
   return res;

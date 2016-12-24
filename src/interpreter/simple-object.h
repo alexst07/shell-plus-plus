@@ -46,7 +46,7 @@ class NullObject: public Object {
     std::cout << "NIL";
   }
 
-  inline nullptr_t value() const noexcept { return nullptr; }
+  inline std::nullptr_t value() const noexcept { return nullptr; }
 };
 
 class BoolObject: public Object {

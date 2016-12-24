@@ -24,8 +24,8 @@ class ParserResult {
       : uptr_(std::move(std::unique_ptr<T>(
             static_cast<T*>(uptr.release())))) {}
 
-  constexpr ParserResult() noexcept: uptr_(nullptr) {}
-  constexpr ParserResult(nullptr_t) noexcept : ParserResult() {}
+  ParserResult() noexcept: uptr_(nullptr) {}
+  ParserResult(std::nullptr_t) noexcept : uptr_(nullptr) {}
   explicit ParserResult(T* p) noexcept: uptr_(p) {}
   ParserResult(ParserResult&& pres) noexcept: uptr_(std::move(pres.uptr_)) {}
   ParserResult(const ParserResult&) = delete;
@@ -34,14 +34,17 @@ class ParserResult {
 
   ParserResult& operator=(ParserResult&& pres) noexcept {
     uptr_ = std::move(pres.uptr_);
+    return *this;
   }
 
   ParserResult& operator=(std::unique_ptr<T>&& uptr) noexcept {
     uptr_ = std::move(uptr);
+    return *this;
   }
 
-  ParserResult& operator=(nullptr_t) noexcept {
+  ParserResult& operator=(std::nullptr_t) noexcept {
     uptr_ = nullptr;
+    return *this;
   }
 
   ParserResult& operator= (const ParserResult&) = delete;

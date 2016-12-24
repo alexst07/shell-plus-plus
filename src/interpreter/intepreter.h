@@ -46,8 +46,6 @@ class Interpreter {
       , obj_factory(symbol_table_stack_) {
     AlocTypes(symbol_table_stack_);
 
-    symbol_table_stack_.Dump();
-
     SymbolTableStack sym_stack;
     sym_stack.Push(symbol_table_stack_.MainTable());
     auto func_type = symbol_table_stack_.Lookup("func", false).SharedAccess();

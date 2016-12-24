@@ -65,7 +65,7 @@ ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
 
   // only the last parameter can be variadic
   if ((variadic_count > 1) ||
-      (variadic_count == 1) && (!fdecl_node->variadic())) {
+      ((variadic_count == 1) && (!fdecl_node->variadic()))) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("only last parameter can be variadic"));
   }
@@ -217,6 +217,11 @@ void StmtExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kDeferStatement: {
       DeferExecutor defer(this, symbol_table_stack());
       defer.Exec(static_cast<DeferStatement*>(node));
+    }
+
+    default: {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("invalid opcode of statement"));
     }
   }
 }

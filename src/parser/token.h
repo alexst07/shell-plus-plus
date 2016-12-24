@@ -328,6 +328,7 @@ class TokenStream {
       return tok_vec_.back();
 
     Token& tk = tok_vec_.at(++pos_);
+    return tk;
   }
 
   inline bool Advance() {

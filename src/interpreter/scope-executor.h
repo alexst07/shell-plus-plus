@@ -20,8 +20,6 @@ class ScopeExecutor: public Executor {
       , main_exec_(main_exec)
       , executed_defer_(false) {}
 
-  virtual void set_stop(StopFlag flag) {}
-
   void PushDeferStmt(Statement* stmt);
 
   void ExecuteDeferStack();
@@ -29,7 +27,7 @@ class ScopeExecutor: public Executor {
   ~ScopeExecutor() = default;
 
  protected:
-  virtual Executor* GetMainExecutor();
+  Executor* GetMainExecutor() override;
 
   Executor* GetBlockParent() override {
     return this;

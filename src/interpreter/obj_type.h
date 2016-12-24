@@ -27,13 +27,6 @@ class DeclClassObject: public Object {
 
   virtual ~DeclClassObject() {}
 
-  std::size_t Hash() const override {
-  }
-
-  bool operator==(const Object& obj) const override {
-
-  }
-
   std::shared_ptr<Object> Arrow(std::shared_ptr<Object> self,
                                 const std::string& name) override;
 

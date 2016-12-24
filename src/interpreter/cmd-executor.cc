@@ -21,6 +21,11 @@ std::tuple<int, std::string> CmdExecutor::ExecGetResult(CmdFull *node) {
       CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
       return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()));
     } break;
+
+    default: {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("invalid command ast"));
+    }
   }
 }
 
@@ -36,6 +41,11 @@ void CmdExecutor::Exec(CmdFull *node) {
       CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
       cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()), background);
     } break;
+
+    default: {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("invalid command ast"));
+    }
   }
 }
 
@@ -130,6 +140,11 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
           str_part = "";
         }
       } break;
+
+      default: {
+        throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                           boost::format("invalid command ast"));
+      }
     }
   }
 
@@ -167,6 +182,11 @@ CmdIoData CmdIoRedirectExecutor::Exec(CmdIoRedirect *node) {
           str_part += " ";
         }
       } break;
+
+      default: {
+        throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                           boost::format("invalid command ast"));
+      }
     }
   }
 
@@ -230,6 +250,11 @@ CmdIoRedirectData CmdIoRedirectListExecutor::PrepareData(
       cmd_io_redirect.cmd_ =
           simple_cmd_exec.Exec(static_cast<SimpleCmd*>(node->cmd()));
     } break;
+
+    default: {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("invalid command ast"));
+    }
   }
 
   return cmd_io_redirect;
@@ -368,9 +393,9 @@ std::tuple<int, std::string> CmdIoRedirectListExecutor::ExecCmdIoWithResult(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CmdPipeListData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
+//CmdPipeListData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
 
-}
+//}
 
 }
 }

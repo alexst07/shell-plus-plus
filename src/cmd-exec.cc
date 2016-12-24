@@ -20,7 +20,7 @@ int ExecCmd(std::vector<std::string>&& args) {
 
   int ret = execvp(p_args[0], p_args);
 
-  delete p_args;
+  delete[] p_args;
 
   return ret;
 }

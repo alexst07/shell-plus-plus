@@ -266,7 +266,7 @@ class StatementList: public AstNode {
   }
 
   size_t num_children() const noexcept {
-    stmt_list_.size();
+    return stmt_list_.size();
   }
 
  private:
@@ -551,7 +551,7 @@ class ExpressionList: public AstNode {
   }
 
   size_t num_children() const noexcept {
-    exps_.size();
+    return exps_.size();
   }
 
  private:
@@ -750,7 +750,7 @@ class FilePathCmd: public Cmd {
   }
 
   size_t num_children() const noexcept {
-    pieces_.size();
+    return pieces_.size();
   }
 
  private:
@@ -787,7 +787,7 @@ public:
   }
 
   size_t num_children() const noexcept {
-    io_list_.size();
+    return io_list_.size();
   }
 
  private:
@@ -877,7 +877,7 @@ class SimpleCmd: public Cmd {
   }
 
   size_t num_children() const noexcept {
-    pieces_.size();
+    return pieces_.size();
   }
 
  private:

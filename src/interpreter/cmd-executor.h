@@ -73,7 +73,7 @@ class CmdPipeSequenceExecutor: public Executor {
                             SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-  CmdPipeListData Exec(CmdPipeSequence *node);
+//  CmdPipeListData Exec(CmdPipeSequence *node);
 };
 
 }

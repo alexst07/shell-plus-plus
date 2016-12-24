@@ -76,6 +76,10 @@ std::shared_ptr<Object> MapObject::Element(ObjectPtr obj_index) {
       error();
     }
   }
+
+  // avoids clang warning
+  throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                     boost::format("key not found"));
 }
 
 ObjectPtr& MapObject::Insert_(ObjectPtr obj_index) {

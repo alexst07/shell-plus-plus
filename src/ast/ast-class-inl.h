@@ -123,7 +123,7 @@ class ClassDeclList: public AstNode {
   }
 
   size_t num_children() const noexcept {
-    decl_list_.size();
+    return decl_list_.size();
   }
 
  private:

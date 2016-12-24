@@ -137,6 +137,9 @@ ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
   } else if (obj->type() == Object::ObjectType::MAP) {
     return RefMap(*array_node, *static_cast<MapObject*>(obj.get()));
   }
+
+  throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                     boost::format("__get__element not overload"));
 }
 
 ObjectPtr& AssignExecutor::AssignmentAcceptorExpr(AstNode* node) {
