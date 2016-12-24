@@ -47,8 +47,17 @@ class SymbolAttr {
   }
 
   // The symbol can't be copied, only the value of the symbol can
-  SymbolAttr(const SymbolAttr&) = delete;
-  SymbolAttr& operator=(const SymbolAttr&) = delete;
+  SymbolAttr(const SymbolAttr& sym) {
+    global_ = sym.global_;
+    value_ = sym.value_;
+  }
+
+  SymbolAttr& operator=(const SymbolAttr& sym) {
+    global_ = sym.global_;
+    value_ = sym.value_;
+
+    return *this;
+  }
 
   std::shared_ptr<Object>& Ref() noexcept {
     return value_;
@@ -76,14 +85,25 @@ typedef std::shared_ptr<SymbolTable> SymbolTablePtr;
 
 class SymbolTable {
  public:
+  enum class TableType {
+    SCOPE_TABLE,
+    FUNC_TABLE,
+    CLASS_TABLE
+  };
+
   using SymbolMap = std::unordered_map<std::string, SymbolAttr>;
   using SymbolIterator = SymbolMap::iterator;
   using SymbolConstIterator = SymbolMap::const_iterator;
 
-  SymbolTable(bool is_func = false): is_func_(is_func) {}
+  SymbolTable(TableType type = TableType::SCOPE_TABLE): type_(type) {}
 
-  static SymbolTablePtr Create(bool is_func = false) {
-    return SymbolTablePtr(new SymbolTable(is_func));
+  SymbolTable(const SymbolTable& sym_table) {
+    map_ = sym_table.map_;
+    type_ = sym_table.type_;
+  }
+
+  static SymbolTablePtr Create(TableType type = TableType::SCOPE_TABLE) {
+    return SymbolTablePtr(new SymbolTable(type));
   }
 
   // Return a reference for symbol if it exists or create a new
@@ -159,8 +179,8 @@ class SymbolTable {
     }
   }
 
-  bool IsFunc() const noexcept {
-    return is_func_;
+  TableType Type() const noexcept {
+    return type_;
   }
 
   void Clear() {
@@ -169,7 +189,7 @@ class SymbolTable {
 
  private:
   SymbolMap map_;
-  bool is_func_;
+  TableType type_;
 };
 
 class SymbolTableStackBase {
@@ -215,6 +235,11 @@ class SymbolTableStack: public SymbolTableStackBase {
 
   SymbolTableStack(const SymbolTableStack& st) {
     stack_ = st.stack_;
+    main_table_ = st.main_table_;
+  }
+
+  SymbolTableStack(SymbolTableStack&& st) {
+    stack_ = std::move(st.stack_);
     main_table_ = st.main_table_;
   }
 
@@ -321,7 +346,7 @@ class SymbolTableStack: public SymbolTableStackBase {
                       std::shared_ptr<Object> value) override {
     // search the last function table inserted
     for (int i = stack_.size() - 1; i >= 0; i--) {
-      if (stack_.at(i)->IsFunc()) {
+      if (stack_.at(i)->Type() == SymbolTable::TableType::FUNC_TABLE) {
         stack_.at(i)->SetValue(name, std::move(value));
       }
     }
@@ -337,8 +362,69 @@ class SymbolTableStack: public SymbolTableStackBase {
     }
   }
 
+  void Append(std::vector<SymbolTablePtr>&& stack) {
+    for (auto table: stack) {
+      auto sym_ptr = SymbolTablePtr(new SymbolTable(*table));
+      stack_.push_back(sym_ptr);
+    }
+  }
+
   void SetFirstAsMain() override {
     main_table_ = *stack_.begin();
+  }
+
+  bool HasFuncTable() const noexcept {
+    for (auto& table: stack_) {
+      if (table->Type() == SymbolTable::TableType::FUNC_TABLE) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool HasClassTable() const noexcept {
+    for (auto& table: stack_) {
+      if (table->Type() == SymbolTable::TableType::CLASS_TABLE) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  std::vector<SymbolTablePtr> GetUntilFuncTable() const {
+    std::vector<SymbolTablePtr> statck;
+
+    for (auto& table: stack_) {
+      if (table->Type() != SymbolTable::TableType::FUNC_TABLE) {
+        statck.push_back(table);
+        continue;
+      }
+
+      statck.push_back(table);
+
+      break;
+    }
+
+    return statck;
+  }
+
+  std::vector<SymbolTablePtr> GetUntilClassTable() const {
+    std::vector<SymbolTablePtr> statck;
+
+    for (auto& table: stack_) {
+      if (table->Type() != SymbolTable::TableType::CLASS_TABLE) {
+        statck.push_back(table);
+        continue;
+      }
+
+      statck.push_back(table);
+
+      break;
+    }
+
+    return statck;
   }
 
   void Dump() override {

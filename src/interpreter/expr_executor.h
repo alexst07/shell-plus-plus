@@ -24,6 +24,8 @@ class AssignableListExecutor: public Executor {
 
   ObjectPtr ExecAssignable(AstNode* node);
 
+  ObjectPtr ExecLambdaFunc(AstNode* node);
+
   void set_stop(StopFlag flag) override;
 };
 

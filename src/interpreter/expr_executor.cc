@@ -4,6 +4,7 @@
 #include <boost/variant.hpp>
 
 #include "cmd-executor.h"
+#include "stmt_executor.h"
 
 namespace setti {
 namespace internal {
@@ -23,13 +24,23 @@ std::vector<ObjectPtr> AssignableListExecutor::Exec(
 
 ObjectPtr AssignableListExecutor::ExecAssignable(AstNode* node) {
   AssignableValue* assignable_node = static_cast<AssignableValue*>(node);
-  if (AstNode::IsExpression(node->type())) {
+  AstNode* value = assignable_node->value();
+
+  if (value->type() == AstNode::NodeType::kFunctionDeclaration) {
+    return ExecLambdaFunc(value);
+  } else if (AstNode::IsExpression(value->type())) {
     ExpressionExecutor expr_exec(this, symbol_table_stack());
-    return expr_exec.Exec(assignable_node->value());
+    return expr_exec.Exec(value);
   }
 
   throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                      boost::format("incompatible expression on assignable"));
+}
+
+ObjectPtr AssignableListExecutor::ExecLambdaFunc(AstNode* node) {
+  // executes lambda assignment
+  FuncDeclExecutor func_exec(this, symbol_table_stack(), false, true);
+  return func_exec.FuncObj(node);
 }
 
 void AssignableListExecutor::set_stop(StopFlag flag) {

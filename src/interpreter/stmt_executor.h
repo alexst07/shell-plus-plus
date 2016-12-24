@@ -31,10 +31,11 @@ class StmtListExecutor: public Executor {
 class FuncDeclExecutor: public Executor {
  public:
   FuncDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack,
-                   bool method = false)
+                   bool method = false, bool lambda = false)
       : Executor(parent, symbol_table_stack)
       , obj_factory_(symbol_table_stack)
-      , method_(method) {}
+      , method_(method)
+      , lambda_(lambda) {}
 
   void Exec(AstNode* node);
 
@@ -45,6 +46,7 @@ class FuncDeclExecutor: public Executor {
  private:
   ObjectFactory obj_factory_;
   bool method_;
+  bool lambda_;
 };
 
 class ClassDeclExecutor: public Executor {

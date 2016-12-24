@@ -72,12 +72,19 @@ ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
 
   SymbolTableStack st_stack(symbol_table_stack());
 
-  ObjectPtr fobj(obj_factory_.NewFuncDeclObject(fdecl_node->name()->name(),
+  std::string func_name = "";
+
+  if (!lambda_) {
+    func_name = fdecl_node->name()->name();
+  }
+
+  ObjectPtr fobj(obj_factory_.NewFuncDeclObject(func_name,
                                                 fdecl_node->block(),
                                                 std::move(st_stack),
                                                 std::move(param_names),
                                                 std::move(default_values),
-                                                fdecl_node->variadic()));
+                                                fdecl_node->variadic(),
+                                                lambda_));
 
   return fobj;
 }

@@ -67,7 +67,8 @@ void FuncDeclObject::HandleArguments(std::vector<ObjectPtr>&& params) {
 ObjectPtr FuncDeclObject::Call(Executor* parent,
                                std::vector<ObjectPtr>&& params) {
   // it is the table function
-  SymbolTablePtr table = SymbolTable::Create(true);
+  SymbolTablePtr table =
+      SymbolTable::Create(SymbolTable::TableType::FUNC_TABLE);
 
   // main symbol of function
   symbol_table_.Push(table, false);

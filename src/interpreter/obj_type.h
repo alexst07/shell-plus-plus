@@ -22,10 +22,12 @@ class DeclClassObject: public Object {
  public:
   DeclClassObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : Object(ObjectType::DECL_OBJ, obj_type, std::move(sym_table)) {
-    sym_table.NewTable();
+    symbol_table_stack().NewTable();
   }
 
-  virtual ~DeclClassObject() {}
+  virtual ~DeclClassObject() {
+    symbol_table_stack().Pop();
+  }
 
   std::shared_ptr<Object> Arrow(std::shared_ptr<Object> self,
                                 const std::string& name) override;

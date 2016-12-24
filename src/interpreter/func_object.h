@@ -60,7 +60,7 @@ class FuncDeclObject: public FuncObject {
                  const SymbolTableStack& symbol_table,
                  std::vector<std::string>&& params,
                  std::vector<ObjectPtr>&& default_values,
-                 bool variadic, ObjectPtr obj_type,
+                 bool variadic, bool lambda, ObjectPtr obj_type,
                  SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table))
       , id_(id)
@@ -68,8 +68,21 @@ class FuncDeclObject: public FuncObject {
       , symbol_table_()
       , params_(std::move(params))
       , default_values_(std::move(default_values))
-      , variadic_(variadic) {
+      , variadic_(variadic)
+      , lambda_(lambda) {
     symbol_table_.Push(symbol_table.MainTable(), true);
+
+    if (lambda) {
+      if (symbol_table.HasClassTable()) {
+        auto stack = symbol_table.GetUntilClassTable();
+        symbol_table_.Append(std::move(stack));
+      } else {
+        // if has function copy symbol table until the function
+        // if not, copy all stack of symbol table
+        auto stack = symbol_table.GetUntilFuncTable();
+        symbol_table_.Append(std::move(stack));
+      }
+    }
   }
 
   ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override;
@@ -83,6 +96,7 @@ class FuncDeclObject: public FuncObject {
   std::vector<std::string> params_;
   std::vector<ObjectPtr> default_values_;
   bool variadic_;
+  bool lambda_;
 };
 
 }
