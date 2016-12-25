@@ -224,7 +224,7 @@ void StmtExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kDeferStatement: {
       DeferExecutor defer(this, symbol_table_stack());
       defer.Exec(static_cast<DeferStatement*>(node));
-    }
+    } break;
 
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
@@ -571,7 +571,15 @@ void DeferExecutor::Exec(DeferStatement *node) {
   Executor* exec = GetMainExecutor();
 
   if (exec != nullptr) {
-    static_cast<ScopeExecutor*>(exec)->PushDeferStmt(node->stmt());
+    SymbolTableStack sym_stack(symbol_table_stack());
+    if (symbol_table_stack().HasClassTable()) {
+      sym_stack.Append(symbol_table_stack().GetUntilClassTable());
+    } else {
+      sym_stack.Append(symbol_table_stack().GetUntilFuncTable());
+    }
+
+    std::tuple<Statement*, SymbolTableStack> t(node->stmt(), sym_stack);
+    static_cast<ScopeExecutor*>(exec)->PushDeferStmt(t);
   }
 }
 

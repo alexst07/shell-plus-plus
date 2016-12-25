@@ -20,7 +20,7 @@ class ScopeExecutor: public Executor {
       , main_exec_(main_exec)
       , executed_defer_(false) {}
 
-  void PushDeferStmt(Statement* stmt);
+  void PushDeferStmt(std::tuple<Statement*, SymbolTableStack> s);
 
   void ExecuteDeferStack();
 
@@ -36,7 +36,7 @@ class ScopeExecutor: public Executor {
  private:
   bool main_exec_;
   bool executed_defer_;
-  std::stack<Statement*> defer_stack_;
+  std::stack<std::tuple<Statement*, SymbolTableStack>> defer_stack_;
 };
 
 class RootExecutor: public ScopeExecutor {

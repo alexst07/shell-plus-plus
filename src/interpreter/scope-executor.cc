@@ -6,8 +6,8 @@
 namespace setti {
 namespace internal {
 
-void ScopeExecutor::PushDeferStmt(Statement* stmt) {
-  defer_stack_.push(stmt);
+void ScopeExecutor::PushDeferStmt(std::tuple<Statement *, SymbolTableStack> s) {
+  defer_stack_.push(s);
 }
 
 Executor* ScopeExecutor::GetMainExecutor() {
@@ -25,9 +25,9 @@ Executor* ScopeExecutor::GetMainExecutor() {
 void ScopeExecutor::ExecuteDeferStack() {
   executed_defer_ = true;
 
-  StmtExecutor stmt_exec(this, symbol_table_stack());
   while (defer_stack_.size() > 0) {
-    stmt_exec.Exec(defer_stack_.top());
+    StmtExecutor stmt_exec(this, std::get<1>(defer_stack_.top()));
+    stmt_exec.Exec(std::get<0>(defer_stack_.top()));
     defer_stack_.pop();
   }
 }
