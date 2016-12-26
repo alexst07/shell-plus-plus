@@ -454,16 +454,32 @@ class FunctionParam: public AstNode {
     return id_.get();
   }
 
+  AssignableValue* value() const noexcept {
+    return value_.get();
+  }
+
+  bool has_value() const noexcept {
+    if (value_) {
+      return true;
+    }
+
+    return false;
+  }
+
  private:
   friend class AstNodeFactory;
 
   std::unique_ptr<Identifier> id_;
+  std::unique_ptr<AssignableValue> value_;
   bool variadic_;
 
-  FunctionParam(std::unique_ptr<Identifier> id, bool variadic,
+  FunctionParam(std::unique_ptr<Identifier> id,
+                std::unique_ptr<AssignableValue> value,
+                bool variadic,
                 Position position)
      : AstNode(NodeType::kFunctionParam, position)
      , id_(std::move(id))
+     , value_(std::move(value))
      , variadic_(variadic) {}
 };
 

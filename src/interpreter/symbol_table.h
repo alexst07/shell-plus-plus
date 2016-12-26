@@ -358,7 +358,8 @@ class SymbolTableStack: public SymbolTableStackBase {
 
   void Append(const SymbolTableStack& stack) {
     for (auto table: stack.stack_) {
-      stack_.push_back(table);
+      auto sym_ptr = SymbolTablePtr(new SymbolTable(*table));
+      stack_.push_back(sym_ptr);
     }
   }
 
@@ -435,6 +436,7 @@ class SymbolTableStack: public SymbolTableStackBase {
       std::cout << "------\n";
       e->Dump();
     }
+    std::cout << "*************\n";
   }
 
  private:

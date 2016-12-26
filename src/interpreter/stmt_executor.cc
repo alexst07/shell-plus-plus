@@ -55,12 +55,30 @@ ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
     param_names.push_back(std::string("this"));
   }
 
+  // flag to help to check if defaults values are only in the last params
+  bool default_value = false;
+  AssignableListExecutor assign_value_exec(this, symbol_table_stack());
+
   for (FunctionParam* param: vec) {
     if (param->variadic()) {
       variadic_count++;
     }
 
     param_names.push_back(param->id()->name());
+
+    // check if the param has default value
+    if (param->has_value()) {
+      default_value = true;
+      ObjectPtr obj_value(assign_value_exec.ExecAssignable(param->value()));
+      default_values.push_back(obj_value);
+    } else {
+      if (default_value) {
+        // error, only the param in the end can have default values
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                           boost::format("no default value can't appear"
+                                         "after a default value parameter"));
+      }
+    }
   }
 
   // only the last parameter can be variadic

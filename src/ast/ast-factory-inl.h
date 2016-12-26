@@ -202,9 +202,10 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<FunctionParam> NewFunctionParam(
-      std::unique_ptr<Identifier> id, bool variadic) {
+      std::unique_ptr<Identifier> id, std::unique_ptr<AssignableValue> value,
+      bool variadic) {
     return std::unique_ptr<FunctionParam>(new FunctionParam(
-        std::move(id), variadic, fn_pos_()));
+        std::move(id), std::move(value), variadic, fn_pos_()));
   }
 
   inline std::unique_ptr<FunctionDeclaration> NewFunctionDeclaration(

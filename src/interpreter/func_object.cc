@@ -43,19 +43,27 @@ void FuncDeclObject::HandleArguments(std::vector<ObjectPtr>&& params) {
 
     symbol_table_.SetEntry(params_[params_.size() - 1], tuple_obj);
   } else {
+    size_t no_values_params = params_.size() - default_values_.size();
+
     if ((params.size() < (params_.size() - default_values_.size())) ||
         (params.size() > params_.size())) {
-      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
-          boost::format("%1% takes exactly %2% argument (%3% given)")%
-                        id_% (params_.size() - 1)% params.size());
+      boost::format msg_error;
+      if (default_values_.size() > 0) {
+        msg_error = boost::format("%1% takes at least %2% argument "
+                                  "(%3% given)")%
+                                  id_% no_values_params % params.size();
+      } else {
+        msg_error = boost::format("%1% takes exactly %2% argument (%3% given)")%
+                                  id_% params_.size() % params.size();
+      }
+
+      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS, msg_error);
     }
 
     // Insert objects on symbol table
     for (size_t i = 0; i < params.size(); i++) {
       symbol_table_.SetEntry(params_[i], params[i]);
     }
-
-    size_t no_values_params = params_.size() - default_values_.size();
 
     for (size_t i = no_values_params; i < params_.size(); i++) {
       symbol_table_.SetEntry(params_[i],

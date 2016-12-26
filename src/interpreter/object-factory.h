@@ -115,7 +115,9 @@ class ObjectFactory {
 
   ObjectPtr NewDeclObject(const std::string& name_type) {
     auto obj_type = symbol_table_.Lookup(name_type, false).SharedAccess();
-    SymbolTableStack sym_stack = SymTableStack();
+    SymbolTableStack sym_stack;
+    sym_stack.Push(symbol_table_.MainTable(), true);
+    sym_stack.Append(symbol_table_);
     sym_stack.NewTable();
     ObjectPtr obj(new DeclClassObject(obj_type, std::move(sym_stack)));
     static_cast<DeclClassObject&>(*obj).SetSelf(obj);
@@ -204,8 +206,7 @@ class ObjectFactory {
 
   ObjectPtr NewDeclType(const std::string& name_type) {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    SymbolTableStack table_stack(symbol_table_);
-    table_stack.NewTable();
+    SymbolTableStack table_stack(symbol_table_.MainTable());
     return ObjectPtr(new DeclClassType(name_type, obj_type,
                                        std::move(table_stack)));
   }

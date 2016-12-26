@@ -66,15 +66,20 @@ Parser::ParserParamsList() {
     ValidToken();
 
     bool variadic = false;
+    std::unique_ptr<AssignableValue> value_;
 
     if (token_ == TokenKind::ELLIPSIS) {
       variadic = true;
       Advance();
       ValidToken();
+    } else if (token_ == TokenKind::ASSIGN){
+      Advance();
+      ValidToken();
+      value_ = ParserAssignable().MoveAstNode();
     }
 
     std::unique_ptr<FunctionParam> param(factory_.NewFunctionParam(
-        std::move(id), variadic));
+        std::move(id), std::move(value_), variadic));
     vec_params.push_back(std::move(param));
 
     // if the token is comma (,) goes to next parameter
@@ -88,7 +93,7 @@ Parser::ParserParamsList() {
   }
 
   return std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>(
-      std::move(vec_params), true); // Error
+      std::move(vec_params), true);
 }
 
 ParserResult<Statement> Parser::ParserDeferStmt() {

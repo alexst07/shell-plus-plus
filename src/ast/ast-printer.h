@@ -431,6 +431,10 @@ class AstPrinter: public AstVisitor {
               << (func_param->variadic()? "true": "false") << ">\n";
     level_++;
     func_param->id()->Accept(this);
+
+    if (func_param->has_value()) {
+      func_param->value()->Accept(this);
+    }
     level_--;
   }
 

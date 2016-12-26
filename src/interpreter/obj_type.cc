@@ -156,6 +156,9 @@ ObjectPtr Type::Constructor(Executor* /*parent*/,
 // has a symbol table stack to store attributes
 ObjectPtr DeclClassType::Constructor(Executor* parent,
                                 std::vector<ObjectPtr>&& params) {
+  std::cout << ">>>> " << this->name() << "\n";
+  symbol_table_stack().Dump();
+
   ObjectFactory obj_factory(symbol_table_stack());
   ObjectPtr obj_self(obj_factory.NewDeclObject(this->name()));
 
