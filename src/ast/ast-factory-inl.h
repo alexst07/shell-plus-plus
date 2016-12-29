@@ -177,9 +177,9 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<CmdPipeSequence> NewCmdPipeSequence(
-      std::unique_ptr<Cmd> cmd_left, std::unique_ptr<Cmd> cmd_right) {
-    return std::unique_ptr<CmdPipeSequence>(new CmdPipeSequence(
-        std::move(cmd_left),  std::move(cmd_right), fn_pos_()));
+      std::vector<std::unique_ptr<Cmd>>&& cmds) {
+    return std::unique_ptr<CmdPipeSequence>(new CmdPipeSequence(std::move(cmds),
+                                                                fn_pos_()));
   }
 
   inline std::unique_ptr<CmdAndOr> NewCmdAndOr(

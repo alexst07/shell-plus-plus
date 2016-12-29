@@ -697,25 +697,24 @@ class CmdPipeSequence: public Cmd {
     visitor->VisitCmdPipeSequence(this);
   }
 
-  Cmd* cmd_left() const noexcept {
-    return cmd_left_.get();
-  }
+  std::vector<Cmd*> cmds() const noexcept {
+    std::vector<Cmd*> vec;
 
-  Cmd* cmd_right() const noexcept {
-    return cmd_right_.get();
+    for (auto&& cmd: cmds_) {
+      vec.push_back(cmd.get());
+    }
+
+    return vec;
   }
 
  private:
   friend class AstNodeFactory;
 
-  std::unique_ptr<Cmd> cmd_left_;
-  std::unique_ptr<Cmd> cmd_right_;
+  std::vector<std::unique_ptr<Cmd>> cmds_;
 
-  CmdPipeSequence(std::unique_ptr<Cmd> cmd_left,
-                  std::unique_ptr<Cmd> cmd_right, Position position)
+  CmdPipeSequence(std::vector<std::unique_ptr<Cmd>>&& cmds, Position position)
       : Cmd(NodeType::kCmdPipeSequence, position)
-      , cmd_left_(std::move(cmd_left))
-      , cmd_right_(std::move(cmd_right)) {}
+      , cmds_(std::move(cmds)) {}
 };
 
 class CmdPiece: public AstNode {

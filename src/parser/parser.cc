@@ -485,27 +485,25 @@ ParserResult<Statement> Parser::ParserCmdAndOr() {
 }
 
 ParserResult<Statement> Parser::ParserCmdPipe() {
-  ParserResult<Statement> rstmt;
-  ParserResult<Statement> lstmt = ParserIoRedirectCmdList();
-
-  if (!lstmt) {
-    return ParserResult<Statement>(); // Error
-  }
-
-  while (token_.Is(TokenKind::BIT_OR)) {
-    TokenKind token_kind = token_.GetKind();
-    Advance();
-    ValidToken();
-
-    rstmt = std::move(ParserIoRedirectCmdList());
-
-    if (rstmt) {
-      lstmt = std::move(factory_.NewCmdPipeSequence(
-          lstmt.MoveAstNode<Cmd>(), rstmt.MoveAstNode<Cmd>()));
+  auto check_pipe = [&]()-> bool {
+    if (token_.Is(TokenKind::BIT_OR)) {
+      Advance();
+      ValidToken();
+      return true;
+    } else {
+      return false;
     }
-  }
+  };
 
-  return lstmt;
+  std::vector<std::unique_ptr<Cmd>> cmds;
+
+  do {
+    ParserResult<Statement> cmd = ParserIoRedirectCmdList();
+    cmds.push_back(cmd.MoveAstNode<Cmd>());
+    ValidToken();
+  } while (check_pipe());
+
+  return ParserResult<Statement>(factory_.NewCmdPipeSequence(std::move(cmds)));
 }
 
 bool Parser::IsIoRedirect() {

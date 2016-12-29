@@ -397,8 +397,9 @@ class AstPrinter: public AstVisitor {
     Level();
     std::cout << "<command pipe>\n";
     level_++;
-    cmd_pipe->cmd_left()->Accept(this);
-    cmd_pipe->cmd_right()->Accept(this);
+    for (auto& e: cmd_pipe->cmds()) {
+      e->Accept(this);
+    }
     level_--;
   }
 
