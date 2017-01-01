@@ -7,6 +7,7 @@
 #include <list>
 #include <functional>
 #include <boost/variant.hpp>
+#include <termios.h>
 
 #include "interpreter/abstract-obj.h"
 
@@ -81,9 +82,118 @@ class CmdOperationData {
 };
 
 
-  typedef boost::variant<SimpleCmdData, CmdIoRedirectData,
-                 CmdPipeListData, CmdOperationData> CmdData;
+typedef boost::variant<SimpleCmdData, CmdIoRedirectData,
+    CmdPipeListData, CmdOperationData> CmdData;
 
+struct CmdTable {
+  CmdData cmd_;
+  bool expr_;
+};
+
+
+
+struct Process {
+  Process(std::vector<std::string>&& args):args_(std::move(args)) {
+    argv_ = new char*[args_.size() + 1];
+
+    for (size_t i = 0; i < args_.size(); i++) {
+      argv_[i] = const_cast<char*>(args_[i].data());
+    }
+
+    argv_[args_.size()] = NULL;
+  }
+
+  ~Process() {
+    delete[] argv_;
+  }
+
+  Process(const Process& p) {
+    args_ = p.args_;
+    argv_ = new char*[args_.size() + 1];
+
+    for (size_t i = 0; i < args_.size(); i++) {
+      argv_[i] = const_cast<char*>(args_[i].data());
+    }
+
+    argv_[args_.size()] = NULL;
+
+    pid_ = p.pid_;
+    completed_ = p.completed_;
+    stopped_ = p.stopped_;
+    status_ = p.status_;
+  }
+
+  Process& operator=(const Process& p) {
+    args_ = p.args_;
+
+    delete[] argv_;
+    argv_ = new char*[args_.size() + 1];
+
+    for (size_t i = 0; i < args_.size(); i++) {
+      argv_[i] = const_cast<char*>(args_[i].data());
+    }
+
+    argv_[args_.size()] = NULL;
+
+    pid_ = p.pid_;
+    completed_ = p.completed_;
+    stopped_ = p.stopped_;
+    status_ = p.status_;
+  }
+
+  Process(Process&& p) {
+    args_ = std::move(p.args_);
+    argv_ = p.argv_;
+    p.argv_ = nullptr;
+    pid_ = p.pid_;
+    completed_ = p.completed_;
+    stopped_ = p.stopped_;
+    status_ = p.status_;
+  }
+
+  Process& operator=(Process&& p) {
+    args_ = std::move(p.args_);
+    argv_ = p.argv_;
+    p.argv_ = nullptr;
+    pid_ = p.pid_;
+    completed_ = p.completed_;
+    stopped_ = p.stopped_;
+    status_ = p.status_;
+
+    return *this;
+  }
+
+  void LaunchProcess (int infile, int outfile, int errfile);
+
+  std::vector<std::string> args_;
+  char **argv_;
+  pid_t pid_;
+  char completed_;
+  char stopped_;
+  int status_;
+};
+
+
+struct Job {
+  void LaunchJob (int foreground);
+  int MarkProcessStatus(pid_t pid, int status);
+  int JobIsStopped();
+  int JobIsCompleted();
+  void WaitForJob();
+  void PutJobInForeground(int cont);
+  void PutJobInBackground(int cont);
+
+  std::vector<Process> process_;
+  int stdin_, stdout_, stderr_;
+  int shell_terminal_;
+  int shell_is_interactive_;
+  pid_t pgid_;
+  int shell_pgid_;
+  struct termios tmodes_;
+  struct termios shell_tmodes_;
+};
+
+void LaunchProcess (char **argv, int infile, int outfile, int errfile);
 
 int ExecCmd(std::vector<std::string> &&args);
 
