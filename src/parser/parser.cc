@@ -500,8 +500,12 @@ ParserResult<Statement> Parser::ParserCmdPipe() {
   do {
     ParserResult<Statement> cmd = ParserIoRedirectCmdList();
     cmds.push_back(cmd.MoveAstNode<Cmd>());
-    ValidToken();
   } while (check_pipe());
+
+  // return a simple command if it has not a pipe command
+  if (cmds.size() == 1) {
+    return ParserResult<Statement>(std::move(cmds.at(0)));
+  }
 
   return ParserResult<Statement>(factory_.NewCmdPipeSequence(std::move(cmds)));
 }

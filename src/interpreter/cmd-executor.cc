@@ -34,7 +34,7 @@ void CmdExecutor::Exec(CmdFull *node) {
 
   switch (node->cmd()->type()) {
     case AstNode::NodeType::kSimpleCmd: {
-      return ExecSimpleCmd(static_cast<SimpleCmd*>(node->cmd()), background);
+      ExecSimpleCmd(static_cast<SimpleCmd*>(node->cmd()), background);
     } break;
 
     case AstNode::NodeType::kCmdIoRedirectList: {
@@ -49,21 +49,19 @@ void CmdExecutor::Exec(CmdFull *node) {
   }
 }
 
-void CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool background) {
+void CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool foreground) {
   SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
 
   std::vector<std::string> cmd_args = simple_cmd.Exec(node);
 
-  pid_t pid;
-  pid = fork();
-
-  if (pid == 0) {
-    ExecCmd(std::move(cmd_args));
-  }
-
-  if (!background) {
-    WaitCmd(pid);
-  }
+  Job job;
+  Process p(std::move(cmd_args));
+  job.process_.push_back(p);
+  job.shell_is_interactive_ = 0;
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = STDOUT_FILENO;
+  job.stdin_ = STDIN_FILENO;
+  job.LaunchJob(foreground);
 }
 
 std::tuple<int, std::string> CmdExecutor::ExecSimpleCmdWithResult(
@@ -231,33 +229,71 @@ CmdIoData::Direction CmdIoRedirectExecutor::SelectDirection(TokenKind kind) {
 
 CmdIoRedirectData CmdIoRedirectListExecutor::PrepareData(
     CmdIoRedirectList *node) {
+  Job job;
+  job.shell_is_interactive_ = 0;
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = STDOUT_FILENO;
+  job.stdin_ = STDIN_FILENO;
+
   std::vector<CmdIoRedirect*> cmd_io_list = node->children();
-  CmdIoListData cmd_io_ls_data;
+  for (auto& l : cmd_io_list) {
+    int fd;
 
-  CmdIoRedirectExecutor cmd_io_exec(this, symbol_table_stack());
+    std::string file_name = boost::get<std::string>(l.content_);
 
-  // get list of files for input or output
-  for (CmdIoRedirect* cmd_io: cmd_io_list) {
-    cmd_io_ls_data.push_back(std::move(cmd_io_exec.Exec(cmd_io)));
-  }
+    if (l->kind() == TokenKind::GREATER_THAN) {
+      fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
+                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+    } else if (l.in_out_ == TokenKind::SAR) {
+      fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND,
+                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+    } else if (l.in_out_ == TokenKind::LESS_THAN) {
+      fd = open(file_name.c_str(), O_RDONLY,
+                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      dup2(fd, STDIN_FILENO);
+    }
 
-  CmdIoRedirectData cmd_io_redirect;
-  cmd_io_redirect.io_list_ = std::move(cmd_io_ls_data);
-
-  switch (node->cmd()->type()) {
-    case AstNode::NodeType::kSimpleCmd: {
-      SimpleCmdExecutor simple_cmd_exec(this, symbol_table_stack());
-      cmd_io_redirect.cmd_ =
-          simple_cmd_exec.Exec(static_cast<SimpleCmd*>(node->cmd()));
-    } break;
-
-    default: {
-      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                         boost::format("invalid command ast"));
+    if (l->all()) {
+      dup2(fd, STDOUT_FILENO);
+      dup2(fd, STDERR_FILENO);
+    } else {
+      if (l.n_iface_ == 2) {
+        dup2(fd, STDERR_FILENO);
+      } else if (l.n_iface_ == 1) {
+        dup2(fd, STDOUT_FILENO);
+      }
     }
   }
 
-  return cmd_io_redirect;
+
+
+
+//  CmdIoListData cmd_io_ls_data;
+
+//  CmdIoRedirectExecutor cmd_io_exec(this, symbol_table_stack());
+
+//  // get list of files for input or output
+//  for (CmdIoRedirect* cmd_io: cmd_io_list) {
+//    cmd_io_ls_data.push_back(std::move(cmd_io_exec.Exec(cmd_io)));
+//  }
+
+//  CmdIoRedirectData cmd_io_redirect;
+//  cmd_io_redirect.io_list_ = std::move(cmd_io_ls_data);
+
+//  switch (node->cmd()->type()) {
+//    case AstNode::NodeType::kSimpleCmd: {
+//      SimpleCmdExecutor simple_cmd_exec(this, symbol_table_stack());
+//      cmd_io_redirect.cmd_ =
+//          simple_cmd_exec.Exec(static_cast<SimpleCmd*>(node->cmd()));
+//    } break;
+
+//    default: {
+//      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+//                         boost::format("invalid command ast"));
+//    }
+//  }
+
+//  return cmd_io_redirect;
 }
 
 int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {

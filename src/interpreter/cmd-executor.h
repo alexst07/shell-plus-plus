@@ -18,7 +18,7 @@ class CmdExecutor: public Executor {
 
   void Exec(CmdFull *node);
 
-  void ExecSimpleCmd(SimpleCmd *node, bool background);
+  void ExecSimpleCmd(SimpleCmd *node, bool foreground);
 
   std::tuple<int, std::string> ExecSimpleCmdWithResult(SimpleCmd *node);
 

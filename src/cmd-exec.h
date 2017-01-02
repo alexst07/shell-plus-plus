@@ -49,16 +49,16 @@ class CmdPipeListData {
 
   void Push(CmdIoRedirectData&& cmd) {
     boost::variant<CmdIoRedirectData, std::string> v(std::move(cmd));
-    pipe_list_.push(std::move(v));
+    pipe_list_.push_back(std::move(v));
   }
 
   void Push(std::string&& cmd) {
     boost::variant<CmdIoRedirectData, std::string> v(std::move(cmd));
-    pipe_list_.push(std::move(v));
+    pipe_list_.push_back(std::move(v));
   }
 
  private:
-  std::stack<boost::variant<CmdIoRedirectData, std::string>> pipe_list_;
+  std::vector<boost::variant<CmdIoRedirectData, std::string>> pipe_list_;
 };
 
 class CmdOperationData {
@@ -89,8 +89,6 @@ struct CmdTable {
   CmdData cmd_;
   bool expr_;
 };
-
-
 
 struct Process {
   Process(std::vector<std::string>&& args):args_(std::move(args)) {
@@ -175,6 +173,10 @@ struct Process {
 
 
 struct Job {
+  Job(bool var_out_mode = false)
+      : status_(0)
+      , var_out_mode_(var_out_mode) {}
+
   void LaunchJob (int foreground);
   int MarkProcessStatus(pid_t pid, int status);
   int JobIsStopped();
@@ -185,6 +187,9 @@ struct Job {
 
   std::vector<Process> process_;
   int stdin_, stdout_, stderr_;
+  std::string strout_, strerr_;
+  bool var_out_mode_;
+  int status_;
   int shell_terminal_;
   int shell_is_interactive_;
   pid_t pgid_;
@@ -198,6 +203,15 @@ void LaunchProcess (char **argv, int infile, int outfile, int errfile);
 int ExecCmd(std::vector<std::string> &&args);
 
 int WaitCmd(int pid);
+
+class BuildJob {
+ public:
+  BuildJob(CmdTable& cmd): cmd_(cmd) {}
+  Job Build();
+
+ private:
+  CmdTable& cmd_;
+};
 
 }
 }
