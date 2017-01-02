@@ -226,28 +226,53 @@ CmdIoData::Direction CmdIoRedirectExecutor::SelectDirection(TokenKind kind) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+int CmdIoRedirectListExecutor::GetInteger(Literal* integer) {
+  return boost::get<int>(integer->value());
+}
 
-CmdIoRedirectData CmdIoRedirectListExecutor::PrepareData(
-    CmdIoRedirectList *node) {
+std::string CmdIoRedirectListExecutor::FileName(FilePathCmd* file_path) {
+  std::vector<AstNode*> pieces = file_path->children();
+  std::string str_part = "";
+
+  for (AstNode* piece: pieces) {
+    switch (piece->type()) {
+      case AstNode::NodeType::kCmdPiece: {
+        CmdPiece* cmd_part = static_cast<CmdPiece*>(piece);
+
+        str_part += cmd_part->cmd_str();
+
+        if (cmd_part->blank_after()) {
+          str_part += " ";
+        }
+      } break;
+
+      default: {
+        throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                           boost::format("invalid command ast"));
+      }
+    }
+  }
+
+  return str_part;
+}
+
+Job CmdIoRedirectListExecutor::PrepareData(CmdIoRedirectList *node) {
   Job job;
   job.shell_is_interactive_ = 0;
-  job.stderr_ = STDERR_FILENO;
-  job.stdout_ = STDOUT_FILENO;
-  job.stdin_ = STDIN_FILENO;
 
   std::vector<CmdIoRedirect*> cmd_io_list = node->children();
   for (auto& l : cmd_io_list) {
     int fd;
 
-    std::string file_name = boost::get<std::string>(l.content_);
+    std::string file_name = FileName(l->file_path_cmd());
 
     if (l->kind() == TokenKind::GREATER_THAN) {
       fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
                 S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
-    } else if (l.in_out_ == TokenKind::SAR) {
+    } else if (l->kind() == TokenKind::SAR) {
       fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND,
                 S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
-    } else if (l.in_out_ == TokenKind::LESS_THAN) {
+    } else if (l->kind() == TokenKind::LESS_THAN) {
       fd = open(file_name.c_str(), O_RDONLY,
                 S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
       dup2(fd, STDIN_FILENO);
@@ -257,54 +282,38 @@ CmdIoRedirectData CmdIoRedirectListExecutor::PrepareData(
       dup2(fd, STDOUT_FILENO);
       dup2(fd, STDERR_FILENO);
     } else {
-      if (l.n_iface_ == 2) {
-        dup2(fd, STDERR_FILENO);
-      } else if (l.n_iface_ == 1) {
-        dup2(fd, STDOUT_FILENO);
+      if (l->has_integer()) {
+        int num = GetInteger(l->integer());
+        if (num == 2) {
+          dup2(fd, STDERR_FILENO);
+        } else if (num == 1) {
+          dup2(fd, STDOUT_FILENO);
+        }
+      } else {
+        if (l->kind() == TokenKind::GREATER_THAN ||
+            l->kind() == TokenKind::SAR) {
+          dup2(fd, STDOUT_FILENO);
+        }
       }
     }
   }
 
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = STDOUT_FILENO;
+  job.stdin_ = STDIN_FILENO;
 
-
-
-//  CmdIoListData cmd_io_ls_data;
-
-//  CmdIoRedirectExecutor cmd_io_exec(this, symbol_table_stack());
-
-//  // get list of files for input or output
-//  for (CmdIoRedirect* cmd_io: cmd_io_list) {
-//    cmd_io_ls_data.push_back(std::move(cmd_io_exec.Exec(cmd_io)));
-//  }
-
-//  CmdIoRedirectData cmd_io_redirect;
-//  cmd_io_redirect.io_list_ = std::move(cmd_io_ls_data);
-
-//  switch (node->cmd()->type()) {
-//    case AstNode::NodeType::kSimpleCmd: {
-//      SimpleCmdExecutor simple_cmd_exec(this, symbol_table_stack());
-//      cmd_io_redirect.cmd_ =
-//          simple_cmd_exec.Exec(static_cast<SimpleCmd*>(node->cmd()));
-//    } break;
-
-//    default: {
-//      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-//                         boost::format("invalid command ast"));
-//    }
-//  }
-
-//  return cmd_io_redirect;
+  return job;
 }
 
 int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
-  CmdIoRedirectData cmd_io_redirect = PrepareData(node);
-  return ExecCmdIo(std::move(cmd_io_redirect), background);
+  Job job = PrepareData(node);
+  job.LaunchJob(background);
 }
 
 std::tuple<int, std::string> CmdIoRedirectListExecutor::Exec(
     CmdIoRedirectList *node) {
-  CmdIoRedirectData cmd_io_redirect = PrepareData(node);
-  return ExecCmdIoWithResult(std::move(cmd_io_redirect));
+//  CmdIoRedirectData cmd_io_redirect = PrepareData(node);
+//  return ExecCmdIoWithResult(std::move(cmd_io_redirect));
 }
 
 int CmdIoRedirectListExecutor::SelectFile(CmdIoData::Direction direction,

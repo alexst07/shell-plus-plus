@@ -56,7 +56,11 @@ class CmdIoRedirectListExecutor: public Executor {
 
   std::tuple<int, std::string> Exec(CmdIoRedirectList *node);
 
-  CmdIoRedirectData PrepareData(CmdIoRedirectList *node);
+  int GetInteger(Literal* integer);
+
+  std::string FileName(FilePathCmd* file_path);
+
+  Job PrepareData(CmdIoRedirectList *node);
 
   int SelectFile(CmdIoData::Direction direction, const std::string& file_name);
 
