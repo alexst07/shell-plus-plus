@@ -1,4 +1,4 @@
-﻿#include "lexer.h"
+#include "lexer.h"
 
 #include <sstream>
 
@@ -157,7 +157,7 @@ Token Lexer::ScanNumber() {
 Token Lexer::ScanWord(const std::string& prestr) {
   std::string word = prestr;
 
-  while (c_ != ' ' && c_ != '\t' && c_ != '\n' && c_ != kEndOfInput) {
+  while (IsSpecialChar(c_)) {
     if (c_ == '\\') {
       word += ScanWordEscape();
       Advance();

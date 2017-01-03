@@ -59,6 +59,19 @@ private:
     return (IsLetter(c) || c == '_');
   }
 
+  inline bool IsSpecialChar(char c) {
+    bool b = c_ != ' ' &&
+             c_ != '\t' &&
+             c_ != '\n' &&
+             c_ != ')' &&
+             c_ != ';' &&
+             c_ != '}' &&
+             c_ != '|' &&
+             c_ != '&' &&
+             c_ != kEndOfInput;
+    return b;
+  }
+
   inline void Advance() {
     if (buffer_cursor_ == strlen_ - 1) {
       c_ = kEndOfInput;
