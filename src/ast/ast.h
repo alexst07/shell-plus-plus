@@ -113,7 +113,8 @@ namespace internal {
   V(CmdPipeSequence)       \
   V(CmdAndOr)              \
   V(CmdFull)               \
-  V(SubShell)
+  V(SubShell)              \
+  V(CmdValueExpr)
 
 #define AST_NODE_LIST(V)        \
   DECLARATION_NODE_LIST(V)      \
@@ -903,6 +904,35 @@ class SimpleCmd: public Cmd {
   SimpleCmd(std::vector<std::unique_ptr<AstNode>>&& pieces, Position position)
       : Cmd(NodeType::kSimpleCmd, position)
       , pieces_(std::move(pieces)) {}
+};
+
+class CmdValueExpr: public Cmd {
+ public:
+  ~CmdValueExpr() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitCmdValueExpr(this);
+  }
+
+  Expression* expr() const noexcept {
+    return expr_.get();
+  }
+
+  bool blank_after() const noexcept {
+    return blank_after_;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> expr_;
+  bool blank_after_;
+
+  CmdValueExpr(std::unique_ptr<Expression> expr, bool blank_after,
+               Position position)
+      : Cmd(NodeType::kCmdValueExpr, position)
+      , expr_(std::move(expr))
+      , blank_after_(blank_after) {}
 };
 
 class ForInStatement: public Statement {

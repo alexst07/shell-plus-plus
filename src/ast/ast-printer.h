@@ -403,6 +403,15 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitCmdValueExpr(CmdValueExpr* cmd) {
+    Level();
+    std::cout << "<cmd_expr_value has_blank_space=" << cmd->blank_after()
+              << ">";
+    level_++;
+    cmd->expr()->Accept(this);
+    level_--;
+  }
+
   void virtual VisitCmdAndOr(CmdAndOr* cmd_and_or) {
     Level();
     std::cout << "<command_and_or type: "

@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <boost/algorithm/string.hpp>
 
+#include "expr_executor.h"
+#include "str-object.h"
+
 namespace setti {
 namespace internal {
 
@@ -21,6 +24,11 @@ CmdExprData CmdExecutor::ExecGetResult(CmdFull *node) {
     case AstNode::NodeType::kCmdIoRedirectList: {
       CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
       return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()));
+    } break;
+
+    case AstNode::NodeType::kCmdPipeSequence: {
+      CmdPipeSequenceExecutor cmd_pipe(this, symbol_table_stack());
+      return cmd_pipe.Exec(static_cast<CmdPipeSequence*>(node->cmd()));
     } break;
 
     default: {
@@ -121,24 +129,30 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
   bool is_cmd_piece = false;
 
   for (AstNode* piece: pieces) {
-    switch (piece->type()) {
-      case AstNode::NodeType::kCmdPiece: {
-        is_cmd_piece = true;
-        CmdPiece* cmd_part = static_cast<CmdPiece*>(piece);
+    if (piece->type() == AstNode::NodeType::kCmdPiece) {
+      is_cmd_piece = true;
+      CmdPiece* cmd_part = static_cast<CmdPiece*>(piece);
 
-        str_part += cmd_part->cmd_str();
-        blank_after = cmd_part->blank_after();
+      str_part += cmd_part->cmd_str();
+      blank_after = cmd_part->blank_after();
 
-        if (blank_after) {
-          cmd.push_back(str_part);
-          str_part = "";
-        }
-      } break;
-
-      default: {
-        throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                           boost::format("invalid command ast"));
+      if (blank_after) {
+        cmd.push_back(str_part);
+        str_part = "";
       }
+    } else if (piece->type() == AstNode::NodeType::kCmdValueExpr) {
+      is_cmd_piece = true;
+      CmdValueExpr* cmd_expr = static_cast<CmdValueExpr*>(piece);
+      str_part +=  ResolveCmdExpr(this, cmd_expr);
+      blank_after = cmd_expr->blank_after();
+
+      if (blank_after) {
+        cmd.push_back(str_part);
+        str_part = "";
+      }
+    } else {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("invalid command ast"));
     }
   }
 
@@ -155,26 +169,30 @@ int CmdIoRedirectListExecutor::GetInteger(Literal* integer) {
   return boost::get<int>(integer->value());
 }
 
-std::string CmdIoRedirectListExecutor::FileName(FilePathCmd* file_path) {
+std::string CmdIoRedirectListExecutor::FileName(Executor* parent,
+                                                FilePathCmd* file_path) {
   std::vector<AstNode*> pieces = file_path->children();
   std::string str_part = "";
 
   for (AstNode* piece: pieces) {
-    switch (piece->type()) {
-      case AstNode::NodeType::kCmdPiece: {
-        CmdPiece* cmd_part = static_cast<CmdPiece*>(piece);
+    if (piece->type() == AstNode::NodeType::kCmdPiece) {
+      CmdPiece* cmd_part = static_cast<CmdPiece*>(piece);
 
-        str_part += cmd_part->cmd_str();
+      str_part += cmd_part->cmd_str();
 
-        if (cmd_part->blank_after()) {
-          str_part += " ";
-        }
-      } break;
-
-      default: {
-        throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                           boost::format("invalid command ast"));
+      if (cmd_part->blank_after()) {
+        str_part += " ";
       }
+    } else if(piece->type() == AstNode::NodeType::kCmdValueExpr) {
+      CmdValueExpr* cmd_expr = static_cast<CmdValueExpr*>(piece);
+      str_part += ResolveCmdExpr(parent, cmd_expr);
+
+      if (cmd_expr->blank_after()) {
+        str_part += " ";
+      }
+    } else {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("invalid command ast"));
     }
   }
 
@@ -189,7 +207,7 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
   for (auto& l : cmd_io_list) {
     int fd;
 
-    std::string file_name = FileName(l->file_path_cmd());
+    std::string file_name = FileName(this, l->file_path_cmd());
 
     if (l->kind() == TokenKind::GREATER_THAN) {
       fd = CreateFile(file_name);
@@ -288,7 +306,7 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
 void CmdPipeSequenceExecutor::InputFile(CmdIoRedirectList* file, Job& job) {
   for (auto& io: file->children()) {
     std::string file_name =
-        CmdIoRedirectListExecutor::FileName(io->file_path_cmd());
+        CmdIoRedirectListExecutor::FileName(this, io->file_path_cmd());
 
     int fd;
     // get only the input file
@@ -327,7 +345,7 @@ void CmdPipeSequenceExecutor::OutputFile(CmdIoRedirectList* cmd_io, Job &job) {
   for (auto& io: cmd_io->children()) {
     int fd;
     std::string file_name =
-        CmdIoRedirectListExecutor::FileName(io->file_path_cmd());
+        CmdIoRedirectListExecutor::FileName(this, io->file_path_cmd());
 
     if (io->kind() == TokenKind::GREATER_THAN) {
       fd = CreateFile(file_name);
@@ -354,16 +372,10 @@ void CmdPipeSequenceExecutor::AddCommand(Job& job, Cmd* cmd) {
   job.process_.push_back(std::move(p));
 }
 
-int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
+void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
   std::vector<Cmd*> cmds = node->cmds();
-
-  Job job;
-  job.shell_is_interactive_ = 0;
-  job.stderr_ = STDERR_FILENO;
-  job.stdout_ = STDOUT_FILENO;
-  job.stdin_ = STDIN_FILENO;
-
   int i = 0;
+
   for (auto& cmd: cmds) {
     if (i == 0) {
       // only in the first pipe can have input file
@@ -389,10 +401,70 @@ int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
 
     i++;
   }
+}
+
+int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
+  Job job;
+  job.shell_is_interactive_ = 0;
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = STDOUT_FILENO;
+  job.stdin_ = STDIN_FILENO;
+
+  PopulateCmd(job, node);
 
   job.LaunchJob(!background);
 
   return job.Status();
+}
+
+CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
+  const int READ = 0;
+  const int WRITE = 1;
+
+  int pipettes[2];
+
+  pipe(pipettes);
+
+  Job job;
+  job.shell_is_interactive_ = 0;
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = pipettes[WRITE];
+  job.stdin_ = STDIN_FILENO;
+
+  PopulateCmd(job, node);
+  job.LaunchJob(true);
+
+  char buf[PIPE_BUF];
+  int rd = 0;
+
+  rd = read(pipettes[READ], buf, PIPE_BUF);
+
+  std::string str_out = "";
+
+  if (rd > 0) {
+    buf[rd] = '\0';
+    str_out += buf;
+  }
+
+  close(pipettes[READ]);
+
+  return CmdExprData(job.Status(), str_out, "");
+}
+
+std::string ResolveCmdExpr(Executor* parent, CmdValueExpr* cmd_expr) {
+  ExpressionExecutor expr(parent, parent->symbol_table_stack());
+  ObjectPtr obj = expr.Exec(cmd_expr->expr());
+
+  // get cmd method overload
+  ObjectPtr str_obj(obj->ObjCmd());
+
+  if (str_obj->type() != Object::ObjectType::STRING) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("object must be string"));
+  }
+
+  std::string part = static_cast<StringObject&>(*str_obj).value();
+  return part;
 }
 
 int CreateFile(std::string file_name) {

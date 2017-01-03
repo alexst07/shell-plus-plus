@@ -51,11 +51,11 @@ class Executor {
     return nullptr;
   }
 
- protected:
   SymbolTableStack& symbol_table_stack() {
     return symbol_table_stack_;
   }
 
+ protected:
   inline bool is_root() const{
     return is_root_;
   }

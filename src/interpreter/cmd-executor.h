@@ -50,7 +50,7 @@ class CmdIoRedirectListExecutor: public Executor {
 
   int GetInteger(Literal* integer);
 
-  static std::string FileName(FilePathCmd* file_path);
+  static std::string FileName(Executor *parent, FilePathCmd* file_path);
 
   void PrepareData(Job &job, CmdIoRedirectList *node);
 };
@@ -62,12 +62,17 @@ class CmdPipeSequenceExecutor: public Executor {
       : Executor(parent, symbol_table_stack) {}
 
   int Exec(CmdPipeSequence *node, bool background);
+  CmdExprData Exec(CmdPipeSequence *node);
+  void PopulateCmd(Job& job, CmdPipeSequence *node);
   void InputFile(CmdIoRedirectList* file, Job &job);
   void OutputFile(CmdIoRedirectList* cmd_io, Job &job);
   void SelectInterface(CmdIoRedirect* io, Job& job, int fd);
   int GetInteger(Literal* integer);
   void AddCommand(Job& job, Cmd *cmd);
 };
+
+// functions to manipulate command
+std::string ResolveCmdExpr(Executor *parent, CmdValueExpr *cmd_expr);
 
 // functions to manipulate file
 int CreateFile(std::string file_name);

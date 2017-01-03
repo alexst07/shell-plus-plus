@@ -53,6 +53,11 @@ ObjectPtr StringObject::Copy() {
   return obj_factory.NewString(value_);
 }
 
+ObjectPtr StringObject::ObjCmd() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(value_);
+}
+
 std::shared_ptr<Object> StringObject::Arrow(std::shared_ptr<Object> self,
                               const std::string& name) {
   ObjectPtr obj_type = ObjType();

@@ -570,7 +570,7 @@ std::unique_ptr<CmdIoRedirect> Parser::ParserIoRedirectCmd() {
     // Parser an expression inside the path
     // ex: cmd_any > f${v[0]}.any
     if (token_ == TokenKind::DOLLAR_LBRACE) {
-      ParserResult<Expression> exp(ParserExpCmd());
+      ParserResult<Cmd> exp(ParserExpCmd());
       pieces.push_back(std::move(exp.MoveAstNode()));
       continue;
     }
@@ -604,7 +604,7 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
     // Parser an expression inside command
     // ex: cmd -e ${v[0] + 1} -d
     if (token_ == TokenKind::DOLLAR_LBRACE) {
-      ParserResult<Expression> exp(ParserExpCmd());
+      ParserResult<Cmd> exp(ParserExpCmd());
       pieces.push_back(std::move(exp.MoveAstNode()));
       continue;
     }
@@ -626,29 +626,33 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
   return ParserResult<Statement>(factory_.NewSimpleCmd(std::move(pieces)));
 }
 
-ParserResult<Expression> Parser::ParserExpCmd() {
+ParserResult<Cmd> Parser::ParserExpCmd() {
   // Parser an expression inside command
   // ex: any_cmd -e ${v[0] + 1} -d
   if (token_ != TokenKind::DOLLAR_LBRACE) {
     ErrorMsg(boost::format("expected ${ token"));
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Cmd>(); // Error
   }
 
   Advance();
   if (token_ == TokenKind::NWL) {
     ErrorMsg(boost::format("New line not allowed"));
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Cmd>(); // Error
   }
 
   ParserResult<Expression> exp(ParserOrExp());
 
   if (token_ != TokenKind::RBRACE) {
     ErrorMsg(boost::format("token '}' expected"));
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Cmd>(); // Error
   }
+
+  bool has_space = token_.BlankAfter();
+
   Advance();
 
-  return exp;
+  return ParserResult<Cmd>(factory_.NewCmdValueExpr(exp.MoveAstNode(),
+                                                    has_space));
 }
 
 ParserResult<Statement> Parser::ParserReturnStmt() {

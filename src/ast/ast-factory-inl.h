@@ -297,6 +297,12 @@ class AstNodeFactory {
         fn_pos_()));
   }
 
+  inline std::unique_ptr<CmdValueExpr> NewCmdValueExpr(
+     std::unique_ptr<Expression> expr, bool has_blank_space) {
+    return std::unique_ptr<CmdValueExpr>(new CmdValueExpr(std::move(expr),
+        has_blank_space, fn_pos_()));
+  }
+
  private:
   std::function<Position()> fn_pos_;
 };

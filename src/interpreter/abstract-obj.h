@@ -70,7 +70,7 @@ class Object {
                        boost::format("type has no int interface"));
   }
 
-  virtual std::shared_ptr<Object> ObjCmd() const {
+  virtual std::shared_ptr<Object> ObjCmd() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no cmd interface"));
   }
