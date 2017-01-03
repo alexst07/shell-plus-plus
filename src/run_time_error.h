@@ -26,7 +26,8 @@ class RunTimeError : public std::exception {
     INCOMPATIBLE_TYPE,
     FUNC_PARAMS,
     ZERO_DIV,
-    INVALID_OPCODE
+    INVALID_OPCODE,
+    FILE
   };
 
   RunTimeError();

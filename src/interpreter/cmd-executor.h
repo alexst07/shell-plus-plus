@@ -9,18 +9,20 @@
 namespace setti {
 namespace internal {
 
+typedef std::tuple<int, std::string, std::string> CmdExprData;
+
 class CmdExecutor: public Executor {
  public:
   CmdExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-  std::tuple<int, std::string> ExecGetResult(CmdFull *node);
+  CmdExprData ExecGetResult(CmdFull *node);
 
   void Exec(CmdFull *node);
 
   void ExecSimpleCmd(SimpleCmd *node, bool foreground);
 
-  std::tuple<int, std::string> ExecSimpleCmdWithResult(SimpleCmd *node);
+  CmdExprData ExecSimpleCmdWithResult(SimpleCmd *node);
 
   std::string CmdOutput() const;
 
@@ -44,13 +46,13 @@ class CmdIoRedirectListExecutor: public Executor {
 
   int Exec(CmdIoRedirectList *node, bool background);
 
-  std::tuple<int, std::string> Exec(CmdIoRedirectList *node);
+  CmdExprData Exec(CmdIoRedirectList *node);
 
   int GetInteger(Literal* integer);
 
   static std::string FileName(FilePathCmd* file_path);
 
-  Job PrepareData(CmdIoRedirectList *node);
+  void PrepareData(Job &job, CmdIoRedirectList *node);
 };
 
 class CmdPipeSequenceExecutor: public Executor {
@@ -66,6 +68,11 @@ class CmdPipeSequenceExecutor: public Executor {
   int GetInteger(Literal* integer);
   void AddCommand(Job& job, Cmd *cmd);
 };
+
+// functions to manipulate file
+int CreateFile(std::string file_name);
+int AppendFile(std::string file_name);
+int ReadFile(std::string file_name);
 
 }
 }

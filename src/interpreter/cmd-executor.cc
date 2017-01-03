@@ -5,11 +5,12 @@
 #include <fcntl.h>
 #include <climits>
 #include <cstdio>
+#include <boost/algorithm/string.hpp>
 
 namespace setti {
 namespace internal {
 
-std::tuple<int, std::string> CmdExecutor::ExecGetResult(CmdFull *node) {
+CmdExprData CmdExecutor::ExecGetResult(CmdFull *node) {
   CmdData cmd_data;
 
   switch (node->cmd()->type()) {
@@ -69,17 +70,11 @@ void CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool foreground) {
   job.LaunchJob(foreground);
 }
 
-std::tuple<int, std::string> CmdExecutor::ExecSimpleCmdWithResult(
+CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
     SimpleCmd *node) {
   SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
-  std::vector<std::string> cmd_args =
-      simple_cmd.Exec(node);
 
-  // status will be 0 if the command is executed on background
-  int status = 0;
-
-  // str_out will be empty if the command is executed on background
-  std::string str_out = "";
+  std::vector<std::string> cmd_args = simple_cmd.Exec(node);
 
   const int READ = 0;
   const int WRITE = 1;
@@ -88,25 +83,21 @@ std::tuple<int, std::string> CmdExecutor::ExecSimpleCmdWithResult(
 
   pipe(pipettes);
 
-  fcntl(pipettes[READ], F_SETFL, fcntl(pipettes[READ], F_GETFL) | O_NONBLOCK);
-
-  pid_t pid;
-  pid = fork();
-
-  if (pid == 0) {  
-    close(pipettes[READ]);
-    dup2(pipettes[WRITE], STDOUT_FILENO);
-    ExecCmd(std::move(cmd_args));
-  }
-
-  status = WaitCmd(pid);
-  close(pipettes[WRITE]);
+  Job job;
+  Process p(std::move(cmd_args));
+  job.process_.push_back(p);
+  job.shell_is_interactive_ = 0;
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = pipettes[WRITE];
+  job.stdin_ = STDIN_FILENO;
+  job.LaunchJob(true);
 
   char buf[PIPE_BUF];
   int rd = 0;
 
-
   rd = read(pipettes[READ], buf, PIPE_BUF);
+
+  std::string str_out = "";
 
   if (rd > 0) {
     buf[rd] = '\0';
@@ -115,7 +106,7 @@ std::tuple<int, std::string> CmdExecutor::ExecSimpleCmdWithResult(
 
   close(pipettes[READ]);
 
-  return std::tuple<int, std::string>(status, str_out);
+  return CmdExprData(job.Status(), str_out, "");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,34 +178,25 @@ std::string CmdIoRedirectListExecutor::FileName(FilePathCmd* file_path) {
     }
   }
 
+  boost::trim(str_part);
+
   return str_part;
 }
 
-Job CmdIoRedirectListExecutor::PrepareData(CmdIoRedirectList *node) {
-  // starts job struct
-  Job job;
-  job.shell_is_interactive_ = 0;
-  job.stderr_ = STDERR_FILENO;
-  job.stdout_ = STDOUT_FILENO;
-  job.stdin_ = STDIN_FILENO;
-
+void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
   // iterate over redirect io list
   std::vector<CmdIoRedirect*> cmd_io_list = node->children();
   for (auto& l : cmd_io_list) {
     int fd;
 
     std::string file_name = FileName(l->file_path_cmd());
-    std::cout << "file name: " << file_name << "\n";
 
     if (l->kind() == TokenKind::GREATER_THAN) {
-      fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
-                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      fd = CreateFile(file_name);
     } else if (l->kind() == TokenKind::SAR) {
-      fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND,
-                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      fd = AppendFile(file_name);
     } else if (l->kind() == TokenKind::LESS_THAN) {
-      fd = open(file_name.c_str(), O_RDONLY,
-                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      fd = ReadFile(file_name);
       job.stdin_ = fd;
     }
 
@@ -251,21 +233,55 @@ Job CmdIoRedirectListExecutor::PrepareData(CmdIoRedirectList *node) {
 
   Process p(std::move(cmd_args));
   job.process_.push_back(std::move(p));
-
-  return job;
 }
 
 int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
-  Job job = PrepareData(node);
+  // starts job struct
+  Job job;
+  job.shell_is_interactive_ = 0;
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = STDOUT_FILENO;
+  job.stdin_ = STDIN_FILENO;
+
+  PrepareData(job, node);
   job.LaunchJob(!background);
 
   return job.Status();
 }
 
-std::tuple<int, std::string> CmdIoRedirectListExecutor::Exec(
+CmdExprData CmdIoRedirectListExecutor::Exec(
     CmdIoRedirectList *node) {
-//  CmdIoRedirectData cmd_io_redirect = PrepareData(node);
-//  return ExecCmdIoWithResult(std::move(cmd_io_redirect));
+  const int READ = 0;
+  const int WRITE = 1;
+
+  int pipettes[2];
+
+  pipe(pipettes);
+
+  Job job;
+  job.shell_is_interactive_ = 0;
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = pipettes[WRITE];
+  job.stdin_ = STDIN_FILENO;
+
+  PrepareData(job, node);
+  job.LaunchJob(true);
+
+  char buf[PIPE_BUF];
+  int rd = 0;
+
+  rd = read(pipettes[READ], buf, PIPE_BUF);
+
+  std::string str_out = "";
+
+  if (rd > 0) {
+    buf[rd] = '\0';
+    str_out += buf;
+  }
+
+  close(pipettes[READ]);
+
+  return CmdExprData(job.Status(), str_out, "");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,8 +293,7 @@ void CmdPipeSequenceExecutor::InputFile(CmdIoRedirectList* file, Job& job) {
     int fd;
     // get only the input file
     if (io->kind() == TokenKind::LESS_THAN) {
-      fd = open(file_name.c_str(), O_RDONLY,
-                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      fd = ReadFile(file_name);
       job.stdin_ = fd;
     }
   }
@@ -315,12 +330,10 @@ void CmdPipeSequenceExecutor::OutputFile(CmdIoRedirectList* cmd_io, Job &job) {
         CmdIoRedirectListExecutor::FileName(io->file_path_cmd());
 
     if (io->kind() == TokenKind::GREATER_THAN) {
-      fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
-                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      fd = CreateFile(file_name);
       SelectInterface(io, job, fd);
     } else if (io->kind() == TokenKind::SAR) {
-      fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND,
-                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      fd = AppendFile(file_name);
       SelectInterface(io, job, fd);
     }
   }
@@ -380,6 +393,42 @@ int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
   job.LaunchJob(!background);
 
   return job.Status();
+}
+
+int CreateFile(std::string file_name) {
+  int fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
+                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+
+  if (fd > 0) {
+    return fd;
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::FILE,
+                       boost::format("%1%: %2%")% file_name% strerror(errno));
+  }
+}
+
+int AppendFile(std::string file_name) {
+  int fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND,
+                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+
+  if (fd > 0) {
+    return fd;
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::FILE,
+                       boost::format("%1%: %2%")% file_name% strerror(errno));
+  }
+}
+
+int ReadFile(std::string file_name) {
+  int fd = open(file_name.c_str(), O_RDONLY,
+                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+
+  if (fd > 0) {
+    return fd;
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::FILE,
+                       boost::format("%1%: %2%")% file_name% strerror(errno));
+  }
 }
 
 }

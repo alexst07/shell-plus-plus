@@ -318,7 +318,7 @@ ObjectPtr ExpressionExecutor::ExecAttribute(Attribute* node) {
 
 ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
   CmdExecutor cmd_full(this, symbol_table_stack());
-  std::tuple<int, std::string> res(cmd_full.ExecGetResult(
+  CmdExprData res(cmd_full.ExecGetResult(
       static_cast<CmdFull*>(node->cmd())));
 
   // create command object
