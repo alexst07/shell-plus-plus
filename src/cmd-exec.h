@@ -182,6 +182,7 @@ struct Job {
   int JobIsStopped();
   int JobIsCompleted();
   void WaitForJob();
+  bool Status();
   void PutJobInForeground(int cont);
   void PutJobInBackground(int cont);
 

@@ -36,16 +36,6 @@ class SimpleCmdExecutor: public Executor {
   std::vector<std::string> Exec(SimpleCmd *node);
 };
 
-class CmdIoRedirectExecutor: public Executor {
- public:
-  CmdIoRedirectExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack) {}
-
-  CmdIoData Exec(CmdIoRedirect *node);
-
-  CmdIoData::Direction SelectDirection(TokenKind kind);
-};
-
 class CmdIoRedirectListExecutor: public Executor {
  public:
   CmdIoRedirectListExecutor(Executor* parent,
@@ -58,17 +48,9 @@ class CmdIoRedirectListExecutor: public Executor {
 
   int GetInteger(Literal* integer);
 
-  std::string FileName(FilePathCmd* file_path);
+  static std::string FileName(FilePathCmd* file_path);
 
   Job PrepareData(CmdIoRedirectList *node);
-
-  int SelectFile(CmdIoData::Direction direction, const std::string& file_name);
-
-  void CopyStdIo(int fd, CmdIoData::Direction direction, int iface, bool all);
-
-  int ExecCmdIo(CmdIoRedirectData&& io_data, bool background);
-
-  std::tuple<int, std::string> ExecCmdIoWithResult(CmdIoRedirectData&& io_data);
 };
 
 class CmdPipeSequenceExecutor: public Executor {
@@ -77,7 +59,12 @@ class CmdPipeSequenceExecutor: public Executor {
                             SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-//  CmdPipeListData Exec(CmdPipeSequence *node);
+  int Exec(CmdPipeSequence *node, bool background);
+  void InputFile(CmdIoRedirectList* file, Job &job);
+  void OutputFile(CmdIoRedirectList* cmd_io, Job &job);
+  void SelectInterface(CmdIoRedirect* io, Job& job, int fd);
+  int GetInteger(Literal* integer);
+  void AddCommand(Job& job, Cmd *cmd);
 };
 
 }

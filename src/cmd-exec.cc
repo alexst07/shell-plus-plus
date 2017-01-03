@@ -168,6 +168,16 @@ void Job::WaitForJob() {
            && !JobIsStopped() && !JobIsCompleted());
 }
 
+bool Job::Status() {
+  int status = 0;
+
+  for (auto& p: process_) {
+    status |= p.status_;
+  }
+
+  return status == 0? true: false;
+}
+
 void Job::PutJobInForeground(int cont) {
   /* Put the job into the foreground.  */
   tcsetpgrp (shell_terminal_, pgid_);

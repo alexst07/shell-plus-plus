@@ -42,6 +42,11 @@ void CmdExecutor::Exec(CmdFull *node) {
       cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()), background);
     } break;
 
+    case AstNode::NodeType::kCmdPipeSequence: {
+      CmdPipeSequenceExecutor cmd_pipe(this, symbol_table_stack());
+      cmd_pipe.Exec(static_cast<CmdPipeSequence*>(node->cmd()), background);
+    } break;
+
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid command ast"));
@@ -155,77 +160,6 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-CmdIoData CmdIoRedirectExecutor::Exec(CmdIoRedirect *node) {
-  FilePathCmd* file_path = node->file_path_cmd();
-  std::vector<AstNode*> pieces = file_path->children();
-  std::string str_part = "";
-
-  int out = 0;
-
-  if (node->has_integer()) {
-    if (node->integer()->literal_type()) {
-      out = boost::get<int>(node->integer()->value());
-    }
-  }
-
-  for (AstNode* piece: pieces) {
-    switch (piece->type()) {
-      case AstNode::NodeType::kCmdPiece: {
-        CmdPiece* cmd_part = static_cast<CmdPiece*>(piece);
-
-        str_part += cmd_part->cmd_str();
-
-        if (cmd_part->blank_after()) {
-          str_part += " ";
-        }
-      } break;
-
-      default: {
-        throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                           boost::format("invalid command ast"));
-      }
-    }
-  }
-
-  CmdIoData cmd_io;
-  cmd_io.content_ = str_part;
-  cmd_io.all_ = node->all();
-  cmd_io.n_iface_ = out;
-  cmd_io.in_out_ = SelectDirection(node->kind());
-
-  return cmd_io;
-}
-
-CmdIoData::Direction CmdIoRedirectExecutor::SelectDirection(TokenKind kind) {
-  switch (kind) {
-    case TokenKind::SHL:
-    case TokenKind::LESS_THAN:
-      return CmdIoData::Direction::IN;
-      break;
-
-    case TokenKind::GREATER_THAN:
-      return CmdIoData::Direction::OUT;
-      break;
-
-    case TokenKind::SAR:
-      return CmdIoData::Direction::OUT_APPEND;
-      break;
-
-    case TokenKind::SSHL:
-      return CmdIoData::Direction::IN_VARIABLE;
-      break;
-
-    case TokenKind::SSAR:
-      return CmdIoData::Direction::OUT_VARIABLE;
-      break;
-
-   default:
-      return CmdIoData::Direction::OUT;
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 int CmdIoRedirectListExecutor::GetInteger(Literal* integer) {
   return boost::get<int>(integer->value());
 }
@@ -257,14 +191,20 @@ std::string CmdIoRedirectListExecutor::FileName(FilePathCmd* file_path) {
 }
 
 Job CmdIoRedirectListExecutor::PrepareData(CmdIoRedirectList *node) {
+  // starts job struct
   Job job;
   job.shell_is_interactive_ = 0;
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = STDOUT_FILENO;
+  job.stdin_ = STDIN_FILENO;
 
+  // iterate over redirect io list
   std::vector<CmdIoRedirect*> cmd_io_list = node->children();
   for (auto& l : cmd_io_list) {
     int fd;
 
     std::string file_name = FileName(l->file_path_cmd());
+    std::cout << "file name: " << file_name << "\n";
 
     if (l->kind() == TokenKind::GREATER_THAN) {
       fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
@@ -275,39 +215,51 @@ Job CmdIoRedirectListExecutor::PrepareData(CmdIoRedirectList *node) {
     } else if (l->kind() == TokenKind::LESS_THAN) {
       fd = open(file_name.c_str(), O_RDONLY,
                 S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
-      dup2(fd, STDIN_FILENO);
+      job.stdin_ = fd;
     }
 
     if (l->all()) {
-      dup2(fd, STDOUT_FILENO);
-      dup2(fd, STDERR_FILENO);
+      job.stdout_ = fd;
+      job.stderr_ = fd;
     } else {
       if (l->has_integer()) {
         int num = GetInteger(l->integer());
+        // 2 is the error interface
         if (num == 2) {
-          dup2(fd, STDERR_FILENO);
+          job.stderr_ = fd;
         } else if (num == 1) {
-          dup2(fd, STDOUT_FILENO);
+          job.stdout_ = fd;
         }
       } else {
         if (l->kind() == TokenKind::GREATER_THAN ||
             l->kind() == TokenKind::SAR) {
-          dup2(fd, STDOUT_FILENO);
+          job.stdout_ = fd;
         }
       }
     }
   }
 
-  job.stderr_ = STDERR_FILENO;
-  job.stdout_ = STDOUT_FILENO;
-  job.stdin_ = STDIN_FILENO;
+  // io command can only have simple command
+  if (node->cmd()->type() != AstNode::NodeType::kSimpleCmd) {
+    throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                       boost::format("invalid command ast"));
+  }
+
+  SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
+  std::vector<std::string> cmd_args = simple_cmd.Exec(static_cast<SimpleCmd*>(
+      node->cmd()));
+
+  Process p(std::move(cmd_args));
+  job.process_.push_back(std::move(p));
 
   return job;
 }
 
 int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
   Job job = PrepareData(node);
-  job.LaunchJob(background);
+  job.LaunchJob(!background);
+
+  return job.Status();
 }
 
 std::tuple<int, std::string> CmdIoRedirectListExecutor::Exec(
@@ -316,131 +268,119 @@ std::tuple<int, std::string> CmdIoRedirectListExecutor::Exec(
 //  return ExecCmdIoWithResult(std::move(cmd_io_redirect));
 }
 
-int CmdIoRedirectListExecutor::SelectFile(CmdIoData::Direction direction,
-                                          const std::string& file_name) {
-  int fd;
-
-  if (direction == CmdIoData::Direction::OUT) {
-    fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
-              S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
-  } else if (direction == CmdIoData::Direction::OUT_APPEND) {
-    fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND,
-              S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
-  } else if (direction == CmdIoData::Direction::IN) {
-    fd = open(file_name.c_str(), O_RDONLY,
-              S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
-  }
-
-  return fd;
-}
-
-void CmdIoRedirectListExecutor::CopyStdIo(int fd,
-                                          CmdIoData::Direction direction,
-                                          int iface,
-                                          bool all) {
-  if (direction == CmdIoData::Direction::OUT ||
-      direction == CmdIoData::Direction::OUT_APPEND) {
-    if (all) {
-      dup2(fd, STDOUT_FILENO);
-      dup2(fd, STDERR_FILENO);
-    } else {
-      if (iface == 0 || iface == 1) {
-        dup2(fd, STDOUT_FILENO);
-      } else if (iface == 2) {
-        dup2(fd, STDERR_FILENO);
-      }
-    }
-  } else if (direction == CmdIoData::Direction::IN) {
-    dup2(fd, STDIN_FILENO);
-  }
-}
-
-int CmdIoRedirectListExecutor::ExecCmdIo(CmdIoRedirectData&& io_data,
-                                          bool background) {
-  pid_t pid;
-  pid = fork();
-  std::vector<int> fds;
-  int status = 0;
-
-  if (pid == 0) {
-    for (auto& l: io_data.io_list_) {
-      std::string str_file = boost::get<std::string>(l.content_);
-
-      int fd = SelectFile(l.in_out_, str_file);
-
-      fds.push_back(fd);
-
-      CopyStdIo(fd, l.in_out_, l.n_iface_, l.all_);
-    }
-
-    ExecCmd(std::move(io_data.cmd_));
-  }
-
-  if (!background) {
-    status = WaitCmd(pid);
-  }
-
-  return status;
-}
-
-std::tuple<int, std::string> CmdIoRedirectListExecutor::ExecCmdIoWithResult(
-    CmdIoRedirectData&& io_data) {
-  std::vector<int> fds;
-  int status = 0;
-  std::string str_out = "";
-
-  const int READ = 0;
-  const int WRITE = 1;
-
-  int pipettes[2];
-
-  fcntl(pipettes[READ], F_SETFL, fcntl(pipettes[READ], F_GETFL) | O_NONBLOCK);
-
-  pipe(pipettes);
-
-  pid_t pid;
-  pid = fork();
-
-  if (pid == 0) {
-    close(pipettes[READ]);
-    dup2(pipettes[WRITE], STDOUT_FILENO);
-
-    for (auto& l: io_data.io_list_) {
-      std::string str_file = boost::get<std::string>(l.content_);
-
-      int fd = SelectFile(l.in_out_, str_file);
-
-      fds.push_back(fd);
-
-      CopyStdIo(fd, l.in_out_, l.n_iface_, l.all_);
-    }
-
-    ExecCmd(std::move(io_data.cmd_));
-  }
-
-  status = WaitCmd(pid);
-  close(pipettes[WRITE]);
-
-  char buf[PIPE_BUF];
-  int rd = 0;
-
-  rd = read(pipettes[READ], buf, PIPE_BUF);
-
-  if (rd > 0) {
-    buf[rd] = '\0';
-    str_out += buf;
-  }
-
-  close(pipettes[READ]);
-
-  return std::tuple<int, std::string>(status, str_out);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
+void CmdPipeSequenceExecutor::InputFile(CmdIoRedirectList* file, Job& job) {
+  for (auto& io: file->children()) {
+    std::string file_name =
+        CmdIoRedirectListExecutor::FileName(io->file_path_cmd());
 
-//CmdPipeListData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
+    int fd;
+    // get only the input file
+    if (io->kind() == TokenKind::LESS_THAN) {
+      fd = open(file_name.c_str(), O_RDONLY,
+                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      job.stdin_ = fd;
+    }
+  }
+}
 
-//}
+int CmdPipeSequenceExecutor::GetInteger(Literal* integer) {
+  return boost::get<int>(integer->value());
+}
+
+void CmdPipeSequenceExecutor::SelectInterface(CmdIoRedirect* io, Job& job,
+                                              int fd) {
+  if (io->all()) {
+    job.stdout_ = fd;
+    job.stderr_ = fd;
+  } else {
+    if (io->has_integer()) {
+      int num = GetInteger(io->integer());
+      // 2 is the error interface
+      if (num == 2) {
+        job.stderr_ = fd;
+      } else if (num == 1) {
+        job.stdout_ = fd;
+      }
+    } else {
+      job.stdout_ = fd;
+    }
+  }
+}
+
+void CmdPipeSequenceExecutor::OutputFile(CmdIoRedirectList* cmd_io, Job &job) {
+  for (auto& io: cmd_io->children()) {
+    int fd;
+    std::string file_name =
+        CmdIoRedirectListExecutor::FileName(io->file_path_cmd());
+
+    if (io->kind() == TokenKind::GREATER_THAN) {
+      fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
+                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      SelectInterface(io, job, fd);
+    } else if (io->kind() == TokenKind::SAR) {
+      fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND,
+                S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
+      SelectInterface(io, job, fd);
+    }
+  }
+}
+
+void CmdPipeSequenceExecutor::AddCommand(Job& job, Cmd* cmd) {
+  // io command can only have simple command
+  if (cmd->type() != AstNode::NodeType::kSimpleCmd) {
+    throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                       boost::format("invalid command ast"));
+  }
+
+  SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
+  std::vector<std::string> cmd_args =
+      simple_cmd.Exec(static_cast<SimpleCmd*>(cmd));
+
+  Process p(std::move(cmd_args));
+  job.process_.push_back(std::move(p));
+}
+
+int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
+  std::vector<Cmd*> cmds = node->cmds();
+
+  Job job;
+  job.shell_is_interactive_ = 0;
+  job.stderr_ = STDERR_FILENO;
+  job.stdout_ = STDOUT_FILENO;
+  job.stdin_ = STDIN_FILENO;
+
+  int i = 0;
+  for (auto& cmd: cmds) {
+    if (i == 0) {
+      // only in the first pipe can have input file
+      if (cmd->type() == AstNode::NodeType::kCmdIoRedirectList) {
+        CmdIoRedirectList* cmd_io = static_cast<CmdIoRedirectList*>(cmd);
+        InputFile(cmd_io, job);
+        AddCommand(job, cmd_io->cmd());
+      } else {
+        AddCommand(job, cmd);
+      }
+    } else if (i == (cmds.size() - 1)) {
+      // the last pipe can have output file
+      if (cmd->type() == AstNode::NodeType::kCmdIoRedirectList) {
+        CmdIoRedirectList* cmd_io = static_cast<CmdIoRedirectList*>(cmd);
+        OutputFile(cmd_io, job);
+        AddCommand(job, cmd_io->cmd());
+      } else {
+        AddCommand(job, cmd);
+      }
+    } else {
+      AddCommand(job, cmd);
+    }
+
+    i++;
+  }
+
+  job.LaunchJob(!background);
+
+  return job.Status();
+}
 
 }
 }
