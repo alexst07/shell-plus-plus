@@ -176,14 +176,14 @@ void Job::WaitForJob() {
            && !JobIsStopped() && !JobIsCompleted());
 }
 
-bool Job::Status() {
+int Job::Status() {
   int status = 0;
 
   for (auto& p: process_) {
     status |= p.status_;
   }
 
-  return status == 0? true: false;
+  return status;
 }
 
 void Job::PutJobInForeground(int cont) {
