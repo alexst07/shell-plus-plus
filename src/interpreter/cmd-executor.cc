@@ -14,21 +14,28 @@ namespace setti {
 namespace internal {
 
 CmdExprData CmdExecutor::ExecGetResult(CmdFull *node) {
-  CmdData cmd_data;
+  return ExecCmdGetResult(node->cmd());
+}
 
-  switch (node->cmd()->type()) {
+CmdExprData CmdExecutor::ExecCmdGetResult(Cmd *node) {
+  switch (node->type()) {
     case AstNode::NodeType::kSimpleCmd: {
-      return ExecSimpleCmdWithResult(static_cast<SimpleCmd*>(node->cmd()));
+      return ExecSimpleCmdWithResult(static_cast<SimpleCmd*>(node));
     } break;
 
     case AstNode::NodeType::kCmdIoRedirectList: {
       CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
-      return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()));
+      return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node));
     } break;
 
     case AstNode::NodeType::kCmdPipeSequence: {
       CmdPipeSequenceExecutor cmd_pipe(this, symbol_table_stack());
-      return cmd_pipe.Exec(static_cast<CmdPipeSequence*>(node->cmd()));
+      return cmd_pipe.Exec(static_cast<CmdPipeSequence*>(node));
+    } break;
+
+    case AstNode::NodeType::kCmdAndOr: {
+      CmdAndOr* cmd = static_cast<CmdAndOr*>(node);
+      return ExecCmdBinOp(cmd);
     } break;
 
     default: {
@@ -38,22 +45,95 @@ CmdExprData CmdExecutor::ExecGetResult(CmdFull *node) {
   }
 }
 
-void CmdExecutor::Exec(CmdFull *node) {
-  bool background = !node->background();
+CmdExprData CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd) {
+  CmdExprData lcmd = ExecCmdGetResult(cmd->cmd_left());
 
-  switch (node->cmd()->type()) {
+  if (cmd->kind() == TokenKind::AND) {
+    if (std::get<0>(lcmd) == 0) {
+      CmdExprData rcmd = ExecCmdGetResult(cmd->cmd_right());
+      std::string str_out = std::get<1>(lcmd) + std::get<1>(rcmd);
+      std::string str_err = std::get<2>(lcmd) + std::get<2>(rcmd);
+      return CmdExprData(std::get<0>(rcmd),  str_out, str_err);
+    } else {
+      std::string str_out = std::get<1>(lcmd);
+      std::string str_err = std::get<2>(lcmd);
+      // -1 set error on status of operation
+      return CmdExprData(-1,  str_out, str_err);
+    }
+  } else if (cmd->kind() == TokenKind::OR) {
+    if (std::get<0>(lcmd) == 0) {
+      std::string str_out = std::get<1>(lcmd);
+      std::string str_err = std::get<2>(lcmd);
+      // -1 set error on status of operation
+      return CmdExprData(std::get<0>(lcmd),  str_out, str_err);
+    } else {
+      CmdExprData rcmd = ExecCmdGetResult(cmd->cmd_right());
+      std::string str_out = std::get<1>(lcmd) + std::get<1>(rcmd);
+      std::string str_err = std::get<2>(lcmd) + std::get<2>(rcmd);
+      return CmdExprData(std::get<0>(rcmd),  str_out, str_err);
+    }
+  }
+}
+
+int CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd, bool wait) {
+  int lcmd = ExecCmd(cmd->cmd_left(), wait);
+
+  if (cmd->kind() == TokenKind::AND) {
+    if (lcmd == 0) {
+      int rcmd = ExecCmd(cmd->cmd_right(), wait);
+      return rcmd;
+    } else {
+      return lcmd;
+    }
+  } else if (cmd->kind() == TokenKind::OR) {
+    if (lcmd == 0) {
+      return lcmd;
+    } else {
+      int rcmd = ExecCmd(cmd->cmd_right(), wait);
+      return rcmd;
+    }
+  }
+}
+
+int CmdExecutor::Exec(CmdFull *node) {
+  bool wait = !node->background();
+  return ExecCmd(node->cmd(), wait);
+}
+
+int CmdExecutor::ExecCmd(Cmd *node, bool wait) {
+  switch (node->type()) {
     case AstNode::NodeType::kSimpleCmd: {
-      ExecSimpleCmd(static_cast<SimpleCmd*>(node->cmd()), background);
+      return ExecSimpleCmd(static_cast<SimpleCmd*>(node), wait);
     } break;
 
     case AstNode::NodeType::kCmdIoRedirectList: {
       CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
-      cmd_io.Exec(static_cast<CmdIoRedirectList*>(node->cmd()), background);
+      return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node), wait);
     } break;
 
     case AstNode::NodeType::kCmdPipeSequence: {
       CmdPipeSequenceExecutor cmd_pipe(this, symbol_table_stack());
-      cmd_pipe.Exec(static_cast<CmdPipeSequence*>(node->cmd()), background);
+      return cmd_pipe.Exec(static_cast<CmdPipeSequence*>(node), wait);
+    } break;
+
+    case AstNode::NodeType::kCmdAndOr: {
+      CmdAndOr* cmd = static_cast<CmdAndOr*>(node);
+      if (wait) {
+        // wait all command
+        return ExecCmdBinOp(cmd, true);
+      } else {
+        // as one command must wait for other to know the result
+        // but the system cant waint, so, create a new process
+        // to execute the whole command
+        pid_t pid;
+        pid = fork ();
+        if (pid == 0) {
+          int r = ExecCmdBinOp(cmd, true);
+          exit(r);
+        }
+
+        return 0;
+      }
     } break;
 
     default: {

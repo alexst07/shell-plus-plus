@@ -18,7 +18,15 @@ class CmdExecutor: public Executor {
 
   CmdExprData ExecGetResult(CmdFull *node);
 
-  void Exec(CmdFull *node);
+  CmdExprData ExecCmdGetResult(Cmd *node);
+
+  CmdExprData ExecCmdBinOp(CmdAndOr* cmd);
+
+  int ExecCmdBinOp(CmdAndOr* cmd, bool wait);
+
+  int Exec(CmdFull *node);
+
+  int ExecCmd(Cmd *node, bool wait);
 
   int ExecSimpleCmd(SimpleCmd *node, bool wait);
 
