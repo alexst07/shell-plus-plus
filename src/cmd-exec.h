@@ -190,6 +190,7 @@ struct Job {
   int stdin_, stdout_, stderr_;
   std::string strout_, strerr_;
   bool var_out_mode_;
+  bool wait_;
   int status_;
   int shell_terminal_;
   int shell_is_interactive_;

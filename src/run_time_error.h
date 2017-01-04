@@ -27,7 +27,8 @@ class RunTimeError : public std::exception {
     FUNC_PARAMS,
     ZERO_DIV,
     INVALID_OPCODE,
-    FILE
+    FILE,
+    INVALID_COMMAND
   };
 
   RunTimeError();

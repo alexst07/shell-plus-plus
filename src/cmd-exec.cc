@@ -113,8 +113,12 @@ void Process::LaunchProcess(int infile, int outfile, int errfile) {
     close (errfile);
   }
 
-  /* Exec the new process.  Make sure we exit.  */
+  // Exec the new process
   execvp (argv_[0], argv_);
+
+  // if some error ocurred on exec, throw the exception
+  throw RunTimeError(RunTimeError::ErrorCode::INVALID_COMMAND,
+                     boost::format("%1%: command not found")%argv_[0]);
 }
 
 int Job::MarkProcessStatus(pid_t pid, int status) {
@@ -158,6 +162,10 @@ int Job::JobIsCompleted() {
 }
 
 void Job::WaitForJob() {
+  if (!wait_) {
+    return;
+  }
+
   int status;
   pid_t pid;
 

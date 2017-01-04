@@ -20,7 +20,7 @@ class CmdExecutor: public Executor {
 
   void Exec(CmdFull *node);
 
-  void ExecSimpleCmd(SimpleCmd *node, bool foreground);
+  int ExecSimpleCmd(SimpleCmd *node, bool wait);
 
   CmdExprData ExecSimpleCmdWithResult(SimpleCmd *node);
 
@@ -44,7 +44,7 @@ class CmdIoRedirectListExecutor: public Executor {
                             SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-  int Exec(CmdIoRedirectList *node, bool background);
+  int Exec(CmdIoRedirectList *node, bool wait);
 
   CmdExprData Exec(CmdIoRedirectList *node);
 
@@ -61,7 +61,7 @@ class CmdPipeSequenceExecutor: public Executor {
                             SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
-  int Exec(CmdPipeSequence *node, bool background);
+  int Exec(CmdPipeSequence *node, bool wait);
   CmdExprData Exec(CmdPipeSequence *node);
   void PopulateCmd(Job& job, CmdPipeSequence *node);
   void InputFile(CmdIoRedirectList* file, Job &job);

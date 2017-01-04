@@ -39,7 +39,7 @@ CmdExprData CmdExecutor::ExecGetResult(CmdFull *node) {
 }
 
 void CmdExecutor::Exec(CmdFull *node) {
-  bool background = node->background();
+  bool background = !node->background();
 
   switch (node->cmd()->type()) {
     case AstNode::NodeType::kSimpleCmd: {
@@ -63,7 +63,7 @@ void CmdExecutor::Exec(CmdFull *node) {
   }
 }
 
-void CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool foreground) {
+int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool wait) {
   SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
 
   std::vector<std::string> cmd_args = simple_cmd.Exec(node);
@@ -75,7 +75,15 @@ void CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool foreground) {
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = STDOUT_FILENO;
   job.stdin_ = STDIN_FILENO;
-  job.LaunchJob(foreground);
+  job.wait_ = wait;
+  job.LaunchJob(wait);
+
+  if (wait) {
+    return job.Status();
+  } else {
+    // if not wait, return as process success
+    return 0;
+  }
 }
 
 CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
@@ -98,6 +106,7 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
+  job.wait_ = true;
   job.LaunchJob(true);
 
   char buf[PIPE_BUF];
@@ -253,16 +262,17 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
   job.process_.push_back(std::move(p));
 }
 
-int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
+int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool wait) {
   // starts job struct
   Job job;
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = STDOUT_FILENO;
   job.stdin_ = STDIN_FILENO;
+  job.wait_ = wait;
 
   PrepareData(job, node);
-  job.LaunchJob(!background);
+  job.LaunchJob(!wait);
 
   return job.Status();
 }
@@ -281,6 +291,7 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
+  job.wait_ = true;
 
   PrepareData(job, node);
   job.LaunchJob(true);
@@ -403,16 +414,17 @@ void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
   }
 }
 
-int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
+int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool wait) {
   Job job;
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = STDOUT_FILENO;
   job.stdin_ = STDIN_FILENO;
+  job.wait_ = wait;
 
   PopulateCmd(job, node);
 
-  job.LaunchJob(!background);
+  job.LaunchJob(wait);
 
   return job.Status();
 }
@@ -430,6 +442,7 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
+  job.wait_ = true;
 
   PopulateCmd(job, node);
   job.LaunchJob(true);
