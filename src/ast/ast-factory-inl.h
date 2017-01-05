@@ -303,6 +303,19 @@ class AstNodeFactory {
         has_blank_space, fn_pos_()));
   }
 
+  inline std::unique_ptr<ImportStatement> NewImportStatement(
+      ImportStatement::From from, ImportStatement::Import import,
+      std::unique_ptr<Identifier> as) {
+    return std::unique_ptr<ImportStatement>(new ImportStatement(std::move(from),
+       std::move(import), std::move(as), fn_pos_()));
+  }
+
+  inline std::unique_ptr<ImportStatement> NewImportStatement(
+      ImportStatement::Import import, std::unique_ptr<Identifier> as) {
+    return std::unique_ptr<ImportStatement>(new ImportStatement(
+       std::move(import), std::move(as), fn_pos_()));
+  }
+
  private:
   std::function<Position()> fn_pos_;
 };

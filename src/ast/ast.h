@@ -51,6 +51,7 @@ namespace internal {
   V(TryCatchStatement)            \
   V(TryFinallyStatement)          \
   V(DeferStatement)               \
+  V(ImportStatement)              \
   V(DebuggerStatement)
 
 #define LITERAL_NODE_LIST(V) \
@@ -513,6 +514,89 @@ class ReturnStatement: public Statement {
                   Position position)
       : Statement(NodeType::kReturnStatement, position)
       , assign_list_(std::move(assign_list)) {}
+};
+
+class ImportStatement: public Statement {
+ public:
+  using From =
+      boost::variant<std::unique_ptr<Identifier>, std::unique_ptr<Literal>>;
+  using Import = From;
+
+  virtual ~ImportStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitImportStatement(this);
+  }
+
+ template<typename T>
+ auto from() const noexcept -> T* {
+   return boost::get<T>(from_).get();
+ }
+
+ template<typename T>
+ auto import() const noexcept -> T* {
+   return boost::get<T>(import_).get();
+ }
+
+ bool is_from_path() const noexcept {
+   int index = from_.which();
+
+   if (index == 2) {
+     return true;
+   }
+
+   return false;
+ }
+
+ bool has_from() const noexcept {
+   return has_from_;
+ }
+
+ bool is_import_path() const noexcept {
+   int index = import_.which();
+
+   if (index == 2) {
+     return true;
+   }
+
+   return false;
+ }
+
+ Identifier* as() const noexcept {
+   return as_.get();
+ }
+
+ bool has_as() const noexcept {
+   if (as_) {
+     return true;
+   }
+
+   return false;
+ }
+
+ private:
+  friend class AstNodeFactory;
+
+  From from_;
+  Import import_;
+  std::unique_ptr<Identifier> as_;
+  bool has_from_;
+
+  ImportStatement(From from,  Import import, std::unique_ptr<Identifier> as,
+                  Position position)
+      : Statement(NodeType::kSubShell, position)
+      , from_(std::move(from))
+      , import_(std::move(import))
+      , as_(std::move(as))
+      , has_from_(true) {}
+
+  ImportStatement(Import import, std::unique_ptr<Identifier> as,
+                  Position position)
+      : Statement(NodeType::kSubShell, position)
+      , from_(std::move(std::unique_ptr<Identifier>(nullptr)))
+      , import_(std::move(import))
+      , as_(std::move(as))
+      , has_from_(false) {}
 };
 
 class Block: public Statement {
