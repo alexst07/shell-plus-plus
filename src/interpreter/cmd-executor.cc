@@ -9,9 +9,46 @@
 
 #include "expr_executor.h"
 #include "str-object.h"
+#include "stmt_executor.h"
+#include "scope-executor.h"
+#include "utils/scope-exit.h"
 
 namespace setti {
 namespace internal {
+
+void CmdDeclEntry::Exec(Executor* parent, std::vector<std::string>&& args) {
+  // it is the table function
+  SymbolTablePtr table =
+      SymbolTable::Create(SymbolTable::TableType::FUNC_TABLE);
+
+  // main symbol of function
+  symbol_table_.Push(table, false);
+
+  BlockExecutor executor(parent, symbol_table_, true);
+
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    executor.ExecuteDeferStack();
+    symbol_table_.Pop();
+  });
+  IgnoreUnused(cleanup);
+
+  std::vector<ObjectPtr> vec_args;
+
+  for (auto& arg: args) {
+    ObjectFactory obj_factory(symbol_table_);
+    ObjectPtr str_obj(obj_factory.NewString(arg));
+    vec_args.push_back(str_obj);
+  }
+
+  ObjectFactory obj_factory(symbol_table_);
+  ObjectPtr array_obj(obj_factory.NewArray(std::move(vec_args)));
+
+  // arguments as passed to command as an array called args
+  symbol_table_.SetEntry("args", array_obj);
+
+  executor.Exec(start_node_);
+}
 
 CmdExprData CmdExecutor::ExecGetResult(CmdFull *node) {
   return ExecCmdGetResult(node->cmd());
@@ -148,8 +185,8 @@ int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool wait) {
 
   std::vector<std::string> cmd_args = simple_cmd.Exec(node);
 
-  Job job;
-  Process p(std::move(cmd_args));
+  Job job(symbol_table_stack());
+  Process p(symbol_table_stack(), std::move(cmd_args));
   job.process_.push_back(p);
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
@@ -179,8 +216,8 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
 
   pipe(pipettes);
 
-  Job job;
-  Process p(std::move(cmd_args));
+  Job job(symbol_table_stack());
+  Process p(symbol_table_stack(), std::move(cmd_args));
   job.process_.push_back(p);
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
@@ -338,13 +375,13 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
   std::vector<std::string> cmd_args = simple_cmd.Exec(static_cast<SimpleCmd*>(
       node->cmd()));
 
-  Process p(std::move(cmd_args));
+  Process p(symbol_table_stack(), std::move(cmd_args));
   job.process_.push_back(std::move(p));
 }
 
 int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool wait) {
   // starts job struct
-  Job job;
+  Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = STDOUT_FILENO;
@@ -366,7 +403,7 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
 
   pipe(pipettes);
 
-  Job job;
+  Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = pipettes[WRITE];
@@ -459,7 +496,7 @@ void CmdPipeSequenceExecutor::AddCommand(Job& job, Cmd* cmd) {
   std::vector<std::string> cmd_args =
       simple_cmd.Exec(static_cast<SimpleCmd*>(cmd));
 
-  Process p(std::move(cmd_args));
+  Process p(symbol_table_stack(), std::move(cmd_args));
   job.process_.push_back(std::move(p));
 }
 
@@ -495,7 +532,7 @@ void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
 }
 
 int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool wait) {
-  Job job;
+  Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = STDOUT_FILENO;
@@ -517,7 +554,7 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
 
   pipe(pipettes);
 
-  Job job;
+  Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = pipettes[WRITE];

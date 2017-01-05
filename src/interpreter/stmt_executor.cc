@@ -244,6 +244,11 @@ void StmtExecutor::Exec(AstNode* node) {
       defer.Exec(static_cast<DeferStatement*>(node));
     } break;
 
+    case AstNode::NodeType::kCmdDeclaration: {
+      CmdDeclExecutor cmd(this, symbol_table_stack());
+      cmd.Exec(static_cast<DeferStatement*>(node));
+    } break;
+
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid opcode of statement"));
@@ -602,6 +607,25 @@ void DeferExecutor::Exec(DeferStatement *node) {
 }
 
 void DeferExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
+void CmdDeclExecutor::Exec(AstNode* node) {
+  CmdDeclaration* cmd_decl = static_cast<CmdDeclaration*>(node);
+
+  CmdEntryPtr cmd_ptr(new CmdDeclEntry(cmd_decl->block(),
+                                       symbol_table_stack()));
+
+  std::string id = cmd_decl->id()->name();
+
+  symbol_table_stack().SetCmd(id, cmd_ptr);
+}
+
+void CmdDeclExecutor::set_stop(StopFlag flag) {
+  if (parent() == nullptr) {
+    return;
+  }
+
   parent()->set_stop(flag);
 }
 

@@ -80,6 +80,26 @@ class SymbolAttr {
   std::shared_ptr<Object> value_;
 };
 
+// command entry class
+class CmdEntry {
+ public:
+  enum class Type {
+    kDecl,
+    kAlias
+  };
+
+  CmdEntry(Type type): type_(type) {}
+
+  Type type() const noexcept {
+    return type_;
+  }
+
+ private:
+  Type type_;
+};
+
+using CmdEntryPtr = std::shared_ptr<CmdEntry>;
+
 class SymbolTable;
 typedef std::shared_ptr<SymbolTable> SymbolTablePtr;
 
@@ -92,7 +112,9 @@ class SymbolTable {
   };
 
   using SymbolMap = std::unordered_map<std::string, SymbolAttr>;
+  using CmdMap = std::unordered_map<std::string, CmdEntryPtr>;
   using SymbolIterator = SymbolMap::iterator;
+  using CmdIterator = CmdMap::iterator;
   using SymbolConstIterator = SymbolMap::const_iterator;
 
   SymbolTable(TableType type = TableType::SCOPE_TABLE): type_(type) {}
@@ -153,6 +175,28 @@ class SymbolTable {
     return true;
   }
 
+  void SetCmd(const std::string& name, CmdEntryPtr cmd) {
+    cmd_map_[name] = cmd;
+  }
+
+  inline CmdEntryPtr LookupCmd(const std::string& name) {
+    auto it = cmd_map_.find(name);
+
+    if (it != cmd_map_.end()) {
+      return it->second;
+    }
+
+    return CmdEntryPtr(nullptr);
+  }
+
+  inline bool RemoveCmd(const std::string& name) {
+    if (cmd_map_.erase(name) == 1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   inline SymbolIterator Lookup(const std::string& name) {
     return map_.find(name);
   }
@@ -189,6 +233,7 @@ class SymbolTable {
 
  private:
   SymbolMap map_;
+  CmdMap cmd_map_;
   TableType type_;
 };
 
@@ -238,9 +283,23 @@ class SymbolTableStack: public SymbolTableStackBase {
     main_table_ = st.main_table_;
   }
 
+  SymbolTableStack& operator=(const SymbolTableStack& st) {
+    stack_ = st.stack_;
+    main_table_ = st.main_table_;
+
+    return *this;
+  }
+
   SymbolTableStack(SymbolTableStack&& st) {
     stack_ = std::move(st.stack_);
     main_table_ = st.main_table_;
+  }
+
+  SymbolTableStack& operator=(SymbolTableStack&& st) {
+    stack_ = std::move(st.stack_);
+    main_table_ = st.main_table_;
+
+    return *this;
   }
 
   // Insert a table on the stack
@@ -340,6 +399,16 @@ class SymbolTableStack: public SymbolTableStackBase {
     }
 
     main_table_.lock()->SetValue(name, std::move(value));
+  }
+
+  CmdEntryPtr LookupCmd(const std::string& name) {
+    CmdEntryPtr cmd = main_table_.lock()->LookupCmd(name);
+
+    return cmd;
+  }
+
+  void SetCmd(const std::string& name, CmdEntryPtr cmd) {
+    main_table_.lock()->SetCmd(name, cmd);
   }
 
   void SetEntryOnFunc(const std::string& name,

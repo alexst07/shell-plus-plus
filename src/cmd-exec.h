@@ -10,6 +10,7 @@
 #include <termios.h>
 
 #include "interpreter/abstract-obj.h"
+#include "interpreter/symbol_table.h"
 
 namespace setti {
 namespace internal {
@@ -91,7 +92,8 @@ struct CmdTable {
 };
 
 struct Process {
-  Process(std::vector<std::string>&& args):args_(std::move(args)) {
+  Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args)
+      : args_(std::move(args)), sym_tab_(sym_tab.MainTable()) {
     argv_ = new char*[args_.size() + 1];
 
     for (size_t i = 0; i < args_.size(); i++) {
@@ -105,7 +107,7 @@ struct Process {
     delete[] argv_;
   }
 
-  Process(const Process& p) {
+  Process(const Process& p): sym_tab_(p.sym_tab_) {
     args_ = p.args_;
     argv_ = new char*[args_.size() + 1];
 
@@ -137,6 +139,7 @@ struct Process {
     completed_ = p.completed_;
     stopped_ = p.stopped_;
     status_ = p.status_;
+    sym_tab_ = p.sym_tab_;
   }
 
   Process(Process&& p) {
@@ -147,6 +150,7 @@ struct Process {
     completed_ = p.completed_;
     stopped_ = p.stopped_;
     status_ = p.status_;
+    sym_tab_ = std::move(p.sym_tab_);
   }
 
   Process& operator=(Process&& p) {
@@ -157,11 +161,14 @@ struct Process {
     completed_ = p.completed_;
     stopped_ = p.stopped_;
     status_ = p.status_;
+    sym_tab_ = std::move(p.sym_tab_);
 
     return *this;
   }
 
-  void LaunchProcess (int infile, int outfile, int errfile);
+  void LaunchProcess(int infile, int outfile, int errfile);
+
+  void LaunchCmd(CmdEntryPtr cmd);
 
   std::vector<std::string> args_;
   char **argv_;
@@ -169,13 +176,16 @@ struct Process {
   char completed_;
   char stopped_;
   int status_;
+  Executor* parent_;
+  SymbolTableStack sym_tab_;
 };
 
 
 struct Job {
-  Job(bool var_out_mode = false)
+  Job(SymbolTableStack& sym_tab, bool var_out_mode = false)
       : status_(0)
-      , var_out_mode_(var_out_mode) {}
+      , var_out_mode_(var_out_mode)
+      , sym_tab_(sym_tab.MainTable()) {}
 
   void LaunchJob (int foreground);
   int MarkProcessStatus(pid_t pid, int status);
@@ -198,6 +208,8 @@ struct Job {
   int shell_pgid_;
   struct termios tmodes_;
   struct termios shell_tmodes_;
+  Executor* parent_;
+  SymbolTableStack sym_tab_;
 };
 
 void LaunchProcess (char **argv, int infile, int outfile, int errfile);
@@ -205,15 +217,6 @@ void LaunchProcess (char **argv, int infile, int outfile, int errfile);
 int ExecCmd(std::vector<std::string> &&args);
 
 int WaitCmd(int pid);
-
-class BuildJob {
- public:
-  BuildJob(CmdTable& cmd): cmd_(cmd) {}
-  Job Build();
-
- private:
-  CmdTable& cmd_;
-};
 
 }
 }

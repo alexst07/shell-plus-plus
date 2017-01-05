@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "interpreter/cmd-executor.h"
+
 namespace setti {
 namespace internal {
 
@@ -32,70 +34,6 @@ int WaitCmd(int pid) {
   return status;
 }
 
-Job BuildJob::Build() {
-  Job job;
-
-  int type = cmd_.cmd_.which();
-
-  switch (type) {
-    case 0: { // SimpleCmdData
-      SimpleCmdData simple_cmd = boost::get<SimpleCmdData>(cmd_.cmd_);
-      Process p(std::move(simple_cmd));
-      job.process_.push_back(p);
-      job.shell_is_interactive_ = 0;
-      job.stderr_ = STDERR_FILENO;
-      job.stdout_ = STDOUT_FILENO;
-      job.stdin_ = STDIN_FILENO;
-      return job;
-    }
-
-    case 1: { // CmdIoRedirectData
-      CmdIoRedirectData cmd_io = boost::get<CmdIoRedirectData>(cmd_.cmd_);
-      Process p(std::move(cmd_io.cmd_));
-      job.process_.push_back(p);
-      job.shell_is_interactive_ = 0;
-      job.stderr_ = STDERR_FILENO;
-      job.stdout_ = STDOUT_FILENO;
-      job.stdin_ = STDIN_FILENO;
-
-      for (auto& l : cmd_io.io_list_) {
-        int fd;
-
-        std::string file_name = boost::get<std::string>(l.content_);
-
-        if (l.in_out_ == CmdIoData::Direction::OUT) {
-          fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
-                    S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
-        } else if (l.in_out_ == CmdIoData::Direction::OUT_APPEND) {
-          fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND,
-                    S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
-        } else if (l.in_out_ == CmdIoData::Direction::IN) {
-          fd = open(file_name.c_str(), O_RDONLY,
-                    S_IRGRP | S_IWGRP | S_IRUSR | S_IWUSR | S_IROTH);
-          dup2(fd, STDIN_FILENO);
-        }
-
-        if (l.all_) {
-          dup2(fd, STDOUT_FILENO);
-          dup2(fd, STDERR_FILENO);
-        } else {
-          if (l.n_iface_ == 2) {
-            dup2(fd, STDERR_FILENO);
-          } else if (l.n_iface_ == 1) {
-            dup2(fd, STDOUT_FILENO);
-          }
-        }
-      }
-
-      return job;
-    }
-
-    case 2: {
-      CmdPipeListData cmd_pipe = boost::get<CmdPipeListData>(cmd_.cmd_);
-    }
-  }
-}
-
 void Process::LaunchProcess(int infile, int outfile, int errfile) {
   /* Set the standard input/output channels of the new process.  */
   if (infile != STDIN_FILENO) {
@@ -113,12 +51,27 @@ void Process::LaunchProcess(int infile, int outfile, int errfile) {
     close (errfile);
   }
 
+  CmdEntryPtr cmd = sym_tab_.LookupCmd(args_[0]);
+
+  if (cmd) {
+    LaunchCmd(cmd);
+    exit(0);
+  }
+
   // Exec the new process
   execvp (argv_[0], argv_);
 
   // if some error ocurred on exec, throw the exception
   throw RunTimeError(RunTimeError::ErrorCode::INVALID_COMMAND,
                      boost::format("%1%: command not found")%argv_[0]);
+
+}
+
+void Process::LaunchCmd(CmdEntryPtr cmd) {
+  if (cmd->type() == CmdEntry::Type::kDecl) {
+    CmdDeclEntry& cmd_ref = static_cast<CmdDeclEntry&>(*cmd);
+    cmd_ref.Exec(parent_, std::move(args_));
+  }
 }
 
 int Job::MarkProcessStatus(pid_t pid, int status) {

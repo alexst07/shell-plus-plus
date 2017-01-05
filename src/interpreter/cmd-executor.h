@@ -9,6 +9,29 @@
 namespace setti {
 namespace internal {
 
+class CmdDeclEntry: public CmdEntry {
+ public:
+  CmdDeclEntry(AstNode* start_node, const SymbolTableStack& symbol_table)
+      : CmdEntry(Type::kDecl)
+      , start_node_(start_node)
+      , symbol_table_(symbol_table.MainTable()) {}
+
+  void Exec(Executor* parent, std::vector<std::string>&& args);
+
+ private:
+  AstNode* start_node_;
+  SymbolTableStack symbol_table_;
+};
+
+class CmdAliasEntry: public CmdEntry {
+public:
+ CmdAliasEntry(AstNode* start_node, const SymbolTableStack& symbol_table);
+ const std::vector<std::string>& args() const noexcept;
+
+private:
+ std::vector<std::string> args_;
+};
+
 typedef std::tuple<int, std::string, std::string> CmdExprData;
 
 class CmdExecutor: public Executor {

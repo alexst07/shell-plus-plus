@@ -43,6 +43,15 @@ class FuncDeclExecutor: public Executor {
 
   void set_stop(StopFlag flag) override;
 
+ protected:
+  bool inside_loop() override {
+    return false;
+  }
+
+  bool inside_switch() override {
+    return false;
+  }
+
  private:
   ObjectFactory obj_factory_;
   bool method_;
@@ -202,6 +211,29 @@ class DeferExecutor: public Executor {
   void Exec(DeferStatement *node);
 
   void set_stop(StopFlag flag) override;
+};
+
+class CmdDeclExecutor: public Executor {
+ public:
+  CmdDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack)
+      , obj_factory_(symbol_table_stack) {}
+
+  void Exec(AstNode* node);
+
+  void set_stop(StopFlag flag) override;
+
+ protected:
+  bool inside_loop() override {
+    return false;
+  }
+
+  bool inside_switch() override {
+    return false;
+  }
+
+ private:
+  ObjectFactory obj_factory_;
 };
 
 }
