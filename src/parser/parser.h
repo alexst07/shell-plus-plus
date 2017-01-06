@@ -240,6 +240,10 @@ class Parser {
 
   ParserResult<Expression> ParserSlice();
 
+  ParserResult<Statement> ParserImportStmt();
+  ParserResult<Statement> ParserImportIdStmt();
+  ParserResult<Statement> ParserImportPathStmt();
+
   TokenStream ts_;
   AstNodeFactory factory_;
   uint nerror_;

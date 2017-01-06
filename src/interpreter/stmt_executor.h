@@ -236,6 +236,16 @@ class CmdDeclExecutor: public Executor {
   ObjectFactory obj_factory_;
 };
 
+class ImportExecutor: public Executor {
+ public:
+  ImportExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(ImportStatement *node);
+
+  void set_stop(StopFlag flag) override;
+};
+
 }
 }
 

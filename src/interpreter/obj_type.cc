@@ -237,6 +237,12 @@ ObjectPtr DeclClassObject::Add(ObjectPtr obj) {
   return static_cast<FuncObject&>(*func_obj).Call(nullptr, std::move(params));
 }
 
+std::shared_ptr<Object> ModuleObject::Arrow(std::shared_ptr<Object>/*self*/,
+                              const std::string& name) {
+  auto obj = SymTableStack().Lookup(name, false).Ref();
+  return PassVar(obj, symbol_table_stack());
+}
+
 ObjectPtr NullType::Constructor(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
   if (params.size() > 0) {
@@ -416,9 +422,15 @@ ObjectPtr CmdType::Constructor(Executor* /*parent*/,
 }
 
 ObjectPtr CmdIterType::Constructor(Executor* /*parent*/,
-                                     std::vector<ObjectPtr>&& /*params*/) {
+                                   std::vector<ObjectPtr>&& /*params*/) {
   throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                      boost::format("cmd_iter is not constructable"));
+}
+
+ObjectPtr ModuleType::Constructor(Executor* /*parent*/,
+                                  std::vector<ObjectPtr>&& params) {
+  throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                     boost::format("module is not constructable"));
 }
 
 }

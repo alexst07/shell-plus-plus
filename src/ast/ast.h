@@ -535,7 +535,7 @@ class ImportStatement: public Statement {
 
  template<typename T>
  auto import() const noexcept -> T* {
-   return boost::get<T>(import_).get();
+   return boost::get<std::unique_ptr<T>>(import_).get();
  }
 
  bool is_from_path() const noexcept {
@@ -555,7 +555,7 @@ class ImportStatement: public Statement {
  bool is_import_path() const noexcept {
    int index = import_.which();
 
-   if (index == 2) {
+   if (index == 1) {
      return true;
    }
 
@@ -584,7 +584,7 @@ class ImportStatement: public Statement {
 
   ImportStatement(From from,  Import import, std::unique_ptr<Identifier> as,
                   Position position)
-      : Statement(NodeType::kSubShell, position)
+      : Statement(NodeType::kImportStatement, position)
       , from_(std::move(from))
       , import_(std::move(import))
       , as_(std::move(as))
@@ -592,7 +592,7 @@ class ImportStatement: public Statement {
 
   ImportStatement(Import import, std::unique_ptr<Identifier> as,
                   Position position)
-      : Statement(NodeType::kSubShell, position)
+      : Statement(NodeType::kImportStatement, position)
       , from_(std::move(std::unique_ptr<Identifier>(nullptr)))
       , import_(std::move(import))
       , as_(std::move(as))

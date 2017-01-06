@@ -28,7 +28,8 @@ class RunTimeError : public std::exception {
     ZERO_DIV,
     INVALID_OPCODE,
     FILE,
-    INVALID_COMMAND
+    INVALID_COMMAND,
+    IMPORT
   };
 
   RunTimeError();

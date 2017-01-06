@@ -115,35 +115,6 @@ class FuncCallExecutor: public Executor {
   }
 };
 
-// Pass the variable as value or reference depending on type
-inline ObjectPtr PassVar(ObjectPtr obj, SymbolTableStack& symbol_table_stack) {
-  ObjectFactory obj_factory(symbol_table_stack);
-  switch (obj->type()) {
-    case Object::ObjectType::NIL:
-      return obj_factory.NewNull();
-      break;
-
-    case Object::ObjectType::INT:
-      return obj_factory.NewInt(static_cast<IntObject&>(*obj).value());
-      break;
-
-    case Object::ObjectType::BOOL:
-      return obj_factory.NewBool(static_cast<BoolObject&>(*obj).value());
-      break;
-
-    case Object::ObjectType::REAL:
-      return obj_factory.NewReal(static_cast<RealObject&>(*obj).value());
-      break;
-
-    case Object::ObjectType::STRING:
-      return obj_factory.NewString(static_cast<StringObject&>(*obj).value());
-      break;
-
-    default:
-      return obj;
-  }
-}
-
 }
 }
 

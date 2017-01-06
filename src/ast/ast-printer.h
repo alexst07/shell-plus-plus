@@ -587,6 +587,33 @@ class AstPrinter: public AstVisitor {
     std::cout << "<end>\n";
   }
 
+  void virtual VisitImportStatement(ImportStatement* import) {
+    Level();
+    std::cout << "<import>\n";
+    level_++;
+
+    if (import->is_import_path()) {
+      Level();
+      std::cout << "<path>\n";
+      level_++;
+      import->import<Literal>()->Accept(this);
+      level_--;
+    } else {
+      Level();
+      std::cout << "<id>\n";
+      level_++;
+      import->import<Identifier>()->Accept(this);
+      level_--;
+    }
+
+    if (import->has_as()) {
+      Level();
+      std::cout << "<as>\n";
+      level_++;
+      import->as()->Accept(this);
+    }
+  }
+
   void virtual VisitClassBlock(ClassBlock* class_block) {
     Level();
     std::cout << "<begin>\n";

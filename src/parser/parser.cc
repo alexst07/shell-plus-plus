@@ -5,6 +5,75 @@
 namespace setti {
 namespace internal {
 
+ParserResult<Statement> Parser::ParserImportStmt() {
+  Advance();
+  ValidToken();
+
+  if (token_ == TokenKind::IDENTIFIER) {
+    return ParserImportIdStmt();
+  } else if (token_ == TokenKind::STRING_LITERAL) {
+    return ParserImportPathStmt();
+  } else {
+    ErrorMsg(boost::format("import statement not valid"));
+    return ParserResult<Statement>(); // Error
+  }
+}
+
+ParserResult<Statement> Parser::ParserImportIdStmt() {
+  std::unique_ptr<Identifier> path(factory_.NewIdentifier(
+                                   boost::get<std::string>(token_.GetValue())));
+
+  Advance();
+
+  std::unique_ptr<Identifier> id;
+
+  if (token_ == TokenKind::KW_AS) {
+    Advance();
+    ValidToken();
+
+    if (token_ != TokenKind::IDENTIFIER) {
+      ErrorMsg(boost::format("expected identifier"));
+      return ParserResult<Statement>(); // Error
+    }
+
+    id = std::move(factory_.NewIdentifier(
+                   boost::get<std::string>(token_.GetValue())));
+
+    Advance();
+  }
+
+  return ParserResult<Statement>(
+        factory_.NewImportStatement(std::move(path), std::move(id)));
+}
+
+ParserResult<Statement> Parser::ParserImportPathStmt() {
+  std::unique_ptr<Literal> path(factory_.NewLiteral(token_.GetValue(),
+                                                    Literal::kString));
+
+  Advance();
+
+  if (token_ != TokenKind::KW_AS) {
+    ErrorMsg(boost::format("expected as keyword"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  if (token_ != TokenKind::IDENTIFIER) {
+    ErrorMsg(boost::format("expected identifier"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
+      boost::get<std::string>(token_.GetValue())));
+
+  Advance();
+
+  return ParserResult<Statement>(
+        factory_.NewImportStatement(std::move(path), std::move(id)));
+}
+
 ParserResult<Statement> Parser::ParserStmtDecl() {
   if (token_ == TokenKind::KW_FUNC) {
     ParserResult<FunctionDeclaration> func(ParserFunctionDeclaration(false));
@@ -427,6 +496,8 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserForInStmt();
   } else if (token_ == TokenKind::KW_DEFER) {
     return ParserDeferStmt();
+  } else if (token_ == TokenKind::KW_IMPORT) {
+    return ParserImportStmt();
   } else if (token_ == TokenKind::LBRACE) {
     return ParserBlock();
   } else if (IsStmtDecl()) {

@@ -14,6 +14,7 @@
 #include "abstract-obj.h"
 #include "simple-object.h"
 #include "func_object.h"
+#include "intepreter.h"
 
 namespace setti {
 namespace internal {
@@ -51,6 +52,35 @@ class DeclClassObject: public Object {
 
  private:
   std::weak_ptr<Object> self_;
+};
+
+class ModuleObject: public Object {
+ public:
+  ModuleObject(std::string module_name, bool is_file_path, ObjectPtr obj_type,
+               SymbolTableStack&& sym_table)
+      : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
+      , module_name_(module_name)
+      , is_file_path_(is_file_path) {
+    interpreter_.Exec(module_name_);
+  }
+
+  virtual ~ModuleObject() {}
+
+  std::shared_ptr<Object> Arrow(std::shared_ptr<Object>/*self*/,
+                                const std::string& name) override;
+
+  SymbolTableStack& SymTableStack() {
+    return interpreter_.SymTableStack();
+  }
+
+  void Print() override {
+    std::cout << "MODULE("<< module_name_ << ")\n";
+  }
+
+ private:
+  Interpreter interpreter_;
+  std::string module_name_;
+  bool is_file_path_;
 };
 
 class SliceObject: public Object {
@@ -525,6 +555,17 @@ class FuncType: public TypeObject {
 
     return ObjectPtr(nullptr);
   }
+};
+
+class ModuleType: public TypeObject {
+ public:
+  ModuleType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("module", obj_type, std::move(sym_table)) {}
+
+  virtual ~ModuleType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override;
 };
 
 }

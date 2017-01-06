@@ -34,6 +34,7 @@ class Object {
     CMD_ITER,
     DECL_TYPE,
     DECL_OBJ,
+    MODULE,
     CUSTON
   };
 

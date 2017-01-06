@@ -249,6 +249,11 @@ void StmtExecutor::Exec(AstNode* node) {
       cmd.Exec(static_cast<DeferStatement*>(node));
     } break;
 
+    case AstNode::NodeType::kImportStatement: {
+      ImportExecutor import(this, symbol_table_stack());
+      import.Exec(static_cast<ImportStatement*>(node));
+    } break;
+
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid opcode of statement"));
@@ -622,6 +627,35 @@ void CmdDeclExecutor::Exec(AstNode* node) {
 }
 
 void CmdDeclExecutor::set_stop(StopFlag flag) {
+  if (parent() == nullptr) {
+    return;
+  }
+
+  parent()->set_stop(flag);
+}
+
+void ImportExecutor::Exec(ImportStatement *node) {
+  if (node->is_import_path()) {
+    // module path has to has "as" parameter
+    if (!node->has_as()) {
+      throw RunTimeError(RunTimeError::ErrorCode::IMPORT,
+                         boost::format("import has not a name given by 'as'"));
+    }
+
+    auto value = node->import<Literal>()->value();
+    std::string module_path = boost::get<std::string>(value);
+
+    ObjectFactory obj_factory(symbol_table_stack());
+    ObjectPtr obj_module = obj_factory.NewModule(module_path, true);
+
+    // module entry on symbol table
+    std::string id_entry = node->as()->name();
+
+    symbol_table_stack().SetEntry(id_entry, obj_module);
+  }
+}
+
+void ImportExecutor::set_stop(StopFlag flag) {
   if (parent() == nullptr) {
     return;
   }
