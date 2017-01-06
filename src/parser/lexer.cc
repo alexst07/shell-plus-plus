@@ -396,7 +396,7 @@ TokenStream Lexer::Scanner() {
         break;
 
       case '.': {
-        // ...
+        // . ...
         std::string  pre_word = ".";
         Advance();
         if (c_ == '.') {
@@ -408,7 +408,7 @@ TokenStream Lexer::Scanner() {
             token = ScanWord(pre_word);
           }
         } else {
-          token = ScanWord(pre_word);
+          token = GetToken(TokenKind::DOT);
         }
       } break;
 

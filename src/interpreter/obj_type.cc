@@ -188,14 +188,14 @@ ObjectPtr DeclClassType::CallObject(const std::string& name,
   return obj;
 }
 
-std::shared_ptr<Object> DeclClassType::Arrow(std::shared_ptr<Object> self,
+std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
   ObjectPtr att_obj = symbol_table_stack().Lookup(name, false).SharedAccess();
 
   return att_obj;
 }
 
-std::shared_ptr<Object> DeclClassObject::Arrow(std::shared_ptr<Object> self,
+std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
   SymbolTableStack& st =
       static_cast<DeclClassType&>(*ObjType()).SymTableStack();
@@ -208,7 +208,7 @@ std::shared_ptr<Object> DeclClassObject::Arrow(std::shared_ptr<Object> self,
   return att_obj;
 }
 
-std::shared_ptr<Object>& DeclClassObject::ArrowAssign(
+std::shared_ptr<Object>& DeclClassObject::AttrAssign(
     std::shared_ptr<Object> /*self*/, const std::string& name) {
   SymbolTableStack& st =
       static_cast<DeclClassType&>(*ObjType()).SymTableStack();
@@ -237,8 +237,8 @@ ObjectPtr DeclClassObject::Add(ObjectPtr obj) {
   return static_cast<FuncObject&>(*func_obj).Call(nullptr, std::move(params));
 }
 
-std::shared_ptr<Object> ModuleObject::Arrow(std::shared_ptr<Object>/*self*/,
-                              const std::string& name) {
+std::shared_ptr<Object> ModuleObject::Attr(std::shared_ptr<Object>/*self*/,
+                                           const std::string& name) {
   auto obj = SymTableStack().Lookup(name, false).Ref();
   return PassVar(obj, symbol_table_stack());
 }

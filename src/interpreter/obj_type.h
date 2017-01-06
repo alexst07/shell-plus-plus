@@ -30,10 +30,10 @@ class DeclClassObject: public Object {
     symbol_table_stack().Pop();
   }
 
-  std::shared_ptr<Object> Arrow(std::shared_ptr<Object> self,
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
                                 const std::string& name) override;
 
-  std::shared_ptr<Object>& ArrowAssign(std::shared_ptr<Object>,
+  std::shared_ptr<Object>& AttrAssign(std::shared_ptr<Object>,
                                         const std::string& name) override;
 
   ObjectPtr Add(ObjectPtr obj) override;
@@ -66,8 +66,8 @@ class ModuleObject: public Object {
 
   virtual ~ModuleObject() {}
 
-  std::shared_ptr<Object> Arrow(std::shared_ptr<Object>/*self*/,
-                                const std::string& name) override;
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object>/*self*/,
+                               const std::string& name) override;
 
   SymbolTableStack& SymTableStack() {
     return interpreter_.SymTableStack();
@@ -373,8 +373,8 @@ class DeclClassType: public TypeObject {
 
   ObjectPtr CallObject(const std::string& name, ObjectPtr self_param) override;
 
-  std::shared_ptr<Object> Arrow(std::shared_ptr<Object> self,
-                                const std::string& name) override;
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
+                               const std::string& name) override;
 
   SymbolTableStack& SymTableStack() noexcept {
     return symbol_table_stack();

@@ -120,7 +120,7 @@ ObjectPtr& AssignExecutor::AssignAtrribute(AstNode* node) {
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr exp_obj(expr_exec.Exec(att_exp));
 
-  return exp_obj->ArrowAssign(exp_obj, att_node->id()->name());
+  return exp_obj->AttrAssign(exp_obj, att_node->id()->name());
 }
 
 // TODO: Executes for map and custon objects

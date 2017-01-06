@@ -61,8 +61,8 @@ class StringObject: public Object {
 
   ObjectPtr ObjCmd() override;
 
-  std::shared_ptr<Object> Arrow(std::shared_ptr<Object> self,
-                                const std::string& name) override;
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
+                               const std::string& name) override;
 
   void Print() override {
     std::cout << "STRING: " << value_;

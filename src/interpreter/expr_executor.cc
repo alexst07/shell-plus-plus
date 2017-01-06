@@ -313,7 +313,7 @@ ObjectPtr ExpressionExecutor::ExecAttribute(Attribute* node) {
   ObjectPtr exp = Exec(node->exp());
   std::string name = node->id()->name();
 
-  return exp->Arrow(exp, name);
+  return exp->Attr(exp, name);
 }
 
 ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {

@@ -218,17 +218,17 @@ class Object {
                        boost::format("type has no end method"));
   }
 
-  virtual std::shared_ptr<Object> Arrow(std::shared_ptr<Object>,
+  virtual std::shared_ptr<Object> Attr(std::shared_ptr<Object>,
                                         const std::string&) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no arrow method"));
+                       boost::format("type has no attr method"));
   }
 
   // this method must be used when arrow operation is on left side
-  virtual std::shared_ptr<Object>& ArrowAssign(std::shared_ptr<Object>,
+  virtual std::shared_ptr<Object>& AttrAssign(std::shared_ptr<Object>,
                                         const std::string&) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no arrow method"));
+                       boost::format("type has no attr method"));
   }
 
   std::shared_ptr<Object> ObjType() const noexcept {

@@ -1124,7 +1124,7 @@ ParserResult<Expression> Parser::ParserUnaryExp() {
 ParserResult<Expression> Parser::ParserPostExp() {
   ParserResult<Expression> exp = ParserPrimaryExp();
 
-  while (token_.IsAny(TokenKind::LBRACKET, TokenKind::ARROW,
+  while (token_.IsAny(TokenKind::LBRACKET, TokenKind::DOT,
          TokenKind::LPAREN)) {
     if (token_ == TokenKind::LBRACKET) {
       // parser array
@@ -1139,7 +1139,7 @@ ParserResult<Expression> Parser::ParserPostExp() {
       Advance();
 
       exp = factory_.NewArray(exp.MoveAstNode(),index_exp.MoveAstNode());
-    } else if (token_ == TokenKind::ARROW) {
+    } else if (token_ == TokenKind::DOT) {
       // parser attributes
       Advance();
       if (ValidToken().IsNot(TokenKind::IDENTIFIER)) {
