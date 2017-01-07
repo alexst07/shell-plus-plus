@@ -11,6 +11,7 @@
 #include "parser/parser.h"
 #include "parser/lexer.h"
 #include "modules/std-funcs.h"
+#include "modules/path.h"
 
 namespace setti {
 namespace internal {
@@ -26,6 +27,8 @@ Interpreter::Interpreter()
   ObjectPtr obj(new PrintFunc(func_type, std::move(sym_stack)));
   SymbolAttr symbol(obj, true);
   symbol_table_stack_.InsertEntry("print", std::move(symbol));
+
+  module::path::RegisterModule(symbol_table_stack_);
 }
 
 Interpreter::~Interpreter() {
@@ -55,7 +58,7 @@ void Interpreter::Exec(std::string name) {
     }
   }
 
-//    symbol_table_->Clear();
+//  symbol_table_->Clear();
 }
 
 }

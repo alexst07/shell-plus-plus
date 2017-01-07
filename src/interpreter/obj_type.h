@@ -87,14 +87,15 @@ class ModuleCustonObject: public Object {
  public:
   using MemberTable = std::vector<std::pair<std::string, ObjectPtr>>;
 
-  ModuleCustonObject(std::string module_name, MemberTable member_table,
+  ModuleCustonObject(std::string module_name, MemberTable&& member_table,
                      ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
       , module_name_(module_name)
+      , symbol_table_(SymbolTablePtr(new SymbolTable))
       , symbol_table_stack_(symbol_table_) {
-
     for (auto& pair: member_table) {
-      RegisterMember(pair.first, pair.second);
+      SymbolAttr sym_entry(pair.second, true);
+      symbol_table_stack_.InsertEntry(pair.first, std::move(sym_entry));
     }
   }
 

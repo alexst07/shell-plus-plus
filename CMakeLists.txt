@@ -17,7 +17,7 @@ SETTI_OPTION(BUILD_UNIT_TESTS "Build unit tests" ON)
 #
 # Boost support
 #
-find_package(Boost 1.58 REQUIRED)
+find_package(Boost 1.58 COMPONENTS system filesystem REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 find_package (Threads REQUIRED)
 

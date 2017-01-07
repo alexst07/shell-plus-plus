@@ -13,6 +13,19 @@
 namespace setti {
 namespace internal {
 
+#define SETI_FUNC_CHECK_NUM_PARAMS(params, num)                                \
+  if (params.size() != num) {                                                  \
+    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
+                       boost::format("type() takes exactly %1% argument")%     \
+                       num);                                                   \
+  }
+
+#define SETI_FUNC_CHECK_NO_PARAMS(params)                                      \
+  if (params.size() != 0) {                                                  \
+    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
+                       boost::format("type() takes no argument"));             \
+  }
+
 class FuncObject: public Object {
  public:
   FuncObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)

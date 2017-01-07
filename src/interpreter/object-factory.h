@@ -119,6 +119,13 @@ class ObjectFactory {
                                    std::move(SymTableStack())));
   }
 
+  ObjectPtr NewModule(const std::string& module,
+                      ModuleCustonObject::MemberTable&& table) {
+    auto obj_type = symbol_table_.Lookup("module", false).SharedAccess();
+    return ObjectPtr(new ModuleCustonObject(module, std::move(table), obj_type,
+                                            std::move(SymTableStack())));
+  }
+
   ObjectPtr NewDeclObject(const std::string& name_type) {
     auto obj_type = symbol_table_.Lookup(name_type, false).SharedAccess();
     SymbolTableStack sym_stack;
@@ -242,8 +249,7 @@ void RegisterMethod(const std::string& fname, SymbolTableStack& symbol_table,
 
 template<class Fn>
 ObjectPtr ObjectMethod(SymbolTableStack& symbol_table) {
-  SymbolTableStack sym_stack;
-  sym_stack.Push(symbol_table.MainTable());
+  SymbolTableStack sym_stack(symbol_table.MainTable());
   auto func_type = symbol_table.Lookup("func", false).SharedAccess();
   ObjectPtr obj(new Fn(func_type, std::move(sym_stack)));
   return obj;
