@@ -76,11 +76,6 @@ void AlocTypes(SymbolTableStack& symbol_table) {
                            std::move(symbol_func));
 
   ObjectPtr type_str = obj_factory.NewStringType();
-  SymbolTableStack sym_stack;
-  sym_stack.Push(symbol_table.MainTable(), true);
-  auto func_type = symbol_table.Lookup("func", false).SharedAccess();
-  ObjectPtr obj_func_at(new StringGetterFunc(func_type, std::move(sym_stack)));
-  static_cast<TypeObject&>(*type_str).RegiterMethod("at", obj_func_at);
   SymbolAttr symbol_str(type_str, true);
   symbol_table.InsertEntry(static_cast<const StringType&>(*type_str).name(),
                            std::move(symbol_str));

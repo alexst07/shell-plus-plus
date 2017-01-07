@@ -36,6 +36,10 @@ class StringObject: public Object {
 
   inline const std::string& value() const noexcept { return value_; }
 
+  ObjectPtr ObjInt() override;
+
+  ObjectPtr ObjReal() override;
+
   std::size_t Hash() const override {
     std::hash<std::string> str_hash;
     return str_hash(value_);
@@ -70,6 +74,16 @@ class StringObject: public Object {
 
  private:
   std::string value_;
+};
+
+class StringType: public TypeObject {
+ public:
+  StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table);
+
+  virtual ~StringType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override;
 };
 
 class StringGetterFunc: public FuncObject {

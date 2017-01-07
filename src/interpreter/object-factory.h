@@ -230,6 +230,16 @@ class ObjectFactory {
   SymbolTableStack& symbol_table_;
 };
 
+template<class Fn>
+void RegisterMethod(const std::string& fname, SymbolTableStack& symbol_table,
+                    TypeObject& type) {
+  SymbolTableStack sym_stack;
+  sym_stack.Push(symbol_table.MainTable(), true);
+  auto func_type = symbol_table.Lookup("func", false).SharedAccess();
+  ObjectPtr obj_func(new Fn(func_type, std::move(sym_stack)));
+  type.RegiterMethod(fname, obj_func);
+}
+
 void AlocTypes(SymbolTableStack& symbol_table);
 
 // Pass the variable as value or reference depending on type

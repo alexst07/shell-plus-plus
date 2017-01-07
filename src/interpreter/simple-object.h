@@ -121,6 +121,10 @@ class IntObject: public Object {
     return int_hash(value_);
   }
 
+  ObjectPtr ObjString() override;
+
+  ObjectPtr ObjReal() override;
+
   bool operator==(const Object& obj) const override {
     if (obj.type() != ObjectType::INT) {
       return false;
@@ -311,6 +315,10 @@ class RealObject: public Object {
   }
 
   inline float value() const noexcept { return value_; }
+
+  ObjectPtr ObjInt() override;
+
+  ObjectPtr ObjString() override;
 
   std::size_t Hash() const override {
     std::hash<float> float_hash;

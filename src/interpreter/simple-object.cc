@@ -153,6 +153,24 @@ ObjectPtr IntObject::OperationObjInt(ObjectPtr obj, int op) {
   }
 }
 
+ObjectPtr IntObject::ObjReal() {
+  float v = static_cast<float>(value_);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj_real(obj_factory.NewReal(v));
+
+  return obj_real;
+}
+
+ObjectPtr IntObject::ObjString() {
+  std::string v = std::to_string(value_);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj_str(obj_factory.NewString(v));
+
+  return obj_str;
+}
+
 ObjectPtr IntObject::OperationObjComp(ObjectPtr obj, int op) {
   switch (obj->type()) {
     case ObjectType::INT: {
@@ -322,6 +340,23 @@ ObjectPtr RealObject::OperationObj(ObjectPtr obj, int op) {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                          boost::format("type not supported"));
   }
+}
+
+ObjectPtr RealObject::ObjInt() {
+  int v = static_cast<int>(value_);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj_int(obj_factory.NewReal(v));
+  return obj_int;
+}
+
+ObjectPtr RealObject::ObjString() {
+  std::string v = std::to_string(value_);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj_str(obj_factory.NewString(v));
+
+  return obj_str;
 }
 
 ObjectPtr RealObject::OperationObjComp(ObjectPtr obj, int op) {

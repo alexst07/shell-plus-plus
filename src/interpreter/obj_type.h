@@ -414,20 +414,6 @@ class IntType: public TypeObject {
 
   ObjectPtr Constructor(Executor* /*parent*/,
                         std::vector<ObjectPtr>&& params) override;
-
- private:
-  int Type2Int(float v) {
-    return static_cast<int>(v);
-  }
-
-  int Type2Int(const std::string& v) {
-    try {
-      return std::stoi(v);
-    } catch (std::exception&) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("invalid string to int"));
-    }
-  }
 };
 
 class RealType: public TypeObject {
@@ -436,31 +422,6 @@ class RealType: public TypeObject {
       : TypeObject("real", obj_type, std::move(sym_table)) {}
 
   virtual ~RealType() {}
-
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
-
- private:
-  float Type2Real(int v) {
-    return static_cast<float>(v);
-  }
-
-  float Type2Real(const std::string& v) {
-    try {
-      return std::stof(v);
-    } catch (std::exception&) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("invalid string to int"));
-    }
-  }
-};
-
-class StringType: public TypeObject {
- public:
-  StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : TypeObject("string", obj_type, std::move(sym_table)) {}
-
-  virtual ~StringType() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
                         std::vector<ObjectPtr>&& params) override;

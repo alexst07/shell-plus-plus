@@ -271,39 +271,15 @@ ObjectPtr IntType::Constructor(Executor* /*parent*/,
                        boost::format("int() takes exactly 1 argument"));
   }
 
-  switch (params[0]->type()) {
-    case ObjectType::INT: {
-      ObjectFactory obj_factory(symbol_table_stack());
-      ObjectPtr obj_int(obj_factory.NewInt(static_cast<IntObject&>(
-          *params[0]).value()));
+  if (params[0]->type() == ObjectType::INT) {
+    ObjectFactory obj_factory(symbol_table_stack());
+    ObjectPtr obj_int(obj_factory.NewInt(static_cast<IntObject&>(
+        *params[0]).value()));
 
-      return obj_int;
-    } break;
-
-    case ObjectType::STRING: {
-      const StringObject& str_obj =
-          static_cast<const StringObject&>(*params[0]);
-      int v = Type2Int(str_obj.value());
-
-      ObjectFactory obj_factory(symbol_table_stack());
-      ObjectPtr obj_int(obj_factory.NewInt(v));
-      return obj_int;
-    } break;
-
-    case ObjectType::REAL: {
-      const RealObject& real_obj =
-          static_cast<const RealObject&>(*params[0]);
-      int v = Type2Int(real_obj.value());
-
-      ObjectFactory obj_factory(symbol_table_stack());
-      ObjectPtr obj_int(obj_factory.NewReal(v));
-      return obj_int;
-    } break;
-
-    default:
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("invalid conversion to int"));
+    return obj_int;
   }
+
+  return params[0]->ObjInt();
 }
 
 ObjectPtr RealType::Constructor(Executor* /*parent*/,
@@ -313,89 +289,16 @@ ObjectPtr RealType::Constructor(Executor* /*parent*/,
                        boost::format("real() takes exactly 1 argument"));
   }
 
-  switch (params[0]->type()) {
-    case ObjectType::REAL: {
-      ObjectFactory obj_factory(symbol_table_stack());
+  if (params[0]->type() == ObjectType::REAL) {
+    ObjectFactory obj_factory(symbol_table_stack());
 
-      ObjectPtr obj_real(obj_factory.NewReal(static_cast<RealObject&>(
-          *params[0]).value()));
+    ObjectPtr obj_real(obj_factory.NewReal(static_cast<RealObject&>(
+        *params[0]).value()));
 
-      return obj_real;
-    } break;
-
-    case ObjectType::STRING: {
-      const StringObject& str_obj =
-          static_cast<const StringObject&>(*params[0]);
-      int v = Type2Real(str_obj.value());
-
-      ObjectFactory obj_factory(symbol_table_stack());
-      ObjectPtr obj_real(obj_factory.NewReal(v));
-
-      return obj_real;
-    } break;
-
-    case ObjectType::INT: {
-      const IntObject& int_obj =
-          static_cast<const IntObject&>(*params[0]);
-      float v = Type2Real(int_obj.value());
-
-      ObjectFactory obj_factory(symbol_table_stack());
-      ObjectPtr obj_real(obj_factory.NewReal(v));
-
-      return obj_real;
-    } break;
-
-    default:
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("invalid conversion to real"));
-  }
-}
-
-ObjectPtr StringType::Constructor(Executor* /*parent*/,
-                                  std::vector<ObjectPtr>&& params) {
-  if (params.size() != 1) {
-    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
-                       boost::format("real() takes exactly 1 argument"));
+    return obj_real;
   }
 
-  switch (params[0]->type()) {
-    case ObjectType::STRING: {
-      ObjectFactory obj_factory(symbol_table_stack());
-
-      ObjectPtr obj_str(obj_factory.NewString(static_cast<StringObject&>(
-          *params[0]).value()));
-
-      return obj_str;
-    } break;
-
-    case ObjectType::REAL: {
-      const RealObject& obj_real =
-          static_cast<const RealObject&>(*params[0]);
-
-      std::string v = std::to_string(obj_real.value());
-
-      ObjectFactory obj_factory(symbol_table_stack());
-      ObjectPtr obj_str(obj_factory.NewString(v));
-
-      return obj_str;
-    } break;
-
-    case ObjectType::INT: {
-      const IntObject& int_obj =
-          static_cast<const IntObject&>(*params[0]);
-
-      std::string v = std::to_string(int_obj.value());
-
-      ObjectFactory obj_factory(symbol_table_stack());
-      ObjectPtr obj_str(obj_factory.NewString(v));
-
-      return obj_str;
-    } break;
-
-    default:
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("invalid conversion to string"));
-  }
+  params[0]->ObjReal();
 }
 
 ObjectPtr ArrayIterType::Constructor(Executor* /*parent*/,

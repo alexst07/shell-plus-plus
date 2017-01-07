@@ -61,14 +61,19 @@ class Object {
                        boost::format("type has no bool interface"));
   }
 
-  virtual std::shared_ptr<Object> ObjString() const {
+  virtual std::shared_ptr<Object> ObjString() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no string interface"));
   }
 
-  virtual std::shared_ptr<Object> ObjInt() const {
+  virtual std::shared_ptr<Object> ObjInt() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no int interface"));
+  }
+
+  virtual std::shared_ptr<Object> ObjReal() {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no real interface"));
   }
 
   virtual std::shared_ptr<Object> ObjCmd() {

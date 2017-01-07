@@ -9,6 +9,37 @@
 namespace setti {
 namespace internal {
 
+ObjectPtr StringObject::ObjInt() {
+  int v;
+
+  try {
+    v = std::stoi(value_);
+  } catch (std::exception&) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("invalid string to int"));
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj_int(obj_factory.NewInt(v));
+  return obj_int;
+}
+
+ObjectPtr StringObject::ObjReal() {
+  int v;
+
+  try {
+    v = std::stof(value_);
+  } catch (std::exception&) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("invalid string to real"));
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj_real(obj_factory.NewReal(v));
+
+  return obj_real;
+}
+
 ObjectPtr StringObject::Equal(ObjectPtr obj) {
   ObjectFactory obj_factory(symbol_table_stack());
 
@@ -62,6 +93,30 @@ std::shared_ptr<Object> StringObject::Attr(std::shared_ptr<Object> self,
                                            const std::string& name) {
   ObjectPtr obj_type = ObjType();
   return static_cast<TypeObject&>(*obj_type).CallObject(name, self);
+}
+
+StringType::StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+    : TypeObject("string", obj_type, std::move(sym_table)) {
+  RegisterMethod<StringGetterFunc>("at", symbol_table_stack(), *this);
+}
+
+ObjectPtr StringType::Constructor(Executor* /*parent*/,
+                                  std::vector<ObjectPtr>&& params) {
+  if (params.size() != 1) {
+    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                       boost::format("real() takes exactly 1 argument"));
+  }
+
+  if (params[0]->type() == ObjectType::STRING) {
+    ObjectFactory obj_factory(symbol_table_stack());
+
+    ObjectPtr obj_str(obj_factory.NewString(static_cast<StringObject&>(
+        *params[0]).value()));
+
+    return obj_str;
+  }
+
+  return params[0]->ObjString();
 }
 
 ObjectPtr StringGetterFunc::Call(Executor* /*parent*/,
