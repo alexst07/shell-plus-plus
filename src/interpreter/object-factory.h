@@ -115,7 +115,7 @@ class ObjectFactory {
 
   ObjectPtr NewModule(const std::string& module, bool is_file_path) {
     auto obj_type = symbol_table_.Lookup("module", false).SharedAccess();
-    return ObjectPtr(new ModuleObject(module, is_file_path, obj_type,
+    return ObjectPtr(new ModuleImportObject(module, is_file_path, obj_type,
                                    std::move(SymTableStack())));
   }
 
@@ -238,6 +238,15 @@ void RegisterMethod(const std::string& fname, SymbolTableStack& symbol_table,
   auto func_type = symbol_table.Lookup("func", false).SharedAccess();
   ObjectPtr obj_func(new Fn(func_type, std::move(sym_stack)));
   type.RegiterMethod(fname, obj_func);
+}
+
+template<class Fn>
+ObjectPtr ObjectMethod(SymbolTableStack& symbol_table) {
+  SymbolTableStack sym_stack;
+  sym_stack.Push(symbol_table.MainTable());
+  auto func_type = symbol_table.Lookup("func", false).SharedAccess();
+  ObjectPtr obj(new Fn(func_type, std::move(sym_stack)));
+  return obj;
 }
 
 void AlocTypes(SymbolTableStack& symbol_table);

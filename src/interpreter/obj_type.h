@@ -54,17 +54,17 @@ class DeclClassObject: public Object {
   std::weak_ptr<Object> self_;
 };
 
-class ModuleObject: public Object {
+class ModuleImportObject: public Object {
  public:
-  ModuleObject(std::string module_name, bool is_file_path, ObjectPtr obj_type,
-               SymbolTableStack&& sym_table)
+  ModuleImportObject(std::string module_name, bool is_file_path,
+                     ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
       , module_name_(module_name)
       , is_file_path_(is_file_path) {
     interpreter_.Exec(module_name_);
   }
 
-  virtual ~ModuleObject() {}
+  virtual ~ModuleImportObject() {}
 
   std::shared_ptr<Object> Attr(std::shared_ptr<Object>/*self*/,
                                const std::string& name) override;
@@ -81,6 +81,45 @@ class ModuleObject: public Object {
   Interpreter interpreter_;
   std::string module_name_;
   bool is_file_path_;
+};
+
+class ModuleCustonObject: public Object {
+ public:
+  using MemberTable = std::vector<std::pair<std::string, ObjectPtr>>;
+
+  ModuleCustonObject(std::string module_name, MemberTable member_table,
+                     ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
+      , module_name_(module_name)
+      , symbol_table_stack_(symbol_table_) {
+
+    for (auto& pair: member_table) {
+      RegisterMember(pair.first, pair.second);
+    }
+  }
+
+  virtual ~ModuleCustonObject() {}
+
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object>/*self*/,
+                               const std::string& name) override;
+
+  SymbolTableStack& SymTableStack() {
+    return symbol_table_stack();
+  }
+
+  void Print() override {
+    std::cout << "MODULE("<< module_name_ << ")\n";
+  }
+
+  void RegisterMember(const std::string& fname, ObjectPtr obj) {
+    SymbolAttr symbol(obj, true);
+    symbol_table_stack_.InsertEntry(fname, std::move(symbol));
+  }
+
+ private:
+  std::string module_name_;
+  SymbolTablePtr symbol_table_;
+  SymbolTableStack symbol_table_stack_;
 };
 
 class SliceObject: public Object {

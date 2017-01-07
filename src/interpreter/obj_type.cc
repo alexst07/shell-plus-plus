@@ -237,9 +237,18 @@ ObjectPtr DeclClassObject::Add(ObjectPtr obj) {
   return static_cast<FuncObject&>(*func_obj).Call(nullptr, std::move(params));
 }
 
-std::shared_ptr<Object> ModuleObject::Attr(std::shared_ptr<Object>/*self*/,
+std::shared_ptr<Object> ModuleImportObject::Attr(std::shared_ptr<Object>/*self*/,
                                            const std::string& name) {
   auto obj = SymTableStack().Lookup(name, false).Ref();
+  return PassVar(obj, symbol_table_stack());
+}
+
+std::shared_ptr<Object> ModuleCustonObject::Attr(std::shared_ptr<Object>/*self*/,
+                                           const std::string& name) {
+  // search on symbol table of the module
+  auto obj = symbol_table_stack_.Lookup(name, false).Ref();
+
+  // PassVar uses the global symbol table because it uses types as int ans real
   return PassVar(obj, symbol_table_stack());
 }
 
