@@ -3,13 +3,15 @@
 #include <boost/filesystem.hpp>
 #include <unistd.h>
 
+#include "utils/check.h"
+
 namespace setti {
 namespace internal {
 namespace module {
 namespace path {
 
 ObjectPtr PwdFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NO_PARAMS(params)
+  SETI_FUNC_CHECK_NO_PARAMS(params, pwd)
 
   namespace fs = boost::filesystem;
 
@@ -18,12 +20,8 @@ ObjectPtr PwdFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr ExistsFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1)
-
-  if (params[0]->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
-                       boost::format("path is not string"));
-  }
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
 
   namespace fs = boost::filesystem;
 
@@ -35,12 +33,8 @@ ObjectPtr ExistsFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr IsRegularFile::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1)
-
-  if (params[0]->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
-                       boost::format("path is not string"));
-  }
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_regular_file)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
 
   namespace fs = boost::filesystem;
 
@@ -52,12 +46,8 @@ ObjectPtr IsRegularFile::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr IsDirFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1)
-
-  if (params[0]->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
-                       boost::format("path is not string"));
-  }
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_dir)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
 
   namespace fs = boost::filesystem;
 
@@ -69,12 +59,8 @@ ObjectPtr IsDirFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr IsSymLink::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1)
-
-  if (params[0]->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
-                       boost::format("path is not string"));
-  }
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_sym_link)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
 
   namespace fs = boost::filesystem;
 
@@ -86,12 +72,8 @@ ObjectPtr IsSymLink::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr IsReadable::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1)
-
-  if (params[0]->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
-                       boost::format("path is not string"));
-  }
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_readable)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
 
   namespace fs = boost::filesystem;
 
@@ -104,12 +86,8 @@ ObjectPtr IsReadable::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr IsWritable::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1)
-
-  if (params[0]->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
-                       boost::format("path is not string"));
-  }
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_writable)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
 
   namespace fs = boost::filesystem;
 
@@ -122,12 +100,8 @@ ObjectPtr IsWritable::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr IsExecutable::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1)
-
-  if (params[0]->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
-                       boost::format("path is not string"));
-  }
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_executable)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
 
   namespace fs = boost::filesystem;
 
