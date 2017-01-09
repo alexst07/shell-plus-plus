@@ -13,6 +13,8 @@
 #include "str-object.h"
 #include "array-object.h"
 #include "cmd-object.h"
+#include "map-object.h"
+#include "tuple-object.h"
 
 namespace setti {
 namespace internal {
