@@ -110,6 +110,30 @@ class IsExecutable: public FuncObject {
   ObjectFactory obj_factory_;
 };
 
+class OwnerUid: public FuncObject {
+ public:
+  OwnerUid(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
+class OwnerGid: public FuncObject {
+ public:
+  OwnerGid(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
 
 inline void RegisterModule(SymbolTableStack& sym_table) {
   ModuleCustonObject::MemberTable table = {
@@ -120,7 +144,9 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
     {"is_symlink",          ObjectMethod<IsSymLink>(sym_table)},
     {"is_readable",         ObjectMethod<IsReadable>(sym_table)},
     {"is_writable",         ObjectMethod<IsWritable>(sym_table)},
-    {"is_executable",       ObjectMethod<IsExecutable>(sym_table)}
+    {"is_executable",       ObjectMethod<IsExecutable>(sym_table)},
+    {"owner_uid",           ObjectMethod<OwnerUid>(sym_table)},
+    {"owner_gid",           ObjectMethod<OwnerGid>(sym_table)}
   };
 
   ObjectFactory obj_factory(sym_table);

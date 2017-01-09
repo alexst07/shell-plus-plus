@@ -2,6 +2,7 @@
 
 #include <boost/filesystem.hpp>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "utils/check.h"
 
@@ -111,6 +112,42 @@ ObjectPtr IsExecutable::Call(Executor*, std::vector<ObjectPtr>&& params) {
   } else {
     return obj_factory_.NewBool(true);
   }
+}
+
+ObjectPtr OwnerUid::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_executable)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
+
+  namespace fs = boost::filesystem;
+
+  struct stat sb;
+
+  std::string str_path = static_cast<StringObject&>(*params[0]).value();
+
+  if (stat(str_path.c_str(), &sb) == -1) {
+    throw RunTimeError(RunTimeError::ErrorCode::FILE,
+                       boost::format("%1%")%strerror(errno));
+  }
+
+  return obj_factory_.NewInt(sb.st_uid);
+}
+
+ObjectPtr OwnerGid::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_executable)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
+
+  namespace fs = boost::filesystem;
+
+  struct stat sb;
+
+  std::string str_path = static_cast<StringObject&>(*params[0]).value();
+
+  if (stat(str_path.c_str(), &sb) == -1) {
+    throw RunTimeError(RunTimeError::ErrorCode::FILE,
+                       boost::format("%1%")%strerror(errno));
+  }
+
+  return obj_factory_.NewInt(sb.st_gid);
 }
 
 }
