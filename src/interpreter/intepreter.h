@@ -1,7 +1,7 @@
 #ifndef SETI_INTERPRETER_H
 #define SETI_INTERPRETER_H
 
-#include "symbol_table.h"
+#include "symbol-table.h"
 #include "ast/ast.h"
 
 namespace setti {

@@ -1,11 +1,11 @@
-#include "func_object.h"
+#include "func-object.h"
 
 #include <string>
 #include <boost/variant.hpp>
 
 #include "object-factory.h"
-#include "scope-executor.h"
-#include "stmt_executor.h"
+#include "interpreter/scope-executor.h"
+#include "interpreter/stmt-executor.h"
 #include "utils/scope-exit.h"
 
 namespace setti {

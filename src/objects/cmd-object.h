@@ -7,7 +7,7 @@
 
 #include "run_time_error.h"
 #include "ast/ast.h"
-#include "symbol_table.h"
+#include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
 
 namespace setti {

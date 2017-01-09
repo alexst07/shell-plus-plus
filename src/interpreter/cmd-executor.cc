@@ -7,9 +7,9 @@
 #include <cstdio>
 #include <boost/algorithm/string.hpp>
 
-#include "expr_executor.h"
-#include "str-object.h"
-#include "stmt_executor.h"
+#include "expr-executor.h"
+#include "objects/str-object.h"
+#include "stmt-executor.h"
 #include "scope-executor.h"
 #include "utils/scope-exit.h"
 

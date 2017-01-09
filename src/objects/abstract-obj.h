@@ -8,7 +8,7 @@
 #include <list>
 
 #include "run_time_error.h"
-#include "symbol_table.h"
+#include "interpreter/symbol-table.h"
 
 namespace setti {
 namespace internal {

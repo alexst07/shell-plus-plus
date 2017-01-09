@@ -4,7 +4,7 @@
 #include <boost/variant.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include "obj_type.h"
+#include "obj-type.h"
 #include "object-factory.h"
 
 namespace setti {

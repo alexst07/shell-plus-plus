@@ -7,8 +7,8 @@
 #include <tuple>
 
 #include "ast/ast.h"
-#include "obj_type.h"
-#include "symbol_table.h"
+#include "objects/obj-type.h"
+#include "symbol-table.h"
 
 namespace setti {
 namespace internal {

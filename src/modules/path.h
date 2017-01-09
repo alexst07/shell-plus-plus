@@ -7,7 +7,7 @@
 #include <vector>
 #include <tuple>
 
-#include "interpreter/object-factory.h"
+#include "objects/object-factory.h"
 
 namespace setti {
 namespace internal {

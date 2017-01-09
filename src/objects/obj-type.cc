@@ -1,4 +1,4 @@
-#include "obj_type.h"
+#include "obj-type.h"
 
 #include <string>
 #include <boost/variant.hpp>
@@ -6,7 +6,7 @@
 #include "str-object.h"
 #include "array-object.h"
 #include "object-factory.h"
-#include "stmt_executor.h"
+#include "interpreter/stmt-executor.h"
 
 namespace setti {
 namespace internal {

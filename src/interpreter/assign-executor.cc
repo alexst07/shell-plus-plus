@@ -1,10 +1,10 @@
-#include "assign_executor.h"
+#include "assign-executor.h"
 
 #include <string>
 #include <boost/variant.hpp>
 
-#include "expr_executor.h"
-#include "func_object.h"
+#include "expr-executor.h"
+#include "objects/func-object.h"
 
 namespace setti {
 namespace internal {

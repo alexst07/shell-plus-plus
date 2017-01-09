@@ -10,11 +10,11 @@
 
 #include "run_time_error.h"
 #include "ast/ast.h"
-#include "symbol_table.h"
+#include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
 #include "simple-object.h"
-#include "func_object.h"
-#include "intepreter.h"
+#include "func-object.h"
+#include "interpreter/intepreter.h"
 
 namespace setti {
 namespace internal {

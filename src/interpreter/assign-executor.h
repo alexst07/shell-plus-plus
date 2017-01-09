@@ -7,10 +7,10 @@
 #include <tuple>
 
 #include "ast/ast.h"
-#include "obj_type.h"
+#include "objects/obj-type.h"
 #include "executor.h"
-#include "symbol_table.h"
-#include "object-factory.h"
+#include "symbol-table.h"
+#include "objects/object-factory.h"
 
 namespace setti {
 namespace internal {

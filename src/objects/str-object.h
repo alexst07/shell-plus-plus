@@ -6,9 +6,9 @@
 
 #include "run_time_error.h"
 #include "ast/ast.h"
-#include "symbol_table.h"
-#include "obj_type.h"
-#include "func_object.h"
+#include "interpreter/symbol-table.h"
+#include "obj-type.h"
+#include "func-object.h"
 
 namespace setti {
 namespace internal {

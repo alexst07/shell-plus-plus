@@ -1,6 +1,6 @@
 #include "scope-executor.h"
 
-#include "stmt_executor.h"
+#include "stmt-executor.h"
 #include "utils/scope-exit.h"
 
 namespace setti {

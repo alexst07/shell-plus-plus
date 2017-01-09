@@ -1,13 +1,13 @@
-#include "stmt_executor.h"
+#include "stmt-executor.h"
 
 #include <string>
 #include <iostream>
 #include <boost/variant.hpp>
 
 #include "scope-executor.h"
-#include "assign_executor.h"
-#include "expr_executor.h"
-#include "func_object.h"
+#include "assign-executor.h"
+#include "expr-executor.h"
+#include "objects/func-object.h"
 #include "cmd-executor.h"
 #include "utils/scope-exit.h"
 

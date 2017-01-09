@@ -8,7 +8,7 @@
 #include <list>
 
 #include "run_time_error.h"
-#include "obj_type.h"
+#include "obj-type.h"
 
 namespace setti {
 namespace internal {

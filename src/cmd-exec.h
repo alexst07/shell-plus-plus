@@ -9,8 +9,8 @@
 #include <boost/variant.hpp>
 #include <termios.h>
 
-#include "interpreter/abstract-obj.h"
-#include "interpreter/symbol_table.h"
+#include "objects/abstract-obj.h"
+#include "interpreter/symbol-table.h"
 
 namespace setti {
 namespace internal {

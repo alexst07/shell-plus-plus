@@ -1,10 +1,10 @@
-#include "expr_executor.h"
+#include "expr-executor.h"
 
 #include <string>
 #include <boost/variant.hpp>
 
 #include "cmd-executor.h"
-#include "stmt_executor.h"
+#include "stmt-executor.h"
 
 namespace setti {
 namespace internal {
