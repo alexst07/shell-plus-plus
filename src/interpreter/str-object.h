@@ -94,6 +94,46 @@ class StringGetterFunc: public FuncObject {
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
 };
 
+class StringToLowerFunc: public FuncObject {
+ public:
+  StringToLowerFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class StringToUpperFunc: public FuncObject {
+ public:
+  StringToUpperFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class StringTrimmFunc: public FuncObject {
+ public:
+  StringTrimmFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class StringTrimmLeftFunc: public FuncObject {
+ public:
+  StringTrimmLeftFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class StringTrimmRightFunc: public FuncObject {
+ public:
+  StringTrimmRightFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
 }
 }
 

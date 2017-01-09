@@ -47,7 +47,9 @@ void AssignableListExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 
-ObjectPtr ExpressionExecutor::Exec(AstNode* node) {
+ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
+  pass_ref_ = pass_ref;
+
   switch (node->type()) {
     case AstNode::NodeType::kLiteral: {
       return ExecLiteral(node);
@@ -124,7 +126,12 @@ ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) {
   Identifier* id_node = static_cast<Identifier*>(node);
   const std::string& name = id_node->name();
   auto obj = symbol_table_stack().Lookup(name, false).Ref();
-  return PassVar(obj, symbol_table_stack());
+
+  if (pass_ref_) {
+    return obj;
+  } else {
+    return PassVar(obj, symbol_table_stack());
+  }
 }
 
 ObjectPtr ExpressionExecutor::ArrayAccess(Array& array_node,
@@ -142,7 +149,12 @@ ObjectPtr ExpressionExecutor::ArrayAccess(Array& array_node,
   int num = static_cast<IntObject*>(index.get())->value();
 
   auto val = static_cast<ArrayObject&>(obj).Element(size_t(num));
-  return PassVar(val, symbol_table_stack());
+
+  if (pass_ref_) {
+    return val;
+  } else {
+    return PassVar(val, symbol_table_stack());
+  }
 }
 
 ObjectPtr ExpressionExecutor::TupleAccess(Array& array_node,
@@ -160,7 +172,12 @@ ObjectPtr ExpressionExecutor::TupleAccess(Array& array_node,
   int num = static_cast<IntObject*>(index.get())->value();
 
   auto val = static_cast<TupleObject&>(obj).Element(size_t(num));
-  return PassVar(val, symbol_table_stack());
+
+  if (pass_ref_) {
+    return val;
+  } else {
+    return PassVar(val, symbol_table_stack());
+  }
 }
 
 ObjectPtr ExpressionExecutor::MapAccess(Array& array_node, MapObject& obj) {
@@ -168,7 +185,12 @@ ObjectPtr ExpressionExecutor::MapAccess(Array& array_node, MapObject& obj) {
   ObjectPtr index = Exec(array_node.index_exp());
 
   auto val = static_cast<MapObject&>(obj).Element(index);
-  return PassVar(val, symbol_table_stack());
+
+  if (pass_ref_) {
+    return val;
+  } else {
+    return PassVar(val, symbol_table_stack());
+  }
 }
 
 ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
@@ -310,7 +332,8 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
 }
 
 ObjectPtr ExpressionExecutor::ExecAttribute(Attribute* node) {
-  ObjectPtr exp = Exec(node->exp());
+  // pass reference for any object
+  ObjectPtr exp = Exec(node->exp(), true);
   std::string name = node->id()->name();
 
   return exp->Attr(exp, name);

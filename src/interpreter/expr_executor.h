@@ -33,10 +33,11 @@ class ExpressionExecutor: public Executor {
  public:
   ExpressionExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack)
+      , pass_ref_(false)
       , obj_factory(symbol_table_stack) {}
 
   // Entry point to execute expression
-  ObjectPtr Exec(AstNode* node);
+  ObjectPtr Exec(AstNode* node, bool pass_ref = false);
 
   // Executes literal const and return an object with its value
   ObjectPtr ExecLiteral(AstNode* node);
@@ -82,6 +83,7 @@ class ExpressionExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 
  private:
+  bool pass_ref_;  // this attribute is only used to execute attribute expr
   ObjectFactory obj_factory;
 };
 

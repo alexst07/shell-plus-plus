@@ -81,6 +81,16 @@ class Object {
                        boost::format("type has no cmd interface"));
   }
 
+  virtual std::shared_ptr<Object> GetItem(std::shared_ptr<Object>) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no get_item interface"));
+  }
+
+  virtual std::shared_ptr<Object> GetItemRef(std::shared_ptr<Object>) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no get_item interface"));
+  }
+
   // This method must receive the self object to apply the iterator
   virtual std::shared_ptr<Object> ObjIter(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,

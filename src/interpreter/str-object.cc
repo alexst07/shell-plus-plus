@@ -2,9 +2,11 @@
 
 #include <string>
 #include <boost/variant.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "obj_type.h"
 #include "object-factory.h"
+#include "utils/check.h"
 
 namespace setti {
 namespace internal {
@@ -98,6 +100,12 @@ std::shared_ptr<Object> StringObject::Attr(std::shared_ptr<Object> self,
 StringType::StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
     : TypeObject("string", obj_type, std::move(sym_table)) {
   RegisterMethod<StringGetterFunc>("at", symbol_table_stack(), *this);
+  RegisterMethod<StringToLowerFunc>("to_lower", symbol_table_stack(), *this);
+  RegisterMethod<StringToUpperFunc>("to_upper", symbol_table_stack(), *this);
+  RegisterMethod<StringTrimmFunc>("trim", symbol_table_stack(), *this);
+  RegisterMethod<StringTrimmLeftFunc>("trim_left", symbol_table_stack(), *this);
+  RegisterMethod<StringTrimmRightFunc>("trim_right", symbol_table_stack(),
+                                       *this);
 }
 
 ObjectPtr StringType::Constructor(Executor* /*parent*/,
@@ -130,5 +138,64 @@ ObjectPtr StringGetterFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(cstr);
 }
 
+ObjectPtr StringToLowerFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, to_lower)
+
+  StringObject& str_obj = static_cast<StringObject&>(*params[0]);
+  std::string& str = const_cast<std::string&>(str_obj.value());
+  boost::to_lower(str);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewNull();
+}
+
+ObjectPtr StringToUpperFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, to_upper)
+
+  StringObject& str_obj = static_cast<StringObject&>(*params[0]);
+  std::string& str = const_cast<std::string&>(str_obj.value());
+  boost::to_upper(str);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewNull();
+}
+
+ObjectPtr StringTrimmFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, trim)
+
+  StringObject& str_obj = static_cast<StringObject&>(*params[0]);
+  std::string& str = const_cast<std::string&>(str_obj.value());
+  boost::trim(str);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewNull();
+}
+
+ObjectPtr StringTrimmLeftFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, trim_left)
+
+  StringObject& str_obj = static_cast<StringObject&>(*params[0]);
+  std::string& str = const_cast<std::string&>(str_obj.value());
+  boost::trim_left(str);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewNull();
+}
+
+ObjectPtr StringTrimmRightFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, trim_right)
+
+  StringObject& str_obj = static_cast<StringObject&>(*params[0]);
+  std::string& str = const_cast<std::string&>(str_obj.value());
+  boost::trim_right(str);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewNull();
+}
 }
 }
