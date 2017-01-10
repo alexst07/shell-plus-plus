@@ -73,6 +73,12 @@ class ObjectFactory {
                                    std::move(SymTableStack())));
   }
 
+  ObjectPtr NewSlice(ObjectPtr start, ObjectPtr end, ObjectPtr step) {
+    auto obj_type = symbol_table_.Lookup("slice", false).SharedAccess();
+    return ObjectPtr(new SliceObject(start, end, step, obj_type,
+                                     std::move(SymTableStack())));
+  }
+
   ObjectPtr NewCmdIter(std::string delim, int outerr, ObjectPtr cmd_obj) {
     auto obj_type = symbol_table_.Lookup("cmd_iter", false).SharedAccess();
     return ObjectPtr(new CmdIterObject(delim, outerr, cmd_obj, obj_type,
@@ -217,6 +223,11 @@ class ObjectFactory {
   ObjectPtr NewModuleType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return std::make_shared<ModuleType>(obj_type, std::move(SymTableStack()));
+  }
+
+  ObjectPtr NewSliceType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return std::make_shared<SliceType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewFuncType() {

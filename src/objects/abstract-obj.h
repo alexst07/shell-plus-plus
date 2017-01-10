@@ -86,7 +86,7 @@ class Object {
                        boost::format("type has no get_item interface"));
   }
 
-  virtual std::shared_ptr<Object> GetItemRef(std::shared_ptr<Object>) {
+  virtual std::shared_ptr<Object>& GetItemRef(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no get_item interface"));
   }

@@ -14,6 +14,24 @@ MapObject::MapObject(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value,
   }
 }
 
+ObjectPtr MapObject::GetItem(ObjectPtr index) {
+  return Element(index);
+}
+
+ObjectPtr& MapObject::GetItemRef(ObjectPtr index) {
+  return ElementRef(index);
+}
+
+ObjectPtr& MapObject::ElementRef(ObjectPtr obj_index) {
+    if (Exists(obj_index)) {
+      size_t hash = obj_index->Hash();
+      auto it = value_.find(hash);
+      return it->second.back().second;
+    } else {
+      return Insert_(obj_index);
+    }
+  }
+
 bool MapObject::operator==(const Object& obj) const {
   if (obj.type() != ObjectType::MAP) {
     return false;

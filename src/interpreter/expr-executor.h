@@ -34,7 +34,7 @@ class ExpressionExecutor: public Executor {
   ExpressionExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack)
       , pass_ref_(false)
-      , obj_factory(symbol_table_stack) {}
+      , obj_factory_(symbol_table_stack) {}
 
   // Entry point to execute expression
   ObjectPtr Exec(AstNode* node, bool pass_ref = false);
@@ -52,15 +52,6 @@ class ExpressionExecutor: public Executor {
   // Executes array access, it could be a language array, map, tuple or
   // custon object
   ObjectPtr ExecArrayAccess(AstNode* node);
-
-  // Access a position of array object
-  ObjectPtr ArrayAccess(Array& array_node, ArrayObject& obj);
-
-  // Access a position of tuple object
-  ObjectPtr TupleAccess(Array& array_node, TupleObject& obj);
-
-  // Access a position of tuple object
-  ObjectPtr MapAccess(Array& array_node, MapObject& obj);
 
   // Executes array instantiation
   ObjectPtr ExecArrayInstantiation(AstNode* node);
@@ -80,11 +71,14 @@ class ExpressionExecutor: public Executor {
   // Executes cmd expression
   ObjectPtr ExecCmdExpr(CmdExpression* node);
 
+  // Executes slice expression
+  ObjectPtr ExecSlice(Slice* node);
+
   void set_stop(StopFlag flag) override;
 
  private:
   bool pass_ref_;  // this attribute is only used to execute attribute expr
-  ObjectFactory obj_factory;
+  ObjectFactory obj_factory_;
 };
 
 class ExprListExecutor: public Executor {

@@ -269,6 +269,16 @@ class CmdType: public TypeObject {
   ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&&) override;
 };
 
+class SliceType: public TypeObject {
+ public:
+  SliceType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("slice", obj_type, std::move(sym_table)) {}
+
+  virtual ~SliceType() {}
+
+  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&& params) override;
+};
+
 class CmdIterType: public TypeObject {
  public:
   CmdIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)

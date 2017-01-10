@@ -87,6 +87,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecCmdExpr(static_cast<CmdExpression*>(node));
       break;
 
+    case AstNode::NodeType::kSlice:
+      return ExecSlice(static_cast<Slice*>(node));
+      break;
+
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid expression opcode"));
@@ -97,7 +101,7 @@ ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {
   ArrayInstantiation* array_node = static_cast<ArrayInstantiation*>(node);
   AssignableListExecutor assignable_list(this, symbol_table_stack());
   auto vec = assignable_list.Exec(array_node->assignable_list());
-  std::shared_ptr<Object> array_obj(obj_factory.NewArray(std::move(vec)));
+  std::shared_ptr<Object> array_obj(obj_factory_.NewArray(std::move(vec)));
   return array_obj;
 }
 
@@ -118,7 +122,7 @@ ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {
   }
 
   // creates the map object
-  ObjectPtr map(obj_factory.NewMap(std::move(map_vec)));
+  ObjectPtr map(obj_factory_.NewMap(std::move(map_vec)));
   return map;
 }
 
@@ -134,80 +138,21 @@ ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) {
   }
 }
 
-ObjectPtr ExpressionExecutor::ArrayAccess(Array& array_node,
-                                          ArrayObject& obj) {
-  // Executes index expression of array
-  ObjectPtr index = Exec(array_node.index_exp());
-
-  // Array accept only integer index
-  if (index->type() != Object::ObjectType::INT) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("array index must be integer"));
-  }
-
-  // Gets the value of integer object
-  int num = static_cast<IntObject*>(index.get())->value();
-
-  auto val = static_cast<ArrayObject&>(obj).Element(size_t(num));
-
-  if (pass_ref_) {
-    return val;
-  } else {
-    return PassVar(val, symbol_table_stack());
-  }
-}
-
-ObjectPtr ExpressionExecutor::TupleAccess(Array& array_node,
-                                          TupleObject& obj) {
-  // Executes index expression of array
-  ObjectPtr index = Exec(array_node.index_exp());
-
-  // Array accept only integer index
-  if (index->type() != Object::ObjectType::INT) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("tuple index must be integer"));
-  }
-
-  // Gets the value of integer object
-  int num = static_cast<IntObject*>(index.get())->value();
-
-  auto val = static_cast<TupleObject&>(obj).Element(size_t(num));
-
-  if (pass_ref_) {
-    return val;
-  } else {
-    return PassVar(val, symbol_table_stack());
-  }
-}
-
-ObjectPtr ExpressionExecutor::MapAccess(Array& array_node, MapObject& obj) {
-  // Executes index expression of array
-  ObjectPtr index = Exec(array_node.index_exp());
-
-  auto val = static_cast<MapObject&>(obj).Element(index);
-
-  if (pass_ref_) {
-    return val;
-  } else {
-    return PassVar(val, symbol_table_stack());
-  }
-}
-
 ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
   Array* array_node = static_cast<Array*>(node);
   Expression* arr_exp = array_node->arr_exp();
 
   ObjectPtr array_obj = Exec(arr_exp);
 
-  if (array_obj->type() == Object::ObjectType::ARRAY) {
-    return ArrayAccess(*array_node, static_cast<ArrayObject&>(*array_obj));
-  } else if (array_obj->type() == Object::ObjectType::TUPLE) {
-    return TupleAccess(*array_node, static_cast<TupleObject&>(*array_obj));
-  } else if (array_obj->type() == Object::ObjectType::MAP) {
-    return MapAccess(*array_node, static_cast<MapObject&>(*array_obj));
+  // Executes index expression of array
+  ObjectPtr index = Exec(array_node->index_exp());
+
+  ObjectPtr val(array_obj->GetItem(index));
+
+  if (pass_ref_) {
+    return val;
   } else {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("operator [] not overload for object"));
+    return PassVar(val, symbol_table_stack());
   }
 }
 
@@ -220,23 +165,23 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
   Literal* literal = static_cast<Literal*>(node);
   switch (literal->literal_type()) {
     case Literal::Type::kInteger: {
-      ObjectPtr obj(obj_factory.NewInt(boost::get<int>(literal->value())));
+      ObjectPtr obj(obj_factory_.NewInt(boost::get<int>(literal->value())));
       return obj;
     } break;
 
     case Literal::Type::kBool: {
-      ObjectPtr obj(obj_factory.NewBool(boost::get<bool>(literal->value())));
+      ObjectPtr obj(obj_factory_.NewBool(boost::get<bool>(literal->value())));
       return obj;
     } break;
 
     case Literal::Type::kReal: {
-      ObjectPtr obj(obj_factory.NewReal(boost::get<float>(literal->value())));
+      ObjectPtr obj(obj_factory_.NewReal(boost::get<float>(literal->value())));
       return obj;
     } break;
 
     case Literal::Type::kString: {
     std::string str = boost::get<std::string>(literal->value());
-      ObjectPtr obj(obj_factory.NewString(std::move(str)));
+      ObjectPtr obj(obj_factory_.NewString(std::move(str)));
       return obj;
     } break;
   }
@@ -337,6 +282,24 @@ ObjectPtr ExpressionExecutor::ExecAttribute(Attribute* node) {
   std::string name = node->id()->name();
 
   return exp->Attr(exp, name);
+}
+
+ObjectPtr ExpressionExecutor::ExecSlice(Slice* node) {
+  ObjectPtr start(obj_factory_.NewNull());
+  ObjectPtr end(obj_factory_.NewNull());
+
+  // TODO: in the future the slice expression must support step x:y:z
+  ObjectPtr step(obj_factory_.NewInt(1));
+
+  if (node->has_start_exp()) {
+    start = Exec(node->start_exp());
+  }
+
+  if (node->has_end_exp()) {
+    end = Exec(node->end_exp());
+  }
+
+  return obj_factory_.NewSlice(start, end, step);
 }
 
 ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {

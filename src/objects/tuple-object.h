@@ -9,6 +9,7 @@
 #include "ast/ast.h"
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
+#include "slice-object.h"
 
 namespace setti {
 namespace internal {
@@ -51,43 +52,15 @@ class TupleObject: public Object {
      value_[i] = std::shared_ptr<Object>(obj_ptr);
    }
 
-   std::size_t Hash() const override {
-     if (value_.empty()) {
-       throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
-                          boost::format("hash of empty tuple is not valid"));
-     }
+   ObjectPtr Element(const SliceObject& slice);
 
-     size_t hash = 0;
+   ObjectPtr GetItem(ObjectPtr index) override;
 
-     // Executes xor operation with hash of each element of tuple
-     for (auto& e: value_) {
-       hash ^= e->Hash();
-     }
+   ObjectPtr& GetItemRef(ObjectPtr index) override;
 
-     return hash;
-   }
+   std::size_t Hash() const override;
 
-   bool operator==(const Object& obj) const override {
-     if (obj.type() != ObjectType::TUPLE) {
-       return false;
-     }
-
-     const TupleObject& tuple_obj = static_cast<const TupleObject&>(obj);
-
-     // If the tuples have different size, they are different
-     if (tuple_obj.value_.size() != value_.size()) {
-       return false;
-     }
-
-     bool r = true;
-
-     // Test each element on tuple
-     for (size_t i = 0; i < value_.size(); i++) {
-       r = r && (tuple_obj.value_[i] == value_[i]);
-     }
-
-     return r;
-   }
+   bool operator==(const Object& obj) const override;
 
    void Print() override {
      std::cout << "TUPLE: ( ";

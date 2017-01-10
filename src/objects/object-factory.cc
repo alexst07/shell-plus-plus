@@ -45,6 +45,11 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertEntry(static_cast<const CmdType&>(*type_cmd).name(),
                            std::move(symbol_cmd));
 
+  ObjectPtr type_slice = obj_factory.NewSliceType();
+  SymbolAttr symbol_slice(type_slice, true);
+  symbol_table.InsertEntry(static_cast<const CmdType&>(*type_slice).name(),
+                           std::move(symbol_slice));
+
   ObjectPtr type_cmd_iter = obj_factory.NewCmdIterType();
   SymbolAttr symbol_cmd_iter(type_cmd_iter, true);
   symbol_table.InsertEntry(static_cast<const CmdIterType&>(

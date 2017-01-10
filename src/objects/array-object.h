@@ -9,6 +9,7 @@
 #include "ast/ast.h"
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
+#include "slice-object.h"
 
 namespace setti {
 namespace internal {
@@ -81,6 +82,12 @@ class ArrayObject: public Object {
    inline std::shared_ptr<Object> Element(size_t i) {
      return value_.at(i);
    }
+
+   ObjectPtr Element(const SliceObject& slice);
+
+   ObjectPtr GetItem(ObjectPtr index) override;
+
+   ObjectPtr& GetItemRef(ObjectPtr index) override;
 
    inline void set(size_t i, std::unique_ptr<Object> obj) {
      Object* obj_ptr = obj.release();

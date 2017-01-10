@@ -42,6 +42,36 @@ ObjectPtr StringObject::ObjReal() {
   return obj_real;
 }
 
+ObjectPtr StringObject::GetItem(ObjectPtr index) {
+  if (index->type() == ObjectType::SLICE) {
+    return Element(static_cast<SliceObject&>(*index));
+  } else if (index->type() == ObjectType::INT) {
+    char c = Element(static_cast<IntObject&>(*index).value());
+    std::string str(1, c);
+    ObjectFactory obj_factory(symbol_table_stack());
+    return obj_factory.NewString(str);
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("index type not valid"));
+  }
+}
+
+ObjectPtr StringObject::Element(const SliceObject& slice) {
+  int start = 0;
+  int end = value_.size();
+  int step = 1;
+
+  std::tie(start, end, step) = SliceLogic(slice, value_.size());
+
+  std::string str = "";
+  for (int i = start; i < end; i += step) {
+    str += value_[i];
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(str);
+}
+
 ObjectPtr StringObject::Equal(ObjectPtr obj) {
   ObjectFactory obj_factory(symbol_table_stack());
 

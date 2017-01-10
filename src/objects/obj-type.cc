@@ -7,6 +7,7 @@
 #include "array-object.h"
 #include "object-factory.h"
 #include "interpreter/stmt-executor.h"
+#include "utils/check.h"
 
 namespace setti {
 namespace internal {
@@ -184,6 +185,13 @@ ObjectPtr IntType::Constructor(Executor* /*parent*/,
   }
 
   return params[0]->ObjInt();
+}
+
+ObjectPtr SliceType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 3, slice)
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewSlice(params[0], params[1], params[2]);
 }
 
 ObjectPtr RealType::Constructor(Executor* /*parent*/,

@@ -9,6 +9,7 @@
 #include "interpreter/symbol-table.h"
 #include "obj-type.h"
 #include "func-object.h"
+#include "slice-object.h"
 
 namespace setti {
 namespace internal {
@@ -64,6 +65,14 @@ class StringObject: public Object {
   ObjectPtr Copy() override;
 
   ObjectPtr ObjCmd() override;
+
+  ObjectPtr GetItem(ObjectPtr index) override;
+
+  inline char Element(size_t i) {
+    return value_[i];
+  }
+
+  ObjectPtr Element(const SliceObject& slice);
 
   std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
                                const std::string& name) override;
