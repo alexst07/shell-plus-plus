@@ -27,6 +27,12 @@ class AstNodeFactory {
         token_kind, std::move(exp), fn_pos_()));
   }
 
+  inline std::unique_ptr<NotExpression> NewNotExpression(
+      TokenKind token_kind, std::unique_ptr<Expression> exp) {
+    return std::unique_ptr<NotExpression>(new NotExpression(
+        token_kind, std::move(exp), fn_pos_()));
+  }
+
   inline std::unique_ptr<Array> NewArray(std::unique_ptr<Expression> arr_exp,
                                          std::unique_ptr<Expression> index_exp) {
     return std::unique_ptr<Array>(new Array(std::move(arr_exp),

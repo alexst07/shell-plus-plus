@@ -66,6 +66,15 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitNotExpression(NotExpression* not_expr) {
+    Level();
+    std::cout << "<not type: "
+              << Token::name(not_expr->kind()) << ">\n";
+    level_++;
+    not_expr->exp()->Accept(this);
+    level_--;
+  }
+
   void virtual VisitIdentifier(Identifier* id) {
     if (inside_scope_) {
       std::cout << id->name();

@@ -1,4 +1,4 @@
-﻿#ifndef SETTI_TOKEN_H
+#ifndef SETTI_TOKEN_H
 #define SETTI_TOKEN_H
 
 #include <string>
@@ -223,7 +223,7 @@ class Token {
       case TokenKind::RBRACE:         // }
       case TokenKind::AND:            // &&
       case TokenKind::OR:             // ||
-      case TokenKind::NOT:            // !
+      case TokenKind::EXCL_NOT:       // !
       case TokenKind::LESS_THAN:      // <
       case TokenKind::GREATER_THAN:   // >
       case TokenKind::NWL:            // new line

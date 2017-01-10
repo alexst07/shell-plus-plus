@@ -928,13 +928,13 @@ ParserResult<Expression> Parser::ParserAndExp() {
 }
 
 ParserResult<Expression> Parser::ParserNotExp() {
-  if (token_.Is(TokenKind::NOT)) {
+  if (token_.Is(TokenKind::KW_NOT)) {
     TokenKind token_kind = token_.GetKind();
     Advance(); // Consume the token
     ValidToken();
 
-    ParserResult<Expression> exp = ParserComparisonExp();
-    return ParserResult<Expression>(factory_.NewUnaryOperation(
+    ParserResult<Expression> exp(ParserNotExp());
+    return ParserResult<Expression>(factory_.NewNotExpression(
           token_kind, exp.MoveAstNode()));
   }
 
@@ -1110,10 +1110,12 @@ ParserResult<Expression> Parser::ParserTerm() {
 }
 
 ParserResult<Expression> Parser::ParserUnaryExp() {
-  if (token_.IsAny(TokenKind::ADD, TokenKind::SUB)) {
+  if (IsUnaryOp()) {
     TokenKind token_kind = token_.GetKind();
     Advance(); // Consume the token
-    ParserResult<Expression> exp = ParserPostExp();
+    ValidToken();
+
+    ParserResult<Expression> exp = ParserUnaryExp();
     return ParserResult<Expression>(factory_.NewUnaryOperation(
           token_kind, exp.MoveAstNode()));
   }

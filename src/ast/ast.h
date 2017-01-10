@@ -92,6 +92,7 @@ namespace internal {
   V(CallRuntime)                \
   V(UnaryOperation)             \
   V(BinaryOperation)            \
+  V(NotExpression)              \
   V(CompareOperation)           \
   V(ExpressionList)             \
   V(FunctionCall)               \
@@ -1458,6 +1459,35 @@ class PackageScope: public AstNode {
 
   PackageScope(std::unique_ptr<Identifier> id, Position position):
    id_(std::move(id)), AstNode(NodeType::kPackageScope, position) {}
+};
+
+class NotExpression: public Expression {
+ public:
+  virtual ~NotExpression() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitNotExpression(this);
+  }
+
+  TokenKind kind() const noexcept {
+    return token_kind_;
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  TokenKind token_kind_;
+  std::unique_ptr<Expression> exp_;
+
+  NotExpression(TokenKind token_kind, std::unique_ptr<Expression> exp,
+                Position position)
+      : Expression(NodeType::kNotExpression, position)
+      , token_kind_(token_kind)
+      , exp_(std::move(exp)) {}
 };
 
 class UnaryOperation: public Expression {

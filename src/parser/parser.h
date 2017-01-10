@@ -169,6 +169,12 @@ class Parser {
     return r;
   }
 
+  inline bool IsUnaryOp() {
+    bool r = token_.IsAny(TokenKind::ADD, TokenKind::SUB, TokenKind::BIT_NOT,
+                          TokenKind::EXCL_NOT);
+    return r;
+  }
+
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserScopeIdentifier();
   ParserResult<Expression> ParserPrimaryExp();

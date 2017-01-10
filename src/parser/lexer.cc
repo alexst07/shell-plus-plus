@@ -252,7 +252,7 @@ TokenStream Lexer::Scanner() {
         if (c_ == '=') {
           token = Select(TokenKind::NOT_EQUAL);
         } else {
-          token = GetToken(TokenKind::NOT);
+          token = GetToken(TokenKind::EXCL_NOT);
         }
         break;
 
