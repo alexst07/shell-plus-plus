@@ -17,6 +17,8 @@ void AssignExecutor::Exec(AstNode* node) {
                        boost::format("not valid left side expression"));
   }
 
+  TokenKind assign_kind = assign_node->assign_kind();
+
   // Executes the left side of assignment
   auto vars = AssignList(assign_node->lexp_list());
 
@@ -34,10 +36,10 @@ void AssignExecutor::Exec(AstNode* node) {
   }
 
   if ((vars.size() == 1) && (values.size() == 1)) {
-    vars[0].get() = values[0];
+    AssignOperation(vars[0], values[0], assign_kind);
   } else if ((vars.size() == 1) && (values.size() != 1)) {
     ObjectPtr tuple_obj(obj_factory_.NewTuple(std::move(values)));
-    vars[0].get() = tuple_obj;
+    AssignOperation(vars[0], tuple_obj, assign_kind);
   } else if ((vars.size() != 1) && (values.size() == 1)) {
     // only tuple object is accept on this case
     if (values[0]->type() != Object::ObjectType::TUPLE) {
@@ -55,13 +57,66 @@ void AssignExecutor::Exec(AstNode* node) {
     }
 
     for (size_t i = 0; i < vars.size(); i++) {
-      vars[i].get() = tuple_obj.Element(i);
+      AssignOperation(vars[i], tuple_obj.Element(i), assign_kind);
     }
   } else {
     // on this case there are the same number of variables and values
     for (size_t i = 0; i < vars.size(); i++) {
-      vars[i].get() = values[i];
+      AssignOperation(vars[i], values[i], assign_kind);
     }
+  }
+}
+
+void AssignExecutor::AssignOperation(std::reference_wrapper<ObjectPtr> ref,
+                                     ObjectPtr value, TokenKind token) {
+  switch (token) {
+    case TokenKind::ASSIGN:
+      ref.get() = value;
+      break;
+
+    case TokenKind::ASSIGN_BIT_OR:
+      ref.get() = ref.get()->BitOr(value);
+      break;
+
+    case TokenKind::ASSIGN_BIT_XOR:
+      ref.get() = ref.get()->BitXor(value);
+      break;
+
+    case TokenKind::ASSIGN_BIT_AND:
+      ref.get() = ref.get()->BitAnd(value);
+      break;
+
+    case TokenKind::ASSIGN_SHL:
+      ref.get() = ref.get()->LeftShift(value);
+      break;
+
+    case TokenKind::ASSIGN_SAR:
+      ref.get() = ref.get()->RightShift(value);
+      break;
+
+    case TokenKind::ASSIGN_ADD:
+      ref.get() = ref.get()->Add(value);
+      break;
+
+    case TokenKind::ASSIGN_SUB:
+      ref.get() = ref.get()->Sub(value);
+      break;
+
+    case TokenKind::ASSIGN_MUL:
+      ref.get() = ref.get()->Mult(value);
+      break;
+
+    case TokenKind::ASSIGN_DIV:
+      ref.get() = ref.get()->Div(value);
+      break;
+
+    case TokenKind::ASSIGN_MOD:
+      ref.get() = ref.get()->DivMod(value);
+      break;
+
+    default:
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("not valid assignment operation"));
   }
 }
 

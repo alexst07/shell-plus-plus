@@ -56,6 +56,9 @@ class AssignExecutor: public Executor {
 
   ObjectPtr& RefArrow(Attribute& att_node, ObjectPtr& obj);
 
+  void AssignOperation(std::reference_wrapper<ObjectPtr> ref, ObjectPtr value,
+                       TokenKind token);
+
   void set_stop(StopFlag flag) override;
 
  private:
