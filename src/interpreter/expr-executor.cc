@@ -100,9 +100,16 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
 ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {
   ArrayInstantiation* array_node = static_cast<ArrayInstantiation*>(node);
   AssignableListExecutor assignable_list(this, symbol_table_stack());
-  auto vec = assignable_list.Exec(array_node->assignable_list());
-  std::shared_ptr<Object> array_obj(obj_factory_.NewArray(std::move(vec)));
-  return array_obj;
+
+  if (array_node->has_elements()) {
+    auto vec = assignable_list.Exec(array_node->assignable_list());
+    std::shared_ptr<Object> array_obj(obj_factory_.NewArray(std::move(vec)));
+    return array_obj;
+  } else {
+    std::vector<ObjectPtr> vec;
+    std::shared_ptr<Object> array_obj(obj_factory_.NewArray(std::move(vec)));
+    return array_obj;
+  }
 }
 
 ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {

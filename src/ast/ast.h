@@ -354,6 +354,14 @@ class ArrayInstantiation: public Expression {
     return elements_.get();
   }
 
+  bool has_elements() const noexcept {
+    if (elements_) {
+      return true;
+    }
+
+    return false;
+  }
+
   bool valid_elements() const noexcept {
     if (elements_) {
       return true;
