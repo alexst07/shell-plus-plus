@@ -38,6 +38,8 @@ class MapObject: public Object {
 
   ObjectPtr& GetItemRef(ObjectPtr index) override;
 
+  ObjectPtr ObjIter(ObjectPtr obj) override;
+
   // Return the reference for an object on the map, if there is no
   // entry for this index, create a new empty with this entry and
   // return its reference
@@ -53,6 +55,10 @@ class MapObject: public Object {
   bool Exists(ObjectPtr obj_index);
 
   const Map& value() const noexcept {
+    return value_;
+  }
+
+  Map& value() noexcept {
     return value_;
   }
 
@@ -101,7 +107,7 @@ class MapIterObject: public Object {
   std::unordered_map<size_t, std::vector<std::pair<ObjectPtr, ObjectPtr>>>
       ::iterator pos_;
 
-  std::vector<std::pair<ObjectPtr, ObjectPtr>>::iterator pos_vec_;
+  size_t pos_vec_;
 };
 
 }

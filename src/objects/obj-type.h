@@ -300,6 +300,18 @@ class ArrayIterType: public TypeObject {
                         std::vector<ObjectPtr>&& params) override;
 };
 
+class MapIterType: public TypeObject {
+ public:
+  MapIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("map_iter", obj_type, std::move(sym_table)) {}
+
+  virtual ~MapIterType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override;
+};
+
+
 class ContainerType: public TypeObject {
  public:
   ContainerType(const std::string& name, ObjectPtr obj_type,

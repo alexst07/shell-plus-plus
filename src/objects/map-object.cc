@@ -14,9 +14,8 @@ MapIterObject::MapIterObject(ObjectPtr map_obj, ObjectPtr obj_type,
   }
 
   map_obj_ = map_obj;
-  static_cast<MapObject&>(*map_obj_).value().begin();
-  static_cast<MapObject&>(*map_obj_).value().begin()->second
-      .begin();
+  pos_ = static_cast<MapObject&>(*map_obj_).value().begin();
+  pos_vec_ = 0;
 }
 
 ObjectPtr MapIterObject::Equal(ObjectPtr obj) {
@@ -35,6 +34,7 @@ ObjectPtr MapIterObject::Equal(ObjectPtr obj) {
 }
 
 ObjectPtr MapIterObject::Next() {
+  ObjectFactory obj_factory(symbol_table_stack());
   MapObject& map_obj = static_cast<MapObject&>(*map_obj_);
 
   if (pos_ == map_obj.value().end()) {
@@ -42,14 +42,28 @@ ObjectPtr MapIterObject::Next() {
     return obj_factory.NewNull();
   }
 
-  ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewBool(false);
+  std::vector<ObjectPtr> vec = {pos_->second[pos_vec_].first,
+                                pos_->second[pos_vec_].second};
+  pos_vec_++;
+
+  if (pos_vec_ >= pos_->second.size()) {
+    pos_++;
+    pos_vec_ = 0;
+  }
+
+  return obj_factory.NewTuple(std::move(vec));
 }
 
 ObjectPtr MapIterObject::HasNext() {
   ObjectFactory obj_factory(symbol_table_stack());
+  MapObject& map_obj = static_cast<MapObject&>(*map_obj_);
 
-  return obj_factory.NewBool(false);
+  if (pos_ == map_obj.value().end()) {
+    ObjectFactory obj_factory(symbol_table_stack());
+    return obj_factory.NewBool(false);
+  }
+
+  return obj_factory.NewBool(true);
 }
 
 MapObject::MapObject(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value,
@@ -69,6 +83,11 @@ ObjectPtr MapObject::GetItem(ObjectPtr index) {
 
 ObjectPtr& MapObject::GetItemRef(ObjectPtr index) {
   return ElementRef(index);
+}
+
+ObjectPtr MapObject::ObjIter(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewMapIter(obj);
 }
 
 ObjectPtr& MapObject::ElementRef(ObjectPtr obj_index) {

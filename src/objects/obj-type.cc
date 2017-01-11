@@ -230,6 +230,23 @@ ObjectPtr ArrayIterType::Constructor(Executor* /*parent*/,
   return obj;
 }
 
+ObjectPtr MapIterType::Constructor(Executor* /*parent*/,
+                                   std::vector<ObjectPtr>&& params) {
+  if (params.size() != 1) {
+    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                       boost::format("array_iter() takes exactly 1 argument"));
+  }
+
+  if (params[0]->type() != ObjectType::MAP) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("invalid type for ma_iter"));
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj(obj_factory.NewMapIter(params[0]));
+  return obj;
+}
+
 ObjectPtr CmdType::Constructor(Executor* /*parent*/,
                                std::vector<ObjectPtr>&& /*params*/) {
   throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
