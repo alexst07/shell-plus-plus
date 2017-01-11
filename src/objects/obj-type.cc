@@ -265,5 +265,11 @@ ObjectPtr ModuleType::Constructor(Executor* /*parent*/,
                      boost::format("module is not constructable"));
 }
 
+ObjectPtr TupleType::Constructor(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewTuple(std::move(params));
+}
+
 }
 }

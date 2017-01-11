@@ -320,8 +320,8 @@ class ContainerType: public TypeObject {
 
   virtual ~ContainerType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override {
+  virtual ObjectPtr Constructor(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
     if (params.size() != 1) {
       throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                          boost::format("%1%() takes exactly 1 argument")
@@ -352,6 +352,9 @@ class TupleType: public ContainerType {
  public:
   TupleType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : ContainerType("tuple", obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override;
 
   virtual ~TupleType() {}
 };
