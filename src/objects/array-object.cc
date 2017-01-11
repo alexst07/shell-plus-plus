@@ -10,6 +10,18 @@
 namespace setti {
 namespace internal {
 
+ArrayIterObject::ArrayIterObject(ObjectPtr array_obj, ObjectPtr obj_type,
+                                 SymbolTableStack&& sym_table)
+    : Object(ObjectType::ARRAY_ITER, obj_type, std::move(sym_table))
+    , pos_(0) {
+  if (array_obj->type() != ObjectType::ARRAY) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("invalid conversion to int"));
+  }
+
+  array_obj_ = array_obj;
+}
+
 ObjectPtr ArrayIterObject::Equal(ObjectPtr obj) {
   ObjectFactory obj_factory(symbol_table_stack());
 
@@ -42,6 +54,24 @@ ObjectPtr ArrayIterObject::HasNext() {
   bool v = pos_ == static_cast<ArrayObject&>(*array_obj_).ArraySize();
   return obj_factory.NewBool(!v);
 }
+
+ArrayObject::ArrayObject(std::vector<std::unique_ptr<Object>>&& value,
+                         ObjectPtr obj_type, SymbolTableStack&& sym_table)
+   : Object(ObjectType::ARRAY, obj_type, std::move(sym_table))
+   , value_(value.size()) {
+  for (size_t i = 0; i < value.size(); i++) {
+    Object* obj_ptr = value[i].release();
+    value_[i] = std::shared_ptr<Object>(obj_ptr);
+  }
+}
+
+ArrayObject::ArrayObject(std::vector<std::shared_ptr<Object>>&& value,
+                         ObjectPtr obj_type, SymbolTableStack&& sym_table)
+   : Object(ObjectType::ARRAY, obj_type, std::move(sym_table))
+   , value_(value) {}
+
+ArrayObject::ArrayObject(const ArrayObject& obj)
+    : Object(obj), value_(obj.value_) {}
 
 std::size_t ArrayObject::Hash() const {
   if (value_.empty()) {
