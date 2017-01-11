@@ -219,9 +219,8 @@ class Object {
 
   virtual std::shared_ptr<Object> Not() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no unary - operator"));
+                       boost::format("type has no not operator"));
   }
-
 
   virtual std::shared_ptr<Object> Begin() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,

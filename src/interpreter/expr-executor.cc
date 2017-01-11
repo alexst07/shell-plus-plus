@@ -91,6 +91,14 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecSlice(static_cast<Slice*>(node));
       break;
 
+    case AstNode::NodeType::kNotExpression:
+      return ExecNotExpr(static_cast<NotExpression*>(node));
+      break;
+
+    case AstNode::NodeType::kUnaryOperation:
+      return ExecUnary(static_cast<UnaryOperation*>(node));
+      break;
+
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid expression opcode"));
@@ -191,6 +199,46 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
       ObjectPtr obj(obj_factory_.NewString(std::move(str)));
       return obj;
     } break;
+  }
+}
+
+ObjectPtr ExpressionExecutor::ExecNotExpr(AstNode* node) {
+  if (node->type() == AstNode::NodeType::kNotExpression) {
+    NotExpression *not_expr = static_cast<NotExpression*>(node);
+    ObjectPtr exp(Exec(not_expr->exp()));
+    return exp->Not();
+  } else {
+    UnaryOperation* not_expr = static_cast<UnaryOperation*>(node);
+    ObjectPtr exp(Exec(not_expr->exp()));
+    return exp->Not();
+  }
+}
+
+ObjectPtr ExpressionExecutor::ExecUnary(AstNode* node) {
+  UnaryOperation* unary_expr = static_cast<UnaryOperation*>(node);
+  ObjectPtr unary_obj = Exec(static_cast<AstNode*>(unary_expr->exp()));
+
+  switch (unary_expr->kind()) {
+    case TokenKind::ADD:
+      return unary_obj->UnaryAdd();
+      break;
+
+    case TokenKind::SUB:
+      return unary_obj->UnarySub();
+      break;
+
+    case TokenKind::EXCL_NOT:
+      return ExecNotExpr(unary_expr);
+      break;
+
+    case TokenKind::BIT_NOT:
+      return unary_obj->BitNot();
+      break;
+
+    default: {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("invalid unary operation opcode"));
+    }
   }
 }
 

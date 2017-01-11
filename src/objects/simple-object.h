@@ -91,6 +91,8 @@ class BoolObject: public Object {
 
   ObjectPtr Or(ObjectPtr obj) override;
 
+  ObjectPtr Not() override;
+
   void Print() override {
     std::cout << "BOOL: " << value_;
   }

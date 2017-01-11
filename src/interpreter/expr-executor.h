@@ -74,6 +74,13 @@ class ExpressionExecutor: public Executor {
   // Executes slice expression
   ObjectPtr ExecSlice(Slice* node);
 
+  // Executes not expression, as the language has
+  // to kinds of not expression, with not and !
+  // the function has to check wich node is
+  ObjectPtr ExecNotExpr(AstNode* node);
+
+  ObjectPtr ExecUnary(AstNode* node);
+
   void set_stop(StopFlag flag) override;
 
  private:
