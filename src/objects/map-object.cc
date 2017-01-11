@@ -1,7 +1,56 @@
 #include "map-object.h"
 
+#include "object-factory.h"
+
 namespace setti {
 namespace internal {
+
+MapIterObject::MapIterObject(ObjectPtr map_obj, ObjectPtr obj_type,
+                             SymbolTableStack&& sym_table)
+    : Object(ObjectType::MAP_ITER, obj_type, std::move(sym_table)) {
+  if (map_obj->type() != ObjectType::MAP) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type is not map"));
+  }
+
+  map_obj_ = map_obj;
+  static_cast<MapObject&>(*map_obj_).value().begin();
+  static_cast<MapObject&>(*map_obj_).value().begin()->second
+      .begin();
+}
+
+ObjectPtr MapIterObject::Equal(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (obj->type() != ObjectType::MAP_ITER) {
+    return obj_factory.NewBool(false);
+  }
+
+  MapIterObject& other = static_cast<MapIterObject&>(*obj);
+
+  bool ptr_eq = obj.get() == map_obj_.get();
+  bool pos_eq = other.pos_ == pos_;
+
+  return obj_factory.NewBool(ptr_eq && pos_eq);
+}
+
+ObjectPtr MapIterObject::Next() {
+  MapObject& map_obj = static_cast<MapObject&>(*map_obj_);
+
+  if (pos_ == map_obj.value().end()) {
+    ObjectFactory obj_factory(symbol_table_stack());
+    return obj_factory.NewNull();
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(false);
+}
+
+ObjectPtr MapIterObject::HasNext() {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  return obj_factory.NewBool(false);
+}
 
 MapObject::MapObject(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value,
                      ObjectPtr obj_type, SymbolTableStack&& sym_table)

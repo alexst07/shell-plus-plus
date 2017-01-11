@@ -31,6 +31,8 @@ class Object {
     CMD,
     TYPE,
     ARRAY_ITER,
+    MAP_ITER,
+    TUPLE_ITER,
     CMD_ITER,
     DECL_TYPE,
     DECL_OBJ,

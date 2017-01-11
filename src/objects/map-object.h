@@ -52,6 +52,10 @@ class MapObject: public Object {
 
   bool Exists(ObjectPtr obj_index);
 
+  const Map& value() const noexcept {
+    return value_;
+  }
+
   void Print() override {
     std::cout << "MAP: { ";
     for (auto& list: value_) {
@@ -68,6 +72,36 @@ class MapObject: public Object {
 
  private:
    Map value_;
+};
+
+class MapIterObject: public Object {
+ public:
+  MapIterObject(ObjectPtr map_obj, ObjectPtr obj_type,
+                SymbolTableStack&& sym_table);
+
+  virtual ~MapIterObject() {}
+
+  ObjectPtr Equal(ObjectPtr obj) override;
+
+  ObjectPtr Next() override;
+
+  ObjectPtr HasNext() override;
+
+  void Print() override {
+    std::cout << "MAP ITER: ";
+  }
+
+ private:
+  // it uses the array object and position insted of c++ iterator
+  // because the iterator object has need a shared_reference
+  // of object, because the array could be removed from memory
+  // if the object was created inside a loop for example
+  // and the iterator could be used outside this loop
+  ObjectPtr map_obj_;
+  std::unordered_map<size_t, std::vector<std::pair<ObjectPtr, ObjectPtr>>>
+      ::iterator pos_;
+
+  std::vector<std::pair<ObjectPtr, ObjectPtr>>::iterator pos_vec_;
 };
 
 }
