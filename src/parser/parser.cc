@@ -1402,6 +1402,8 @@ ParserResult<Expression> Parser::LiteralExp() {
   } else if (token.Is(TokenKind::KW_FALSE)) {
     Token::Value value = false;
     return ParserResult<Expression>(factory_.NewLiteral(value, Literal::kBool));
+  } else if (token.Is(TokenKind::KW_NULL)) {
+    return ParserResult<Expression>(factory_.NewNullExpression());
   } else {
     ErrorMsg(boost::format("primary expression expected, got %1%")
         % Token::TokenValueToStr(token.GetValue()));

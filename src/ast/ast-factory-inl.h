@@ -14,6 +14,10 @@ class AstNodeFactory {
     return std::unique_ptr<Literal>(new Literal(value, type, fn_pos_()));
   }
 
+  inline std::unique_ptr<NullExpression> NewNullExpression() {
+    return std::unique_ptr<NullExpression>(new NullExpression(fn_pos_()));
+  }
+
   inline std::unique_ptr<BinaryOperation> NewBinaryOperation(
       TokenKind token_kind, std::unique_ptr<Expression> left,
       std::unique_ptr<Expression> right) {

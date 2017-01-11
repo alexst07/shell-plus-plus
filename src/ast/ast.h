@@ -83,6 +83,7 @@ namespace internal {
   V(Conditional)                \
   V(VariableProxy)              \
   V(Literal)                    \
+  V(NullExpression)             \
   V(Array)                      \
   V(ArrayInstantiation)         \
   V(DictionaryInstantiation)    \
@@ -1653,6 +1654,21 @@ class FunctionCall: public Expression {
       : Expression(NodeType::kFunctionCall, position)
       , func_exp_(std::move(func_exp))
       , rvalue_list_(std::move(rvalue_list)) {}
+};
+
+class NullExpression: public Expression {
+ public:
+  virtual ~NullExpression() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitNullExpression(this);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  NullExpression(Position position)
+      : Expression(NodeType::kNullExpression, position) {}
 };
 
 class Literal: public Expression {

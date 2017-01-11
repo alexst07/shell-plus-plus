@@ -81,6 +81,8 @@ class ExpressionExecutor: public Executor {
 
   ObjectPtr ExecUnary(AstNode* node);
 
+  ObjectPtr ExecNull();
+
   void set_stop(StopFlag flag) override;
 
  private:

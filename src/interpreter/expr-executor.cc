@@ -99,6 +99,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecUnary(static_cast<UnaryOperation*>(node));
       break;
 
+    case AstNode::NodeType::kNullExpression:
+      return ExecNull();
+      break;
+
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid expression opcode"));
@@ -212,6 +216,10 @@ ObjectPtr ExpressionExecutor::ExecNotExpr(AstNode* node) {
     ObjectPtr exp(Exec(not_expr->exp()));
     return exp->Not();
   }
+}
+
+ObjectPtr ExpressionExecutor::ExecNull() {
+  return obj_factory_.NewNull();
 }
 
 ObjectPtr ExpressionExecutor::ExecUnary(AstNode* node) {
