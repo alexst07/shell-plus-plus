@@ -176,8 +176,7 @@ ObjectPtr StringToLowerFunc::Call(Executor* /*parent*/,
   std::string& str = const_cast<std::string&>(str_obj.value());
   boost::to_lower(str);
 
-  ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewNull();
+  return params[0];
 }
 
 ObjectPtr StringToUpperFunc::Call(Executor* /*parent*/,
@@ -188,8 +187,7 @@ ObjectPtr StringToUpperFunc::Call(Executor* /*parent*/,
   std::string& str = const_cast<std::string&>(str_obj.value());
   boost::to_upper(str);
 
-  ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewNull();
+  return params[0];
 }
 
 ObjectPtr StringTrimmFunc::Call(Executor* /*parent*/,
@@ -200,8 +198,7 @@ ObjectPtr StringTrimmFunc::Call(Executor* /*parent*/,
   std::string& str = const_cast<std::string&>(str_obj.value());
   boost::trim(str);
 
-  ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewNull();
+  return params[0];
 }
 
 ObjectPtr StringTrimmLeftFunc::Call(Executor* /*parent*/,
@@ -212,8 +209,7 @@ ObjectPtr StringTrimmLeftFunc::Call(Executor* /*parent*/,
   std::string& str = const_cast<std::string&>(str_obj.value());
   boost::trim_left(str);
 
-  ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewNull();
+  return params[0];
 }
 
 ObjectPtr StringTrimmRightFunc::Call(Executor* /*parent*/,
@@ -224,8 +220,45 @@ ObjectPtr StringTrimmRightFunc::Call(Executor* /*parent*/,
   std::string& str = const_cast<std::string&>(str_obj.value());
   boost::trim_right(str);
 
-  ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewNull();
+  return params[0];
 }
+
+ObjectPtr StringFindFunc::Call(Executor* /*parent*/,
+                               std::vector<ObjectPtr>&& params) {
+  int pos = 0;
+
+  if (params.size() == 3) {
+    SETI_FUNC_CHECK_PARAM_TYPE(params[2], pos, INT)
+
+    pos = static_cast<IntObject&>(*params[2]).value();
+  } else {
+    SETI_FUNC_CHECK_NUM_PARAMS(params, 2, find)
+  }
+
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+
+  StringObject& str_obj = static_cast<StringObject&>(*params[0]);
+  std::string& self = const_cast<std::string&>(str_obj.value());
+
+  std::string str = static_cast<StringObject&>(*params[1]).value();
+
+  size_t f = self.find(str, pos);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (f == std::string::npos) {
+    return obj_factory.NewBool(false);
+  }
+
+  return obj_factory.NewInt(f);
+}
+
+ObjectPtr StringEndsWithFunc::Call(Executor* /*parent*/,
+                                   std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+
+}
+
 }
 }
