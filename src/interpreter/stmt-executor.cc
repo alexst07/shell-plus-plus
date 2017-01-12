@@ -76,7 +76,8 @@ ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
         // error, only the param in the end can have default values
         throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                            boost::format("no default value can't appear"
-                                         "after a default value parameter"));
+                                         "after a default value parameter"),
+                           param->value()->pos());
       }
     }
   }
@@ -85,7 +86,8 @@ ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
   if ((variadic_count > 1) ||
       ((variadic_count == 1) && (!fdecl_node->variadic()))) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("only last parameter can be variadic"));
+                       boost::format("only last parameter can be variadic"),
+                       fdecl_node->pos());
   }
 
   SymbolTableStack st_stack(symbol_table_stack());
@@ -96,15 +98,19 @@ ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
     func_name = fdecl_node->name()->name();
   }
 
-  ObjectPtr fobj(obj_factory_.NewFuncDeclObject(func_name,
-                                                fdecl_node->block(),
-                                                std::move(st_stack),
-                                                std::move(param_names),
-                                                std::move(default_values),
-                                                fdecl_node->variadic(),
-                                                lambda_));
+  try {
+    ObjectPtr fobj(obj_factory_.NewFuncDeclObject(func_name,
+                                                  fdecl_node->block(),
+                                                  std::move(st_stack),
+                                                  std::move(param_names),
+                                                  std::move(default_values),
+                                                  fdecl_node->variadic(),
+                                                  lambda_));
 
-  return fobj;
+    return fobj;
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), fdecl_node->pos());
+  }
 }
 
 void FuncDeclExecutor::Exec(AstNode* node) {
@@ -115,8 +121,12 @@ void FuncDeclExecutor::Exec(AstNode* node) {
   // global symbol
   SymbolAttr entry(fobj, true);
 
-  symbol_table_stack().InsertEntry(fdecl_node->name()->name(),
-                                   std::move(entry));
+  try {
+    symbol_table_stack().InsertEntry(fdecl_node->name()->name(),
+                                     std::move(entry));
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+  }
 }
 
 void FuncDeclExecutor::set_stop(StopFlag flag) {
@@ -127,6 +137,7 @@ void FuncDeclExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 
+// TODO: Analize errors exception
 void ClassDeclExecutor::Exec(AstNode* node) {
   ClassDeclaration* class_decl_node = static_cast<ClassDeclaration*>(node);
 
@@ -256,7 +267,8 @@ void StmtExecutor::Exec(AstNode* node) {
 
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                         boost::format("invalid opcode of statement"));
+                         boost::format("invalid opcode of statement"),
+                         node->pos());
     }
   }
 }
@@ -303,7 +315,14 @@ void IfElseExecutor::Exec(IfStatement* node) {
   // Executes if expresion
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr obj_exp = expr_exec.Exec(node->exp());
-  bool cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
+
+  bool cond;
+
+  try {
+    cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->exp()->pos());
+  }
 
   // create a new table for if else scope
   symbol_table_stack().NewTable();
@@ -338,8 +357,12 @@ void WhileExecutor::Exec(WhileStatement* node) {
     }
 
     ObjectPtr obj_exp = expr_exec.Exec(exp);
-    bool cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
-    return cond;
+
+    try {
+      return static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->exp()->pos());
+    }
   };
 
   // create a new table for while scope
@@ -468,7 +491,8 @@ void ForInExecutor::Exec(ForInStatement* node) {
 
       if (has_next_obj->type() != Object::ObjectType::BOOL) {
         throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                           boost::format("expect bool from __has_next__"));
+                           boost::format("expect bool from __has_next__"),
+                           node->test_list()->pos());
       }
 
       bool v = static_cast<BoolObject&>(*has_next_obj).value();
@@ -477,9 +501,13 @@ void ForInExecutor::Exec(ForInStatement* node) {
       }
     }
 
-    // assign the it_values->Next to vars references to be used inside
-    // block of for statemente
-    Assign(vars, it_values);
+    try {
+      // assign the it_values->Next to vars references to be used inside
+      // block of for statemente
+      Assign(vars, it_values);
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    }
 
     return true;
   };
@@ -565,7 +593,14 @@ void SwitchExecutor::Exec(SwitchStatement* node) {
     std::vector<ObjectPtr> obj_res_list = expr_list_exec.Exec(c->exp_list());
 
     // compare each expression with switch expression
-    if (MatchAnyExp(obj_exp_switch, std::move(obj_res_list))) {
+    bool comp;
+    try {
+      comp = MatchAnyExp(obj_exp_switch, std::move(obj_res_list));
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), c->pos());
+    }
+
+    if (comp) {
       any_case_executed = true;
 
       // create a new table for while scope
@@ -623,7 +658,11 @@ void CmdDeclExecutor::Exec(AstNode* node) {
 
   std::string id = cmd_decl->id()->name();
 
-  symbol_table_stack().SetCmd(id, cmd_ptr);
+  try {
+    symbol_table_stack().SetCmd(id, cmd_ptr);
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+  }
 }
 
 void CmdDeclExecutor::set_stop(StopFlag flag) {
@@ -639,19 +678,30 @@ void ImportExecutor::Exec(ImportStatement *node) {
     // module path has to has "as" parameter
     if (!node->has_as()) {
       throw RunTimeError(RunTimeError::ErrorCode::IMPORT,
-                         boost::format("import has not a name given by 'as'"));
+                         boost::format("import has not a name given by 'as'"),
+                         node->pos());
     }
 
     auto value = node->import<Literal>()->value();
     std::string module_path = boost::get<std::string>(value);
 
     ObjectFactory obj_factory(symbol_table_stack());
-    ObjectPtr obj_module = obj_factory.NewModule(module_path, true);
+    ObjectPtr obj_module;
+
+    try {
+      obj_module = obj_factory.NewModule(module_path, true);
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    }
 
     // module entry on symbol table
     std::string id_entry = node->as()->name();
 
-    symbol_table_stack().SetEntry(id_entry, obj_module);
+    try {
+      symbol_table_stack().SetEntry(id_entry, obj_module);
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    }
   }
 }
 

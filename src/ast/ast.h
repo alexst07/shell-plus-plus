@@ -186,6 +186,10 @@ class AstNode {
 
   virtual void Accept(AstVisitor* visitor) = 0;
 
+  Position pos() const noexcept {
+    return position_;
+  }
+
  private:
   NodeType type_;
   Position position_;

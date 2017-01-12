@@ -5,6 +5,8 @@
 #include <string>
 #include <boost/format.hpp>
 
+#include "ast/ast.h"
+
 namespace setti {
 namespace internal {
 
@@ -35,7 +37,13 @@ class RunTimeError : public std::exception {
   RunTimeError();
 
   RunTimeError(ErrorCode code, const boost::format& msg)
-      : code_(code), msg_(boost::str(msg)) {}
+      : code_(code), msg_(boost::str(msg)), pos_{0, 0} {}
+
+  RunTimeError(ErrorCode code, const boost::format& msg, Position pos)
+      : code_(code), msg_(boost::str(msg)), pos_{pos} {}
+
+  RunTimeError(ErrorCode code, const std::string& msg, Position pos)
+      : code_(code), msg_(msg), pos_{pos} {}
 
   virtual ~RunTimeError() noexcept  = default;
 
@@ -46,8 +54,21 @@ class RunTimeError : public std::exception {
     return msg_.c_str();
   }
 
+  ErrorCode err_code() const noexcept {
+    return code_;
+  }
+
+  const std::string& msg() const noexcept {
+    return msg_;
+  }
+
+  Position pos() const noexcept {
+    return pos_;
+  }
+
   ErrorCode code_;
   std::string msg_;
+  Position pos_;
 };
 
 }

@@ -34,7 +34,8 @@ ObjectPtr AssignableListExecutor::ExecAssignable(AstNode* node) {
   }
 
   throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                     boost::format("incompatible expression on assignable"));
+                     boost::format("incompatible expression on assignable"),
+                     node->pos());
 }
 
 ObjectPtr AssignableListExecutor::ExecLambdaFunc(AstNode* node) {
@@ -105,7 +106,8 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
 
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                         boost::format("invalid expression opcode"));
+                         boost::format("invalid expression opcode"),
+                         node->pos());
   }
 }
 
@@ -115,11 +117,25 @@ ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {
 
   if (array_node->has_elements()) {
     auto vec = assignable_list.Exec(array_node->assignable_list());
-    std::shared_ptr<Object> array_obj(obj_factory_.NewArray(std::move(vec)));
+    std::shared_ptr<Object> array_obj;
+
+    try {
+      array_obj = obj_factory_.NewArray(std::move(vec));
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    }
+
     return array_obj;
   } else {
     std::vector<ObjectPtr> vec;
-    std::shared_ptr<Object> array_obj(obj_factory_.NewArray(std::move(vec)));
+    std::shared_ptr<Object> array_obj;
+
+    try {
+      array_obj = obj_factory_.NewArray(std::move(vec));
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    }
+
     return array_obj;
   }
 }
@@ -140,12 +156,19 @@ ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {
     map_vec.push_back(std::move(pair));
   }
 
-  // creates the map object
-  ObjectPtr map(obj_factory_.NewMap(std::move(map_vec)));
+  ObjectPtr map;
+
+  try {
+    // creates the map object
+    map = obj_factory_.NewMap(std::move(map_vec));
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+  }
+
   return map;
 }
 
-ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) {
+ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) try {
   Identifier* id_node = static_cast<Identifier*>(node);
   const std::string& name = id_node->name();
   auto obj = symbol_table_stack().Lookup(name, false).Ref();
@@ -155,6 +178,8 @@ ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) {
   } else {
     return PassVar(obj, symbol_table_stack());
   }
+} catch (RunTimeError& e) {
+  throw RunTimeError(e.err_code(), e.msg(), node->pos());
 }
 
 ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
@@ -166,7 +191,12 @@ ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
   // Executes index expression of array
   ObjectPtr index = Exec(array_node->index_exp());
 
-  ObjectPtr val(array_obj->GetItem(index));
+  ObjectPtr val;
+  try {
+    val = array_obj->GetItem(index);
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), array_node->index_exp()->pos());
+  }
 
   if (pass_ref_) {
     return val;
@@ -180,7 +210,7 @@ ObjectPtr ExpressionExecutor::ExecFuncCall(FunctionCall* node) {
   return fcall_exec.Exec(node);
 }
 
-ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
+ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) try {
   Literal* literal = static_cast<Literal*>(node);
   switch (literal->literal_type()) {
     case Literal::Type::kInteger: {
@@ -204,17 +234,29 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) {
       return obj;
     } break;
   }
+} catch (RunTimeError& e) {
+  throw RunTimeError(e.err_code(), e.msg(), node->pos());
 }
 
 ObjectPtr ExpressionExecutor::ExecNotExpr(AstNode* node) {
   if (node->type() == AstNode::NodeType::kNotExpression) {
     NotExpression *not_expr = static_cast<NotExpression*>(node);
     ObjectPtr exp(Exec(not_expr->exp()));
+
+    try {
+      return exp->Not();
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    }
+  }
+
+  UnaryOperation* not_expr = static_cast<UnaryOperation*>(node);
+  ObjectPtr exp(Exec(not_expr->exp()));
+
+  try {
     return exp->Not();
-  } else {
-    UnaryOperation* not_expr = static_cast<UnaryOperation*>(node);
-    ObjectPtr exp(Exec(not_expr->exp()));
-    return exp->Not();
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
   }
 }
 
@@ -226,27 +268,30 @@ ObjectPtr ExpressionExecutor::ExecUnary(AstNode* node) {
   UnaryOperation* unary_expr = static_cast<UnaryOperation*>(node);
   ObjectPtr unary_obj = Exec(static_cast<AstNode*>(unary_expr->exp()));
 
-  switch (unary_expr->kind()) {
-    case TokenKind::ADD:
-      return unary_obj->UnaryAdd();
-      break;
+  try {
+    switch (unary_expr->kind()) {
+      case TokenKind::ADD:
+        return unary_obj->UnaryAdd();
+        break;
 
-    case TokenKind::SUB:
-      return unary_obj->UnarySub();
-      break;
+      case TokenKind::SUB:
+        return unary_obj->UnarySub();
+        break;
 
-    case TokenKind::EXCL_NOT:
-      return ExecNotExpr(unary_expr);
-      break;
+      case TokenKind::EXCL_NOT:
+        return ExecNotExpr(unary_expr);
+        break;
 
-    case TokenKind::BIT_NOT:
-      return unary_obj->BitNot();
-      break;
+      case TokenKind::BIT_NOT:
+        return unary_obj->BitNot();
+        break;
 
-    default: {
-      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                         boost::format("invalid unary operation opcode"));
+      default:
+        throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                           boost::format("invalid unary operation opcode"));
     }
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
   }
 }
 
@@ -257,83 +302,86 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
 
   ObjectPtr res;
 
-  switch (node->kind()) {
-    case TokenKind::ADD:
-      res = left->Add(right);
-      break;
+  try {
+    switch (node->kind()) {
+      case TokenKind::ADD:
+        res = left->Add(right);
+        break;
 
-    case TokenKind::SUB:
-      res = left->Sub(right);
-      break;
+      case TokenKind::SUB:
+        res = left->Sub(right);
+        break;
 
-    case TokenKind::MUL:
-      res = left->Mult(right);
-      break;
+      case TokenKind::MUL:
+        res = left->Mult(right);
+        break;
 
-    case TokenKind::DIV:
-      res = left->Div(right);
-      break;
+      case TokenKind::DIV:
+        res = left->Div(right);
+        break;
 
-    case TokenKind::MOD:
-      res = left->DivMod(right);
-      break;
+      case TokenKind::MOD:
+        res = left->DivMod(right);
+        break;
 
-    case TokenKind::SAR:
-      res = left->RightShift(right);
-      break;
+      case TokenKind::SAR:
+        res = left->RightShift(right);
+        break;
 
-    case TokenKind::SHL:
-      res = left->LeftShift(right);
-      break;
+      case TokenKind::SHL:
+        res = left->LeftShift(right);
+        break;
 
-    case TokenKind::BIT_AND:
-      res = left->BitAnd(right);
-      break;
+      case TokenKind::BIT_AND:
+        res = left->BitAnd(right);
+        break;
 
-    case TokenKind::BIT_OR:
-      res = left->BitOr(right);
-      break;
+      case TokenKind::BIT_OR:
+        res = left->BitOr(right);
+        break;
 
-    case TokenKind::BIT_XOR:
-      res = left->BitXor(right);
-      break;
+      case TokenKind::BIT_XOR:
+        res = left->BitXor(right);
+        break;
 
-    case TokenKind::AND:
-      res = left->And(right);
-      break;
+      case TokenKind::AND:
+        res = left->And(right);
+        break;
 
-    case TokenKind::OR:
-      res = left->Or(right);
-      break;
+      case TokenKind::OR:
+        res = left->Or(right);
+        break;
 
-    case TokenKind::EQUAL:
-      res = left->Equal(right);
-      break;
+      case TokenKind::EQUAL:
+        res = left->Equal(right);
+        break;
 
-    case TokenKind::NOT_EQUAL:
-      res = left->NotEqual(right);
-      break;
+      case TokenKind::NOT_EQUAL:
+        res = left->NotEqual(right);
+        break;
 
-    case TokenKind::LESS_THAN:
-      res = left->Lesser(right);
-      break;
+      case TokenKind::LESS_THAN:
+        res = left->Lesser(right);
+        break;
 
-    case TokenKind::GREATER_THAN:
-      res = left->Greater(right);
-      break;
+      case TokenKind::GREATER_THAN:
+        res = left->Greater(right);
+        break;
 
-    case TokenKind::LESS_EQ:
-      res = left->LessEqual(right);
-      break;
+      case TokenKind::LESS_EQ:
+        res = left->LessEqual(right);
+        break;
 
-    case TokenKind::GREATER_EQ:
-      res = left->GreatEqual(right);
-      break;
+      case TokenKind::GREATER_EQ:
+        res = left->GreatEqual(right);
+        break;
 
-    default: {
-      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                         boost::format("invalid bin operation opcode"));
+      default:
+        throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                           boost::format("invalid bin operation opcode"));
     }
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
   }
 
   return res;
@@ -344,7 +392,11 @@ ObjectPtr ExpressionExecutor::ExecAttribute(Attribute* node) {
   ObjectPtr exp = Exec(node->exp(), true);
   std::string name = node->id()->name();
 
-  return exp->Attr(exp, name);
+  try {
+    return exp->Attr(exp, name);
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+  }
 }
 
 ObjectPtr ExpressionExecutor::ExecSlice(Slice* node) {
@@ -362,7 +414,11 @@ ObjectPtr ExpressionExecutor::ExecSlice(Slice* node) {
     end = Exec(node->end_exp());
   }
 
-  return obj_factory_.NewSlice(start, end, step);
+  try {
+    return obj_factory_.NewSlice(start, end, step);
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+  }
 }
 
 ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
@@ -374,9 +430,14 @@ ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
   int status = std::get<0>(res);
   std::string str = std::get<1>(res);
   ObjectFactory obj_factory(symbol_table_stack());
-  ObjectPtr obj(obj_factory.NewCmdObj(status, std::move(str),
-                                      std::move(std::string(""))));
-  return obj;
+
+  try {
+    ObjectPtr obj(obj_factory.NewCmdObj(status, std::move(str),
+                                        std::move(std::string(""))));
+    return obj;
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+  }
 }
 
 void ExpressionExecutor::set_stop(StopFlag flag) {
@@ -422,7 +483,8 @@ ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
 
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("object is not callable"));
+                         boost::format("object is not callable"),
+                         node->func_exp()->pos());
     }
   }
 }

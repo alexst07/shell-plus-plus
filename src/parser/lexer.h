@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <cstring>
 
 #include "token.h"
 #include "msg.h"
@@ -21,8 +22,8 @@ class Lexer {
       , strlen_(str.length())
       , c_(str_[0])
       , buffer_cursor_(0)
-      , line_(0)
-      , line_pos_(0)
+      , line_(1)
+      , line_pos_(1)
       , nerror_(0) {}
 
   TokenStream Scanner();
@@ -103,7 +104,8 @@ private:
     }
 
     bool blank_after = check_blank == ' ';
-    Token t(k, blank_after, line_, line_pos_);
+
+    Token t(k, blank_after, line_, start_pos_);
     return t;
   }
 
@@ -113,7 +115,7 @@ private:
     }
 
     bool blank_after = check_blank == ' ';
-    Token t(k, v, blank_after, line_, line_pos_);
+    Token t(k, v, blank_after, line_, start_pos_);
     return t;
   }
 
@@ -147,6 +149,7 @@ private:
   uint buffer_cursor_;
   uint line_;
   uint line_pos_;
+  uint start_pos_;
   uint nerror_;
   Messages msgs_;
 
