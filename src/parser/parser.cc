@@ -1407,6 +1407,7 @@ ParserResult<Expression> Parser::LiteralExp() {
   } else {
     ErrorMsg(boost::format("primary expression expected, got %1%")
         % Token::TokenValueToStr(token.GetValue()));
+    SetTokenError(token);
     return ParserResult<Expression>(); // Error
   }
 }

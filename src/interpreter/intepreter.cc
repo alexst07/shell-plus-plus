@@ -21,13 +21,7 @@ Interpreter::Interpreter()
     , symbol_table_stack_(symbol_table_) {
   AlocTypes(symbol_table_stack_);
 
-  SymbolTableStack sym_stack;
-  sym_stack.Push(symbol_table_stack_.MainTable());
-  auto func_type = symbol_table_stack_.Lookup("func", false).SharedAccess();
-  ObjectPtr obj(new PrintFunc(func_type, std::move(sym_stack)));
-  SymbolAttr symbol(obj, true);
-  symbol_table_stack_.InsertEntry("print", std::move(symbol));
-
+  module::stdf::RegisterModule(symbol_table_stack_);
   module::path::RegisterModule(symbol_table_stack_);
 }
 

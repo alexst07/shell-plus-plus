@@ -25,7 +25,8 @@ class Parser {
       : ts_(std::move(ts))
       , factory_(std::bind(&Parser::Pos, this))
       , nerror_(0)
-      , token_(ts_.CurrentToken()) {}
+      , token_(ts_.CurrentToken())
+      , token_error_(TokenKind::NUM_TOKENS, false, 0, 0) {}
 
   ParserResult<StatementList> AstGen() {
     return ParserStmtList();
@@ -37,6 +38,14 @@ class Parser {
 
   inline const Messages& Msgs() const {
     return msgs_;
+  }
+
+  bool StmtIncomplete() {
+    if ((nerror_ > 0) && (token_error_ == TokenKind::EOS)) {
+      return true;
+    }
+
+    return false;
   }
 
  private:
@@ -83,8 +92,11 @@ class Parser {
   }
 
   void ErrorMsg(const boost::format& fmt_msg) {
-    Message msg(Message::Severity::ERR, fmt_msg, token_.Line(), token_.Col());
-    msgs_.Push(std::move(msg));
+    if (nerror_ == 0) {
+      token_error_ = token_;
+      Message msg(Message::Severity::ERR, fmt_msg, token_.Line(), token_.Col());
+      msgs_.Push(std::move(msg));
+    }
     nerror_++;
   }
 
@@ -175,6 +187,10 @@ class Parser {
     return r;
   }
 
+  void SetTokenError(const Token& tk_err) {
+    token_error_ = tk_err;
+  }
+
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserScopeIdentifier();
   ParserResult<Expression> ParserPrimaryExp();
@@ -254,6 +270,7 @@ class Parser {
   AstNodeFactory factory_;
   uint nerror_;
   Token& token_;
+  Token token_error_;
   Messages msgs_;
 };
 
