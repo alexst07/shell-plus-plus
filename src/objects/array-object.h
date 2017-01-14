@@ -80,6 +80,10 @@ class ArrayObject: public Object {
 
    std::size_t Hash() const override;
 
+   long int Len() override {
+     return value_.size();
+   }
+
    bool operator==(const Object& obj) const override;
 
    size_t ArraySize() const noexcept {

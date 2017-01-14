@@ -54,6 +54,8 @@ class MapObject: public Object {
 
   bool Exists(ObjectPtr obj_index);
 
+  long int Len() override;
+
   const Map& value() const noexcept {
     return value_;
   }

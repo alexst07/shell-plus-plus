@@ -194,5 +194,15 @@ bool MapObject::Exists(ObjectPtr obj_index) {
   return false;
 }
 
+long int MapObject::Len() {
+  long int size = 0;
+
+  for (auto& v: value_) {
+    size += v.second.size();
+  }
+
+  return size;
+}
+
 }
 }

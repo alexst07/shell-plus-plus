@@ -59,6 +59,10 @@ class CmdObject: public Object {
      return str_stdout_;
    }
 
+   long int Len() override {
+     return str_stdout_.size();
+   }
+
  private:
   std::string str_stdout_;
   std::string str_stderr_;

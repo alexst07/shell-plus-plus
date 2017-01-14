@@ -77,6 +77,10 @@ class StringObject: public Object {
   std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
                                const std::string& name) override;
 
+  long int Len() override {
+    return value_.size();
+  }
+
   std::string Print() override {
     return value_;
   }

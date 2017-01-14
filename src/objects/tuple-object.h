@@ -62,6 +62,10 @@ class TupleObject: public Object {
 
    bool operator==(const Object& obj) const override;
 
+   long int Len() override {
+     return value_.size();
+   }
+
    std::string Print() override {
      std::string str = "(";
      for (const auto& e: value_) {

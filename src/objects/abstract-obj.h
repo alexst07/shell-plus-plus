@@ -48,6 +48,11 @@ class Object {
 
   virtual std::string Print() = 0;
 
+  virtual long int Len() {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no len interface"));
+  }
+
   virtual std::size_t Hash() const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no hash interface"));
