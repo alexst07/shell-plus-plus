@@ -42,8 +42,8 @@ class NullObject: public Object {
 
   ObjectPtr Or(ObjectPtr obj) override;
 
-  void Print() override {
-    std::cout << "NIL";
+  std::string Print() override {
+    return std::string("[null]");
   }
 
   inline std::nullptr_t value() const noexcept { return nullptr; }
@@ -93,8 +93,8 @@ class BoolObject: public Object {
 
   ObjectPtr Not() override;
 
-  void Print() override {
-    std::cout << "BOOL: " << value_;
+  std::string Print() override {
+    return std::string(value_? "true": "false");
   }
 
  private:
@@ -177,8 +177,8 @@ class IntObject: public Object {
 
   ObjectPtr UnarySub() override;
 
-  void Print() override {
-    std::cout << "INT: " << value_;
+  std::string Print() override {
+    return std::to_string(value_);
   }
 
  private:
@@ -367,8 +367,8 @@ class RealObject: public Object {
 
   ObjectPtr UnarySub() override;
 
-  void Print() override {
-    std::cout << "REAL: " << value_;
+  std::string Print() override {
+    return std::to_string(value_);
   }
 
  private:

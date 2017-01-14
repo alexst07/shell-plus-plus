@@ -8,7 +8,7 @@ namespace stdf {
 
 ObjectPtr PrintFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   for (auto& e: params) {
-    e->Print();
+    std::cout << e->Print();
   }
 
   std::cout << "\n";

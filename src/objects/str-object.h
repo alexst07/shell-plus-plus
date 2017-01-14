@@ -77,8 +77,8 @@ class StringObject: public Object {
   std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
                                const std::string& name) override;
 
-  void Print() override {
-    std::cout << "STRING: " << value_;
+  std::string Print() override {
+    return value_;
   }
 
  private:

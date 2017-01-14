@@ -149,5 +149,20 @@ ObjectPtr& ArrayObject::GetItemRef(ObjectPtr index) {
   }
 }
 
+std::string ArrayObject::Print() {
+  std::string str;
+  str = "[";
+
+  for (const auto& e: value_) {
+    str += e->Print();
+    str += ", ";
+  }
+
+  str = str.substr(0, str.length() - 2);
+  str += "]";
+
+  return str;
+}
+
 }
 }

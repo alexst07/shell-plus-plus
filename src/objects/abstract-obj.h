@@ -46,7 +46,7 @@ class Object {
     return type_;
   }
 
-  virtual void Print() = 0;
+  virtual std::string Print() = 0;
 
   virtual std::size_t Hash() const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,

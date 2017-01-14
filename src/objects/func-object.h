@@ -32,8 +32,8 @@ class FuncObject: public Object {
 
   virtual ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) = 0;
 
-  void Print() override {
-    std::cout << "FUNC";
+  std::string Print() override {
+    return std::string("[function]");
   }
 };
 

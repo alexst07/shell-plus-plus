@@ -50,8 +50,9 @@ class SliceObject: public Object {
 
   bool operator==(const Object& obj) const override;
 
-  void Print() override {
-    std::cout << "SLICE: start = " << start_ << ", end = " << end_;
+  std::string Print() override {
+    return std::string("[slice ") + std::to_string(start_ ) + ", " +
+        std::to_string(end_);
   }
 
  private:

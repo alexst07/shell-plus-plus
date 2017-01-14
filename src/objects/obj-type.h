@@ -38,8 +38,9 @@ class DeclClassObject: public Object {
 
   ObjectPtr Add(ObjectPtr obj) override;
 
-  void Print() override {
-//    std::cout << static_cast<TypeObject&>(*ObjType()).name();
+  std::string Print() override {
+    // TODO: call print function
+    return std::string("object");
   }
 
   SymbolTableStack& SymTable() {
@@ -73,8 +74,8 @@ class ModuleImportObject: public Object {
     return interpreter_.SymTableStack();
   }
 
-  void Print() override {
-    std::cout << "MODULE("<< module_name_ << ")\n";
+  std::string Print() override {
+    return std::string("[moule: ") + module_name_ + "]\n";
   }
 
  private:
@@ -108,8 +109,8 @@ class ModuleCustonObject: public Object {
     return symbol_table_stack();
   }
 
-  void Print() override {
-    std::cout << "MODULE("<< module_name_ << ")\n";
+  std::string Print() override {
+    return std::string("[module: ") + module_name_ + "]";
   }
 
   void RegisterMember(const std::string& fname, ObjectPtr obj) {
@@ -169,8 +170,8 @@ class TypeObject: public Object {
     return symbol_table_stack().InsertEntry(name, std::move(sym_entry));
   }
 
-  void Print() override {
-    std::cout << "TYPE(" << name_ << ")";
+  std::string Print() override {
+    return std::string("<type: ") + name_ + ">";
   }
 
  private:

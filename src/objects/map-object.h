@@ -62,18 +62,23 @@ class MapObject: public Object {
     return value_;
   }
 
-  void Print() override {
-    std::cout << "MAP: { ";
+  std::string Print() override {
+    std::string str = "{";
+
     for (auto& list: value_) {
       for (auto& pair: list.second) {
-        std::cout << "(";
-        pair.first->Print();
-        std::cout << ", ";
-        pair.second->Print();
-        std::cout << ")";
+        str += "(";
+        str += pair.first->Print();
+        str += ", ";
+        str += pair.second->Print();
+        str += "), ";
       }
     }
-    std::cout << "} ";
+
+    str = str.substr(0, str.length() - 3);
+    str += "}";
+
+    return str;
   }
 
  private:
@@ -93,8 +98,8 @@ class MapIterObject: public Object {
 
   ObjectPtr HasNext() override;
 
-  void Print() override {
-    std::cout << "MAP ITER: ";
+  std::string Print() override {
+    return std::string("[map_iter]");
   }
 
  private:

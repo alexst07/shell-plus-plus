@@ -24,8 +24,8 @@ class CmdIterObject: public Object {
 
   ObjectPtr HasNext() override;
 
-  void Print() override {
-    std::cout << "CMD ITER";
+  std::string Print() override {
+    return std::string("[cmd_iter]");
   }
 
  private:
@@ -55,8 +55,8 @@ class CmdObject: public Object {
      return str_stderr_;
    }
 
-   void Print() override {
-     std::cout << "CMD-OBJ";
+   std::string Print() override {
+     return str_stdout_;
    }
 
  private:

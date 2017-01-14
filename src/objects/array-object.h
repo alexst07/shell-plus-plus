@@ -27,8 +27,8 @@ class ArrayIterObject: public Object {
 
   ObjectPtr HasNext() override;
 
-  void Print() override {
-    std::cout << "ARRAY ITER: ";
+  std::string Print() override {
+    return std::string("[array_iter]");
   }
 
  private:
@@ -86,14 +86,7 @@ class ArrayObject: public Object {
      return value_.size();
    }
 
-   void Print() override {
-     std::cout << "ARRAY: [ ";
-     for (const auto& e: value_) {
-       e->Print();
-       std::cout << " ";
-     }
-     std::cout << "]";
-   }
+   std::string Print() override;
 
  private:
   std::vector<std::shared_ptr<Object>> value_;

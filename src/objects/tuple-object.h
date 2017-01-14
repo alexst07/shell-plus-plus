@@ -62,13 +62,17 @@ class TupleObject: public Object {
 
    bool operator==(const Object& obj) const override;
 
-   void Print() override {
-     std::cout << "TUPLE: ( ";
+   std::string Print() override {
+     std::string str = "(";
      for (const auto& e: value_) {
-       e->Print();
-       std::cout << " ";
+       str += e->Print();
+       str += ", ";
      }
-     std::cout << ")";
+
+     str = str.substr(0, str.length() - 2);
+     str += ")";
+
+     return str;
    }
 
  private:
