@@ -91,24 +91,25 @@ CmdExprData CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd) {
       std::string str_out = std::get<1>(lcmd) + std::get<1>(rcmd);
       std::string str_err = std::get<2>(lcmd) + std::get<2>(rcmd);
       return CmdExprData(std::get<0>(rcmd),  str_out, str_err);
-    } else {
-      std::string str_out = std::get<1>(lcmd);
-      std::string str_err = std::get<2>(lcmd);
-      // -1 set error on status of operation
-      return CmdExprData(-1,  str_out, str_err);
     }
-  } else if (cmd->kind() == TokenKind::OR) {
+
+    std::string str_out = std::get<1>(lcmd);
+    std::string str_err = std::get<2>(lcmd);
+
+    // -1 set error on status of operation
+    return CmdExprData(-1,  str_out, str_err);
+  } else /*TokenKind::OR*/ {
     if (std::get<0>(lcmd) == 0) {
       std::string str_out = std::get<1>(lcmd);
       std::string str_err = std::get<2>(lcmd);
       // -1 set error on status of operation
       return CmdExprData(std::get<0>(lcmd),  str_out, str_err);
-    } else {
-      CmdExprData rcmd = ExecCmdGetResult(cmd->cmd_right());
-      std::string str_out = std::get<1>(lcmd) + std::get<1>(rcmd);
-      std::string str_err = std::get<2>(lcmd) + std::get<2>(rcmd);
-      return CmdExprData(std::get<0>(rcmd),  str_out, str_err);
     }
+
+    CmdExprData rcmd = ExecCmdGetResult(cmd->cmd_right());
+    std::string str_out = std::get<1>(lcmd) + std::get<1>(rcmd);
+    std::string str_err = std::get<2>(lcmd) + std::get<2>(rcmd);
+    return CmdExprData(std::get<0>(rcmd),  str_out, str_err);
   }
 }
 
@@ -119,17 +120,18 @@ int CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd, bool wait) {
     if (lcmd == 0) {
       int rcmd = ExecCmd(cmd->cmd_right(), wait);
       return rcmd;
-    } else {
-      return lcmd;
     }
-  } else if (cmd->kind() == TokenKind::OR) {
-    if (lcmd == 0) {
-      return lcmd;
-    } else {
-      int rcmd = ExecCmd(cmd->cmd_right(), wait);
-      return rcmd;
-    }
+
+    return lcmd;
   }
+
+  /*TokenKind::OR*/
+  if (lcmd == 0) {
+    return lcmd;
+  }
+
+  int rcmd = ExecCmd(cmd->cmd_right(), wait);
+  return rcmd;
 }
 
 int CmdExecutor::Exec(CmdFull *node) {

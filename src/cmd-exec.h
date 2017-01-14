@@ -140,6 +140,8 @@ struct Process {
     stopped_ = p.stopped_;
     status_ = p.status_;
     sym_tab_ = p.sym_tab_;
+
+    return *this;
   }
 
   Process(Process&& p) {

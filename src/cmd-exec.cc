@@ -90,10 +90,9 @@ int Job::MarkProcessStatus(pid_t pid, int status) {
   } else if (pid == 0 || errno == ECHILD) {
     /* No processes ready to report.  */
     return -1;
-  } else {
-    /* Other weird errors.  */
-    return -1;
   }
+
+  return -1;
 }
 
 int Job::JobIsStopped() {
