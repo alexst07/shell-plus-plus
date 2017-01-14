@@ -16,6 +16,16 @@ ObjectPtr PrintFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewNull();
 }
 
+ObjectPtr PrintErrFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  for (auto& e: params) {
+    std::cerr << e->Print();
+  }
+
+  std::cerr << "\n";
+
+  return obj_factory_.NewNull();
+}
+
 }
 }
 }

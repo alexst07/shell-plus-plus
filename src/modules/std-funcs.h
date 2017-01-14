@@ -14,10 +14,21 @@ namespace internal {
 namespace module {
 namespace stdf {
 
-// Temporary declaration of functions
 class PrintFunc: public FuncObject {
  public:
   PrintFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
+class PrintErrFunc: public FuncObject {
+ public:
+  PrintErrFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
