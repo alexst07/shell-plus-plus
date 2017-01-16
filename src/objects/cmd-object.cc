@@ -62,6 +62,12 @@ ObjectPtr CmdObject::ObjString()  {
   return obj_factory.NewString(str_stdout());
 }
 
+std::shared_ptr<Object> CmdObject::Attr(std::shared_ptr<Object> self,
+                                        const std::string& name) {
+  ObjectPtr obj_type = ObjType();
+  return static_cast<TypeObject&>(*obj_type).CallObject(name, self);
+}
+
 ObjectPtr CmdType::Constructor(Executor* /*parent*/,
                                std::vector<ObjectPtr>&& /*params*/) {
   throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,

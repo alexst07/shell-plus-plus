@@ -15,6 +15,11 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertEntry(static_cast<const Type&>(*obj_type).name(),
                            std::move(symbol_type));
 
+  ObjectPtr type_func = obj_factory.NewFuncType();
+  SymbolAttr symbol_func(type_func, true);
+  symbol_table.InsertEntry(static_cast<const FuncType&>(*type_func).name(),
+                           std::move(symbol_func));
+
   ObjectPtr type_null = obj_factory.NewNullType();
   SymbolAttr symbol_null(type_null, true);
   symbol_table.InsertEntry(static_cast<const NullType&>(*type_null).name(),
@@ -79,11 +84,6 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   SymbolAttr symbol_module(type_module, true);
   symbol_table.InsertEntry(static_cast<const ModuleType&>(*type_module).name(),
                            std::move(symbol_module));
-
-  ObjectPtr type_func = obj_factory.NewFuncType();
-  SymbolAttr symbol_func(type_func, true);
-  symbol_table.InsertEntry(static_cast<const FuncType&>(*type_func).name(),
-                           std::move(symbol_func));
 
   ObjectPtr type_str = obj_factory.NewStringType();
   SymbolAttr symbol_str(type_str, true);

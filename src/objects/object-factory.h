@@ -157,7 +157,7 @@ class ObjectFactory {
                               std::vector<std::string>&& params,
                               std::vector<ObjectPtr>&& default_values,
                               bool variadic, bool lambda) {
-    auto obj_type = symbol_table_.Lookup("func", false).SharedAccess();
+    auto obj_type = symbol_table_.Lookup("function", false).SharedAccess();
     return ObjectPtr(new FuncDeclObject(id, start_node, symbol_table,
                                         std::move(params),
                                         std::move(default_values),
@@ -166,7 +166,7 @@ class ObjectFactory {
   }
 
   ObjectPtr NewWrapperFunc(ObjectPtr func, ObjectPtr self) {
-    auto obj_type = symbol_table_.Lookup("func", false).SharedAccess();
+    auto obj_type = symbol_table_.Lookup("function", false).SharedAccess();
     return ObjectPtr(new FuncWrapperObject(obj_type, func, self,
                                            std::move(SymTableStack())));
   }
@@ -268,7 +268,7 @@ void RegisterMethod(const std::string& fname, SymbolTableStack& symbol_table,
                     TypeObject& type) {
   SymbolTableStack sym_stack;
   sym_stack.Push(symbol_table.MainTable(), true);
-  auto func_type = symbol_table.Lookup("func", false).SharedAccess();
+  auto func_type = symbol_table.Lookup("function", false).SharedAccess();
   ObjectPtr obj_func(new Fn(func_type, std::move(sym_stack)));
   type.RegiterMethod(fname, obj_func);
 }
@@ -276,7 +276,7 @@ void RegisterMethod(const std::string& fname, SymbolTableStack& symbol_table,
 template<class Fn>
 ObjectPtr ObjectMethod(SymbolTableStack& symbol_table) {
   SymbolTableStack sym_stack(symbol_table.MainTable());
-  auto func_type = symbol_table.Lookup("func", false).SharedAccess();
+  auto func_type = symbol_table.Lookup("function", false).SharedAccess();
   ObjectPtr obj(new Fn(func_type, std::move(sym_stack)));
   return obj;
 }

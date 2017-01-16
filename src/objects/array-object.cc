@@ -168,6 +168,12 @@ std::string ArrayObject::Print() {
   return str;
 }
 
+std::shared_ptr<Object> ArrayObject::Attr(std::shared_ptr<Object> self,
+                                          const std::string& name) {
+  ObjectPtr obj_type = ObjType();
+  return static_cast<TypeObject&>(*obj_type).CallObject(name, self);
+}
+
 ArrayType::ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
     : ContainerType("array", obj_type, std::move(sym_table)) {
   RegisterMethod<ArrayJoinFunc>("join", symbol_table_stack(), *this);
@@ -188,7 +194,7 @@ ObjectPtr ArrayJoinFunc::Call(Executor* /*parent*/,
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
   std::string result = "";
-  for (size_t i = 1; i < array_obj.ArraySize(); i++) {
+  for (size_t i = 0; i < array_obj.ArraySize(); i++) {
     if (array_obj.Element(i)->type() != ObjectType::STRING) {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                          boost::format("element %1% type not string")%i);
@@ -198,7 +204,7 @@ ObjectPtr ArrayJoinFunc::Call(Executor* /*parent*/,
     result += delim;
   }
 
-  result = result.substr(0, result.length()-delim.length() - 1);
+  result = result.substr(0, result.length()-delim.length());
 
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewString(result);

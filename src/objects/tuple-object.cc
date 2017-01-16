@@ -72,9 +72,12 @@ ObjectPtr TupleObject::GetItem(ObjectPtr index) {
 }
 
 ObjectPtr& TupleObject::GetItemRef(ObjectPtr index) {
-  if (index->type() == ObjectType::INT) {
-    return ElementRef(static_cast<IntObject&>(*index).value());
+  if (index->type() != ObjectType::INT) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("index type not valid"));
   }
+
+  return ElementRef(static_cast<IntObject&>(*index).value());
 }
 
 }

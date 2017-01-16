@@ -77,7 +77,7 @@ std::tuple<int, int, int> SliceLogic(const SliceObject& slice, int size) {
   }
 
   if (end < 0) {
-    end = size - end;
+    end = size - abs(end);
   }
 
   if (start < 0) {

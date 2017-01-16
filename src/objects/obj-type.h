@@ -345,7 +345,7 @@ class TupleType: public ContainerType {
 class FuncType: public TypeObject {
  public:
   FuncType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : TypeObject("func", obj_type, std::move(sym_table)) {}
+      : TypeObject("function", obj_type, std::move(sym_table)) {}
 
   virtual ~FuncType() {}
 

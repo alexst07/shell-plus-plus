@@ -60,6 +60,9 @@ class CmdObject: public Object {
 
    ObjectPtr ObjString() override;
 
+   std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
+                                const std::string& name) override;
+
    std::string Print() override {
      return str_stdout_;
    }

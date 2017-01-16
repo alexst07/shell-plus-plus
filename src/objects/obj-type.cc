@@ -210,7 +210,7 @@ ObjectPtr RealType::Constructor(Executor* /*parent*/,
     return obj_real;
   }
 
-  params[0]->ObjReal();
+  return params[0]->ObjReal();
 }
 
 ObjectPtr ArrayIterType::Constructor(Executor* /*parent*/,

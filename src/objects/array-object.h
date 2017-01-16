@@ -73,6 +73,9 @@ class ArrayObject: public Object {
 
    ObjectPtr& GetItemRef(ObjectPtr index) override;
 
+   std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
+                                const std::string& name) override;
+
    void Append(ObjectPtr obj) {
      value_.push_back(obj);
    }
