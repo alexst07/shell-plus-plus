@@ -47,7 +47,7 @@ void CmdDeclEntry::Exec(Executor* parent, std::vector<std::string>&& args) {
   // arguments as passed to command as an array called args
   symbol_table_.SetEntry("args", array_obj);
 
-  executor.Exec(start_node_);
+  executor.Exec(start_node_.get());
 }
 
 CmdExprData CmdExecutor::ExecGetResult(CmdFull *node) {

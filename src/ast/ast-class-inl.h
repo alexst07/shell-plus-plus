@@ -17,14 +17,14 @@ class CmdDeclaration: public Declaration {
     return id_.get();
   }
 
-  Block* block() const noexcept {
-    return block_.get();
+  std::shared_ptr<Block> block() const noexcept {
+    return block_;
   }
 
  private:
   friend class AstNodeFactory;
 
-  std::unique_ptr<Block> block_;
+  std::shared_ptr<Block> block_;
   std::unique_ptr<Identifier> id_;
 
   CmdDeclaration(std::unique_ptr<Identifier> id, std::unique_ptr<Block> block,

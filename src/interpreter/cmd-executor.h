@@ -11,7 +11,7 @@ namespace internal {
 
 class CmdDeclEntry: public CmdEntry {
  public:
-  CmdDeclEntry(AstNode* start_node, const SymbolTableStack& symbol_table)
+  CmdDeclEntry(std::shared_ptr<Block> start_node, const SymbolTableStack& symbol_table)
       : CmdEntry(Type::kDecl)
       , start_node_(start_node)
       , symbol_table_(symbol_table.MainTable()) {}
@@ -19,7 +19,7 @@ class CmdDeclEntry: public CmdEntry {
   void Exec(Executor* parent, std::vector<std::string>&& args);
 
  private:
-  AstNode* start_node_;
+  std::shared_ptr<Block> start_node_;
   SymbolTableStack symbol_table_;
 };
 
