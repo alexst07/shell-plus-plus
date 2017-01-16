@@ -56,7 +56,7 @@ class FuncWrapperObject: public FuncObject {
 
 class FuncDeclObject: public FuncObject {
  public:
-  FuncDeclObject(const std::string& id, AstNode* start_node,
+  FuncDeclObject(const std::string& id, std::shared_ptr<Block> start_node,
                  const SymbolTableStack& symbol_table,
                  std::vector<std::string>&& params,
                  std::vector<ObjectPtr>&& default_values,
@@ -91,7 +91,11 @@ class FuncDeclObject: public FuncObject {
 
  private:
   std::string id_;
-  AstNode* start_node_;
+
+  // the start_node_ is a pointer on ast, on interactive mode the
+  // ast can be free and the func object be keep on symbol table
+  // so shared_ptr avoid lost this pointer
+  std::shared_ptr<Block> start_node_;
   SymbolTableStack symbol_table_;
   std::vector<std::string> params_;
   std::vector<ObjectPtr> default_values_;

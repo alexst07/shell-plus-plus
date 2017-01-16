@@ -72,8 +72,12 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
     return vec;
   }
 
-  Block* block() const noexcept {
-    return block_.get();
+  // shared is passed because the pointer of body function
+  // is used by others objects, this object can exists
+  // even when the ast doesn't exists anymore, it happens
+  // when is using interactive mode
+  std::shared_ptr<Block> block() const noexcept {
+    return block_;
   }
 
   bool has_block() const noexcept {
@@ -89,11 +93,11 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
 
   std::vector<std::unique_ptr<FunctionParam>> params_;
   std::unique_ptr<Identifier> name_;
-  std::unique_ptr<Block> block_;
+  std::shared_ptr<Block> block_;
 
   FunctionDeclaration(std::vector<std::unique_ptr<FunctionParam>>&& params,
                       std::unique_ptr<Identifier> name,
-                      std::unique_ptr<Block> block, Position position)
+                      std::shared_ptr<Block> block, Position position)
     : Declaration(NodeType::kFunctionDeclaration, position)
     , name_(std::move(name))
     , params_(std::move(params))

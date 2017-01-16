@@ -93,7 +93,7 @@ ObjectPtr FuncDeclObject::Call(Executor* parent,
   HandleArguments(std::move(params));
 
   // Executes the function using the ast nodes
-  executor.Exec(start_node_);
+  executor.Exec(start_node_.get());
 
   ObjectPtr obj_ret;
   bool bool_ret = false;

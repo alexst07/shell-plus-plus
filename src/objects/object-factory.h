@@ -151,7 +151,8 @@ class ObjectFactory {
     return obj;
   }
 
-  ObjectPtr NewFuncDeclObject(const std::string& id, AstNode* start_node,
+  ObjectPtr NewFuncDeclObject(const std::string& id,
+                              std::shared_ptr<Block> start_node,
                               const SymbolTableStack& symbol_table,
                               std::vector<std::string>&& params,
                               std::vector<ObjectPtr>&& default_values,
