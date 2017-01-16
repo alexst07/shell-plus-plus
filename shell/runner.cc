@@ -42,9 +42,13 @@ void Runner::Exec(std::string name) {
 
   if (p.nerrors() == 0) {
     RootExecutor executor(symbol_table_stack_);
-    executor.Exec(stmt_list_.get());
+    try {
+      executor.Exec(stmt_list_.get());
+    } catch (RunTimeError& e) {
+      std::cout << "Error: " << e.pos().line << ": " << e.pos().col
+                << ": " << e.what() << "\n";
+    }
   } else {
-    std::cout << "Parser error analysis:\n";
     auto msgs = p.Msgs();
     for (const auto& msg : msgs) {
       std::cout << msg << "\n";
@@ -92,14 +96,18 @@ void Runner::ExecInterative() {
 
     if (p.nerrors() == 0) {
       concat = false;
-      executor.Exec(stmt_list.get());
+      try {
+        executor.Exec(stmt_list.get());
+      } catch (RunTimeError& e) {
+        std::cout << "Error: " << e.pos().line << ": " << e.pos().col
+                  << ": " << e.what() << "\n";
+      }
     } else {
       if (p.StmtIncomplete()) {
         concat = true;
         continue;
       } else {
         concat = false;
-        std::cout << "Parser error analysis:\n";
         auto msgs = p.Msgs();
         for (const auto& msg : msgs) {
           std::cout << msg << "\n";

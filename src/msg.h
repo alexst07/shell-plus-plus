@@ -86,6 +86,20 @@ class Messages {
 
   Messages() = default;
 
+  Messages(Messages&& msg):msg_vec_(std::move(msg.msg_vec_)) {}
+
+  Messages& operator=(Messages&& msg) {
+    msg_vec_ = std::move(msg.msg_vec_);
+    return *this;
+  }
+
+  Messages(const Messages& msg):msg_vec_(msg.msg_vec_) {}
+
+  Messages& operator=(const Messages& msg) {
+    msg_vec_ = msg.msg_vec_;
+    return *this;
+  }
+
   void Push(Message&& msg) {
     msg_vec_.push_back(std::move(msg));
   }

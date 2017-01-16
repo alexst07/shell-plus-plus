@@ -54,7 +54,8 @@ CmdExprData CmdExecutor::ExecGetResult(CmdFull *node) {
   return ExecCmdGetResult(node->cmd());
 }
 
-CmdExprData CmdExecutor::ExecCmdGetResult(Cmd *node) {
+CmdExprData CmdExecutor::ExecCmdGetResult(Cmd *node)
+try {
   switch (node->type()) {
     case AstNode::NodeType::kSimpleCmd: {
       return ExecSimpleCmdWithResult(static_cast<SimpleCmd*>(node));
@@ -80,6 +81,8 @@ CmdExprData CmdExecutor::ExecCmdGetResult(Cmd *node) {
                          boost::format("invalid command ast"));
     }
   }
+} catch (RunTimeError& e) {
+  throw RunTimeError(e.err_code(), e.msg(), node->pos());
 }
 
 CmdExprData CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd) {
@@ -139,7 +142,8 @@ int CmdExecutor::Exec(CmdFull *node) {
   return ExecCmd(node->cmd(), wait);
 }
 
-int CmdExecutor::ExecCmd(Cmd *node, bool wait) {
+int CmdExecutor::ExecCmd(Cmd *node, bool wait)
+try {
   switch (node->type()) {
     case AstNode::NodeType::kSimpleCmd: {
       return ExecSimpleCmd(static_cast<SimpleCmd*>(node), wait);
@@ -180,6 +184,8 @@ int CmdExecutor::ExecCmd(Cmd *node, bool wait) {
                          boost::format("invalid command ast"));
     }
   }
+} catch (RunTimeError& e) {
+  throw RunTimeError(e.err_code(), e.msg(), node->pos());
 }
 
 int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool wait) {

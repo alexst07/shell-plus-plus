@@ -6,9 +6,9 @@
 #include <boost/format.hpp>
 
 #include "ast/ast.h"
+#include "msg.h"
 
 namespace setti {
-namespace internal {
 
 /**
  * @brief Class to represent an run time error
@@ -39,13 +39,28 @@ class RunTimeError : public std::exception {
   RunTimeError(ErrorCode code, const boost::format& msg)
       : code_(code), msg_(boost::str(msg)), pos_{0, 0} {}
 
-  RunTimeError(ErrorCode code, const boost::format& msg, Position pos)
+  RunTimeError(ErrorCode code, const boost::format& msg, internal::Position pos)
       : code_(code), msg_(boost::str(msg)), pos_{pos} {}
 
-  RunTimeError(ErrorCode code, const std::string& msg, Position pos)
+  RunTimeError(ErrorCode code, const std::string& msg, internal::Position pos)
       : code_(code), msg_(msg), pos_{pos} {}
 
   virtual ~RunTimeError() noexcept  = default;
+
+  RunTimeError(const RunTimeError& rt_err)
+      : code_(rt_err.code_)
+      , msg_(rt_err.msg_)
+      , pos_(rt_err.pos_)
+      , stack_msg_(rt_err.stack_msg_) {}
+
+  RunTimeError& operator=(const RunTimeError& rt_err) {
+    code_ = rt_err.code_;
+    msg_ = rt_err.msg_;
+    pos_ = rt_err.pos_;
+    stack_msg_ = rt_err.stack_msg_;
+
+    return *this;
+  }
 
   /**
    * @return the error description and the context as a text string.
@@ -62,16 +77,24 @@ class RunTimeError : public std::exception {
     return msg_;
   }
 
-  Position pos() const noexcept {
+  internal::Position pos() const noexcept {
     return pos_;
+  }
+
+  void AppendMsg(internal::Message&& msg) {
+    stack_msg_.Push(std::move(msg));
+  }
+
+  internal::Messages& messages() {
+    return stack_msg_;
   }
 
   ErrorCode code_;
   std::string msg_;
-  Position pos_;
+  internal::Position pos_;
+  internal::Messages stack_msg_;
 };
 
-}
 }
 
 #endif  // SETI_RUN_TIME_ERROR_H

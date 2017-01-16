@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   Interpreter i;
   try {
     i.Exec(name);
-  } catch (setti::internal::RunTimeError& e) {
+  } catch (setti::RunTimeError& e) {
     std::cout << "Error: " << e.pos().line << ": " << e.pos().col
               << ": " << e.what() << "\n";
   }
