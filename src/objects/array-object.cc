@@ -6,6 +6,7 @@
 #include "obj-type.h"
 #include "object-factory.h"
 #include "simple-object.h"
+#include "utils/check.h"
 
 namespace setti {
 namespace internal {
@@ -165,6 +166,55 @@ std::string ArrayObject::Print() {
   str += "]";
 
   return str;
+}
+
+ArrayType::ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+    : ContainerType("array", obj_type, std::move(sym_table)) {
+  RegisterMethod<ArrayJoinFunc>("join", symbol_table_stack(), *this);
+  RegisterMethod<ArrayAppendFunc>("append", symbol_table_stack(), *this);
+}
+
+ObjectPtr ArrayJoinFunc::Call(Executor* /*parent*/,
+                              std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, join)
+
+  std::string delim = "";
+
+  if (params.size() == 2) {
+    SETI_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
+    delim = static_cast<StringObject&>(*params[1]).value();
+  }
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+
+  std::string result = "";
+  for (size_t i = 1; i < array_obj.ArraySize(); i++) {
+    if (array_obj.Element(i)->type() != ObjectType::STRING) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("element %1% type not string")%i);
+    }
+
+    result += static_cast<StringObject&>(*array_obj.Element(i)).value();
+    result += delim;
+  }
+
+  result = result.substr(0, result.length()-delim.length() - 1);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(result);
+}
+
+ObjectPtr ArrayAppendFunc::Call(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, append)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+
+  for (size_t i = 1; i < params.size(); i++) {
+    array_obj.Append(params[i]);
+  }
+
+  return params[0];
 }
 
 }

@@ -10,6 +10,8 @@
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
 #include "slice-object.h"
+#include "func-object.h"
+#include "obj-type.h"
 
 namespace setti {
 namespace internal {
@@ -71,6 +73,10 @@ class ArrayObject: public Object {
 
    ObjectPtr& GetItemRef(ObjectPtr index) override;
 
+   void Append(ObjectPtr obj) {
+     value_.push_back(obj);
+   }
+
    inline void set(size_t i, std::unique_ptr<Object> obj) {
      Object* obj_ptr = obj.release();
      value_[i] = std::shared_ptr<Object>(obj_ptr);
@@ -94,6 +100,29 @@ class ArrayObject: public Object {
 
  private:
   std::vector<std::shared_ptr<Object>> value_;
+};
+
+class ArrayType: public ContainerType {
+ public:
+  ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table);
+
+  virtual ~ArrayType() {}
+};
+
+class ArrayJoinFunc: public FuncObject {
+ public:
+  ArrayJoinFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayAppendFunc: public FuncObject {
+ public:
+  ArrayAppendFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
 };
 
 }

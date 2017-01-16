@@ -260,16 +260,6 @@ class RealType: public TypeObject {
                         std::vector<ObjectPtr>&& params) override;
 };
 
-class CmdType: public TypeObject {
- public:
-  CmdType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : TypeObject("cmdobj", obj_type, std::move(sym_table)) {}
-
-  virtual ~CmdType() {}
-
-  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&&) override;
-};
-
 class SliceType: public TypeObject {
  public:
   SliceType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
@@ -331,14 +321,6 @@ class ContainerType: public TypeObject {
 
     return params[0]->Copy();
   }
-};
-
-class ArrayType: public ContainerType {
- public:
-  ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : ContainerType("array", obj_type, std::move(sym_table)) {}
-
-  virtual ~ArrayType() {}
 };
 
 class MapType: public ContainerType {

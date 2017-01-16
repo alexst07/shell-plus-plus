@@ -6,6 +6,7 @@
 
 #include "obj-type.h"
 #include "object-factory.h"
+#include "utils/check.h"
 
 namespace setti {
 namespace internal {
@@ -53,9 +54,48 @@ ObjectPtr CmdIterObject::HasNext() {
 
 ObjectPtr CmdObject::ObjIter(ObjectPtr obj) {
   ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewCmdIter("\n", 0, obj);
+  return obj_factory.NewCmdIter(delim_, 0, obj);
 }
 
+ObjectPtr CmdObject::ObjString()  {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(str_stdout());
+}
+
+ObjectPtr CmdType::Constructor(Executor* /*parent*/,
+                               std::vector<ObjectPtr>&& /*params*/) {
+  throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                     boost::format("cmdobj is not constructable"));
+}
+
+ObjectPtr CmdOutFunc::Call(Executor* /*parent*/,
+                           std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, out)
+
+  CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(cmd_obj.str_stdout());
+}
+
+ObjectPtr CmdDelimFunc::Call(Executor* /*parent*/,
+                           std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, delim)
+
+  CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
+
+  if (params.size() == 2) {
+    SETI_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
+    std::string delim = static_cast<StringObject&>(*params[1]).value();
+    cmd_obj.set_delim(delim);
+    return params[0];
+  }
+
+  std::string delim = cmd_obj.delim();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(delim);
+}
 
 }
 }

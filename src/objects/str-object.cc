@@ -136,6 +136,7 @@ StringType::StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<StringTrimmLeftFunc>("trim_left", symbol_table_stack(), *this);
   RegisterMethod<StringTrimmRightFunc>("trim_right", symbol_table_stack(),
                                        *this);
+  RegisterMethod<StringEndsWithFunc>("ends_with", symbol_table_stack(), *this);
 }
 
 ObjectPtr StringType::Constructor(Executor* /*parent*/,
@@ -258,6 +259,22 @@ ObjectPtr StringEndsWithFunc::Call(Executor* /*parent*/,
   SETI_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
   SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
 
+  std::string str_obj = static_cast<StringObject&>(*params[0]).value();
+  std::string str = static_cast<StringObject&>(*params[1]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (str.length() > str_obj.length()) {
+    return obj_factory.NewBool(false);
+  }
+
+  std::string sub_str = str_obj.substr(str_obj.length() - str.length());
+
+  if (str == sub_str) {
+    return obj_factory.NewBool(true);
+  }
+
+  return obj_factory.NewBool(false);
 }
 
 }

@@ -5,6 +5,21 @@
                        #func% num);                                            \
   }
 
+#define SETI_FUNC_CHECK_NUM_PARAMS_UNTIL(params, num, func)                    \
+  if (params.size() > num) {                                                   \
+    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
+                       boost::format("%1% takes at most %2% argument")%        \
+                       #func% num);                                            \
+  }
+
+#define SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, num, func)                    \
+  if (params.size() < num) {                                                   \
+    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
+                       boost::format("%1% takes at least %2% argument")%        \
+                       #func% num);                                            \
+  }
+
+
 #define SETI_FUNC_CHECK_NO_PARAMS(params, func)                                \
   if (params.size() != 0) {                                                    \
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
