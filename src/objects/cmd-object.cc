@@ -23,17 +23,22 @@ CmdIterObject::CmdIterObject(std::string delim, int outerr, ObjectPtr cmd_obj,
   cmd_obj_ = cmd_obj;
   CmdObject& cmd_obj_ref = static_cast<CmdObject&>(*cmd_obj_);
 
+  std::string str_cmd;
+
   if (outerr == 0) {
-    std::string str_cmd = cmd_obj_ref.str_stdout();
-    boost::trim_if(str_cmd, boost::is_any_of(delim));
-    boost::algorithm::split(str_split_, str_cmd, boost::is_any_of(delim),
-                            boost::algorithm::token_compress_on);
+    str_cmd = cmd_obj_ref.str_stdout();
   } else {
-    std::string str_cmd = cmd_obj_ref.str_stderr();
-    boost::trim_if(str_cmd, boost::is_any_of(delim));
-    boost::algorithm::split(str_split_, str_cmd, boost::is_any_of(delim),
-                            boost::algorithm::token_compress_on);
+    str_cmd = cmd_obj_ref.str_stderr();
   }
+
+  boost::trim_if(str_cmd, boost::is_any_of(delim));
+
+  if (str_cmd.empty()) {
+    return;
+  }
+
+  boost::algorithm::split(str_split_, str_cmd, boost::is_any_of(delim),
+                          boost::algorithm::token_compress_on);
 }
 
 ObjectPtr CmdIterObject::Next() {

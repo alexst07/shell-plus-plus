@@ -237,6 +237,11 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
   char buf[PIPE_BUF];
   int rd = 0;
 
+  int flags;
+  if (-1 == (flags = fcntl(pipettes[READ], F_GETFL, 0)))
+          flags = 0;
+  fcntl(pipettes[READ], F_SETFL, flags | O_NONBLOCK);
+
   rd = read(pipettes[READ], buf, PIPE_BUF);
 
   std::string str_out = "";
