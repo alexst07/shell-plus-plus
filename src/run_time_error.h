@@ -31,7 +31,9 @@ class RunTimeError : public std::exception {
     INVALID_OPCODE,
     FILE,
     INVALID_COMMAND,
-    IMPORT
+    IMPORT,
+    ASSERT,
+    CUSTON
   };
 
   RunTimeError();

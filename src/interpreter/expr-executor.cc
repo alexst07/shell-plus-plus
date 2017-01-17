@@ -205,9 +205,12 @@ ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
   }
 }
 
-ObjectPtr ExpressionExecutor::ExecFuncCall(FunctionCall* node) {
+ObjectPtr ExpressionExecutor::ExecFuncCall(FunctionCall* node)
+try {
   FuncCallExecutor fcall_exec(this, symbol_table_stack());
   return fcall_exec.Exec(node);
+} catch (RunTimeError& e) {
+  throw RunTimeError(e.err_code(), e.msg(), node->pos());
 }
 
 ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) try {

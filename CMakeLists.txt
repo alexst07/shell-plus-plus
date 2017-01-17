@@ -13,7 +13,14 @@ else()
 endif()
 
 SETTI_OPTION(BUILD_UNIT_TESTS "Build unit tests" ON)
+SETTI_OPTION(COV_TESTS "Coverage tests" OFF)
 
+if (COV_TESTS)
+  # put on debug
+  SET(CMAKE_CXX_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+  SET(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+  set(CMAKE_BUILD_TYPE "Debug")
+endif()
 #
 # Boost support
 #
