@@ -163,6 +163,14 @@ class StringEndsWithFunc: public FuncObject {
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
 };
 
+class StringSplitFunc: public FuncObject {
+ public:
+  StringSplitFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
 }
 }
 

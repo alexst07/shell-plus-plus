@@ -137,6 +137,7 @@ StringType::StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<StringTrimmRightFunc>("trim_right", symbol_table_stack(),
                                        *this);
   RegisterMethod<StringEndsWithFunc>("ends_with", symbol_table_stack(), *this);
+  RegisterMethod<StringSplitFunc>("split", symbol_table_stack(), *this);
 }
 
 ObjectPtr StringType::Constructor(Executor* /*parent*/,
@@ -275,6 +276,29 @@ ObjectPtr StringEndsWithFunc::Call(Executor* /*parent*/,
   }
 
   return obj_factory.NewBool(false);
+}
+
+ObjectPtr StringSplitFunc::Call(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, split)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
+
+  StringObject& str_obj = static_cast<StringObject&>(*params[0]);
+  std::string& str = const_cast<std::string&>(str_obj.value());
+  const std::string& str_delim = static_cast<StringObject&>(*params[1]).value();
+
+  std::vector<std::string> str_split;
+  boost::algorithm::split(str_split, str, boost::is_any_of(str_delim),
+                          boost::algorithm::token_compress_on);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  std::vector<ObjectPtr> obj_split;
+
+  for (auto& s: str_split) {
+    obj_split.push_back(obj_factory.NewString(s));
+  }
+
+  return obj_factory.NewArray(std::move(obj_split));
 }
 
 }
