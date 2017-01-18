@@ -33,7 +33,7 @@ class SymbolAttr {
 
   SymbolAttr(SymbolAttr&& other)
       : global_(other.global_)
-      , value_(std::move(other.value_)) {}
+      , value_(other.value_) {}
 
   SymbolAttr& operator=(SymbolAttr&& other) noexcept {
     if (&other == this) {
@@ -41,7 +41,7 @@ class SymbolAttr {
     }
 
     global_ = other.global_;
-    value_ = std::move(other.value_);
+    value_ = other.value_;
 
     return *this;
   }
@@ -148,12 +148,12 @@ class SymbolTable {
   void SetValue(const std::string& name, std::shared_ptr<Object> value) {
     auto it = map_.find(name);
     if (it != map_.end()) {
-      it->second.set_value(std::move(value));
+      it->second.set_value(value);
       return;
     }
 
     // declare variable always as local
-    SymbolAttr symbol(std::move(value), false);
+    SymbolAttr symbol(value, false);
     it = map_.begin();
     map_.insert (it, std::move(std::pair<std::string, SymbolAttr>(
         name, std::move(symbol))));
@@ -395,10 +395,10 @@ class SymbolTableStack: public SymbolTableStackBase {
   void SetEntry(const std::string& name,
                 std::shared_ptr<Object> value) override {
     if (stack_.size() > 0) {
-      stack_.back()->SetValue(name, std::move(value));
+      stack_.back()->SetValue(name, value);
     }
 
-    main_table_.lock()->SetValue(name, std::move(value));
+    main_table_.lock()->SetValue(name, value);
   }
 
   CmdEntryPtr LookupCmd(const std::string& name) {
@@ -416,7 +416,7 @@ class SymbolTableStack: public SymbolTableStackBase {
     // search the last function table inserted
     for (int i = stack_.size() - 1; i >= 0; i--) {
       if (stack_.at(i)->Type() == SymbolTable::TableType::FUNC_TABLE) {
-        stack_.at(i)->SetValue(name, std::move(value));
+        stack_.at(i)->SetValue(name, value);
       }
     }
   }

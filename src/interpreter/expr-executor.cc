@@ -16,7 +16,7 @@ std::vector<ObjectPtr> AssignableListExecutor::Exec(
   std::vector<ObjectPtr> obj_vec;
 
   for (AstNode* value: assign_list_node->children()) {
-    obj_vec.push_back(std::move(ExecAssignable(value)));
+    obj_vec.push_back(ExecAssignable(value));
   }
 
   return obj_vec;
@@ -456,7 +456,7 @@ std::vector<ObjectPtr> ExprListExecutor::Exec(
   ExpressionExecutor expr_executor(this, symbol_table_stack());
   std::vector<Expression*> expr_vec = expr_list_node->children();
   for (AstNode* value: expr_vec) {
-    obj_vec.push_back(std::move(expr_executor.Exec(value)));
+    obj_vec.push_back(expr_executor.Exec(value));
   }
 
   return obj_vec;
