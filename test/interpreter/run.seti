@@ -34,7 +34,7 @@ func get_file_output(file) {
             get = true
         }
     }
-print (">*>|> ",file)
+
     return out_lines
 }
 
@@ -74,10 +74,7 @@ for p in $(ls ${test_path}) {
 for folder in folders {
     for f in $(ls ${folder}) {
         file = folder +"/"+ f
-        print (">>> ",file)
-        print (">>|> ",file)
         fres = get_file_output(file)
-        print (">*>=> ",file)
         fout = $(./${seti_path} ${file})
 
         if compare_lines(fout, fres) {
