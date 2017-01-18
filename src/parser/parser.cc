@@ -1093,7 +1093,7 @@ ParserResult<Expression> Parser::ParserTerm() {
     return ParserResult<Expression>(); // Error
   }
 
-  while (token_.IsAny(TokenKind::MUL, TokenKind::DIV)) {
+  while (token_.IsAny(TokenKind::MUL, TokenKind::DIV, TokenKind::MOD)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();

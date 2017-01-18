@@ -309,9 +309,9 @@ TokenStream Lexer::Scanner() {
         // % %=
         Advance();
         if (c_ == '=') {
-          Select(TokenKind::ASSIGN_MOD);
+          token = Select(TokenKind::ASSIGN_MOD);
         } else {
-          GetToken(TokenKind::MOD);
+          token = GetToken(TokenKind::MOD);
         }
         break;
 
