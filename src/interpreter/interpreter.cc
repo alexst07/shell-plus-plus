@@ -18,6 +18,7 @@
 #include <memory>
 #include <iostream>
 #include <fstream>
+#include <boost/filesystem.hpp>
 
 #include "stmt-executor.h"
 #include "executor.h"
@@ -26,22 +27,52 @@
 #include "parser/lexer.h"
 #include "modules/std-funcs.h"
 #include "modules/path.h"
+#include "objects/object-factory.h"
 
 namespace seti {
 namespace internal {
 
 Interpreter::Interpreter()
     : symbol_table_(SymbolTablePtr(new SymbolTable))
-    , symbol_table_stack_(symbol_table_) {
+    , symbol_table_stack_(symbol_table_)
+    , main_(true) {
   AlocTypes(symbol_table_stack_);
 
   module::stdf::RegisterModule(symbol_table_stack_);
   module::path::RegisterModule(symbol_table_stack_);
+
+  RegisterVars();
 }
 
 Interpreter::~Interpreter() {
   // avoid errors of memory leak using sanytise flag
   symbol_table_.~shared_ptr();
+}
+
+void Interpreter::InsertVar(const std::string& name, ObjectPtr obj) {
+  SymbolAttr symbol(obj, true);
+  symbol_table_stack_.InsertEntry(name, std::move(symbol));
+}
+
+void Interpreter::RegisterVars() {
+  ObjectFactory obj_factory(symbol_table_stack_);
+
+  InsertVar("__main__", obj_factory.NewBool(main_));
+}
+
+void Interpreter::RegisterFileVars(const std::string& file) {
+  namespace fs = boost::filesystem;
+
+  ObjectFactory obj_factory(symbol_table_stack_);
+
+  fs::path full_path = fs::system_complete(file);
+  InsertVar("__file_path__", obj_factory.NewString(full_path.string()));
+
+  fs::path file_name = full_path.filename();
+  InsertVar("__file__", obj_factory.NewString(file_name.string()));
+
+  fs::path parent_path = full_path.parent_path();
+  InsertVar("__path__", obj_factory.NewString(parent_path.string()));
 }
 
 void Interpreter::Exec(std::string name) {
@@ -63,6 +94,7 @@ void Interpreter::Exec(std::string name) {
   stmt_list_ = res.MoveAstNode();
 
   if (p.nerrors() == 0) {
+    RegisterFileVars(name);
     RootExecutor executor(symbol_table_stack_);
     executor.Exec(stmt_list_.get());
   } else {

@@ -19,6 +19,7 @@
 
 #include "symbol-table.h"
 #include "ast/ast.h"
+#include "objects/abstract-obj.h"
 
 namespace seti {
 namespace internal {
@@ -37,9 +38,14 @@ class Interpreter {
   void ExecInterative(const std::function<std::string(bool concat)>& func);
 
  private:
+  void RegisterVars();
+  void InsertVar(const std::string& name, ObjectPtr obj);
+  void RegisterFileVars(const std::string& file);
+
   SymbolTablePtr symbol_table_;
   SymbolTableStack symbol_table_stack_;
   std::unique_ptr<StatementList> stmt_list_;
+  bool main_;
 };
 
 }
