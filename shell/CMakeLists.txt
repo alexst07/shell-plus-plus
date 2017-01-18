@@ -24,6 +24,6 @@ target_link_libraries(seti_exe
   ${READLINE_LIBRARY})
 
 if(CMAKE_COMPILER_IS_GNUCXX AND COV_TESTS)
-    target_link_libraries(seti gcov)
+    target_link_libraries(seti_exe gcov)
 endif()
 
