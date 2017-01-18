@@ -41,6 +41,17 @@ ObjectPtr PrintErrFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewNull();
 }
 
+ObjectPtr ReadFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
+
+  std::string str;
+
+  std::cout << static_cast<StringObject&>(*params[0]).value();
+  std::cin >> str;
+
+  return obj_factory_.NewString(str);
+}
+
 ObjectPtr LenFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   SETI_FUNC_CHECK_NUM_PARAMS(params, 1, len)
 
