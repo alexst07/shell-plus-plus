@@ -1,3 +1,5 @@
+# Run tests for seti interpreter
+
 func get_file_lines(file) {
     content = $(cat ${file})
 
@@ -13,7 +15,9 @@ func get_file_lines(file) {
 }
 
 func get_file_output(file) {
+
     lines = get_file_lines(file)
+
     get = false
     out_lines = []
 
@@ -30,8 +34,25 @@ func get_file_output(file) {
             get = true
         }
     }
-
+print (">*>|> ",file)
     return out_lines
+}
+
+func compare_lines(out_lines, expected_lines) {
+    for out_line, expected_line in out_lines, expected_lines {
+        if expected_line[0] == "*" {
+            if out_line.find("Error") == false {
+                return false
+            }
+
+            continue
+        }
+        if out_line != expected_line {
+            return false
+        }
+    }
+
+    return true
 }
 
 # seti interpreter has several limitations at this moment
@@ -53,18 +74,18 @@ for p in $(ls ${test_path}) {
 for folder in folders {
     for f in $(ls ${folder}) {
         file = folder +"/"+ f
+        print (">>> ",file)
+        print (">>|> ",file)
         fres = get_file_output(file)
+        print (">*>=> ",file)
         fout = $(./${seti_path} ${file})
 
-        expected = fres.join("\n").trim()
-        output = string(fout).trim()
-
-        if expected ==  output{
+        if compare_lines(fout, fres) {
             echo test ${file} correct
         } else {
             echo test ${file} error
-            print("output: ", output)
-            print("expected: ", expected)
+            print("output: ", string(fout))
+            print("expected: ", fres.join("\n"))
         }
     }
 }

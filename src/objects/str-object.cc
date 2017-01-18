@@ -138,6 +138,7 @@ StringType::StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
                                        *this);
   RegisterMethod<StringEndsWithFunc>("ends_with", symbol_table_stack(), *this);
   RegisterMethod<StringSplitFunc>("split", symbol_table_stack(), *this);
+  RegisterMethod<StringFindFunc>("find", symbol_table_stack(), *this);
 }
 
 ObjectPtr StringType::Constructor(Executor* /*parent*/,

@@ -23,6 +23,6 @@ target_link_libraries(seti
   ${READLINE_LIBRARY})
 
 if(CMAKE_COMPILER_IS_GNUCXX AND COV_TESTS)
-    target_link_libraries(seti_coverage gcov)
+    target_link_libraries(seti gcov)
 endif()
 
