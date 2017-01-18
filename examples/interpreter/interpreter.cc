@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "interpreter/intepreter.h"
+#include "interpreter/interpreter.h"
 
 int main(int argc, char **argv) {
   using namespace seti::internal;

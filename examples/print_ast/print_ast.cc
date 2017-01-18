@@ -30,8 +30,6 @@ int main(int argc, char **argv) {
   } else {
     std::cout << "Parser error analysis:\n";
     auto msgs = p.Msgs();
-    for (const auto& msg : msgs) {
-      std::cout << msg << "\n";
-    }
+    std::cout << msgs << "\n";
   }
 }

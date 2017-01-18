@@ -23,7 +23,6 @@
 #include <functional>
 
 #include "parser/token.h"
-#include "msg.h"
 #include "parser/lexer.h"
 
 namespace seti {

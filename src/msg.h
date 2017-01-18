@@ -39,6 +39,33 @@ class Message {
       , line_(line)
       , pos_(pos) {}
 
+  Message(const Message& msg)
+      : severity_(msg.severity_)
+      , msg_(msg.msg_)
+      , line_(msg.line_)
+      , pos_(msg.pos_) {}
+
+  Message& operator=(const Message& msg) {
+    severity_ = msg.severity_;
+    msg_ = msg.msg_;
+    line_ = msg.line_;
+    pos_ = msg.pos_;
+
+    return *this;
+  }
+
+  std::string msg() {
+    return msg_.str();
+  }
+
+  uint line() {
+    return line_;
+  }
+
+  uint pos() {
+    return pos_;
+  }
+
   friend std::ostream& operator<<(std::ostream& stream, const Message& msg);
   friend std::ostream& operator<<(std::ostream& stream, Message& msg);
 

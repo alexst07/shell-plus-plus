@@ -28,7 +28,7 @@
 #include "abstract-obj.h"
 #include "simple-object.h"
 #include "func-object.h"
-#include "interpreter/intepreter.h"
+#include "interpreter/interpreter.h"
 
 namespace seti {
 namespace internal {

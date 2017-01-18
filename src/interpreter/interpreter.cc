@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "intepreter.h"
+#include "interpreter.h"
 
 #include <string>
 #include <memory>
@@ -46,6 +46,13 @@ Interpreter::~Interpreter() {
 
 void Interpreter::Exec(std::string name) {
   std::ifstream file(name);
+
+  if (!file.is_open()) {
+    throw RunTimeError(RunTimeError::ErrorCode::INTERPRETER_FILE,
+                       boost::format("can't open file: %1%")%name,
+                       Position{0, 0});
+  }
+
   std::stringstream buffer;
   buffer << file.rdbuf();
 
@@ -59,14 +66,51 @@ void Interpreter::Exec(std::string name) {
     RootExecutor executor(symbol_table_stack_);
     executor.Exec(stmt_list_.get());
   } else {
-    std::cout << "Parser error analysis:\n";
-    auto msgs = p.Msgs();
-    for (const auto& msg : msgs) {
-      std::cout << msg << "\n";
+    Message msg = p.Msgs();
+    throw RunTimeError(RunTimeError::ErrorCode::PARSER, msg.msg(),
+                       Position{msg.line(), msg.pos()});
+  }
+}
+
+void Interpreter::ExecInterative(
+    const std::function<std::string(bool concat)>& func) {
+  RootExecutor executor(symbol_table_stack_);
+  bool concat = false;
+  std::string str_source;
+
+  while (true) {
+    std::string line = func(concat);
+    if (concat) {
+      str_source += std::string("\n") +  line;
+    } else {
+      str_source = line;
+    }
+
+    if (str_source.empty()) {
+      continue;
+    }
+
+    Lexer l(str_source);
+    TokenStream ts = l.Scanner();
+    Parser p(std::move(ts));
+    auto res = p.AstGen();
+    std::unique_ptr<StatementList> stmt_list = res.MoveAstNode();
+
+    if (p.nerrors() == 0) {
+      concat = false;
+      executor.Exec(stmt_list.get());
+    } else {
+      if (p.StmtIncomplete()) {
+        concat = true;
+        continue;
+      } else {
+        concat = false;
+        Message msg = p.Msgs();
+        throw RunTimeError(RunTimeError::ErrorCode::PARSER, msg.msg(),
+                           Position{msg.line(), msg.pos()});
+      }
     }
   }
-
-//  symbol_table_->Clear();
 }
 
 }

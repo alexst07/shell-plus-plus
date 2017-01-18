@@ -47,6 +47,8 @@ class RunTimeError : public std::exception {
     INVALID_COMMAND,
     IMPORT,
     ASSERT,
+    PARSER,
+    INTERPRETER_FILE,
     CUSTON
   };
 

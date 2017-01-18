@@ -50,8 +50,8 @@ class Parser {
     return nerror_;
   }
 
-  inline const Messages& Msgs() const {
-    return msgs_;
+  inline const Message& Msgs() const {
+    return *msgs_.begin();
   }
 
   bool StmtIncomplete() {

@@ -15,6 +15,8 @@
 #ifndef SETI_INTERPRETER_H
 #define SETI_INTERPRETER_H
 
+#include <functional>
+
 #include "symbol-table.h"
 #include "ast/ast.h"
 
@@ -32,6 +34,7 @@ class Interpreter {
   }
 
   void Exec(std::string name);
+  void ExecInterative(const std::function<std::string(bool concat)>& func);
 
  private:
   SymbolTablePtr symbol_table_;
