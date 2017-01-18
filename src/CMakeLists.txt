@@ -6,5 +6,5 @@ file(GLOB SOURCES_MODULES ${CMAKE_CURRENT_SOURCE_DIR}/modules/*.cc)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(setti ${SOURCES} ${SOURCES_PARSER} ${SOURCES_INTER}
+add_library(seti ${SOURCES} ${SOURCES_PARSER} ${SOURCES_INTER}
             ${SOURCES_OBJECTS} ${SOURCES_MODULES})

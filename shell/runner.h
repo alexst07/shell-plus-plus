@@ -4,7 +4,7 @@
 #include "interpreter/symbol-table.h"
 #include "ast/ast.h"
 
-namespace setti {
+namespace seti {
 
 using internal::Lexer;
 using internal::TokenStream;

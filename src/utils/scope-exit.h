@@ -1,7 +1,7 @@
 #ifndef SETI_SCOPE_EXIT_H
 #define SETI_SCOPE_EXIT_H
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 template <typename T>

@@ -11,7 +11,7 @@
 #include "abstract-obj.h"
 #include "slice-object.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class TupleObject: public Object {

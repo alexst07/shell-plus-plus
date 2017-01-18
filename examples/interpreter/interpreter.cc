@@ -5,7 +5,7 @@
 #include "interpreter/intepreter.h"
 
 int main(int argc, char **argv) {
-  using namespace setti::internal;
+  using namespace seti::internal;
 
   if (argc < 2) {
     std::cout << "usage: interpreter <file>\n";
@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   Interpreter i;
   try {
     i.Exec(name);
-  } catch (setti::RunTimeError& e) {
+  } catch (seti::RunTimeError& e) {
     std::cout << "Error: " << e.pos().line << ": " << e.pos().col
               << ": " << e.what() << "\n";
   }

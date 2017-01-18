@@ -16,7 +16,7 @@
 #include "func-object.h"
 #include "interpreter/intepreter.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class DeclClassObject: public Object {

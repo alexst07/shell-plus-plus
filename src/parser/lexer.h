@@ -1,5 +1,5 @@
-#ifndef SETTI_LEXER_H
-#define SETTI_LEXER_H
+#ifndef SETI_LEXER_H
+#define SETI_LEXER_H
 
 #include <string>
 #include <memory>
@@ -10,7 +10,7 @@
 #include "token.h"
 #include "msg.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class Lexer {
@@ -158,4 +158,4 @@ private:
 }
 }
 
-#endif  // SETTI_LEXER_H
+#endif  // SETI_LEXER_H

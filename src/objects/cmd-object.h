@@ -12,7 +12,7 @@
 #include "obj-type.h"
 #include "func-object.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class CmdIterObject: public Object {

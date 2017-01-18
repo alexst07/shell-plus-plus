@@ -10,7 +10,7 @@
 #include "run_time_error.h"
 #include "interpreter/symbol-table.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class Executor;

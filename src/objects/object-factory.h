@@ -16,7 +16,7 @@
 #include "map-object.h"
 #include "tuple-object.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class ObjectFactory {

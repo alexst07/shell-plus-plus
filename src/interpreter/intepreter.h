@@ -4,7 +4,7 @@
 #include "symbol-table.h"
 #include "ast/ast.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class Interpreter {

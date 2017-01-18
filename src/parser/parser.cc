@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 ParserResult<Statement> Parser::ParserImportStmt() {

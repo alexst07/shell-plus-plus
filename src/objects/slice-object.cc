@@ -2,7 +2,7 @@
 
 #include "simple-object.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 SliceObject::SliceObject(ObjectPtr obj_start, ObjectPtr obj_end,

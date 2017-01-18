@@ -8,7 +8,7 @@
 #include "interpreter/stmt-executor.h"
 #include "utils/scope-exit.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 ObjectPtr FuncWrapperObject::Call(Executor* parent,

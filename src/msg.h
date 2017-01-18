@@ -6,7 +6,7 @@
 #include <vector>
 #include <boost/format.hpp>
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class Message {

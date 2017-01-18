@@ -1,5 +1,5 @@
-﻿#ifndef SETTI_PARSER_RESULT_H
-#define SETTI_PARSER_RESULT_H
+﻿#ifndef SETI_PARSER_RESULT_H
+#define SETI_PARSER_RESULT_H
 
 #include <string>
 #include <memory>
@@ -10,7 +10,7 @@
 #include "msg.h"
 #include "lexer.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 template<class T>

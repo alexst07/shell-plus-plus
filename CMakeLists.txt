@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
-project(setti C CXX)
+project(seti C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
@@ -12,8 +12,8 @@ else()
   message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
 endif()
 
-SETTI_OPTION(BUILD_UNIT_TESTS "Build unit tests" ON)
-SETTI_OPTION(COV_TESTS "Coverage tests" OFF)
+SETI_OPTION(BUILD_UNIT_TESTS "Build unit tests" ON)
+SETI_OPTION(COV_TESTS "Coverage tests" OFF)
 
 if (COV_TESTS)
   # put on debug

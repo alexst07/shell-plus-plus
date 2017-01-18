@@ -6,7 +6,7 @@
 #include "executor.h"
 #include "cmd-exec.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class CmdDeclEntry: public CmdEntry {

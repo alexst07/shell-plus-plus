@@ -12,7 +12,7 @@
 #include "executor.h"
 #include "objects/object-factory.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class StmtListExecutor: public Executor {

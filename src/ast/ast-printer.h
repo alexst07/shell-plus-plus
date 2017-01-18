@@ -1,5 +1,5 @@
-#ifndef SETTI_AST_TRAVERSAL_VISITOR_H
-#define SETTI_AST_TRAVERSAL_VISITOR_H
+#ifndef SETI_AST_TRAVERSAL_VISITOR_H
+#define SETI_AST_TRAVERSAL_VISITOR_H
 
 #include <string>
 #include <iostream>
@@ -9,7 +9,7 @@
 
 #include "ast.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class AstPrinter: public AstVisitor {

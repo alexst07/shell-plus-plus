@@ -7,7 +7,7 @@
 
 #include "interpreter/cmd-executor.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 int ExecCmd(std::vector<std::string>&& args) {

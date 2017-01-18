@@ -6,7 +6,7 @@
 #include "obj-type.h"
 #include "object-factory.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 ObjectPtr NullObject::ObjBool() {

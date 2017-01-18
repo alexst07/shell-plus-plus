@@ -12,7 +12,7 @@
 #include "objects/abstract-obj.h"
 #include "interpreter/symbol-table.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 typedef std::vector<std::string> SimpleCmdData;

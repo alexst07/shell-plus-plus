@@ -12,7 +12,7 @@
 #include "modules/std-funcs.h"
 
 int main(int argc, char **argv) {
-  using namespace setti::internal;
+  using namespace seti::internal;
 
   SymbolTablePtr symbol_table(SymbolTablePtr(new SymbolTable));
   SymbolTableStack symbol_table_stack(symbol_table);

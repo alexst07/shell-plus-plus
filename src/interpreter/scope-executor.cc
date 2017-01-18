@@ -3,7 +3,7 @@
 #include "stmt-executor.h"
 #include "utils/scope-exit.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 void ScopeExecutor::PushDeferStmt(std::tuple<Statement *, SymbolTableStack> s) {

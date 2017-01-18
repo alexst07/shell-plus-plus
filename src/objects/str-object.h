@@ -11,7 +11,7 @@
 #include "func-object.h"
 #include "slice-object.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class StringObject: public Object {

@@ -1,8 +1,8 @@
-#ifndef SETTI_AST_H
+#ifndef SETI_AST_H
 #error This file may only be included from ast.h.
 #endif
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class CmdDeclaration: public Declaration {

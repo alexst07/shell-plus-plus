@@ -8,7 +8,7 @@
 #include "object-factory.h"
 #include "utils/check.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 ObjectPtr StringObject::ObjInt() {

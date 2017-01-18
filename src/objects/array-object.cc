@@ -8,7 +8,7 @@
 #include "simple-object.h"
 #include "utils/check.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 ArrayIterObject::ArrayIterObject(ObjectPtr array_obj, ObjectPtr obj_type,

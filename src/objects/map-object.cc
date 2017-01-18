@@ -2,7 +2,7 @@
 
 #include "object-factory.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 MapIterObject::MapIterObject(ObjectPtr map_obj, ObjectPtr obj_type,

@@ -6,7 +6,7 @@
 #include "expr-executor.h"
 #include "objects/func-object.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 void AssignExecutor::Exec(AstNode* node) {

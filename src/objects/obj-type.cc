@@ -9,7 +9,7 @@
 #include "interpreter/stmt-executor.h"
 #include "utils/check.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 ObjectPtr TypeObject::CallObject(const std::string& name,

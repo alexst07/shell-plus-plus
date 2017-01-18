@@ -6,7 +6,7 @@
 #include "cmd-executor.h"
 #include "stmt-executor.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 std::vector<ObjectPtr> AssignableListExecutor::Exec(

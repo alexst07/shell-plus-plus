@@ -9,7 +9,7 @@ void help() {
 }
 
 int main(int argc, char **argv) {
-  setti::Runner runner;
+  seti::Runner runner;
 
   if (argc == 1) {
     runner.ExecInterative();

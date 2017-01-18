@@ -11,7 +11,7 @@
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class SliceObject: public Object {

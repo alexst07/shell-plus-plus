@@ -3,7 +3,7 @@
 #include "simple-object.h"
 #include "object-factory.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 std::size_t TupleObject::Hash() const {

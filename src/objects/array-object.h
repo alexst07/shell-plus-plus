@@ -13,7 +13,7 @@
 #include "func-object.h"
 #include "obj-type.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class ArrayIterObject: public Object {

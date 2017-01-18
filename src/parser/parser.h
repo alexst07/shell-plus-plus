@@ -1,5 +1,5 @@
-#ifndef SETTI_PARSER_H
-#define SETTI_PARSER_H
+#ifndef SETI_PARSER_H
+#define SETI_PARSER_H
 
 #include <string>
 #include <memory>
@@ -14,7 +14,7 @@
 #include "parser_result.h"
 #include "ast/ast.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class Parser {
@@ -277,5 +277,5 @@ class Parser {
 }
 }
 
-#endif  // SETTI_PARSER_H
+#endif  // SETI_PARSER_H
 

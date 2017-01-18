@@ -11,7 +11,7 @@
 #include "cmd-executor.h"
 #include "utils/scope-exit.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 void StmtListExecutor::Exec(AstNode* node) {

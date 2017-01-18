@@ -13,7 +13,7 @@
 #include "scope-executor.h"
 #include "utils/scope-exit.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 void CmdDeclEntry::Exec(Executor* parent, std::vector<std::string>&& args) {

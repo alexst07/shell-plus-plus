@@ -10,7 +10,7 @@
 #include "objects/obj-type.h"
 #include "symbol-table.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class Executor {

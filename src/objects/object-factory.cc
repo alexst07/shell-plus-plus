@@ -4,7 +4,7 @@
 #include <iostream>
 #include <boost/variant.hpp>
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 void AlocTypes(SymbolTableStack& symbol_table) {

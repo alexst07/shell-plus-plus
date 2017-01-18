@@ -14,7 +14,7 @@
 #include "modules/std-funcs.h"
 #include "modules/path.h"
 
-namespace setti {
+namespace seti {
 
 using internal::RootExecutor;
 using internal::Parser;

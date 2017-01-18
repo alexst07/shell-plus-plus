@@ -1,5 +1,5 @@
-#ifndef SETTI_AST_H
-#define SETTI_AST_H
+#ifndef SETI_AST_H
+#define SETI_AST_H
 
 #include <string>
 #include <memory>
@@ -12,7 +12,7 @@
 #include "msg.h"
 #include "parser/lexer.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 #define DECLARATION_NODE_LIST(V) \
@@ -1714,4 +1714,4 @@ class Literal: public Expression {
 #include "ast-class-inl.h"
 #include "ast-factory-inl.h"
 
-#endif  // SETTI_AST_H
+#endif  // SETI_AST_H

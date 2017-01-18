@@ -13,7 +13,7 @@
 #include "modules/std-funcs.h"
 #include "modules/path.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 Interpreter::Interpreter()

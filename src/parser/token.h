@@ -1,5 +1,5 @@
-#ifndef SETTI_TOKEN_H
-#define SETTI_TOKEN_H
+#ifndef SETI_TOKEN_H
+#define SETI_TOKEN_H
 
 #include <string>
 #include <memory>
@@ -9,7 +9,7 @@
 #include <tuple>
 #include <boost/variant.hpp>
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 enum class TokenKind {

@@ -10,7 +10,7 @@
 #include "run_time_error.h"
 #include "obj-type.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class FuncObject: public Object {

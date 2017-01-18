@@ -9,7 +9,7 @@
 
 #include "objects/object-factory.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 namespace module {
 namespace stdf {

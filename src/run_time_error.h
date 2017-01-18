@@ -8,7 +8,7 @@
 #include "ast/ast.h"
 #include "msg.h"
 
-namespace setti {
+namespace seti {
 
 /**
  * @brief Class to represent an run time error

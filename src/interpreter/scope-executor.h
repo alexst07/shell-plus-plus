@@ -9,7 +9,7 @@
 #include "ast/ast.h"
 #include "executor.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 class ScopeExecutor: public Executor {

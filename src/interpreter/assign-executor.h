@@ -12,7 +12,7 @@
 #include "symbol-table.h"
 #include "objects/object-factory.h"
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 // Class to execute assignment operation
