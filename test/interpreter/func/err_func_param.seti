@@ -1,0 +1,10 @@
+# param error test
+# --output:start
+# *
+# --output:end
+
+func test(a) {
+  print(a)
+}
+
+test(5, 6)

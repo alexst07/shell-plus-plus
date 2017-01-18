@@ -1,0 +1,90 @@
+# Run tests for seti interpreter
+
+func get_file_lines(file) {
+    content = $(cat ${file})
+
+    lines = []
+
+    for line in content {
+        if line[0] == "#" {
+          lines.append(line[1:])
+        }
+    }
+
+    return lines
+}
+
+func get_file_output(file) {
+
+    lines = get_file_lines(file)
+
+    get = false
+    out_lines = []
+
+    for line in lines {
+        if line.trim() == "--output:end" {
+            get = false
+        }
+
+        if get {
+            out_lines.append(line.trim())
+        }
+
+        if line.trim() == "--output:start" {
+            get = true
+        }
+    }
+
+    return out_lines
+}
+
+func compare_lines(out_lines, expected_lines) {
+    for out_line, expected_line in out_lines, expected_lines {
+        if expected_line[0] == "*" {
+            if out_line.find("Error") == false {
+                return false
+            }
+
+            continue
+        }
+        if out_line != expected_line {
+            return false
+        }
+    }
+
+    return true
+}
+
+# seti interpreter has several limitations at this moment
+# on the future this test must be improved
+
+seti_path = "../build/shell/seti"
+test_path = "../test/interpreter/"
+
+folders = []
+
+for p in $(ls ${test_path}) {
+    ptest = test_path + p
+
+    if path.is_dir(ptest) {
+        folders.append(ptest)
+    }
+}
+
+for folder in folders {
+    for f in $(ls ${folder}) {
+        file = folder +"/"+ f
+        fres = get_file_output(file)
+        fout = $(./${seti_path} ${file})
+
+        if compare_lines(fout, fres) {
+            echo test ${file} correct
+        } else {
+            echo test ${file} error
+            print("output: ", string(fout))
+            print("expected: ", fres.join("\n"))
+        }
+    }
+}
+
+

@@ -1,4 +1,12 @@
 
+#ifndef TOKEN
+#define TOKEN(kw, str)
+#endif
+
+#ifndef LITERAL
+#define LITERAL(kw, str)
+#endif
+
 #ifndef KEYWORD
 #define KEYWORD(kw, str)
 #endif
@@ -18,6 +26,29 @@
 #define PUNCTUATOR(name, str)
 #endif
 
+/// PUNCTUATOR_ASSIGN(name, str)
+#ifndef PUNCTUATOR_ASSIGN
+#define PUNCTUATOR_ASSIGN(name, str)
+#endif
+
+/// PUNCTUATOR_COMP(name, str)
+#ifndef PUNCTUATOR_COMP
+#define PUNCTUATOR_COMP(name, str)
+#endif
+
+TOKEN(EOS,        "end of source")
+TOKEN(NWL,        "new line")
+TOKEN(COMMENT,    "comment")
+TOKEN(IDENTIFIER, "")
+TOKEN(WORD,       "")
+
+LITERAL(INT_LITERAL,   "")
+LITERAL(HEX_LITERAL,   "")
+LITERAL(OCT_LITERAL,   "")
+LITERAL(BIN_LITERAL,   "")
+LITERAL(REAL_LITERAL,  "")
+LITERAL(STRING_LITERAL,"")
+
 // Keywords that start decls.
 DECL_KEYWORD(CLASS,         "class")
 DECL_KEYWORD(INTERFACE,     "interface")
@@ -27,11 +58,10 @@ DECL_KEYWORD(EXTENDS,       "extends")
 DECL_KEYWORD(IMPLEMENTS,    "implements")
 DECL_KEYWORD(FUNC,          "func")
 DECL_KEYWORD(CMD,           "cmd")
-DECL_KEYWORD(IMPORT,        "cmd")
+DECL_KEYWORD(IMPORT,        "import")
 DECL_KEYWORD(LET,           "let")
 DECL_KEYWORD(OPERATOR,      "operator")
 DECL_KEYWORD(ALIAS,         "alias")
-DECL_KEYWORD(TYPE,          "type")
 DECL_KEYWORD(VAR,           "var")
 DECL_KEYWORD(VARENV,        "varenv")
 DECL_KEYWORD(INTERNAL,      "internal")
@@ -58,6 +88,7 @@ STMT_KEYWORD(CASE,          "case")
 STMT_KEYWORD(DEFAULT,       "default")
 STMT_KEYWORD(WHERE,         "where")
 STMT_KEYWORD(CATCH,         "catch")
+STMT_KEYWORD(FROM,          "from")
 
 // Expression keywords.
 KEYWORD(AS,                 "as")
@@ -65,12 +96,12 @@ KEYWORD(TYPEOF,             "typeof")
 KEYWORD(INSTANCEOF,         "instanceof")
 KEYWORD(TRUE,               "true")
 KEYWORD(FALSE,              "false")
+KEYWORD(NOT,                "not")
 KEYWORD(IS,                 "is")
 KEYWORD(DEVNULL,            "dev_null")
 KEYWORD(NULL,               "null")
 KEYWORD(RETHROW,            "rethrow")
 KEYWORD(SUPER,              "super")
-KEYWORD(THIS,               "this")
 KEYWORD(THROW,              "throw")
 KEYWORD(TRY,                "try")
 KEYWORD(THROWS,             "throws")
@@ -79,6 +110,27 @@ KEYWORD(__FILE__,           "__FILE__")
 KEYWORD(__LINE__,           "__LINE__")
 KEYWORD(__FUNCTION__,       "__FUNCTION__")
 KEYWORD(__CMD__,            "__CMD__")
+
+// Punctuators assign
+PUNCTUATOR_ASSIGN(ASSIGN,          "=")
+PUNCTUATOR_ASSIGN(ASSIGN_BIT_OR,   "|=")
+PUNCTUATOR_ASSIGN(ASSIGN_BIT_XOR,  "^=")
+PUNCTUATOR_ASSIGN(ASSIGN_BIT_AND,  "&=")
+PUNCTUATOR_ASSIGN(ASSIGN_SHL,      "<<=")
+PUNCTUATOR_ASSIGN(ASSIGN_SAR,      ">>=")
+PUNCTUATOR_ASSIGN(ASSIGN_ADD,      "+=")
+PUNCTUATOR_ASSIGN(ASSIGN_SUB,      "-=")
+PUNCTUATOR_ASSIGN(ASSIGN_MUL,      "*=")
+PUNCTUATOR_ASSIGN(ASSIGN_DIV,      "/=")
+PUNCTUATOR_ASSIGN(ASSIGN_MOD,      "%=")
+
+// Punctuators comparison
+PUNCTUATOR_COMP(EQUAL,           "==")
+PUNCTUATOR_COMP(NOT_EQUAL,       "!=")
+PUNCTUATOR_COMP(LESS_THAN,       "<")
+PUNCTUATOR_COMP(GREATER_THAN,    ">")
+PUNCTUATOR_COMP(LESS_EQ,         "<=")
+PUNCTUATOR_COMP(GREATER_EQ,      ">=")
 
 // Punctuators.
 PUNCTUATOR(LPAREN,          "(")
@@ -89,45 +141,37 @@ PUNCTUATOR(LBRACKET,        "[")
 PUNCTUATOR(RBRACKET,        "]")
 PUNCTUATOR(COMMA,           ",")
 PUNCTUATOR(COLON,           ":")
+PUNCTUATOR(SCOPE,           "::")
 PUNCTUATOR(SEMI_COLON,      ";")
-PUNCTUATOR(ASSIGN,          "=")
-PUNCTUATOR(ASSIGN_BIT_OR,   "|=")
-PUNCTUATOR(ASSIGN_BIT_XOR,  "^=")
-PUNCTUATOR(ASSIGN_BIT_AND,  "&=")
-PUNCTUATOR(ASSIGN_SHL,      "<<=")
-PUNCTUATOR(ASSIGN_SAR,      ">>=")
-PUNCTUATOR(ASSIGN_ADD,      "+=")
-PUNCTUATOR(ASSIGN_SUB,      "-=")
-PUNCTUATOR(ASSIGN_MUL,      "*=")
-PUNCTUATOR(ASSIGN_DIV,      "/=")
-PUNCTUATOR(ASSIGN_MOD,      "%=")
 PUNCTUATOR(AT_SIGN,         "@")
 PUNCTUATOR(ELLIPSIS,        "...")
 PUNCTUATOR(OR,              "||")
 PUNCTUATOR(AND,             "&&")
-PUNCTUATOR(NOT,             "!")
+PUNCTUATOR(EXCL_NOT,        "!")
 PUNCTUATOR(BIT_OR,          "|")
 PUNCTUATOR(BIT_XOR,         "^")
 PUNCTUATOR(BIT_AND,         "&")
+PUNCTUATOR(BIT_NOT,         "~")
 PUNCTUATOR(SHL,             "<<")
 PUNCTUATOR(SAR,             ">>")
+PUNCTUATOR(SSHL,            "<<<")
+PUNCTUATOR(SSAR,            ">>>")
 PUNCTUATOR(ADD,             "+")
 PUNCTUATOR(SUB,             "-")
 PUNCTUATOR(MUL,             "*")
 PUNCTUATOR(DIV,             "/")
 PUNCTUATOR(MOD,             "%")
-PUNCTUATOR(EQUAL,           "==")
-PUNCTUATOR(NOT_EQUAL,       "!=")
-PUNCTUATOR(LESS_THAN,       "<")
-PUNCTUATOR(GREATER_THAN,    ">")
-PUNCTUATOR(LESS_EQ,         "<=")
-PUNCTUATOR(GREATER_EQ,      ">=")
 PUNCTUATOR(ARROW,           "->")
+PUNCTUATOR(DOT,             ".")
 PUNCTUATOR(DOLLAR,          "$")
 PUNCTUATOR(DOLLAR_LPAREN,   "$(")
 PUNCTUATOR(DOLLAR_LBRACE,   "${")
 
+#undef TOKEN
+#undef LITERAL
 #undef KEYWORD
 #undef DECL_KEYWORD
 #undef STMT_KEYWORD
 #undef PUNCTUATOR
+#undef PUNCTUATOR_ASSIGN
+#undef PUNCTUATOR_COMP

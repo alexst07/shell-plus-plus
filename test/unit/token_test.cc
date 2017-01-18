@@ -4,7 +4,7 @@
 #include "parser/token.h"
 
 TEST(Token, Print) {
-  using namespace setti::internal;
+  using namespace seti::internal;
 
   Token t1(TokenKind::KW_IF, true, 1, 1);
   Token t2(TokenKind::INT_LITERAL, 5, true, 1, 1);
@@ -15,7 +15,7 @@ TEST(Token, Print) {
 }
 
 TEST(Token, Comparing) {
-  using namespace setti::internal;
+  using namespace seti::internal;
 
   Token t1(TokenKind::KW_IF, "if", true, 1, 1);
   Token t2(TokenKind::INT_LITERAL, 5, true, 1, 1);
@@ -30,11 +30,11 @@ TEST(Token, Comparing) {
   ASSERT_TRUE(t3 != TokenKind::KW_IF);
 
   ASSERT_TRUE(t1.IsAny(TokenKind::INT_LITERAL, TokenKind::KW_IF));
-  ASSERT_TRUE(t2.isNot(TokenKind::REAL_LITERAL, TokenKind::KW_IF));
+  ASSERT_TRUE(t2.IsNot(TokenKind::REAL_LITERAL, TokenKind::KW_IF));
 }
 
 TEST(TokenStream, Operations) {
-  using namespace setti::internal;
+  using namespace seti::internal;
 
   Token t1(TokenKind::KW_IF, true, 1, 1);
   Token t2(TokenKind::INT_LITERAL, 5, true, 1, 1);

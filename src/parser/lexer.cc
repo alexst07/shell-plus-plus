@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-namespace setti {
+namespace seti {
 namespace internal {
 
 void Lexer::SkipSingleLineComment() {
@@ -41,6 +41,7 @@ char Lexer::ScanStringEscape() {
 }
 
 char Lexer::ScanWordEscape() {
+  start_pos_ = line_pos_;
   Advance();
 
   char c = c_;
@@ -59,6 +60,8 @@ char Lexer::ScanWordEscape() {
 
 Token Lexer::ScanString() {
   std::string str = "";
+  start_pos_ = line_pos_;
+
   Advance();
 
   while(true) {
@@ -83,11 +86,14 @@ Token Lexer::ScanString() {
     Advance();
   }
 
-  return Select(TokenKind::STRING_LITERAL, str);
+  // Check blank char after string
+  char check_blank = c_;
+  return GetToken(TokenKind::STRING_LITERAL, str, check_blank);
 }
 
 Token Lexer::ScanIdentifier() {
   std::string id = "";
+  start_pos_ = line_pos_;
 
   if (IsIdentifierStart(c_)) {
     id += c_;
@@ -102,10 +108,13 @@ Token Lexer::ScanIdentifier() {
     bool res;
     std::tie(token_kind, res) = Token::IsKeyWord(id);
 
+    // Check blank char after identifier
+    char check_blank = c_;
+
     if (res) {
-      return GetToken(token_kind);
+      return GetToken(token_kind, check_blank);
     } else {
-      return GetToken(TokenKind::IDENTIFIER, id);
+      return GetToken(TokenKind::IDENTIFIER, id, check_blank);
     }
   }
 
@@ -115,6 +124,7 @@ Token Lexer::ScanIdentifier() {
 Token Lexer::ScanNumber() {
   std::string str_num = "";
   size_t point_num = 0;
+  start_pos_ = line_pos_;
 
   if (IsDigit(c_)) {
     str_num += c_;
@@ -133,23 +143,27 @@ Token Lexer::ScanNumber() {
     }
   }
 
+  // Check blank char after number
+  char check_blank = c_;
+
   if (point_num == 0) {
     int v;
     std::istringstream ss(str_num);
     ss >> v;
-    return GetToken(TokenKind::INT_LITERAL, v);
+    return GetToken(TokenKind::INT_LITERAL, v, check_blank);
   } else {
     float v;
     std::istringstream ss(str_num);
     ss >> v;
-    return GetToken(TokenKind::REAL_LITERAL, v);
+    return GetToken(TokenKind::REAL_LITERAL, v, check_blank);
   }
 }
 
 Token Lexer::ScanWord(const std::string& prestr) {
   std::string word = prestr;
+  start_pos_ = line_pos_;
 
-  while (c_ != ' ' && c_ != '\t' && c_ != '\n' && c_ != kEndOfInput) {
+  while (IsSpecialChar(c_)) {
     if (c_ == '\\') {
       word += ScanWordEscape();
       Advance();
@@ -160,13 +174,17 @@ Token Lexer::ScanWord(const std::string& prestr) {
     Advance();
   }
 
-  return GetToken(TokenKind::WORD, word);
+  // Check blank char after word
+  char check_blank = c_;
+  return GetToken(TokenKind::WORD, word, check_blank);
 }
 
 TokenStream Lexer::Scanner() {
   TokenStream ts;
+  char check_blank = c_;
 
   while (true) {
+    start_pos_ = line_pos_;
     bool whitespace = false;
     Token&& token = GetToken(TokenKind::UNKNOWN);
     switch (c_) {
@@ -192,6 +210,7 @@ TokenStream Lexer::Scanner() {
       case '<':
         // < <= << <<=
         Advance();
+        check_blank = c_;
         if (c_ == '=') {
           token = Select(TokenKind::LESS_EQ);
         } else if (c_ == '<') {
@@ -202,13 +221,14 @@ TokenStream Lexer::Scanner() {
             token = GetToken(TokenKind::SHL);
           }
         } else {
-          token = GetToken(TokenKind::LESS_THAN);
+          token = GetToken(TokenKind::LESS_THAN, check_blank);
         }
         break;
 
       case '>':
         // > >= >> >>=
         Advance();
+        check_blank = c_;
         if (c_ == '=') {
           token = Select(TokenKind::GREATER_EQ);
         } else if (c_ == '>') {
@@ -219,7 +239,7 @@ TokenStream Lexer::Scanner() {
             token = GetToken(TokenKind::SAR);
           }
         } else {
-          token = GetToken(TokenKind::GREATER_THAN);
+          token = GetToken(TokenKind::GREATER_THAN, check_blank);
         }
         break;
 
@@ -239,7 +259,7 @@ TokenStream Lexer::Scanner() {
         if (c_ == '=') {
           token = Select(TokenKind::NOT_EQUAL);
         } else {
-          token = GetToken(TokenKind::NOT);
+          token = GetToken(TokenKind::EXCL_NOT);
         }
         break;
 
@@ -276,7 +296,7 @@ TokenStream Lexer::Scanner() {
         break;
 
       case '/':
-        // * /=
+        // / /=
         Advance();
         if (c_ == '=') {
           token = Select(TokenKind::ASSIGN_DIV);
@@ -289,9 +309,9 @@ TokenStream Lexer::Scanner() {
         // % %=
         Advance();
         if (c_ == '=') {
-          Select(TokenKind::ASSIGN_MOD);
+          token = Select(TokenKind::ASSIGN_MOD);
         } else {
-          Select(TokenKind::MOD);
+          token = GetToken(TokenKind::MOD);
         }
         break;
 
@@ -312,7 +332,7 @@ TokenStream Lexer::Scanner() {
         Advance();
         if (c_ == '=') {
           token = Select(TokenKind::ASSIGN_BIT_OR);
-        } else if (c_ == '&') {
+        } else if (c_ == '|') {
           token = Select(TokenKind::OR);
         } else {
           token = GetToken(TokenKind::BIT_OR);
@@ -329,12 +349,22 @@ TokenStream Lexer::Scanner() {
         }
         break;
 
+      case '~':
+        token = Select(TokenKind::BIT_NOT);
+        break;
+
       case ';':
         token = Select(TokenKind::SEMI_COLON);
         break;
 
       case ':':
-        token = Select(TokenKind::COLON);
+        // : ::
+        Advance();
+        if (c_ == ':') {
+          token = Select(TokenKind::SCOPE);
+        } else {
+          token = GetToken(TokenKind::COLON);
+        }
         break;
 
       case ',':
@@ -378,7 +408,7 @@ TokenStream Lexer::Scanner() {
         break;
 
       case '.': {
-        // ...
+        // . ...
         std::string  pre_word = ".";
         Advance();
         if (c_ == '.') {
@@ -390,7 +420,7 @@ TokenStream Lexer::Scanner() {
             token = ScanWord(pre_word);
           }
         } else {
-          token = ScanWord(pre_word);
+          token = GetToken(TokenKind::DOT);
         }
       } break;
 
