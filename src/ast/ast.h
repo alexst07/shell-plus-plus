@@ -843,6 +843,10 @@ class CmdPiece: public AstNode {
     return str;
   }
 
+  const Token& token() const noexcept {
+    return token_;
+  }
+
   bool blank_after() {
     return token_.BlankAfter();
   }

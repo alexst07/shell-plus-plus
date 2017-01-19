@@ -30,6 +30,42 @@
 namespace seti {
 namespace internal {
 
+void SetFdAsync(int fd) {
+  int flags;
+  if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
+          flags = 0;
+  fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
+
+std::tuple<std::string, std::string> ReadPipe(int pipe_out, int pipe_err) {
+  char buf[PIPE_BUF];
+  char buf_err[PIPE_BUF];
+
+  int rd = 0;
+  int rd_err = 0;
+
+  SetFdAsync(pipe_out);
+  SetFdAsync(pipe_err);
+
+  rd = read(pipe_out, buf, PIPE_BUF);
+  rd_err = read(pipe_err, buf_err, PIPE_BUF);
+
+  std::string str_out = "";
+  std::string str_err = "";
+
+  if (rd > 0) {
+    buf[rd] = '\0';
+    str_out += buf;
+  }
+
+  if (rd_err > 0) {
+    buf_err[rd_err] = '\0';
+    str_err += buf_err;
+  }
+
+  return std::tuple<std::string, std::string>(str_out, str_err);
+}
+
 void CmdDeclEntry::Exec(Executor* parent, std::vector<std::string>&& args) {
   // it is the table function
   SymbolTablePtr table =
@@ -235,39 +271,30 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
   const int WRITE = 1;
 
   int pipettes[2];
+  int pipe_err[2];
 
   pipe(pipettes);
+  pipe(pipe_err);
 
   Job job(symbol_table_stack());
   Process p(symbol_table_stack(), std::move(cmd_args));
   job.process_.push_back(p);
   job.shell_is_interactive_ = 0;
-  job.stderr_ = STDERR_FILENO;
+  job.stderr_ = pipe_err[WRITE];
   job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
   job.wait_ = true;
   job.LaunchJob(true);
 
-  char buf[PIPE_BUF];
-  int rd = 0;
+  std::string str_out;
+  std::string str_err;
 
-  int flags;
-  if (-1 == (flags = fcntl(pipettes[READ], F_GETFL, 0)))
-          flags = 0;
-  fcntl(pipettes[READ], F_SETFL, flags | O_NONBLOCK);
-
-  rd = read(pipettes[READ], buf, PIPE_BUF);
-
-  std::string str_out = "";
-
-  if (rd > 0) {
-    buf[rd] = '\0';
-    str_out += buf;
-  }
+  std::tie(str_out, str_err) = ReadPipe(pipettes[READ], pipe_err[READ]);
 
   close(pipettes[READ]);
+  close(pipe_err[READ]);
 
-  return CmdExprData(job.Status(), str_out, "");
+  return CmdExprData(job.Status(), str_out, str_err);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,6 +322,8 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
       }
     } else if (piece->type() == AstNode::NodeType::kCmdValueExpr) {
       is_cmd_piece = true;
+
+      // handle expression inside the command, ex: ls ${expr + 2}
       CmdValueExpr* cmd_expr = static_cast<CmdValueExpr*>(piece);
       str_part +=  ResolveCmdExpr(this, cmd_expr);
       blank_after = cmd_expr->blank_after();
@@ -427,12 +456,14 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
   const int WRITE = 1;
 
   int pipettes[2];
+  int pipe_err[2];
 
   pipe(pipettes);
+  pipe(pipe_err);
 
   Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
-  job.stderr_ = STDERR_FILENO;
+  job.stderr_ = pipe_err[WRITE];
   job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
   job.wait_ = true;
@@ -440,21 +471,14 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
   PrepareData(job, node);
   job.LaunchJob(true);
 
-  char buf[PIPE_BUF];
-  int rd = 0;
+  std::string str_out, str_err;
 
-  rd = read(pipettes[READ], buf, PIPE_BUF);
-
-  std::string str_out = "";
-
-  if (rd > 0) {
-    buf[rd] = '\0';
-    str_out += buf;
-  }
+  std::tie(str_out, str_err) = ReadPipe(pipettes[READ], pipe_err[READ]);
 
   close(pipettes[READ]);
+  close(pipe_err[READ]);
 
-  return CmdExprData(job.Status(), str_out, "");
+  return CmdExprData(job.Status(), str_out, str_err);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -578,12 +602,14 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
   const int WRITE = 1;
 
   int pipettes[2];
+  int pipe_err[2];
 
   pipe(pipettes);
+  pipe(pipe_err);
 
   Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
-  job.stderr_ = STDERR_FILENO;
+  job.stderr_ = pipe_err[WRITE];
   job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
   job.wait_ = true;
@@ -591,21 +617,15 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
   PopulateCmd(job, node);
   job.LaunchJob(true);
 
-  char buf[PIPE_BUF];
-  int rd = 0;
-
-  rd = read(pipettes[READ], buf, PIPE_BUF);
-
   std::string str_out = "";
+  std::string str_err = "";
 
-  if (rd > 0) {
-    buf[rd] = '\0';
-    str_out += buf;
-  }
+  std::tie(str_out, str_err) = ReadPipe(pipettes[READ], pipe_err[READ]);
 
   close(pipettes[READ]);
+  close(pipe_err[READ]);
 
-  return CmdExprData(job.Status(), str_out, "");
+  return CmdExprData(job.Status(), str_out, str_err);
 }
 
 std::string ResolveCmdExpr(Executor* parent, CmdValueExpr* cmd_expr) {
