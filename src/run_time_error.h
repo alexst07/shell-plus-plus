@@ -99,8 +99,9 @@ class RunTimeError : public std::exception {
     return pos_;
   }
 
-  void AppendMsg(internal::Message&& msg) {
+  RunTimeError& AppendMsg(internal::Message&& msg) {
     stack_msg_.Push(std::move(msg));
+    return *this;
   }
 
   internal::Messages& messages() {

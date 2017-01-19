@@ -74,9 +74,19 @@ class ModuleImportObject: public Object {
   ModuleImportObject(std::string module_name, bool is_file_path,
                      ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
+      , interpreter_(false)
       , module_name_(module_name)
       , is_file_path_(is_file_path) {
-    interpreter_.Exec(module_name_);
+    try {
+      interpreter_.Exec(module_name_);
+    } catch (RunTimeError& e) {
+      Message msg(Message::Severity::ERR, boost::format(e.msg()), e.pos().line,
+                  e.pos().col);
+
+      throw RunTimeError (RunTimeError::ErrorCode::IMPORT,
+                          boost::format("import: %1% error")%module_name_)
+          .AppendMsg(std::move(msg));
+    }
   }
 
   virtual ~ModuleImportObject() {}

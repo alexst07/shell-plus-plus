@@ -32,10 +32,10 @@
 namespace seti {
 namespace internal {
 
-Interpreter::Interpreter()
+Interpreter::Interpreter(bool main)
     : symbol_table_(SymbolTablePtr(new SymbolTable))
     , symbol_table_stack_(symbol_table_)
-    , main_(true) {
+    , main_(main) {
   AlocTypes(symbol_table_stack_);
 
   module::stdf::RegisterModule(symbol_table_stack_);

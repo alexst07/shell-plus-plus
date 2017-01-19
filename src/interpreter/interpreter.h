@@ -26,7 +26,7 @@ namespace internal {
 
 class Interpreter {
  public:
-  Interpreter();
+  Interpreter(bool main = false);
 
   ~Interpreter();
 
