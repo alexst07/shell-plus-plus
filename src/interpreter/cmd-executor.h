@@ -95,9 +95,14 @@ class CmdIoRedirectListExecutor: public Executor {
 
   int GetInteger(Literal* integer);
 
-  static std::string FileName(Executor *parent, FilePathCmd* file_path);
+  static std::string FileName(Executor *parent, FilePathCmd* file_path,
+                              bool trim = true);
 
   void PrepareData(Job &job, CmdIoRedirectList *node);
+
+  int Var2Pipe(std::string var);
+
+  int Str2Pipe(const std::string& str);
 };
 
 class CmdPipeSequenceExecutor: public Executor {
@@ -123,7 +128,6 @@ std::string ResolveCmdExpr(Executor *parent, CmdValueExpr *cmd_expr);
 int CreateFile(std::string file_name);
 int AppendFile(std::string file_name);
 int ReadFile(std::string file_name);
-int Var2Pipe(std::string var, SymbolTableStack& sym_tab);
 
 }
 }

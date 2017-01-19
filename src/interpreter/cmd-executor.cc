@@ -353,7 +353,8 @@ int CmdIoRedirectListExecutor::GetInteger(Literal* integer) {
 }
 
 std::string CmdIoRedirectListExecutor::FileName(Executor* parent,
-                                                FilePathCmd* file_path) {
+                                                FilePathCmd* file_path,
+                                                bool trim) {
   std::vector<AstNode*> pieces = file_path->children();
   std::string str_part = "";
 
@@ -379,9 +380,52 @@ std::string CmdIoRedirectListExecutor::FileName(Executor* parent,
     }
   }
 
-  boost::trim(str_part);
+  if (trim) {
+    boost::trim(str_part);
+  }
 
   return str_part;
+}
+
+int CmdIoRedirectListExecutor::Var2Pipe(std::string var) {
+  ObjectPtr obj = symbol_table_stack().Lookup(var, false).SharedAccess();
+
+  if (obj->type() != Object::ObjectType::STRING) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type: %1% has no cmd interface")%
+                       static_cast<TypeObject&>(*obj->ObjType()).name());
+  }
+
+  const int READ = 0;
+  const int WRITE = 1;
+
+  int pipettes[2];
+
+  pipe(pipettes);
+
+  const std::string& str = static_cast<StringObject&>(*obj).value();
+  const char* buf = str.c_str();
+
+  write(pipettes[WRITE], buf, str.length());
+  close(pipettes[WRITE]);
+
+  return pipettes[READ];
+}
+
+int CmdIoRedirectListExecutor::Str2Pipe(const std::string& str) {
+  const int READ = 0;
+  const int WRITE = 1;
+
+  int pipettes[2];
+
+  pipe(pipettes);
+
+  const char* buf = str.c_str();
+
+  write(pipettes[WRITE], buf, str.length());
+  close(pipettes[WRITE]);
+
+  return pipettes[READ];
 }
 
 void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
@@ -400,7 +444,14 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
       fd = ReadFile(file_name);
       job.stdin_ = fd;
     } else if (l->kind() == TokenKind::SHL) {
-      fd = Var2Pipe(file_name, symbol_table_stack());
+      // when o redirect operator is <<, the string is used in stdin
+      // so, the new lines or space must be keept, insted of file names
+      // where we maust execute a trim operation
+      file_name = FileName(this, l->file_path_cmd(), false);
+      fd = Str2Pipe(file_name);
+      job.stdin_ = fd;
+    } else if (l->kind() == TokenKind::SSHL) {
+      fd = Var2Pipe(file_name);
       job.stdin_ = fd;
     }
 
@@ -682,31 +733,6 @@ int ReadFile(std::string file_name) {
     throw RunTimeError(RunTimeError::ErrorCode::FILE,
                        boost::format("%1%: %2%")% file_name% strerror(errno));
   }
-}
-
-int Var2Pipe(std::string var, SymbolTableStack& sym_tab) {
-  ObjectPtr obj = sym_tab.Lookup(var, false).SharedAccess();
-
-  if (obj->type() != Object::ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type: %1% has no cmd interface")%
-                       static_cast<TypeObject&>(*obj->ObjType()).name());
-  }
-
-  const int READ = 0;
-  const int WRITE = 1;
-
-  int pipettes[2];
-
-  pipe(pipettes);
-
-  const std::string& str = static_cast<StringObject&>(*obj).value();
-  const char* buf = str.c_str();
-
-  write(pipettes[WRITE], buf, str.length());
-  close(pipettes[WRITE]);
-
-  return pipettes[READ];
 }
 
 }

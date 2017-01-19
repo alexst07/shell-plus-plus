@@ -161,6 +161,8 @@ class Parser {
       case TokenKind::GREATER_THAN:
       case TokenKind::SHL:
       case TokenKind::SAR:
+      case TokenKind::SSHL:
+      case TokenKind::SSAR:
         return true;
         break;
 

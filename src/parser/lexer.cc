@@ -222,7 +222,7 @@ TokenStream Lexer::Scanner() {
         break;
 
       case '<':
-        // < <= << <<=
+        // < <= << <<= <<<
         Advance();
         check_blank = c_;
         if (c_ == '=') {
@@ -231,6 +231,8 @@ TokenStream Lexer::Scanner() {
           Advance();
           if (c_ == '=') {
             token = Select(TokenKind::ASSIGN_SHL);
+          } else if (c_ == '<') {
+            token = Select(TokenKind::SSHL);
           } else {
             token = GetToken(TokenKind::SHL);
           }
@@ -240,7 +242,7 @@ TokenStream Lexer::Scanner() {
         break;
 
       case '>':
-        // > >= >> >>=
+        // > >= >> >>= >>>
         Advance();
         check_blank = c_;
         if (c_ == '=') {
@@ -249,6 +251,8 @@ TokenStream Lexer::Scanner() {
           Advance();
           if (c_ == '=') {
             token = Select(TokenKind::ASSIGN_SAR);
+          } else if (c_ == '>') {
+            token = Select(TokenKind::SSAR);
           } else {
             token = GetToken(TokenKind::SAR);
           }
