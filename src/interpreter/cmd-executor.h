@@ -114,10 +114,6 @@ class CmdPipeSequenceExecutor: public Executor {
   int Exec(CmdPipeSequence *node, bool wait);
   CmdExprData Exec(CmdPipeSequence *node);
   void PopulateCmd(Job& job, CmdPipeSequence *node);
-  void InputFile(CmdIoRedirectList* file, Job &job);
-  void OutputFile(CmdIoRedirectList* cmd_io, Job &job);
-  void SelectInterface(CmdIoRedirect* io, Job& job, int fd);
-  int GetInteger(Literal* integer);
   void AddCommand(Job& job, Cmd *cmd);
 };
 

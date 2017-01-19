@@ -537,59 +537,6 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void CmdPipeSequenceExecutor::InputFile(CmdIoRedirectList* file, Job& job) {
-  for (auto& io: file->children()) {
-    std::string file_name =
-        CmdIoRedirectListExecutor::FileName(this, io->file_path_cmd());
-
-    int fd;
-    // get only the input file
-    if (io->kind() == TokenKind::LESS_THAN) {
-      fd = ReadFile(file_name);
-      job.stdin_ = fd;
-    }
-  }
-}
-
-int CmdPipeSequenceExecutor::GetInteger(Literal* integer) {
-  return boost::get<int>(integer->value());
-}
-
-void CmdPipeSequenceExecutor::SelectInterface(CmdIoRedirect* io, Job& job,
-                                              int fd) {
-  if (io->all()) {
-    job.stdout_ = fd;
-    job.stderr_ = fd;
-  } else {
-    if (io->has_integer()) {
-      int num = GetInteger(io->integer());
-      // 2 is the error interface
-      if (num == 2) {
-        job.stderr_ = fd;
-      } else if (num == 1) {
-        job.stdout_ = fd;
-      }
-    } else {
-      job.stdout_ = fd;
-    }
-  }
-}
-
-void CmdPipeSequenceExecutor::OutputFile(CmdIoRedirectList* cmd_io, Job &job) {
-  for (auto& io: cmd_io->children()) {
-    int fd;
-    std::string file_name =
-        CmdIoRedirectListExecutor::FileName(this, io->file_path_cmd());
-
-    if (io->kind() == TokenKind::GREATER_THAN) {
-      fd = CreateFile(file_name);
-      SelectInterface(io, job, fd);
-    } else if (io->kind() == TokenKind::SAR) {
-      fd = AppendFile(file_name);
-      SelectInterface(io, job, fd);
-    }
-  }
-}
 
 void CmdPipeSequenceExecutor::AddCommand(Job& job, Cmd* cmd) {
   // io command can only have simple command
@@ -608,32 +555,17 @@ void CmdPipeSequenceExecutor::AddCommand(Job& job, Cmd* cmd) {
 
 void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
   std::vector<Cmd*> cmds = node->cmds();
-  int i = 0;
 
   for (auto& cmd: cmds) {
-    if (i == 0) {
-      // only in the first pipe can have input file
-      if (cmd->type() == AstNode::NodeType::kCmdIoRedirectList) {
-        CmdIoRedirectList* cmd_io = static_cast<CmdIoRedirectList*>(cmd);
-        InputFile(cmd_io, job);
-        AddCommand(job, cmd_io->cmd());
-      } else {
-        AddCommand(job, cmd);
-      }
-    } else if (i == (cmds.size() - 1)) {
-      // the last pipe can have output file
-      if (cmd->type() == AstNode::NodeType::kCmdIoRedirectList) {
-        CmdIoRedirectList* cmd_io = static_cast<CmdIoRedirectList*>(cmd);
-        OutputFile(cmd_io, job);
-        AddCommand(job, cmd_io->cmd());
-      } else {
-        AddCommand(job, cmd);
-      }
+    if (cmd->type() == AstNode::NodeType::kCmdIoRedirectList) {
+      CmdIoRedirectList* cmd_io = static_cast<CmdIoRedirectList*>(cmd);
+      CmdIoRedirectListExecutor io_process(this, symbol_table_stack());
+
+      io_process.PrepareData(job, cmd_io);
+      AddCommand(job, cmd_io->cmd());
     } else {
       AddCommand(job, cmd);
     }
-
-    i++;
   }
 }
 
