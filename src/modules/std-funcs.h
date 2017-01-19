@@ -88,13 +88,26 @@ class AssertFunc: public FuncObject {
   ObjectFactory obj_factory_;
 };
 
+class IsInteractiveFunc: public FuncObject {
+ public:
+  IsInteractiveFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
 inline void RegisterModule(SymbolTableStack& sym_table) {
   ModuleCustonObject::MemberTable table = {
     {"print",                 ObjectMethod<PrintFunc>(sym_table)},
     {"print_err",             ObjectMethod<PrintErrFunc>(sym_table)},
     {"read",                  ObjectMethod<ReadFunc>(sym_table)},
     {"len",                   ObjectMethod<LenFunc>(sym_table)},
-    {"assert",                ObjectMethod<AssertFunc>(sym_table)}
+    {"assert",                ObjectMethod<AssertFunc>(sym_table)},
+    {"is_interactive",        ObjectMethod<IsInteractiveFunc>(sym_table)}
   };
 
   for (auto& pair: table) {

@@ -76,6 +76,21 @@ ObjectPtr AssertFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewNull();
 }
 
+ObjectPtr IsInteractiveFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 0, params)
+
+  int shell_terminal;
+  int shell_is_interactive;
+
+  // see if we are running interactively
+  shell_terminal = STDIN_FILENO;
+  shell_is_interactive = isatty(shell_terminal);
+
+  bool v = shell_is_interactive?true:false;
+
+  return obj_factory_.NewBool(v);
+}
+
 }
 }
 }
