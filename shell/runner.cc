@@ -41,24 +41,36 @@ void Runner::Exec(std::string name) {
 }
 
 void Runner::ExecInterative() {
-  interpreter_.ExecInterative([](bool concat){
-    char *input;
-    std::string str_source;
+  while (true) {
+    try {
+      interpreter_.ExecInterative([](bool concat){
+        char *input;
+        std::string str_source;
 
-    if (concat) {
-      input = readline("| ");
-    } else {
-      input = readline("> ");
+        if (concat) {
+          input = readline("| ");
+        } else {
+          input = readline("> ");
+        }
+
+        if (input == nullptr) {
+          exit(0);
+        }
+
+        str_source = input;
+        free(input);
+        return str_source;
+      });
+    } catch (RunTimeError& e) {
+      std::cout << "Error: " << e.pos().line << ": " << e.pos().col
+                << ": " << e.what() << "\n\n";
+
+      for (auto& msg: e.messages()) {
+        std::cout << "Error: " << msg.line() << ": " << msg.pos()
+                  << ": " << msg.msg() << "\n";
+      }
     }
-
-    if (input == nullptr) {
-      exit(0);
-    }
-
-    str_source = input;
-    free(input);
-    return str_source;
-  });
+  }
 }
 
 }
