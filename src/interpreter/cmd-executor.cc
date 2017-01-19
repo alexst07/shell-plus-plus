@@ -26,6 +26,7 @@
 #include "stmt-executor.h"
 #include "scope-executor.h"
 #include "utils/scope-exit.h"
+#include "objects/obj-type.h"
 
 namespace seti {
 namespace internal {
@@ -398,6 +399,9 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
     } else if (l->kind() == TokenKind::LESS_THAN) {
       fd = ReadFile(file_name);
       job.stdin_ = fd;
+    } else if (l->kind() == TokenKind::SHL) {
+      fd = Var2Pipe(file_name, symbol_table_stack());
+      job.stdin_ = fd;
     }
 
     if (l->all()) {
@@ -678,6 +682,31 @@ int ReadFile(std::string file_name) {
     throw RunTimeError(RunTimeError::ErrorCode::FILE,
                        boost::format("%1%: %2%")% file_name% strerror(errno));
   }
+}
+
+int Var2Pipe(std::string var, SymbolTableStack& sym_tab) {
+  ObjectPtr obj = sym_tab.Lookup(var, false).SharedAccess();
+
+  if (obj->type() != Object::ObjectType::STRING) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type: %1% has no cmd interface")%
+                       static_cast<TypeObject&>(*obj->ObjType()).name());
+  }
+
+  const int READ = 0;
+  const int WRITE = 1;
+
+  int pipettes[2];
+
+  pipe(pipettes);
+
+  const std::string& str = static_cast<StringObject&>(*obj).value();
+  const char* buf = str.c_str();
+
+  write(pipettes[WRITE], buf, str.length());
+  close(pipettes[WRITE]);
+
+  return pipettes[READ];
 }
 
 }

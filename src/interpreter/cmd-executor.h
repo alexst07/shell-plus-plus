@@ -123,6 +123,7 @@ std::string ResolveCmdExpr(Executor *parent, CmdValueExpr *cmd_expr);
 int CreateFile(std::string file_name);
 int AppendFile(std::string file_name);
 int ReadFile(std::string file_name);
+int Var2Pipe(std::string var, SymbolTableStack& sym_tab);
 
 }
 }
