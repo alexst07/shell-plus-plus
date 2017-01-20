@@ -28,6 +28,7 @@
 #include "modules/std-funcs.h"
 #include "modules/path.h"
 #include "objects/object-factory.h"
+#include "modules/std-cmds.h"
 
 namespace seti {
 namespace internal {
@@ -40,6 +41,7 @@ Interpreter::Interpreter(bool main)
 
   module::stdf::RegisterModule(symbol_table_stack_);
   module::path::RegisterModule(symbol_table_stack_);
+  cmds::stdf::RegisterCmds(symbol_table_stack_);
 
   RegisterVars();
 }

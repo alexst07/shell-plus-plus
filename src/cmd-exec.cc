@@ -114,10 +114,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
 }
 
 void Process::LaunchCmd(CmdEntryPtr cmd) {
-  if (cmd->type() == CmdEntry::Type::kDecl) {
-    CmdDeclEntry& cmd_ref = static_cast<CmdDeclEntry&>(*cmd);
-    cmd_ref.Exec(parent_, std::move(args_));
-  }
+  cmd->Exec(parent_, std::move(args_));
 }
 
 int Job::MarkProcessStatus(pid_t pid, int status) {

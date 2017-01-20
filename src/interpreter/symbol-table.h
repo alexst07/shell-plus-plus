@@ -28,6 +28,7 @@ namespace seti {
 namespace internal {
 
 class Object;
+class CmdEntry;
 
 class SymbolAttr {
  public:
@@ -94,26 +95,6 @@ class SymbolAttr {
   std::shared_ptr<Object> value_;
 };
 
-// command entry class
-class CmdEntry {
- public:
-  enum class Type {
-    kDecl,
-    kAlias
-  };
-
-  CmdEntry(Type type): type_(type) {}
-
-  Type type() const noexcept {
-    return type_;
-  }
-
- private:
-  Type type_;
-};
-
-using CmdEntryPtr = std::shared_ptr<CmdEntry>;
-
 class SymbolTable;
 typedef std::shared_ptr<SymbolTable> SymbolTablePtr;
 
@@ -126,7 +107,7 @@ class SymbolTable {
   };
 
   using SymbolMap = std::unordered_map<std::string, SymbolAttr>;
-  using CmdMap = std::unordered_map<std::string, CmdEntryPtr>;
+  using CmdMap = std::unordered_map<std::string, std::shared_ptr<CmdEntry>>;
   using SymbolIterator = SymbolMap::iterator;
   using CmdIterator = CmdMap::iterator;
   using SymbolConstIterator = SymbolMap::const_iterator;
@@ -189,18 +170,18 @@ class SymbolTable {
     return true;
   }
 
-  void SetCmd(const std::string& name, CmdEntryPtr cmd) {
+  void SetCmd(const std::string& name, std::shared_ptr<CmdEntry> cmd) {
     cmd_map_[name] = cmd;
   }
 
-  inline CmdEntryPtr LookupCmd(const std::string& name) {
+  inline std::shared_ptr<CmdEntry> LookupCmd(const std::string& name) {
     auto it = cmd_map_.find(name);
 
     if (it != cmd_map_.end()) {
       return it->second;
     }
 
-    return CmdEntryPtr(nullptr);
+    return std::shared_ptr<CmdEntry>(nullptr);
   }
 
   inline bool RemoveCmd(const std::string& name) {
@@ -415,13 +396,13 @@ class SymbolTableStack: public SymbolTableStackBase {
     main_table_.lock()->SetValue(name, value);
   }
 
-  CmdEntryPtr LookupCmd(const std::string& name) {
-    CmdEntryPtr cmd = main_table_.lock()->LookupCmd(name);
+  std::shared_ptr<CmdEntry> LookupCmd(const std::string& name) {
+    std::shared_ptr<CmdEntry> cmd = main_table_.lock()->LookupCmd(name);
 
     return cmd;
   }
 
-  void SetCmd(const std::string& name, CmdEntryPtr cmd) {
+  void SetCmd(const std::string& name, std::shared_ptr<CmdEntry> cmd) {
     main_table_.lock()->SetCmd(name, cmd);
   }
 

@@ -25,6 +25,7 @@
 
 #include "objects/abstract-obj.h"
 #include "interpreter/symbol-table.h"
+#include "cmd-entry.h"
 
 namespace seti {
 namespace internal {
