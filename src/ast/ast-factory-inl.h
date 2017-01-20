@@ -235,9 +235,9 @@ class AstNodeFactory {
   inline std::unique_ptr<FunctionDeclaration> NewFunctionDeclaration(
       std::vector<std::unique_ptr<FunctionParam>>&& params,
       std::unique_ptr<Identifier> name,
-      std::unique_ptr<Block> block) {
+      std::unique_ptr<Block> block, Position pos) {
     return std::unique_ptr<FunctionDeclaration>(new FunctionDeclaration(
-        std::move(params), std::move(name), std::move(block), fn_pos_()));
+        std::move(params), std::move(name), std::move(block), pos));
   }
 
   inline std::unique_ptr<ArrayInstantiation> NewArrayInstantiation(

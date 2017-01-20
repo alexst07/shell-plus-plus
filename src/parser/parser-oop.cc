@@ -20,6 +20,9 @@ namespace seti {
 namespace internal {
 
 ParserResult<Declaration> Parser::ParserMethodDeclaration() {
+  // get the method position
+  Position pos = {token_.Line(), token_.Col()};
+
   // Advance func keyword
   Advance();
   ValidToken();
@@ -72,13 +75,13 @@ ParserResult<Declaration> Parser::ParserMethodDeclaration() {
   if (token_ != TokenKind::LBRACE) {
     return ParserResult<Declaration>(factory_.NewFunctionDeclaration(
         std::move(func_params), std::move(id),
-        std::unique_ptr<Block>(nullptr)));
+        std::unique_ptr<Block>(nullptr), pos));
   }
 
   std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
 
   return ParserResult<Declaration>(factory_.NewFunctionDeclaration(
-      std::move(func_params), std::move(id), std::move(block)));
+      std::move(func_params), std::move(id), std::move(block), pos));
 }
 
 ParserResult<ClassBlock> Parser::ParserClassBlock() {

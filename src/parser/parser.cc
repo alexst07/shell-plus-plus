@@ -224,6 +224,8 @@ ParserResult<FunctionDeclaration> Parser::ParserFunctionDeclaration(
     return ParserResult<FunctionDeclaration>(); // Error
   }
 
+  Position pos = {token_.Line(), token_.Col()};
+
   Advance();
   ValidToken();
 
@@ -275,7 +277,7 @@ ParserResult<FunctionDeclaration> Parser::ParserFunctionDeclaration(
   std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
 
   return ParserResult<FunctionDeclaration>(factory_.NewFunctionDeclaration(
-      std::move(func_params), std::move(id), std::move(block)));
+      std::move(func_params), std::move(id), std::move(block), pos));
 }
 
 ParserResult<Statement> Parser::ParserForInStmt() {
@@ -424,7 +426,6 @@ ParserResult<Statement> Parser::ParserBlock() {
   // handle empty block
   if (ValidToken() == TokenKind::RBRACE) {
     Advance();
-    ValidToken();
     return ParserResult<Statement>(factory_.NewBlock(stmt_list.MoveAstNode()));
   }
 
@@ -438,7 +439,6 @@ ParserResult<Statement> Parser::ParserBlock() {
   }
 
   Advance();
-  ValidToken();
 
   return ParserResult<Statement>(factory_.NewBlock(stmt_list.MoveAstNode()));
 }
@@ -450,6 +450,12 @@ ParserResult<StatementList> Parser::ParserStmtList() {
   // stmt list is inside the block, it has to check token
   // RBRACE(}) to know if it is in the end of the block
   while (token_.IsNot(TokenKind::EOS, TokenKind::RBRACE)) {
+    // ignore new line or ; if it come before any statement
+    if ((token_ == TokenKind::NWL) || (token_ == TokenKind::SEMI_COLON)) {
+      Advance();
+      continue;
+    }
+
     ValidToken();
     ParserResult<Statement> stmt(ParserStmt());
     if (!stmt) {
@@ -458,14 +464,12 @@ ParserResult<StatementList> Parser::ParserStmtList() {
 
     stmt_list.push_back(stmt.MoveAstNode());
 
-    // uses new line char as end of statement, and advance until valid
-    // a valid token
-    if (token_ == TokenKind::NWL) {
-      ValidToken();
-    } else if (token_.IsAny(TokenKind::EOS, TokenKind::RBRACE)) {
+    if (token_.IsAny(TokenKind::EOS, TokenKind::RBRACE)) {
       // end of file and end of block are a valid end for statement
       break;
     } else {
+      // any other char than end, continue, and the statement will decide
+      // if the char in valid or not
       continue;
     }
   }
@@ -494,33 +498,58 @@ ParserResult<Statement> Parser::ParserWhileStmt() {
 }
 
 ParserResult<Statement> Parser::ParserStmt() {
+  ParserResult<Statement> res;
+  bool check_end_stmt = false;
+
   if (token_ == TokenKind::KW_IF) {
-    return ParserIfStmt();
+    res = std::move(ParserIfStmt());
   } else if (token_ == TokenKind::KW_WHILE) {
-    return ParserWhileStmt();
+    res = std::move(ParserWhileStmt());
   } else if (token_ == TokenKind::KW_BREAK) {
-    return ParserBreakStmt();
+    check_end_stmt = true;
+    res = std::move(ParserBreakStmt());
   } else if (token_ == TokenKind::KW_CONTINUE) {
-    return ParserContinueStmt();
+    check_end_stmt = true;
+    res = std::move(ParserContinueStmt());
   } else if (token_ == TokenKind::KW_RETURN) {
-    return ParserReturnStmt();
+    check_end_stmt = true;
+    res = std::move(ParserReturnStmt());
   } else if (token_ == TokenKind::KW_SWITCH) {
-    return ParserSwitchStmt();
+    res = std::move(ParserSwitchStmt());
   } else if (token_ == TokenKind::KW_FOR) {
-    return ParserForInStmt();
+    res = std::move(ParserForInStmt());
   } else if (token_ == TokenKind::KW_DEFER) {
-    return ParserDeferStmt();
+    check_end_stmt = true;
+    res = std::move(ParserDeferStmt());
   } else if (token_ == TokenKind::KW_IMPORT) {
-    return ParserImportStmt();
+    check_end_stmt = true;
+    res = std::move(ParserImportStmt());
   } else if (token_ == TokenKind::LBRACE) {
-    return ParserBlock();
+    res = std::move(ParserBlock());
   } else if (IsStmtDecl()) {
-    return ParserStmtDecl();
+    res = std::move(ParserStmtDecl());
   } else if (MatchLangStmt()) {
-    return ParserSimpleStmt();
+    check_end_stmt = true;
+    res = std::move(ParserSimpleStmt());
   } else {
-    return ParserCmdFull();
+    check_end_stmt = true;
+    res = std::move(ParserCmdFull());
   }
+
+  if (check_end_stmt) {
+    if (token_.IsAny(TokenKind::EOS, TokenKind::RBRACE)) {
+      return res;
+    } else if ((token_ == TokenKind::NWL) ||
+               (token_ == TokenKind::SEMI_COLON)) {
+      Advance();
+    } else {
+      ErrorMsg(boost::format("expected end of statement, got %1%")%
+               TokenValueStr());
+      return ParserResult<Statement>(); // Error
+    }
+  }
+
+  return res;
 }
 
 ParserResult<Statement> Parser::ParserCmdFull() {
@@ -533,8 +562,6 @@ ParserResult<Statement> Parser::ParserCmdFull() {
 
   if (token_ == TokenKind::BIT_AND) {
     background_exec = true;
-    Advance();
-  } else if (token_ == TokenKind::SEMI_COLON) {
     Advance();
   } else if (!TokenEndFullCmd()) {
     ErrorMsg(boost::format("unexpected token in the end of command"));
@@ -798,6 +825,7 @@ ParserResult<Statement> Parser::ParserSimpleStmt() {
   // parser the left side, if there is a comma, or assign token
   // the stmt must has a right value list
   do {
+    ValidToken();
     ParserResult<Expression> exp = ParserPostExp();
     vec_list.push_back(exp.MoveAstNode());
 
@@ -849,6 +877,7 @@ ParserResult<ExpressionList> Parser::ParserPostExpList() {
   std::vector<std::unique_ptr<Expression>> vec_list;
 
   do {
+    ValidToken();
     ParserResult<Expression> exp(ParserPostExp());
     vec_list.push_back(exp.MoveAstNode());
   } while (CheckComma());
@@ -873,6 +902,7 @@ ParserResult<AssignableList> Parser::ParserAssignableList() {
   std::vector<std::unique_ptr<AssignableValue>> vec_values;
 
   do {
+    ValidToken();
     ParserResult<AssignableValue> value(ParserAssignable());
     vec_values.push_back(value.MoveAstNode());
   } while (CheckComma());
@@ -885,6 +915,7 @@ ParserResult<ExpressionList> Parser::ParserExpList() {
   std::vector<std::unique_ptr<Expression>> vec_exp;
 
   do {
+    ValidToken();
     ParserResult<Expression> exp = ParserOrExp();
     vec_exp.push_back(exp.MoveAstNode());
   } while (CheckComma());
@@ -1238,6 +1269,7 @@ ParserResult<Expression> Parser::ParserDictionary() {
   }
 
   do {
+    ValidToken();
     std::unique_ptr<KeyValue> key_value;
     bool ok;
     std::tie(key_value, ok) = ParserKeyValue();

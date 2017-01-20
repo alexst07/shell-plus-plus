@@ -94,7 +94,6 @@ class Parser {
   inline bool CheckComma() {
     if (token_.Is(TokenKind::COMMA)) {
       Advance();
-      ValidToken();
       return true;
     } else {
       return false;
@@ -193,6 +192,7 @@ class Parser {
     bool r = token_.IsAny(TokenKind::NWL,
                           TokenKind::EOS,
                           TokenKind::RBRACE,
+                          TokenKind::SEMI_COLON,
                           TokenKind::RPAREN);
     return r;
   }

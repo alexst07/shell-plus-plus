@@ -1,6 +1,6 @@
 # param error test
 # --output:start
-# Error: 10: 1: only last parameter can be variadic
+# Error: 6: 1: only last parameter can be variadic
 # --output:end
 
 func test(a, c..., d) {
