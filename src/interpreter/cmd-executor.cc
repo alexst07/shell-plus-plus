@@ -557,11 +557,13 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
 
   Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
-  job.stderr_ = pipe_err[WRITE];
-  job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
 
   PopulateCmd(job, node);
+
+  job.stderr_ = pipe_err[WRITE];
+  job.stdout_ = pipettes[WRITE];
+
   job.LaunchJob(true);
 
   std::string str_out = "";
