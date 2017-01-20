@@ -179,20 +179,20 @@ try {
     case AstNode::NodeType::kCmdAndOr: {
       CmdAndOr* cmd = static_cast<CmdAndOr*>(node);
       if (background) {
-        // background all command
-        return ExecCmdBinOp(cmd, true);
-      } else {
         // as one command must background for other to know the result
         // but the system cant waint, so, create a new process
         // to execute the whole command
         pid_t pid;
         pid = fork ();
         if (pid == 0) {
-          int r = ExecCmdBinOp(cmd, true);
+          int r = ExecCmdBinOp(cmd, false);
           exit(r);
         }
 
         return 0;
+      } else {
+        // background all command
+        return ExecCmdBinOp(cmd, false);
       }
     } break;
 
