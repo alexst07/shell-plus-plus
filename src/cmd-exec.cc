@@ -20,6 +20,7 @@
 #include <sys/wait.h>
 
 #include "interpreter/cmd-executor.h"
+#include "env-shell.h"
 
 namespace seti {
 namespace internal {
@@ -48,8 +49,39 @@ int WaitCmd(int pid) {
   return status;
 }
 
-void Process::LaunchProcess(int infile, int outfile, int errfile) {
-  /* Set the standard input/output channels of the new process.  */
+void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
+                            bool foreground) {
+  pid_t pid;
+  bool shell_is_interactive = EnvShell::instance()->shell_is_interactive();
+  int shell_terminal = EnvShell::instance()->shell_terminal();
+
+  if (shell_is_interactive) {
+    // Put the process into the process group and give the process group
+    // the terminal, if appropriate.
+    // This has to be done both by the shell and in the individual
+    // child processes because of potential race conditions.
+    pid = getpid ();
+
+    if (pgid == 0) {
+      pgid = pid;
+    }
+
+    setpgid (pid, pgid);
+
+    if (foreground) {
+      tcsetpgrp (shell_terminal, pgid);
+    }
+
+    /* Set the handling for job control signals back to the default.  */
+    signal (SIGINT, SIG_DFL);
+    signal (SIGQUIT, SIG_DFL);
+    signal (SIGTSTP, SIG_DFL);
+    signal (SIGTTIN, SIG_DFL);
+    signal (SIGTTOU, SIG_DFL);
+    signal (SIGCHLD, SIG_DFL);
+  }
+
+  // set the standard input/output channels of the new process
   if (infile != STDIN_FILENO) {
     dup2 (infile, STDIN_FILENO);
     close (infile);
@@ -128,10 +160,6 @@ int Job::JobIsCompleted() {
 }
 
 void Job::WaitForJob() {
-  if (!wait_) {
-    return;
-  }
-
   int status;
   pid_t pid;
 
@@ -153,26 +181,30 @@ int Job::Status() {
 }
 
 void Job::PutJobInForeground(int cont) {
-  /* Put the job into the foreground.  */
-  tcsetpgrp (shell_terminal_, pgid_);
+  int shell_terminal = EnvShell::instance()->shell_terminal();
+  struct termios* tmodes = EnvShell::instance()->shell_tmodes();
+  pid_t shell_pgid = EnvShell::instance()->shell_pgid();
 
-  /* Send the job a continue signal, if necessary.  */
+  // put the job into the foreground
+  tcsetpgrp (shell_terminal, pgid_);
+
+  // send the job a continue signal, if necessary
   if (cont) {
-    tcsetattr (shell_terminal_, TCSADRAIN, &tmodes_);
+    tcsetattr (shell_terminal, TCSADRAIN, &shell_tmodes_);
     if (kill (- pgid_, SIGCONT) < 0) {
       perror ("kill (SIGCONT)");
     }
   }
 
-  /* Wait for it to report.  */
+  // wait for it to report
   WaitForJob();
 
-  /* Put the shell back in the foreground.  */
-  tcsetpgrp(shell_terminal_, shell_pgid_);
+  // put the shell back in the foreground
+  tcsetpgrp(shell_terminal, shell_pgid);
 
   /* Restore the shell’s terminal modes.  */
-  tcgetattr(shell_terminal_, &tmodes_);
-  tcsetattr(shell_terminal_, TCSADRAIN, &shell_tmodes_);
+  tcgetattr(shell_terminal, &shell_tmodes_);
+  tcsetattr(shell_terminal, TCSADRAIN, tmodes);
 }
 
 void Job::PutJobInBackground(int cont) {
@@ -189,7 +221,7 @@ void Job::LaunchJob(int foreground) {
 
   infile = stdin_;
   for (size_t i = 0; i < process_.size(); i++) {
-    /* Set up pipes, if necessary.  */
+    // set up pipes, if necessary
     if (i != (process_.size() - 1)) {
       if (pipe (mypipe) < 0) {
         perror ("pipe");
@@ -202,21 +234,30 @@ void Job::LaunchJob(int foreground) {
       outfile = stdout_;
     }
 
-    /* Fork the child processes.  */
+    // fork the child processes
     pid = fork ();
     if (pid == 0) {
-      /* This is the child process.  */
-      process_[i].LaunchProcess(infile, outfile, stderr_);
+      // this is the child process
+      process_[i].LaunchProcess(infile, outfile, stderr_, pgid_, foreground);
     } else if (pid < 0) {
-      /* The fork failed.  */
+      // the fork failed
       perror ("fork");
       exit (1);
     } else {
-      /* This is the parent process.  */
+      // this is the parent process
       process_[i].pid_ = pid;
+      bool shell_is_interactive = EnvShell::instance()->shell_is_interactive();
+
+      if (shell_is_interactive) {
+        if (!pgid_) {
+          pgid_ = pid;
+        }
+
+        setpgid(pid, pgid_);
+      }
     }
 
-    /* Clean up after pipes.  */
+    // clean up after pipes
     if (infile != stdin_)
       close (infile);
     if (outfile != stdout_)
@@ -224,7 +265,9 @@ void Job::LaunchJob(int foreground) {
     infile = mypipe[0];
   }
 
-  if (!shell_is_interactive_)
+  bool shell_is_interactive = EnvShell::instance()->shell_is_interactive();
+
+  if (!shell_is_interactive)
     WaitForJob();
   else if (foreground)
     PutJobInForeground(0);

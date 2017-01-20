@@ -182,7 +182,8 @@ struct Process {
     return *this;
   }
 
-  void LaunchProcess(int infile, int outfile, int errfile);
+  void LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
+                     bool foreground);
 
   void LaunchCmd(CmdEntryPtr cmd);
 
@@ -201,6 +202,7 @@ struct Job {
   Job(SymbolTableStack& sym_tab, bool var_out_mode = false)
       : status_(0)
       , var_out_mode_(var_out_mode)
+      , pgid_(0)
       , sym_tab_(sym_tab.MainTable()) {}
 
   void LaunchJob (int foreground);

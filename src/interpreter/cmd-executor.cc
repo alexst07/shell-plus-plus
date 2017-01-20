@@ -167,12 +167,12 @@ CmdExprData CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd) {
   }
 }
 
-int CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd, bool wait) {
-  int lcmd = ExecCmd(cmd->cmd_left(), wait);
+int CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd, bool background) {
+  int lcmd = ExecCmd(cmd->cmd_left(), background);
 
   if (cmd->kind() == TokenKind::AND) {
     if (lcmd == 0) {
-      int rcmd = ExecCmd(cmd->cmd_right(), wait);
+      int rcmd = ExecCmd(cmd->cmd_right(), background);
       return rcmd;
     }
 
@@ -184,39 +184,39 @@ int CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd, bool wait) {
     return lcmd;
   }
 
-  int rcmd = ExecCmd(cmd->cmd_right(), wait);
+  int rcmd = ExecCmd(cmd->cmd_right(), background);
   return rcmd;
 }
 
 int CmdExecutor::Exec(CmdFull *node) {
-  bool wait = !node->background();
-  return ExecCmd(node->cmd(), wait);
+  bool background = node->background();
+  return ExecCmd(node->cmd(), background);
 }
 
-int CmdExecutor::ExecCmd(Cmd *node, bool wait)
+int CmdExecutor::ExecCmd(Cmd *node, bool background)
 try {
   switch (node->type()) {
     case AstNode::NodeType::kSimpleCmd: {
-      return ExecSimpleCmd(static_cast<SimpleCmd*>(node), wait);
+      return ExecSimpleCmd(static_cast<SimpleCmd*>(node), background);
     } break;
 
     case AstNode::NodeType::kCmdIoRedirectList: {
       CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
-      return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node), wait);
+      return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node), background);
     } break;
 
     case AstNode::NodeType::kCmdPipeSequence: {
       CmdPipeSequenceExecutor cmd_pipe(this, symbol_table_stack());
-      return cmd_pipe.Exec(static_cast<CmdPipeSequence*>(node), wait);
+      return cmd_pipe.Exec(static_cast<CmdPipeSequence*>(node), background);
     } break;
 
     case AstNode::NodeType::kCmdAndOr: {
       CmdAndOr* cmd = static_cast<CmdAndOr*>(node);
-      if (wait) {
-        // wait all command
+      if (background) {
+        // background all command
         return ExecCmdBinOp(cmd, true);
       } else {
-        // as one command must wait for other to know the result
+        // as one command must background for other to know the result
         // but the system cant waint, so, create a new process
         // to execute the whole command
         pid_t pid;
@@ -239,7 +239,7 @@ try {
   throw RunTimeError(e.err_code(), e.msg(), node->pos());
 }
 
-int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool wait) {
+int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool background) {
   SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
 
   std::vector<std::string> cmd_args = simple_cmd.Exec(node);
@@ -251,13 +251,12 @@ int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool wait) {
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = STDOUT_FILENO;
   job.stdin_ = STDIN_FILENO;
-  job.wait_ = wait;
-  job.LaunchJob(wait);
+  job.LaunchJob(!background);
 
-  if (wait) {
+  if (background) {
     return job.Status();
   } else {
-    // if not wait, return as process success
+    // if not background, return as process success
     return 0;
   }
 }
@@ -284,7 +283,6 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
   job.stderr_ = pipe_err[WRITE];
   job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
-  job.wait_ = true;
   job.LaunchJob(true);
 
   std::string str_out;
@@ -490,17 +488,16 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
   job.process_.push_back(std::move(p));
 }
 
-int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool wait) {
+int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
   // starts job struct
   Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = STDOUT_FILENO;
   job.stdin_ = STDIN_FILENO;
-  job.wait_ = wait;
 
   PrepareData(job, node);
-  job.LaunchJob(!wait);
+  job.LaunchJob(!background);
 
   return job.Status();
 }
@@ -521,7 +518,6 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
   job.stderr_ = pipe_err[WRITE];
   job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
-  job.wait_ = true;
 
   PrepareData(job, node);
   job.LaunchJob(true);
@@ -569,17 +565,16 @@ void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
   }
 }
 
-int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool wait) {
+int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
   Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
   job.stderr_ = STDERR_FILENO;
   job.stdout_ = STDOUT_FILENO;
   job.stdin_ = STDIN_FILENO;
-  job.wait_ = wait;
 
   PopulateCmd(job, node);
 
-  job.LaunchJob(wait);
+  job.LaunchJob(!background);
 
   return job.Status();
 }
@@ -599,7 +594,6 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
   job.stderr_ = pipe_err[WRITE];
   job.stdout_ = pipettes[WRITE];
   job.stdin_ = STDIN_FILENO;
-  job.wait_ = true;
 
   PopulateCmd(job, node);
   job.LaunchJob(true);

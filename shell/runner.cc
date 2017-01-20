@@ -22,9 +22,15 @@
 #include <fstream>
 #include <readline/readline.h>
 
+#include "env-shell.h"
+
 namespace seti {
 
-Runner::Runner() {}
+Runner::Runner() {
+  using namespace internal;
+
+  internal::EnvShell::instance()->InitShell();
+}
 
 void Runner::Exec(std::string name) {
   try {
