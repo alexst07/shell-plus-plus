@@ -55,12 +55,12 @@ std::tuple<std::string, std::string> ReadPipe(int pipe_out, int pipe_err) {
   std::string str_err = "";
 
   if (rd > 0) {
-    buf[rd] = '\0';
+    buf[rd < PIPE_BUF?rd:PIPE_BUF-1] = '\0';
     str_out += buf;
   }
 
   if (rd_err > 0) {
-    buf_err[rd_err] = '\0';
+    buf_err[rd_err < PIPE_BUF?rd_err:PIPE_BUF-1] = '\0';
     str_err += buf_err;
   }
 
