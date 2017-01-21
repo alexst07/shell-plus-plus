@@ -28,7 +28,7 @@ class Interpreter {
  public:
   Interpreter(bool main = false);
 
-  ~Interpreter();
+  ~Interpreter() = default;
 
   inline SymbolTableStack& SymTableStack() {
     return symbol_table_stack_;

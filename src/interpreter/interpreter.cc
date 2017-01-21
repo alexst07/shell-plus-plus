@@ -46,11 +46,6 @@ Interpreter::Interpreter(bool main)
   RegisterVars();
 }
 
-Interpreter::~Interpreter() {
-  // avoid errors of memory leak using sanytise flag
-  symbol_table_.~shared_ptr();
-}
-
 void Interpreter::InsertVar(const std::string& name, ObjectPtr obj) {
   SymbolAttr symbol(obj, true);
   symbol_table_stack_.InsertEntry(name, std::move(symbol));
