@@ -108,7 +108,9 @@ struct CmdTable {
 
 struct Process {
   Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args)
-      : args_(std::move(args)), sym_tab_(sym_tab.MainTable()) {
+      : args_(std::move(args)), sym_tab_(sym_tab.MainTable())
+      , completed_(false)
+      , stopped_(false) {
     argv_ = new char*[args_.size() + 1];
 
     for (size_t i = 0; i < args_.size(); i++) {
@@ -191,8 +193,8 @@ struct Process {
   std::vector<std::string> args_;
   char **argv_;
   pid_t pid_;
-  char completed_;
-  char stopped_;
+  bool completed_;
+  bool stopped_;
   int status_;
   Executor* parent_;
   SymbolTableStack sym_tab_;
@@ -208,8 +210,8 @@ struct Job {
 
   void LaunchJob (int foreground);
   int MarkProcessStatus(pid_t pid, int status);
-  int JobIsStopped();
-  int JobIsCompleted();
+  bool JobIsStopped();
+  bool JobIsCompleted();
   void WaitForJob();
   int Status();
   void PutJobInForeground(int cont);

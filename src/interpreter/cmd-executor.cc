@@ -219,7 +219,7 @@ int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool background) {
   job.stdin_ = STDIN_FILENO;
   job.LaunchJob(!background);
 
-  if (background) {
+  if (!background) {
     return job.Status();
   } else {
     // if not background, return as process success

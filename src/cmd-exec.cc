@@ -30,7 +30,6 @@ int ExecCmd(std::vector<std::string>&& args) {
 
   for (size_t i = 0; i < args.size(); i++) {
     p_args[i] = const_cast<char*>(args[i].data());
-    std::cout << "::" << p_args[i];
   }
 
   p_args[args.size()] = NULL;
@@ -123,9 +122,9 @@ int Job::MarkProcessStatus(pid_t pid, int status) {
       if (p.pid_ == pid) {
         p.status_ = status;
         if (WIFSTOPPED (status)) {
-          p.stopped_ = 1;
+          p.stopped_ = true;
         } else {
-          p.completed_ = 1;
+          p.completed_ = true;
         }
         return 0;
       }
@@ -138,33 +137,36 @@ int Job::MarkProcessStatus(pid_t pid, int status) {
   return -1;
 }
 
-int Job::JobIsStopped() {
+bool Job::JobIsStopped() {
   for (auto& p: process_) {
-    if (!p.completed_ && !p.stopped_)
-      return 0;
+    if (!p.completed_ && !p.stopped_) {
+      return false;
+    }
   }
 
-  return 1;
+  return true;
 }
 
-int Job::JobIsCompleted() {
+bool Job::JobIsCompleted() {
   for (auto& p: process_) {
-    if (!p.completed_)
-      return 0;
+    if (!p.completed_) {
+      return false;
+    }
   }
 
-  return 1;
+  return true;
 }
 
 void Job::WaitForJob() {
-  int status;
   pid_t pid;
+  int status;
 
   do {
     pid = waitpid (WAIT_ANY, &status, WUNTRACED);
-    status_ |= status;
   } while (!MarkProcessStatus(pid, status)
            && !JobIsStopped() && !JobIsCompleted());
+
+  signal(SIGCHLD, SIG_IGN);
 }
 
 int Job::Status() {
@@ -264,12 +266,14 @@ void Job::LaunchJob(int foreground) {
 
   bool shell_is_interactive = EnvShell::instance()->shell_is_interactive();
 
-  if (!shell_is_interactive)
+  if (!shell_is_interactive) {
     WaitForJob();
-  else if (foreground)
+  } else if (foreground) {
+    signal (SIGCHLD, SIG_DFL);
     PutJobInForeground(0);
-  else
+  } else {
     PutJobInBackground(0);
+  }
 }
 
 
