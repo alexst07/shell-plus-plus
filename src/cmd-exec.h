@@ -216,6 +216,7 @@ struct Job {
   int Status();
   void PutJobInForeground(int cont);
   void PutJobInBackground(int cont);
+  void LaunchInternalCmd(CmdEntryPtr cmd);
 
   std::vector<Process> process_;
   int stdin_, stdout_, stderr_;

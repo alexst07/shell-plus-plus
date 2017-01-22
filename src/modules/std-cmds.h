@@ -28,16 +28,25 @@ namespace internal {
 namespace cmds {
 namespace stdf {
 
-class CdCmd: public CmdDefEntry {
+class CdCmd: public CmdInEntry {
  public:
   CdCmd(const SymbolTableStack& symbol_table)
-      : CmdDefEntry(symbol_table) {}
+      : CmdInEntry(symbol_table) {}
+
+  void Exec(Executor* /*parent*/, std::vector<std::string>&& args) override;
+};
+
+class ExitCmd: public CmdInEntry {
+ public:
+  ExitCmd(const SymbolTableStack& symbol_table)
+      : CmdInEntry(symbol_table) {}
 
   void Exec(Executor* /*parent*/, std::vector<std::string>&& args) override;
 };
 
 inline void RegisterCmds(SymbolTableStack& sym_table) {
   CmdSet<CdCmd>("cd", sym_table);
+  CmdSet<ExitCmd>("exit", sym_table);
 }
 
 }

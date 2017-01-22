@@ -29,6 +29,7 @@ class CmdEntry {
   enum class Type {
     kDecl,
     kDef,
+    kIn,
     kAlias
   };
 
@@ -61,15 +62,38 @@ class CmdDeclEntry: public CmdEntry {
   SymbolTableStack symbol_table_;
 };
 
-class CmdDefEntry: public CmdEntry {
+class CmdInEntry: public CmdEntry {
  public:
-  CmdDefEntry(const SymbolTableStack& symbol_table)
-      : CmdEntry(Type::kDef)
+  CmdInEntry(const SymbolTableStack& symbol_table)
+      : CmdEntry(Type::kIn)
       , symbol_table_(symbol_table.MainTable()) {}
 
   virtual void Exec(Executor* parent, std::vector<std::string>&& args) = 0;
 
+  void SetStdFd(int outfile, int errfile, int infile) {
+    outfile_ = outfile;
+    errfile_ = errfile;
+    infile_ = infile;
+  }
+
+  std::tuple<int, int, int> GetStdFd() {
+    return std::tuple<int, int, int>(outfile_, errfile_, infile_);
+  }
+
+  int GetStatus() {
+    return status_;
+  }
+
+ protected:
+  void SetStatus(int status) {
+    status_ = status;
+  }
+
  private:
+  int outfile_;
+  int errfile_;
+  int infile_;
+  int status_;
   SymbolTableStack symbol_table_;
 };
 

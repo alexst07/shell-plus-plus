@@ -214,7 +214,37 @@ void Job::PutJobInBackground(int cont) {
   }
 }
 
+void Job::LaunchInternalCmd(CmdEntryPtr cmd) {
+  static_cast<CmdInEntry&>(*cmd).SetStdFd(stdout_, stderr_, stdin_);
+  cmd->Exec(parent_, std::move(process_[0].args_));
+
+  if (stdin_ != STDIN_FILENO) {
+    close (stdin_);
+  }
+
+  if (stdout_ != STDOUT_FILENO) {
+    close (stdout_);
+  }
+
+  if (stderr_ != STDERR_FILENO) {
+    close (stderr_);
+  }
+}
+
 void Job::LaunchJob(int foreground) {
+  // executes commands that change self process status
+  // commands like cd and exit must be executed this way
+  if (process_.size() == 1) {
+    CmdEntryPtr cmd = sym_tab_.LookupCmd(process_[0].args_[0]);
+
+    if (cmd) {
+      if (cmd->type() == CmdEntry::Type::kIn) {
+        LaunchInternalCmd(cmd);
+        return;
+      }
+    }
+  }
+
   pid_t pid;
   int mypipe[2], infile, outfile;
 
