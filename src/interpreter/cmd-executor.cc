@@ -48,20 +48,15 @@ std::tuple<std::string, std::string> ReadPipe(int pipe_out, int pipe_err) {
   SetFdAsync(pipe_out);
   SetFdAsync(pipe_err);
 
-  rd = read(pipe_out, buf, PIPE_BUF);
-  rd_err = read(pipe_err, buf_err, PIPE_BUF);
-
   std::string str_out = "";
   std::string str_err = "";
 
-  if (rd > 0) {
-    buf[rd < PIPE_BUF?rd:PIPE_BUF-1] = '\0';
-    str_out += buf;
+  while ((rd = read(pipe_out, buf, PIPE_BUF)) > 0) {
+    str_out.append(buf, rd);
   }
 
-  if (rd_err > 0) {
-    buf_err[rd_err < PIPE_BUF?rd_err:PIPE_BUF-1] = '\0';
-    str_err += buf_err;
+  while ((rd_err = read(pipe_err, buf_err, PIPE_BUF)) > 0) {
+    str_err.append(buf_err, rd_err);
   }
 
   return std::tuple<std::string, std::string>(str_out, str_err);
