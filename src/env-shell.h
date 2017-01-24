@@ -26,6 +26,15 @@
 namespace seti {
 namespace internal {
 
+#define SETI_CMD_SIZE_MAX 256
+
+struct CmdSharedError {
+  int err_code;
+  int except_code;
+  bool error;
+  char err_str[SETI_CMD_SIZE_MAX];
+};
+
 class EnvShell {
  public:
   static EnvShell *instance() {
@@ -54,6 +63,12 @@ class EnvShell {
     return shell_pgid_;
   }
 
+  int shmid() const noexcept {
+    return shmid_;
+  }
+
+  ~EnvShell();
+
  private:
   EnvShell() = default;
 
@@ -63,6 +78,7 @@ class EnvShell {
   struct termios shell_tmodes_;
   int shell_terminal_;
   int shell_is_interactive_;
+  int shmid_;
 };
 
 }

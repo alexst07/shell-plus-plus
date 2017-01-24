@@ -15,6 +15,10 @@
 #include "env-shell.h"
 
 #include <signal.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 
 namespace seti {
 namespace internal {
@@ -25,6 +29,9 @@ void EnvShell::InitShell() {
   // see if we are running interactively
   shell_terminal_ = STDIN_FILENO;
   shell_is_interactive_ = isatty(shell_terminal_);
+
+  // starts the shared memory region
+  shmid_ = shmget(IPC_PRIVATE, sizeof(CmdSharedError), 0640|IPC_CREAT);
 
   if (shell_is_interactive_) {
     // loop until we are in the foreground
@@ -53,6 +60,10 @@ void EnvShell::InitShell() {
     /* Save default terminal attributes for shell.  */
     tcgetattr(shell_terminal_, &shell_tmodes_);
   }
+}
+
+EnvShell::~EnvShell() {
+  shmctl(shmid_, IPC_RMID, 0);
 }
 
 }

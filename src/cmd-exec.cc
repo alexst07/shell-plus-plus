@@ -14,13 +14,15 @@
 
 #include "cmd-exec.h"
 
+#include <cstring>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/shm.h>
 
 #include "interpreter/cmd-executor.h"
-#include "env-shell.h"
 
 namespace seti {
 namespace internal {
@@ -103,13 +105,26 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
     exit(0);
   }
 
+  CmdSharedError *err = (CmdSharedError*)
+      shmat(EnvShell::instance()->shmid(), 0, 0);
+  err->error = false;
+
   // Exec the new process
   execvp (argv_[0], argv_);
 
-  // if some error ocurred on exec, throw the exception
-  throw RunTimeError(RunTimeError::ErrorCode::INVALID_COMMAND,
-                     boost::format("%1%: command not found")%argv_[0]);
+  // set error on memory region
+  err->error = true;
+  err->except_code = static_cast<int>(RunTimeError::ErrorCode::INVALID_COMMAND);
+  err->err_code = errno;
+  int len = std::strlen(argv_[0]);
+  len = len >= SETI_CMD_SIZE_MAX? SETI_CMD_SIZE_MAX-1: len;
+  memcpy(err->err_str, argv_[0], len);
 
+  // set \0 to end string
+  err->err_str[len] = '\0';
+
+  shmdt(err);
+  exit(-1);
 }
 
 void Process::LaunchCmd(CmdEntryPtr cmd) {
@@ -298,14 +313,31 @@ void Job::LaunchJob(int foreground) {
 
   if (!shell_is_interactive) {
     WaitForJob();
+    CheckCmdError();
   } else if (foreground) {
     signal (SIGCHLD, SIG_DFL);
     PutJobInForeground(0);
+    CheckCmdError();
   } else {
     PutJobInBackground(0);
   }
 }
 
+void Job::CheckCmdError() {
+  // verify if there was some error executing command
+  CmdSharedError *cmd_err = (CmdSharedError *) shmat(
+        EnvShell::instance()->shmid(), 0, 0);
+
+  CmdSharedError cpy_err;
+  std::memcpy(&cpy_err, cmd_err, sizeof(CmdSharedError));
+
+  shmdt(cmd_err);
+  if (cpy_err.error) {
+        throw RunTimeError(RunTimeError::ErrorCode::INVALID_COMMAND,
+                           boost::format("%1%: %2%")%
+                           cpy_err.err_str %strerror(cpy_err.err_code));
+  }
+}
 
 }
 }

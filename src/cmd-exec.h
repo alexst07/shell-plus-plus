@@ -26,6 +26,7 @@
 #include "objects/abstract-obj.h"
 #include "interpreter/symbol-table.h"
 #include "cmd-entry.h"
+#include "env-shell.h"
 
 namespace seti {
 namespace internal {
@@ -217,6 +218,10 @@ struct Job {
   void PutJobInForeground(int cont);
   void PutJobInBackground(int cont);
   void LaunchInternalCmd(CmdEntryPtr cmd);
+
+  // check if there was some error on command execution
+  // and throw an exception is it was happens
+  void CheckCmdError();
 
   std::vector<Process> process_;
   int stdin_, stdout_, stderr_;
