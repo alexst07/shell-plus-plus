@@ -22,5 +22,5 @@ if(CMAKE_COMPILER_IS_GNUCXX AND COV_TESTS)
     target_link_libraries(seti_exe gcov)
 endif()
 
-install(TARGETS seti_exe RUNTIME DESTINATION /usr/local/bin)
+install(TARGETS seti_exe RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
