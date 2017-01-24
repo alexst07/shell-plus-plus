@@ -70,7 +70,14 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
     setpgid (pid, pgid);
 
     if (foreground) {
-      tcsetpgrp (shell_terminal, pgid);
+      // this part fix the problem fo stuck on tcsetpgrp
+      // sources: https://dev.haiku-os.org/ticket/3417
+      // https://dev.haiku-os.org/attachment/ticket/3417/tcsetpgrp-test.c
+      sigset_t blocked;
+      sigemptyset(&blocked);
+      sigaddset(&blocked, SIGTTOU);
+      pthread_sigmask(SIG_BLOCK, &blocked, NULL);
+      tcsetpgrp(shell_terminal, pgid);
     }
 
     /* Set the handling for job control signals back to the default.  */
