@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #ifndef SETI_ENV_FUNCS_H
-#define SETI_STD_FUNCS_H
+#define SETI_ENV_FUNCS_H
 
 #include <string>
 #include <memory>
@@ -108,6 +108,6 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
 }
 }
 
-#endif  // SETI_STD_FUNCS_H
+#endif  // SETI_ENV_FUNCS_H
 
 
