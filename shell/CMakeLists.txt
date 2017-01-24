@@ -16,14 +16,11 @@ if(CMAKE_COMPILER_IS_GNUCXX AND COV_TESTS)
     setup_target_for_coverage(seti_coverage "./shell/seti ../test/interpreter/run.seti" coverage)
 endif()
 
-target_link_libraries(seti_exe
-  seti
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${Boost_FILESYSTEM_LIBRARY}
-  ${Boost_SYSTEM_LIBRARY}
-  ${READLINE_LIBRARY})
+target_link_libraries(seti_exe seti)
 
 if(CMAKE_COMPILER_IS_GNUCXX AND COV_TESTS)
     target_link_libraries(seti_exe gcov)
 endif()
+
+install(TARGETS seti_exe RUNTIME DESTINATION /usr/local/bin)
 
