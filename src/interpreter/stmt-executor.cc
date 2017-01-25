@@ -279,6 +279,11 @@ void StmtExecutor::Exec(AstNode* node) {
       import.Exec(static_cast<ImportStatement*>(node));
     } break;
 
+    case AstNode::NodeType::kAliasDeclaration: {
+      AliasDeclExecutor alias(this, symbol_table_stack());
+      alias.Exec(static_cast<AliasDeclaration*>(node));
+    } break;
+
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid opcode of statement"),
@@ -725,6 +730,14 @@ void ImportExecutor::set_stop(StopFlag flag) {
   }
 
   parent()->set_stop(flag);
+}
+
+void AliasDeclExecutor::Exec(AliasDeclaration *node) {
+  std::string alias_name = node->name()->name();
+  SimpleCmdExecutor cmd_exec(this, symbol_table_stack());
+  std::vector<std::string> cmd_pieces = cmd_exec.Exec(node->cmd());
+
+  symbol_table_stack().SetCmdAlias(alias_name, std::move(cmd_pieces));
 }
 
 }

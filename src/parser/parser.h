@@ -266,6 +266,8 @@ class Parser {
 
   ParserResult<Declaration> ParserCmdDeclaration();
 
+  ParserResult<Declaration> ParserAliasDeclaration();
+
   ParserResult<Statement> ParserStmtDecl();
   bool IsStmtDecl();
 

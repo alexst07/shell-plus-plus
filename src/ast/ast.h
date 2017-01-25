@@ -35,6 +35,7 @@ namespace internal {
   V(FunctionDeclaration)         \
   V(FunctionParam)               \
   V(CmdDeclaration)              \
+  V(AliasDeclaration)            \
   V(ClassDeclList)               \
   V(ClassBlock)
 
@@ -1019,6 +1020,35 @@ class SimpleCmd: public Cmd {
   SimpleCmd(std::vector<std::unique_ptr<AstNode>>&& pieces, Position position)
       : Cmd(NodeType::kSimpleCmd, position)
       , pieces_(std::move(pieces)) {}
+};
+
+class AliasDeclaration: public Declaration {
+ public:
+  ~AliasDeclaration() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitAliasDeclaration(this);
+  }
+
+  SimpleCmd* cmd() const noexcept {
+    return cmd_.get();
+  }
+
+  Identifier* name() const noexcept {
+    return name_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<SimpleCmd> cmd_;
+  std::unique_ptr<Identifier> name_;
+
+  AliasDeclaration(std::unique_ptr<SimpleCmd>&& cmd,
+                   std::unique_ptr<Identifier>&& name, Position position)
+      : Declaration(NodeType::kAliasDeclaration, position)
+      , cmd_(std::move(cmd))
+      , name_(std::move(name)) {}
 };
 
 class CmdValueExpr: public Cmd {

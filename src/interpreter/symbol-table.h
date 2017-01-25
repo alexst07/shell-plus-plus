@@ -111,6 +111,7 @@ class SymbolTable {
   using SymbolIterator = SymbolMap::iterator;
   using CmdIterator = CmdMap::iterator;
   using SymbolConstIterator = SymbolMap::const_iterator;
+  using CmdAliasMap = std::unordered_map<std::string, std::vector<std::string>>;
 
   SymbolTable(TableType type = TableType::SCOPE_TABLE): type_(type) {}
 
@@ -192,6 +193,26 @@ class SymbolTable {
     }
   }
 
+  // insert alias for command, this must be global even if declared
+  // inside an if or loop, and in the import must me copied
+  void SetCmdAlias(const std::string& name, std::vector<std::string>&& cmd) {
+    cmd_alias_[name] = std::move(cmd);
+  }
+
+  bool ExistsCmdAlias(const std::string& name) const {
+    auto it = cmd_alias_.find(name);
+
+    if (it == cmd_alias_.end()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  const std::vector<std::string>& GetCmdAlias(const std::string& name) {
+    return cmd_alias_[name];
+  }
+
   inline SymbolIterator Lookup(const std::string& name) {
     return map_.find(name);
   }
@@ -230,6 +251,7 @@ class SymbolTable {
   SymbolMap map_;
   CmdMap cmd_map_;
   TableType type_;
+  CmdAliasMap cmd_alias_;
 };
 
 class SymbolTableStackBase {
@@ -406,6 +428,19 @@ class SymbolTableStack: public SymbolTableStackBase {
     main_table_.lock()->SetCmd(name, cmd);
   }
 
+  void SetCmdAlias(const std::string& name, std::vector<std::string>&& cmd) {
+    main_table_.lock()->SetCmdAlias(name, std::move(cmd));
+  }
+
+  bool ExistsCmdAlias(const std::string& name) const {
+    return main_table_.lock()->ExistsCmdAlias(name);
+  }
+
+  const std::vector<std::string>& GetCmdAlias(const std::string& name) {
+    return main_table_.lock()->GetCmdAlias(name);
+  }
+
+  // insert the object on the table stack of the function
   void SetEntryOnFunc(const std::string& name,
                       std::shared_ptr<Object> value) override {
     // search the last function table inserted

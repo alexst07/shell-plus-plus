@@ -304,9 +304,17 @@ class AstPrinter: public AstVisitor {
     }
   }
 
+  void virtual VisitAliasDeclaration(AliasDeclaration* alias) {
+    Level();
+    std::cout << "<alias name: ";
+    alias->name()->Accept(this);
+    std::cout << " cmd: ";
+    alias->cmd()->Accept(this);
+  }
+
   void virtual VisitSimpleCmd(SimpleCmd* cmd) {
     inside_cmd_ = true;
-
+    Level();
     std::cout << "<cmd: ";
     auto vec = cmd->children();
 

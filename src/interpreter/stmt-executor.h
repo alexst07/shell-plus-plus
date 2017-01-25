@@ -260,6 +260,14 @@ class ImportExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
+class AliasDeclExecutor: public Executor {
+ public:
+  AliasDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(AliasDeclaration *node);
+};
+
 }
 }
 

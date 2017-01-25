@@ -27,27 +27,48 @@
 namespace seti {
 namespace internal {
 
-int ExecCmd(std::vector<std::string>&& args) {
-  char** p_args = new char*[args.size() + 1];
+Process::Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args)
+    : args_(std::move(args)), sym_tab_(sym_tab.MainTable())
+    , completed_(false)
+    , stopped_(false) {}
 
-  for (size_t i = 0; i < args.size(); i++) {
-    p_args[i] = const_cast<char*>(args[i].data());
-  }
-
-  p_args[args.size()] = NULL;
-
-  int ret = execvp(p_args[0], p_args);
-
-  delete[] p_args;
-
-  return ret;
+Process::Process(const Process& p): sym_tab_(p.sym_tab_) {
+  args_ = p.args_;
+  pid_ = p.pid_;
+  completed_ = p.completed_;
+  stopped_ = p.stopped_;
+  status_ = p.status_;
 }
 
-int WaitCmd(int pid) {
-  int status;
+Process& Process::operator=(const Process& p) {
+  args_ = p.args_;
+  pid_ = p.pid_;
+  completed_ = p.completed_;
+  stopped_ = p.stopped_;
+  status_ = p.status_;
+  sym_tab_ = p.sym_tab_;
 
-  waitpid(pid,&status,0);
-  return status;
+  return *this;
+}
+
+Process::Process(Process&& p) {
+  args_ = std::move(p.args_);
+  pid_ = p.pid_;
+  completed_ = p.completed_;
+  stopped_ = p.stopped_;
+  status_ = p.status_;
+  sym_tab_ = std::move(p.sym_tab_);
+}
+
+Process& Process::operator=(Process&& p) {
+  args_ = std::move(p.args_);
+  pid_ = p.pid_;
+  completed_ = p.completed_;
+  stopped_ = p.stopped_;
+  status_ = p.status_;
+  sym_tab_ = std::move(p.sym_tab_);
+
+  return *this;
 }
 
 void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
@@ -70,7 +91,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
     setpgid (pid, pgid);
 
     if (foreground) {
-      // this part fix the problem fo stuck on tcsetpgrp
+      // this part fix the problem of stuck on tcsetpgrp
       // sources: https://dev.haiku-os.org/ticket/3417
       // https://dev.haiku-os.org/attachment/ticket/3417/tcsetpgrp-test.c
       sigset_t blocked;
@@ -80,7 +101,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
       tcsetpgrp(shell_terminal, pgid);
     }
 
-    /* Set the handling for job control signals back to the default.  */
+    // Set the handling for job control signals back to the default
     signal (SIGINT, SIG_DFL);
     signal (SIGQUIT, SIG_DFL);
     signal (SIGTSTP, SIG_DFL);
@@ -105,27 +126,58 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
     close (errfile);
   }
 
-  CmdEntryPtr cmd = sym_tab_.LookupCmd(args_[0]);
+  std::vector<std::string> args;
 
-  if (cmd) {
-    LaunchCmd(cmd);
-    exit(0);
+  if (sym_tab_.ExistsCmdAlias(args_[0])) {
+    args = sym_tab_.GetCmdAlias(args_[0]);
+
+    // append arguments
+    for (size_t i = 1; i < args_.size(); i++) {
+      args.push_back(args_[i]);
+    }
+  } else {
+    // append arguments
+    for (auto& e: args_) {
+      args.push_back(e);
+    }
   }
+
+  CmdEntryPtr cmd = sym_tab_.LookupCmd(args[0]);
 
   CmdSharedError *err = (CmdSharedError*)
       shmat(EnvShell::instance()->shmid(), 0, 0);
   err->error = false;
 
+  if (cmd) {
+    try {
+      LaunchCmd(cmd);
+      exit(0);
+    } catch (RunTimeError& e) {
+      // set error on memory region
+      err->error = true;
+      err->except_code = static_cast<int>(e.code_);
+      err->err_code = 0;
+      int len = e.msg().length();
+      len = len >= SETI_CMD_SIZE_MAX? SETI_CMD_SIZE_MAX-1: len;
+      memcpy(err->err_str, e.msg().c_str(), len);
+      exit(-1);
+    }
+  }
+
+  char **argv = FillArgv(args);
+
   // Exec the new process
-  execvp (argv_[0], argv_);
+  execvp(argv[0], argv);
 
   // set error on memory region
   err->error = true;
   err->except_code = static_cast<int>(RunTimeError::ErrorCode::INVALID_COMMAND);
   err->err_code = errno;
-  int len = std::strlen(argv_[0]);
+  int len = std::strlen(argv[0]);
   len = len >= SETI_CMD_SIZE_MAX? SETI_CMD_SIZE_MAX-1: len;
-  memcpy(err->err_str, argv_[0], len);
+  memcpy(err->err_str, argv[0], len);
+
+  delete[] argv;
 
   // set \0 to end string
   err->err_str[len] = '\0';
@@ -136,6 +188,19 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
 
 void Process::LaunchCmd(CmdEntryPtr cmd) {
   cmd->Exec(parent_, std::move(args_));
+}
+
+char** Process::FillArgv(const std::vector<std::string>& args) {
+  char **argv;
+  argv = new char*[args.size() + 1];
+
+  for (int i = 0; i < args.size(); i++) {
+    argv[i] = const_cast<char*>(args[i].data());
+  }
+
+  argv[args.size()] = NULL;
+
+  return argv;
 }
 
 int Job::MarkProcessStatus(pid_t pid, int status) {

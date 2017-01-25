@@ -108,91 +108,26 @@ struct CmdTable {
 };
 
 struct Process {
-  Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args)
-      : args_(std::move(args)), sym_tab_(sym_tab.MainTable())
-      , completed_(false)
-      , stopped_(false) {
-    argv_ = new char*[args_.size() + 1];
+  Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args);
 
-    for (size_t i = 0; i < args_.size(); i++) {
-      argv_[i] = const_cast<char*>(args_[i].data());
-    }
+  ~Process() = default;
 
-    argv_[args_.size()] = NULL;
-  }
+  Process(const Process& p);
 
-  ~Process() {
-    delete[] argv_;
-  }
+  Process& operator=(const Process& p);
 
-  Process(const Process& p): sym_tab_(p.sym_tab_) {
-    args_ = p.args_;
-    argv_ = new char*[args_.size() + 1];
+  Process(Process&& p);
 
-    for (size_t i = 0; i < args_.size(); i++) {
-      argv_[i] = const_cast<char*>(args_[i].data());
-    }
-
-    argv_[args_.size()] = NULL;
-
-    pid_ = p.pid_;
-    completed_ = p.completed_;
-    stopped_ = p.stopped_;
-    status_ = p.status_;
-  }
-
-  Process& operator=(const Process& p) {
-    args_ = p.args_;
-
-    delete[] argv_;
-    argv_ = new char*[args_.size() + 1];
-
-    for (size_t i = 0; i < args_.size(); i++) {
-      argv_[i] = const_cast<char*>(args_[i].data());
-    }
-
-    argv_[args_.size()] = NULL;
-
-    pid_ = p.pid_;
-    completed_ = p.completed_;
-    stopped_ = p.stopped_;
-    status_ = p.status_;
-    sym_tab_ = p.sym_tab_;
-
-    return *this;
-  }
-
-  Process(Process&& p) {
-    args_ = std::move(p.args_);
-    argv_ = p.argv_;
-    p.argv_ = nullptr;
-    pid_ = p.pid_;
-    completed_ = p.completed_;
-    stopped_ = p.stopped_;
-    status_ = p.status_;
-    sym_tab_ = std::move(p.sym_tab_);
-  }
-
-  Process& operator=(Process&& p) {
-    args_ = std::move(p.args_);
-    argv_ = p.argv_;
-    p.argv_ = nullptr;
-    pid_ = p.pid_;
-    completed_ = p.completed_;
-    stopped_ = p.stopped_;
-    status_ = p.status_;
-    sym_tab_ = std::move(p.sym_tab_);
-
-    return *this;
-  }
+  Process& operator=(Process&& p);
 
   void LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
                      bool foreground);
 
   void LaunchCmd(CmdEntryPtr cmd);
 
+  char** FillArgv(const std::vector<std::string>& args);
+
   std::vector<std::string> args_;
-  char **argv_;
   pid_t pid_;
   bool completed_;
   bool stopped_;
@@ -238,12 +173,6 @@ struct Job {
   Executor* parent_;
   SymbolTableStack sym_tab_;
 };
-
-void LaunchProcess (char **argv, int infile, int outfile, int errfile);
-
-int ExecCmd(std::vector<std::string> &&args);
-
-int WaitCmd(int pid);
 
 }
 }

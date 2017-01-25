@@ -170,6 +170,12 @@ class AstNodeFactory {
         std::move(exp_list), std::move(block), fn_pos_()));
   }
 
+  inline std::unique_ptr<AliasDeclaration> NewAliasDeclaration(
+      std::unique_ptr<SimpleCmd>&& cmd, std::unique_ptr<Identifier>&& name) {
+    return std::unique_ptr<AliasDeclaration>(new AliasDeclaration(
+      std::move(cmd), std::move(name), fn_pos_()));
+  }
+
   inline std::unique_ptr<CmdPiece> NewCmdPiece(const Token& token) {
     return std::unique_ptr<CmdPiece>(new CmdPiece(token, fn_pos_()));
   }

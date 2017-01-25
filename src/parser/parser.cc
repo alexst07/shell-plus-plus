@@ -98,6 +98,9 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
   } else if (token_ == TokenKind::KW_CLASS) {
     ParserResult<Declaration> class_decl(ParserClassDecl());
     return ParserResult<Statement>(class_decl.MoveAstNode<Statement>());
+  } else if (token_ == TokenKind::KW_ALIAS) {
+    ParserResult<Declaration> alias(ParserAliasDeclaration());
+    return ParserResult<Statement>(alias.MoveAstNode<Statement>());
   }
 
   return ParserResult<Statement>(); // error
@@ -105,7 +108,7 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
 
 bool Parser::IsStmtDecl() {
   return token_.IsAny(TokenKind::KW_FUNC, TokenKind::KW_CMD,
-                      TokenKind::KW_CLASS);
+                      TokenKind::KW_CLASS, TokenKind::KW_ALIAS);
 }
 
 ParserResult<Declaration> Parser::ParserCmdDeclaration() {
@@ -736,6 +739,33 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
   }
 
   return ParserResult<Statement>(factory_.NewSimpleCmd(std::move(pieces)));
+}
+
+ParserResult<Declaration> Parser::ParserAliasDeclaration() {
+  Advance();  // advance alias keyword
+
+  if (token_ != TokenKind::IDENTIFIER) {
+    ErrorMsg(boost::format("expected identifier"));
+    return ParserResult<Declaration>(); // Error
+  }
+
+  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
+      boost::get<std::string>(token_.GetValue())));
+
+  Advance();
+
+  if (token_ != TokenKind::ASSIGN) {
+    ErrorMsg(boost::format("expected assign operator"));
+    return ParserResult<Declaration>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  std::unique_ptr<SimpleCmd> cmd(ParserSimpleCmd().MoveAstNode<SimpleCmd>());
+
+  return ParserResult<Declaration>(factory_.NewAliasDeclaration(
+      std::move(cmd), std::move(id)));
 }
 
 ParserResult<Cmd> Parser::ParserExpCmd() {
