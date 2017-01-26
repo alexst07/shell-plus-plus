@@ -78,6 +78,12 @@ class ArrayObject: public Object {
    }
 
    inline std::shared_ptr<Object> Element(size_t i) {
+     if (i >= value_.size()) {
+       throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                          boost::format("index: %1% must be lower than "
+                                        "the array size: %2%")%i%value_.size());
+     }
+
      return value_.at(i);
    }
 

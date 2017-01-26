@@ -148,6 +148,12 @@ ObjectPtr ArrayObject::Element(const SliceObject& slice) {
 
   std::tie(start, end, step) = SliceLogic(slice, value_.size());
 
+  if (end > value_.size()) {
+    throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                       boost::format("value of end of slice: %1% larger than "
+                                     "the array size: %2%")%end%value_.size());
+  }
+
   std::vector<std::shared_ptr<Object>> values;
   for (int i = start; i < end; i += step) {
     values.push_back(value_[i]);
