@@ -81,6 +81,29 @@ ObjectPtr CmdObject::ObjString()  {
   return obj_factory.NewString(str_stdout());
 }
 
+ObjectPtr CmdObject::ObjArray() {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  std::string str_cmd = str_stdout_;
+  boost::trim_if(str_cmd, boost::is_any_of(delim_));
+
+  std::vector<ObjectPtr> arr_obj;
+  std::vector<std::string> arr_str;
+
+  if (str_cmd.empty()) {
+    return obj_factory.NewArray(std::move(arr_obj));
+  }
+
+  boost::algorithm::split(arr_str, str_cmd, boost::is_any_of(delim_),
+                          boost::algorithm::token_compress_on);
+
+  for (auto& s: arr_str) {
+    arr_obj.push_back(obj_factory.NewString(s));
+  }
+
+  return obj_factory.NewArray(std::move(arr_obj));
+}
+
 std::shared_ptr<Object> CmdObject::Attr(std::shared_ptr<Object> self,
                                         const std::string& name) {
   ObjectPtr obj_type = ObjType();

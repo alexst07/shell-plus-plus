@@ -101,6 +101,8 @@ class ArrayObject: public Object {
 
    ObjectPtr ObjIter(ObjectPtr obj) override;
 
+   ObjectPtr ObjArray() override;
+
    std::size_t Hash() const override;
 
    long int Len() override {
@@ -122,6 +124,9 @@ class ArrayObject: public Object {
 class ArrayType: public ContainerType {
  public:
   ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table);
+
+  virtual ObjectPtr Constructor(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params);
 
   virtual ~ArrayType() {}
 };

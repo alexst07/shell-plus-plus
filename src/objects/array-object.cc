@@ -15,6 +15,7 @@
 #include "array-object.h"
 
 #include <string>
+#include <algorithm>
 #include <boost/variant.hpp>
 
 #include "obj-type.h"
@@ -102,6 +103,15 @@ std::size_t ArrayObject::Hash() const {
   }
 
   return hash;
+}
+
+ObjectPtr ArrayObject::ObjArray() {
+  std::vector<ObjectPtr> to_vector;
+  std::copy(value_.begin(), value_.end(),
+      std::back_inserter(to_vector));
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewArray(std::move(to_vector));
 }
 
 ObjectPtr ArrayObject::ObjIter(ObjectPtr obj) {
@@ -192,6 +202,17 @@ ArrayType::ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
     : ContainerType("array", obj_type, std::move(sym_table)) {
   RegisterMethod<ArrayJoinFunc>("join", symbol_table_stack(), *this);
   RegisterMethod<ArrayAppendFunc>("append", symbol_table_stack(), *this);
+}
+
+ObjectPtr ArrayType::Constructor(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  if (params.size() != 1) {
+    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                       boost::format("%1%() takes exactly 1 argument")
+                       %name());
+  }
+
+  return params[0]->ObjArray();
 }
 
 ObjectPtr ArrayJoinFunc::Call(Executor* /*parent*/,

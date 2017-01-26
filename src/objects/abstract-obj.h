@@ -102,6 +102,11 @@ class Object {
                        boost::format("type has no cmd interface"));
   }
 
+  virtual std::shared_ptr<Object> ObjArray() {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no array interface"));
+  }
+
   virtual std::shared_ptr<Object> GetItem(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no get_item interface"));
