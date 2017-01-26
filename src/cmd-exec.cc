@@ -94,10 +94,14 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
       // this part fix the problem of stuck on tcsetpgrp
       // sources: https://dev.haiku-os.org/ticket/3417
       // https://dev.haiku-os.org/attachment/ticket/3417/tcsetpgrp-test.c
-      sigset_t blocked;
-      sigemptyset(&blocked);
-      sigaddset(&blocked, SIGTTOU);
-      pthread_sigmask(SIG_BLOCK, &blocked, NULL);
+      // buf afeter put this part, the status return wrong for the commands
+      // this part must be understood better
+      sigset_t set, oset;
+      sigemptyset (&set);
+      sigaddset (&set, SIGCHLD);
+      sigaddset (&set, SIGTTOU);
+      sigemptyset (&oset);
+      sigprocmask (SIG_BLOCK, &set, &oset);
       tcsetpgrp(shell_terminal, pgid);
     }
 
