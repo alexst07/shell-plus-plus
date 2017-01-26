@@ -105,6 +105,10 @@ class ArrayObject: public Object {
      value_[i] = std::shared_ptr<Object>(obj_ptr);
    }
 
+   inline void set(size_t i, std::shared_ptr<Object> obj) {
+     value_[i] = obj;
+   }
+
    ObjectPtr ObjIter(ObjectPtr obj) override;
 
    ObjectPtr ObjArray() override;
@@ -151,6 +155,22 @@ class ArrayAppendFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table)) {}
 
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayForEachFunc: public FuncObject {
+ public:
+  ArrayForEachFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayMapFunc: public FuncObject {
+ public:
+  ArrayMapFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params);
 };
 
 }

@@ -44,8 +44,6 @@ class FuncObject: public Object {
                        boost::format("func object has no compare method"));
   }
 
-  virtual ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) = 0;
-
   std::string Print() override {
     return std::string("[function]");
   }

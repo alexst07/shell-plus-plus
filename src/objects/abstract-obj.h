@@ -107,6 +107,12 @@ class Object {
                        boost::format("type has no array interface"));
   }
 
+  virtual std::shared_ptr<Object> Call(
+      Executor*, std::vector<std::shared_ptr<Object>>&&) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no call interface"));
+  }
+
   virtual std::shared_ptr<Object> GetItem(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no get_item interface"));

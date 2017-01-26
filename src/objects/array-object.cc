@@ -208,6 +208,8 @@ ArrayType::ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
     : ContainerType("array", obj_type, std::move(sym_table)) {
   RegisterMethod<ArrayJoinFunc>("join", symbol_table_stack(), *this);
   RegisterMethod<ArrayAppendFunc>("append", symbol_table_stack(), *this);
+  RegisterMethod<ArrayForEachFunc>("for_each", symbol_table_stack(), *this);
+  RegisterMethod<ArrayMapFunc>("map", symbol_table_stack(), *this);
 }
 
 ObjectPtr ArrayType::Constructor(Executor* /*parent*/,
@@ -259,6 +261,34 @@ ObjectPtr ArrayAppendFunc::Call(Executor* /*parent*/,
 
   for (size_t i = 1; i < params.size(); i++) {
     array_obj.Append(params[i]);
+  }
+
+  return params[0];
+}
+
+ObjectPtr ArrayForEachFunc::Call(Executor* parent,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, for_each)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+
+  for (int i = 0; i < array_obj.Len(); i++) {
+    std::vector<ObjectPtr> fparams(1, array_obj.Element(i));
+    params[1]->Call(parent, std::move(fparams));
+  }
+
+  return params[0];
+}
+
+ObjectPtr ArrayMapFunc::Call(Executor* parent,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, for_each)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+
+  for (int i = 0; i < array_obj.Len(); i++) {
+    std::vector<ObjectPtr> fparams(1, array_obj.Element(i));
+    array_obj.set(i, params[1]->Call(parent, std::move(fparams)));
   }
 
   return params[0];
