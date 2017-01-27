@@ -1,17 +1,37 @@
-# Welcome to MkDocs
+# Introduction
 
-For full documentation visit [mkdocs.org](http://mkdocs.org).
+Seti is a programming language that aims bring features from modern languages,
+as facility to manipulate data structures, object oriented programming,
+functional programming and others, to shell script.
 
-## Commands
+# Building
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs help` - Print this help message.
+## Requirements:
+  * A compiler that supports C++ 14 (gcc or clang)
+  * Boost
+  * Readline
+  * CMake
+  * Linux
 
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+## Compiling
+In the root of the project:
+```
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+```
+## Installing
+```
+$ sudo make install
+```
+# Running
+## Hello world
+```
+$ seti
+> echo hello world
+```
+## Running a file
+```
+$ seti file.seti
+```
