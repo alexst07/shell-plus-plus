@@ -1,0 +1,229 @@
+{
+    "docs": [
+        {
+            "location": "/", 
+            "text": "Introduction\n\n\nSeti is a programming language that aims bring features from modern languages,\nas facility to manipulate data structures, object oriented programming,\nfunctional programming and others, to shell script.\n\n\nBuilding\n\n\nRequirements:\n\n\n\n\nA compiler that supports C++ 14 (gcc or clang)\n\n\nBoost\n\n\nReadline\n\n\nCMake\n\n\nLinux\n\n\n\n\nCompiling\n\n\nIn the root of the project:\n\n\n$ mkdir build\n$ cd build\n$ cmake ..\n$ make\n\n\n\n\nInstalling\n\n\n$ sudo make install\n\n\n\n\nRunning\n\n\nHello world\n\n\n$ seti\n\n echo hello world\n\n\n\n\nRunning a file\n\n\n$ seti file.seti", 
+            "title": "Home"
+        }, 
+        {
+            "location": "/#introduction", 
+            "text": "Seti is a programming language that aims bring features from modern languages,\nas facility to manipulate data structures, object oriented programming,\nfunctional programming and others, to shell script.", 
+            "title": "Introduction"
+        }, 
+        {
+            "location": "/#building", 
+            "text": "", 
+            "title": "Building"
+        }, 
+        {
+            "location": "/#requirements", 
+            "text": "A compiler that supports C++ 14 (gcc or clang)  Boost  Readline  CMake  Linux", 
+            "title": "Requirements:"
+        }, 
+        {
+            "location": "/#compiling", 
+            "text": "In the root of the project:  $ mkdir build\n$ cd build\n$ cmake ..\n$ make", 
+            "title": "Compiling"
+        }, 
+        {
+            "location": "/#installing", 
+            "text": "$ sudo make install", 
+            "title": "Installing"
+        }, 
+        {
+            "location": "/#running", 
+            "text": "", 
+            "title": "Running"
+        }, 
+        {
+            "location": "/#hello-world", 
+            "text": "$ seti  echo hello world", 
+            "title": "Hello world"
+        }, 
+        {
+            "location": "/#running-a-file", 
+            "text": "$ seti file.seti", 
+            "title": "Running a file"
+        }, 
+        {
+            "location": "/lang-basics/", 
+            "text": "Language basics\n\n\nHello World\n\n\nIn seti there are several ways to print information on screen, you can use shell\ncommands or the function print.\n\n\nUsing shell commands:\n\n\necho Hello World\n\n\n\n\nUsing seti print function:\n\n\nprint(\nHello World\n)\n\n\n\n\nComments\n\n\nIn seti comments are everything that comes after #\n\n\n# comment\nprint(\nhello world\n) # print hello world\n\n\n\n\nVariables\n\n\nmy_var = 7\n\n\n\n\nif my_var doesn't exists, seti will create my_var and attributes 7 to it,\nif it already exists, the value 7 will be attributed to my_var\n\n\nBasic types\n\n\ninteger\n\n\nmy_var = 7\nprint(type(my_var))  # int\n\n\n\n\nLike in other languages, int in seti has oprations as add, sub, div and mult\n\n\nv1 = 7\nv2 = 3\nv3 = v1 + v2*v1 - v2/v1\nv3 += v1%v2 # mod\n\n\n\n\nreal\n\n\nmy_var = 7.5\nprint(type(my_var))  # real\n\n\n\n\nLike in other languages, real in seti has oprations as add, sub, div and mult\n\n\nv1 = 7.1\nv2 = 3.3\nv3 = v1 + v2*v1 - v2/v1\nv3 += 2.3\n\n\n\n\nstring\n\n\nmy_var = \ntest\n\nprint(type(my_var))  # string\n\n\n\n\nConcatenating string:\n\n\nstr1 = \nhello\n\nstr2 = \nworld\n\nstr = str1 + \n \n + str2\n\n\n\n\nString functions:\nstring.upper()\nstring.lower()\nstring.split(delim)\nstring.trim(arg = \" \")\nstring.trim_left(arg = \" \")\nstring.trim_right(arg = \" \")\n\n\nstr1 = \nhElLo\n\nstr2 = \nhElLo\n\nstr1.upper() # HELLO\nstr2.lower() # hello\n\n\n\n\nstr1 = \ntest1,test2,test3\n\narr = str1.split(\n,\n)  # [\ntest1\n, \ntest2\n, \ntest3\n]\n\n\n\n\nstr1 = \n  test1  \n\nstr2 = \n  test2  \n\nstr1.trimm_right()  # \n  test1\n\nstr1.trimm_left()  # \ntest1\n\nstr2.trim()  # \ntest2\n\n\n\n\n\nnull\n\n\nmy_var = null\nprint(my_var)  # null\nprint(type(my_var))  # null_t\n\n\n\n\nboolean\n\n\nmy_var_t = true\nmy_var_f = false\nprint(my_var_t)  # true\nprint(type(my_var_t))  # bool\n\n\n\n\narray\n\n\nmy_var = [4, \nstr\n, [1, 2]]\nprint(type(my_var))  # array\n\n\n\n\nArray access\n\n\narr = [4, \nstr\n, [1, 2]]\nprint(arr[0])  # 4\nprint(arr[1])  # str\nprint(arr[2][1])  # 2\n\narr[0] = 10\nprint(arr[0])  # 10\n\n\n\n\nArray functions:\narray.join(sep)\n\n\nmap\n\n\nmy_var = {\nkey1\n: \ntest\n, \nkey2\n: 5, 6:\nother\n}\nprint(type(my_var))  # map\n\n\n\n\nMap access\n\n\nmy_var = {\nkey1\n: \ntest\n, {\nkey2\n: 5, \nt\n:[1,2]}, 6:\nother\n}\nprint(arr[\nkey1\n])  # \ntest\n\nprint(arr[\nkey2\n][\nt\n])  # [1, 2]\nprint(arr[\nkey2\n][\nt\n][0])  # 1\n\nmy_var[\nkey1\n] = 4\nprint(arr[\nkey1\n])  # 4\n\n\n\n\ntuple\n\n\nmy_var = \nstr\n, 4, [1, 3]\nprint(type(my_var))  # tuple\n\n\n\n\nTuple access works as array access\n\n\nControl flow statements\n\n\nIf and else\n\n\nif is_raining() {\n  print (\nit is raining\n)\n} else if is_snowing() {\n  print(\nit is snowing\n)\n} else {\n  print(\nsun is up in the sky\n)\n}\n\n\n\n\nSwitch case\n\n\na = \nres\n\n\nswitch a {\n  case \nasdf\n,7 {\n    print(\nok\n)\n  }\n\n  case \nres\n {\n    print(\nother\n)\n  }\n\n  default {\n    print(\ndefault\n)\n  }\n}\n\n\n\n\nif switch has no argument, so it is like the argument was true\n\n\nswitch {\n  case true {\n    print(\ntrue\n)\n  }\n\n  case false {\n    print(\nfalse\n)\n  }\n}\n\n\n\n\nWhile loop\n\n\na = 1\n\nwhile a \n 10 {\n  print(a)\n  a = a + 1\n}\n\n\n\n\nFor loop\n\n\na = [1, 2, 3, 4]\n\nfor i in a {\n  print(i)\n}\n\n\n\n\nprint:\n\n\n1\n2\n3\n4\n\n\n\n\na = [1, 2, 3, 4]\nb = [10, 11, 12, 13, 15, 16]\nc = [6, 5, 7]\n\nfor i in a, b, [55, 56, 57] {\n  print(i)\n}\n\n\n\n\nprint:\n\n\n(1, 10, 55)\n(2, 11, 56)\n(3, 12, 57)\n\n\n\n\nv1 = [1, 2, 3, 4]\nv2 = [10, 11]\n\nfor i, j in v1, v2 {\n  print(i, \n: \n ,j)\n}\n\n\n\n\nprint:\n\n\n1:10\n2:11\n\n\n\n\nBreak and continue\n\n\ni = 0\nwhile i \n 10 {\n  if i == 7 {\n    break\n  }\n\n  print(i)\n  i = i +1\n}\n\n\n\n\nprint:\n\n\n0\n1\n2\n3\n4\n5\n6\n\n\n\n\ni = 0\nwhile i \n 10 {\n  if i == 7 {\n    i = i +1\n    continue\n  }\n\n  print(i)\n  i = i +1\n}\n\n\n\n\nprint:\n\n\n0\n1\n2\n3\n4\n5\n6\n8\n9\n0\n\n\n\n\nShell commands\n\n\nTo execute others programs in seti is very similar the way that works others\nshell languages.\n\n\nSimple command\n\n\necho hello world\n\n\n\n\nRedirect to a file\n\n\necho hello world \n file.txt\n\n\n\n\nRedirect and append to a file\n\n\necho hello world \n file.txt\necho append this text \n file.txt\n\n\n\n\nInput from a file\n\n\ncat \n file.txt\n\n\n\n\nPipeline of commands\n\n\nls | grep test\n\n\n\n\ncat \n file.txt | grep mytext\n\n\n\n\ncat \n file.txt | grep other_text \n other.txt\n\n\n\n\nLogic operation with commands\n\n\nAnd operation:\n\n\ncmd1 \n cmd2\n\n\n\n\nIf cmd1 has exit status 0 (correct), executes cmd2, if not, doesn't execute cmd2\n\n\nOr operation:\n\n\ncmd1 || cmd2\n\n\n\n\nIf cmd1 has exit status 0 (correct), doesn't execute cmd2, if not, executes cmd2\n\n\nBackground commands\n\n\nAs in bash, to put a command in background in seti, the command must end with \n\n\nls \n\n\n\n\n\nls | grep some \n\n\n\n\n\nls | grep some \n file \n\n\n\n\n\ncmd1 || cmd2 \n\n\n\n\n\nAssign commands to variables\n\n\nAlmost everything in seti is a an object, in fact only commands are not\nobjects, but the result of commands can be stored on an object\n\n\nfiles = $(ls)\n\n\n\n\nfiles = $(ls | grep test)\n\n\n\n\nfiles = $(cat \n file.txt | grep test)\n\n\n\n\nthe only requirement is that the output must be for variable, so it won't\nwork:\n\n\nfiles = $(cat \n file.txt | grep test \n out.txt)\n\n\n\n\nThe variable that receives a command result can be used on if or for loop\n\n\nmy_cmd = $(cmd_test)\nif my_cmd {\n  echo command worked\n}\n\n\n\n\ncommand object has an iterator object associated with it too:\n\n\nfiles = $(ls)\n\nfor file in files {\n  print(\nfile is: \n, file)\n}\n\n\n\n\nor you can change the delimiter using in command iterator:\n\n\nfor piece in $(cat \n file).delim(\n\\t\n) {\n  print(\npiece is: \n, file)\n}\n\n\n\n\nFunctions\n\n\nIn almost everything is an object, in fact except commands declaration,\neverything is an ojbect including functions, so a function can be assigned\nto other variable or be used as an argument for other function.\nPS: Functions are NOT commands like happens in bash\n\n\nfunctions return\n\n\nfunc test(a, b) {\n  print(a,b)\n}\n\n\n\n\nif no return is specified, the return of the function is null\n\n\nfunc test(a, b) {\n  return a + b\n}\n\n\n\n\ndefault parameters\n\n\nthe function can have default parameters:\n\n\nfunc test(a, b = 4) {\n  return a + b\n}\n\nres = func(5, 6)  # 11\nres1 = func(5)  # 9\n\n\n\n\nvariadic\n\n\nin seti functions support variadic parameters too:\n\n\nfunc make_and_print_tuple(t...) {\n  for item in t {\n    print(\nitem: \n, item)\n  }\n  return t\n}\n\ntres = make_and_print_tuple(5, \ntest\n, true)\n\n\n\n\n\nfunction as argument\n\n\nfunc receiv_func(a, b) {\n  return b(a)\n}\n\nfunc test_b(i) {\n  return i + 10\n}\n\nprint(receiv_func(4,test_b))\n\n\n\n\n\nlambda functions\n\n\nLambda functions works almost as all other functions, it means, lambda\nsupport default parameters and variadic, the difference is that, lambda\nfunctions can be declared inside blocs, loop, if, or other function\n\n\nfunc ret_func(b) {\n  a = func (i) {\n    return i*b\n  }\n\n  return a\n}\n\nv = ret_func(5)(2)\nprint(v)  # 10\n\n\n\n\nDeclaration of commands\n\n\nCommands are the only thing in seti that is not an object, it means, you can't\nassign a command to a variable\n\n\ncmd test {\n  echo test has ${len(args)} arguments\n  for arg in args {\n    print(\nargument: \n, arg)\n  }\n}\n\ntest -n -p alex\n\n\n\n\nAll argment is passed to command in a variable args, this variable is an array\nof strings, commands can't be used as functions, so it won't work\n\n\ntest(\n-n\n, \n-p\n, \nalex\n)  # it generates an error: test is not declared", 
+            "title": "Language"
+        }, 
+        {
+            "location": "/lang-basics/#language-basics", 
+            "text": "", 
+            "title": "Language basics"
+        }, 
+        {
+            "location": "/lang-basics/#hello-world", 
+            "text": "In seti there are several ways to print information on screen, you can use shell\ncommands or the function print.  Using shell commands:  echo Hello World  Using seti print function:  print( Hello World )", 
+            "title": "Hello World"
+        }, 
+        {
+            "location": "/lang-basics/#comments", 
+            "text": "In seti comments are everything that comes after #  # comment\nprint( hello world ) # print hello world", 
+            "title": "Comments"
+        }, 
+        {
+            "location": "/lang-basics/#variables", 
+            "text": "my_var = 7  if my_var doesn't exists, seti will create my_var and attributes 7 to it,\nif it already exists, the value 7 will be attributed to my_var", 
+            "title": "Variables"
+        }, 
+        {
+            "location": "/lang-basics/#basic-types", 
+            "text": "", 
+            "title": "Basic types"
+        }, 
+        {
+            "location": "/lang-basics/#integer", 
+            "text": "my_var = 7\nprint(type(my_var))  # int  Like in other languages, int in seti has oprations as add, sub, div and mult  v1 = 7\nv2 = 3\nv3 = v1 + v2*v1 - v2/v1\nv3 += v1%v2 # mod", 
+            "title": "integer"
+        }, 
+        {
+            "location": "/lang-basics/#real", 
+            "text": "my_var = 7.5\nprint(type(my_var))  # real  Like in other languages, real in seti has oprations as add, sub, div and mult  v1 = 7.1\nv2 = 3.3\nv3 = v1 + v2*v1 - v2/v1\nv3 += 2.3", 
+            "title": "real"
+        }, 
+        {
+            "location": "/lang-basics/#string", 
+            "text": "my_var =  test \nprint(type(my_var))  # string  Concatenating string:  str1 =  hello \nstr2 =  world \nstr = str1 +     + str2  String functions:\nstring.upper()\nstring.lower()\nstring.split(delim)\nstring.trim(arg = \" \")\nstring.trim_left(arg = \" \")\nstring.trim_right(arg = \" \")  str1 =  hElLo \nstr2 =  hElLo \nstr1.upper() # HELLO\nstr2.lower() # hello  str1 =  test1,test2,test3 \narr = str1.split( , )  # [ test1 ,  test2 ,  test3 ]  str1 =    test1   \nstr2 =    test2   \nstr1.trimm_right()  #    test1 \nstr1.trimm_left()  #  test1 \nstr2.trim()  #  test2", 
+            "title": "string"
+        }, 
+        {
+            "location": "/lang-basics/#null", 
+            "text": "my_var = null\nprint(my_var)  # null\nprint(type(my_var))  # null_t", 
+            "title": "null"
+        }, 
+        {
+            "location": "/lang-basics/#boolean", 
+            "text": "my_var_t = true\nmy_var_f = false\nprint(my_var_t)  # true\nprint(type(my_var_t))  # bool", 
+            "title": "boolean"
+        }, 
+        {
+            "location": "/lang-basics/#array", 
+            "text": "my_var = [4,  str , [1, 2]]\nprint(type(my_var))  # array  Array access  arr = [4,  str , [1, 2]]\nprint(arr[0])  # 4\nprint(arr[1])  # str\nprint(arr[2][1])  # 2\n\narr[0] = 10\nprint(arr[0])  # 10  Array functions:\narray.join(sep)", 
+            "title": "array"
+        }, 
+        {
+            "location": "/lang-basics/#map", 
+            "text": "my_var = { key1 :  test ,  key2 : 5, 6: other }\nprint(type(my_var))  # map  Map access  my_var = { key1 :  test , { key2 : 5,  t :[1,2]}, 6: other }\nprint(arr[ key1 ])  #  test \nprint(arr[ key2 ][ t ])  # [1, 2]\nprint(arr[ key2 ][ t ][0])  # 1\n\nmy_var[ key1 ] = 4\nprint(arr[ key1 ])  # 4", 
+            "title": "map"
+        }, 
+        {
+            "location": "/lang-basics/#tuple", 
+            "text": "my_var =  str , 4, [1, 3]\nprint(type(my_var))  # tuple  Tuple access works as array access", 
+            "title": "tuple"
+        }, 
+        {
+            "location": "/lang-basics/#control-flow-statements", 
+            "text": "", 
+            "title": "Control flow statements"
+        }, 
+        {
+            "location": "/lang-basics/#if-and-else", 
+            "text": "if is_raining() {\n  print ( it is raining )\n} else if is_snowing() {\n  print( it is snowing )\n} else {\n  print( sun is up in the sky )\n}", 
+            "title": "If and else"
+        }, 
+        {
+            "location": "/lang-basics/#switch-case", 
+            "text": "a =  res \n\nswitch a {\n  case  asdf ,7 {\n    print( ok )\n  }\n\n  case  res  {\n    print( other )\n  }\n\n  default {\n    print( default )\n  }\n}  if switch has no argument, so it is like the argument was true  switch {\n  case true {\n    print( true )\n  }\n\n  case false {\n    print( false )\n  }\n}", 
+            "title": "Switch case"
+        }, 
+        {
+            "location": "/lang-basics/#while-loop", 
+            "text": "a = 1\n\nwhile a   10 {\n  print(a)\n  a = a + 1\n}", 
+            "title": "While loop"
+        }, 
+        {
+            "location": "/lang-basics/#for-loop", 
+            "text": "a = [1, 2, 3, 4]\n\nfor i in a {\n  print(i)\n}  print:  1\n2\n3\n4  a = [1, 2, 3, 4]\nb = [10, 11, 12, 13, 15, 16]\nc = [6, 5, 7]\n\nfor i in a, b, [55, 56, 57] {\n  print(i)\n}  print:  (1, 10, 55)\n(2, 11, 56)\n(3, 12, 57)  v1 = [1, 2, 3, 4]\nv2 = [10, 11]\n\nfor i, j in v1, v2 {\n  print(i,  :   ,j)\n}  print:  1:10\n2:11", 
+            "title": "For loop"
+        }, 
+        {
+            "location": "/lang-basics/#break-and-continue", 
+            "text": "i = 0\nwhile i   10 {\n  if i == 7 {\n    break\n  }\n\n  print(i)\n  i = i +1\n}  print:  0\n1\n2\n3\n4\n5\n6  i = 0\nwhile i   10 {\n  if i == 7 {\n    i = i +1\n    continue\n  }\n\n  print(i)\n  i = i +1\n}  print:  0\n1\n2\n3\n4\n5\n6\n8\n9\n0", 
+            "title": "Break and continue"
+        }, 
+        {
+            "location": "/lang-basics/#shell-commands", 
+            "text": "To execute others programs in seti is very similar the way that works others\nshell languages.", 
+            "title": "Shell commands"
+        }, 
+        {
+            "location": "/lang-basics/#simple-command", 
+            "text": "echo hello world", 
+            "title": "Simple command"
+        }, 
+        {
+            "location": "/lang-basics/#redirect-to-a-file", 
+            "text": "echo hello world   file.txt", 
+            "title": "Redirect to a file"
+        }, 
+        {
+            "location": "/lang-basics/#redirect-and-append-to-a-file", 
+            "text": "echo hello world   file.txt\necho append this text   file.txt", 
+            "title": "Redirect and append to a file"
+        }, 
+        {
+            "location": "/lang-basics/#input-from-a-file", 
+            "text": "cat   file.txt", 
+            "title": "Input from a file"
+        }, 
+        {
+            "location": "/lang-basics/#pipeline-of-commands", 
+            "text": "ls | grep test  cat   file.txt | grep mytext  cat   file.txt | grep other_text   other.txt", 
+            "title": "Pipeline of commands"
+        }, 
+        {
+            "location": "/lang-basics/#logic-operation-with-commands", 
+            "text": "And operation:  cmd1   cmd2  If cmd1 has exit status 0 (correct), executes cmd2, if not, doesn't execute cmd2  Or operation:  cmd1 || cmd2  If cmd1 has exit status 0 (correct), doesn't execute cmd2, if not, executes cmd2", 
+            "title": "Logic operation with commands"
+        }, 
+        {
+            "location": "/lang-basics/#background-commands", 
+            "text": "As in bash, to put a command in background in seti, the command must end with   ls    ls | grep some    ls | grep some   file    cmd1 || cmd2", 
+            "title": "Background commands"
+        }, 
+        {
+            "location": "/lang-basics/#assign-commands-to-variables", 
+            "text": "Almost everything in seti is a an object, in fact only commands are not\nobjects, but the result of commands can be stored on an object  files = $(ls)  files = $(ls | grep test)  files = $(cat   file.txt | grep test)  the only requirement is that the output must be for variable, so it won't\nwork:  files = $(cat   file.txt | grep test   out.txt)  The variable that receives a command result can be used on if or for loop  my_cmd = $(cmd_test)\nif my_cmd {\n  echo command worked\n}  command object has an iterator object associated with it too:  files = $(ls)\n\nfor file in files {\n  print( file is:  , file)\n}  or you can change the delimiter using in command iterator:  for piece in $(cat   file).delim( \\t ) {\n  print( piece is:  , file)\n}", 
+            "title": "Assign commands to variables"
+        }, 
+        {
+            "location": "/lang-basics/#functions", 
+            "text": "In almost everything is an object, in fact except commands declaration,\neverything is an ojbect including functions, so a function can be assigned\nto other variable or be used as an argument for other function.\nPS: Functions are NOT commands like happens in bash", 
+            "title": "Functions"
+        }, 
+        {
+            "location": "/lang-basics/#functions-return", 
+            "text": "func test(a, b) {\n  print(a,b)\n}  if no return is specified, the return of the function is null  func test(a, b) {\n  return a + b\n}", 
+            "title": "functions return"
+        }, 
+        {
+            "location": "/lang-basics/#default-parameters", 
+            "text": "the function can have default parameters:  func test(a, b = 4) {\n  return a + b\n}\n\nres = func(5, 6)  # 11\nres1 = func(5)  # 9", 
+            "title": "default parameters"
+        }, 
+        {
+            "location": "/lang-basics/#variadic", 
+            "text": "in seti functions support variadic parameters too:  func make_and_print_tuple(t...) {\n  for item in t {\n    print( item:  , item)\n  }\n  return t\n}\n\ntres = make_and_print_tuple(5,  test , true)", 
+            "title": "variadic"
+        }, 
+        {
+            "location": "/lang-basics/#function-as-argument", 
+            "text": "func receiv_func(a, b) {\n  return b(a)\n}\n\nfunc test_b(i) {\n  return i + 10\n}\n\nprint(receiv_func(4,test_b))", 
+            "title": "function as argument"
+        }, 
+        {
+            "location": "/lang-basics/#lambda-functions", 
+            "text": "Lambda functions works almost as all other functions, it means, lambda\nsupport default parameters and variadic, the difference is that, lambda\nfunctions can be declared inside blocs, loop, if, or other function  func ret_func(b) {\n  a = func (i) {\n    return i*b\n  }\n\n  return a\n}\n\nv = ret_func(5)(2)\nprint(v)  # 10", 
+            "title": "lambda functions"
+        }, 
+        {
+            "location": "/lang-basics/#declaration-of-commands", 
+            "text": "Commands are the only thing in seti that is not an object, it means, you can't\nassign a command to a variable  cmd test {\n  echo test has ${len(args)} arguments\n  for arg in args {\n    print( argument:  , arg)\n  }\n}\n\ntest -n -p alex  All argment is passed to command in a variable args, this variable is an array\nof strings, commands can't be used as functions, so it won't work  test( -n ,  -p ,  alex )  # it generates an error: test is not declared", 
+            "title": "Declaration of commands"
+        }
+    ]
+}
