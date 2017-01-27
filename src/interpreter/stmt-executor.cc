@@ -284,6 +284,11 @@ void StmtExecutor::Exec(AstNode* node) {
       alias.Exec(static_cast<AliasDeclaration*>(node));
     } break;
 
+    case AstNode::NodeType::kDelStatement: {
+      DelStmtExecutor del(this, symbol_table_stack());
+      del.Exec(static_cast<DelStatement*>(node));
+    } break;
+
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid opcode of statement"),
@@ -738,6 +743,58 @@ void AliasDeclExecutor::Exec(AliasDeclaration *node) {
   std::vector<std::string> cmd_pieces = cmd_exec.Exec(node->cmd());
 
   symbol_table_stack().SetCmdAlias(alias_name, std::move(cmd_pieces));
+}
+
+void DelStmtExecutor::Exec(DelStatement *node) {
+  ExpressionList* expr_list_node = node->exp_list();
+
+  std::vector<Expression*> expr_vec = expr_list_node->children();
+  for (AstNode* value: expr_vec) {
+    Del(static_cast<Expression*>(value));
+  }
+}
+
+void DelStmtExecutor::Del(Expression* node) {
+  switch (node->type()) {
+    case AstNode::NodeType::kIdentifier:
+      DelId(static_cast<Identifier*>(node));
+      break;
+
+    case AstNode::NodeType::kArray:
+      DelArray(static_cast<Array*>(node));
+      break;
+
+    default:
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("expression not valid for del"),
+                         node->pos());
+  }
+}
+
+void DelStmtExecutor::DelId(Identifier* id_node) {
+  // remove the entry of variable on symbol table,
+  // it doesn't remove the object from memotry
+  // if the counter of shared pointer is larger than
+  // one, the object keep in the memory
+  const std::string& name = id_node->name();
+
+  if (!symbol_table_stack().Remove(name)) {
+    throw RunTimeError(RunTimeError::ErrorCode::ID_NOT_FOUND,
+                       boost::format("variable %1% not found")%name,
+                       id_node->pos());
+  }
+}
+
+void DelStmtExecutor::DelArray(Array* array_node) {
+  Expression* arr_exp = array_node->arr_exp();
+
+  ExpressionExecutor expr(this, symbol_table_stack());
+  ObjectPtr array_obj = expr.Exec(arr_exp);
+
+  // Executes index expression of array
+  ObjectPtr index = expr.Exec(array_node->index_exp());
+
+  array_obj->DelItem(index);
 }
 
 }

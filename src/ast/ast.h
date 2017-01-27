@@ -1215,7 +1215,7 @@ class DelStatement: public Statement {
     visitor->VisitDelStatement(this);
   }
 
-  ExpressionList* exp_list() const noexcept {
+  ExpressionList* exp_list() noexcept {
     return exp_list_.get();
   }
 
@@ -1225,7 +1225,7 @@ class DelStatement: public Statement {
   std::unique_ptr<ExpressionList> exp_list_;
 
   DelStatement(std::unique_ptr<ExpressionList> exp_list, Position position)
-      : Statement(NodeType::kCaseStatement, position)
+      : Statement(NodeType::kDelStatement, position)
       , exp_list_(std::move(exp_list)) {}
 };
 

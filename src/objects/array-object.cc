@@ -119,6 +119,37 @@ ObjectPtr ArrayObject::ObjIter(ObjectPtr obj) {
   return obj_factory.NewArrayIter(obj);
 }
 
+void ArrayObject::DelItem(ObjectPtr index) {
+  if (index->type() == ObjectType::INT) {
+    // remove the item pointed by index
+    int i = static_cast<IntObject&>(*index).value();
+    value_.erase(value_.begin()+i);
+  } else if (index->type() == ObjectType::SLICE) {
+    // remove a range of items determined by the slice
+    SliceObject& slice = static_cast<SliceObject&>(*index);
+
+    int start = 0;
+    int end = value_.size();
+    int step = 1;
+
+    std::tie(start, end, step) = SliceLogic(slice, value_.size());
+
+    if (end > value_.size()) {
+      throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                         boost::format("value of end of slice: %1% larger than "
+                                       "the array size: %2%")
+                         %end%value_.size());
+    }
+
+    for (int i = start; i < end; i += step) {
+      value_.erase(value_.begin()+i);
+    }
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("index must be int"));
+  }
+}
+
 bool ArrayObject::operator==(const Object& obj) const {
   if (obj.type() != ObjectType::ARRAY) {
     return false;

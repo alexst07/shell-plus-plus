@@ -220,9 +220,9 @@ class SymbolTable {
   inline bool Remove(const std::string& name) {
     if (map_.erase(name) == 1) {
       return true;
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   inline SymbolConstIterator end() const noexcept {
@@ -292,6 +292,7 @@ class SymbolTableStack: public SymbolTableStackBase {
   SymbolTableStack(SymbolTablePtr symbol_table = SymbolTablePtr(nullptr)) {
     if (symbol_table) {
       main_table_ = symbol_table;
+      stack_.push_back(symbol_table);
     }
   }
 
@@ -399,6 +400,18 @@ class SymbolTableStack: public SymbolTableStackBase {
 
     return std::tuple<std::shared_ptr<Object>,bool>(
           std::shared_ptr<Object>(nullptr), false);
+  }
+
+  bool Remove(const std::string& name) {
+    for (int i = (stack_.size() - 1); i >= 0 ; i--) {
+      bool r = stack_.at(i)->Remove(name);
+
+      if (r) {
+        return r;
+      }
+    }
+
+    return main_table_.lock()->Remove(name);
   }
 
   bool InsertEntry(const std::string& name, SymbolAttr&& symbol) override {

@@ -105,14 +105,14 @@ ObjectPtr MapObject::ObjIter(ObjectPtr obj) {
 }
 
 ObjectPtr& MapObject::ElementRef(ObjectPtr obj_index) {
-    if (Exists(obj_index)) {
-      size_t hash = obj_index->Hash();
-      auto it = value_.find(hash);
-      return it->second.back().second;
-    } else {
-      return Insert_(obj_index);
-    }
+  if (Exists(obj_index)) {
+    size_t hash = obj_index->Hash();
+    auto it = value_.find(hash);
+    return it->second.back().second;
+  } else {
+    return Insert_(obj_index);
   }
+}
 
 bool MapObject::operator==(const Object& obj) const {
   if (obj.type() != ObjectType::MAP) {

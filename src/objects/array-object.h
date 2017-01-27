@@ -91,6 +91,8 @@ class ArrayObject: public Object {
 
    ObjectPtr GetItem(ObjectPtr index) override;
 
+   void DelItem(ObjectPtr index) override;
+
    ObjectPtr& GetItemRef(ObjectPtr index) override;
 
    std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,

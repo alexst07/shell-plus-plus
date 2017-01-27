@@ -268,6 +268,20 @@ class AliasDeclExecutor: public Executor {
   void Exec(AliasDeclaration *node);
 };
 
+class DelStmtExecutor: public Executor {
+ public:
+  DelStmtExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(DelStatement *node);
+
+  void Del(Expression* node);
+
+  void DelId(Identifier* id_node);
+
+  void DelArray(Array* node);
+};
+
 }
 }
 

@@ -129,6 +129,11 @@ class Object {
                        boost::format("type has no iter interface"));
   }
 
+  virtual void DelItem(std::shared_ptr<Object>) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has del operation"));
+  }
+
   virtual std::shared_ptr<Object> Add(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no + operator"));
