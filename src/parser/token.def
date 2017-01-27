@@ -100,6 +100,7 @@ STMT_KEYWORD(SWITCH,        "switch")
 STMT_KEYWORD(CASE,          "case")
 STMT_KEYWORD(DEFAULT,       "default")
 STMT_KEYWORD(WHERE,         "where")
+STMT_KEYWORD(DEL,           "del")
 STMT_KEYWORD(CATCH,         "catch")
 STMT_KEYWORD(FROM,          "from")
 

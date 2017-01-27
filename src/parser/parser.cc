@@ -207,6 +207,8 @@ std::unique_ptr<Statement> Parser::ParserDeferableStmt() {
     stmt = ParserContinueStmt().MoveAstNode();
   } else if (token_ == TokenKind::KW_SWITCH) {
     stmt = ParserSwitchStmt().MoveAstNode();
+  } else if (token_ == TokenKind::KW_DEL) {
+    stmt = ParserDelStmt().MoveAstNode();
   } else if (token_ == TokenKind::KW_FOR) {
     stmt = ParserForInStmt().MoveAstNode();
   } else if (token_ == TokenKind::LBRACE) {
@@ -524,6 +526,9 @@ ParserResult<Statement> Parser::ParserStmt() {
   } else if (token_ == TokenKind::KW_DEFER) {
     check_end_stmt = true;
     res = std::move(ParserDeferStmt());
+  } else if (token_ == TokenKind::KW_DEL) {
+    check_end_stmt = true;
+    res = std::move(ParserDelStmt());
   } else if (token_ == TokenKind::KW_IMPORT) {
     check_end_stmt = true;
     res = std::move(ParserImportStmt());
@@ -901,6 +906,16 @@ ParserResult<Statement> Parser::ParserSimpleStmt() {
       ErrorMsg(boost::format("not a statement"));
       return ParserResult<Statement>(); // Error
   }
+}
+
+ParserResult<Statement> Parser::ParserDelStmt() {
+  // advance del token
+  Advance();
+  ValidToken();
+
+  std::unique_ptr<ExpressionList> exp_ls(ParserPostExpList().MoveAstNode());
+
+  return ParserResult<Statement>(factory_.NewDelStatement(std::move(exp_ls)));
 }
 
 ParserResult<ExpressionList> Parser::ParserPostExpList() {

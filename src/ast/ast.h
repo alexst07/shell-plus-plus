@@ -65,6 +65,7 @@ namespace internal {
   V(TryCatchStatement)            \
   V(TryFinallyStatement)          \
   V(DeferStatement)               \
+  V(DelStatement)                 \
   V(ImportStatement)              \
   V(DebuggerStatement)
 
@@ -1204,6 +1205,28 @@ class CaseStatement: public Statement {
       : Statement(NodeType::kCaseStatement, position)
       , exp_list_(std::move(exp_list))
       , block_(std::move(block)) {}
+};
+
+class DelStatement: public Statement {
+ public:
+  virtual ~DelStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitDelStatement(this);
+  }
+
+  ExpressionList* exp_list() const noexcept {
+    return exp_list_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<ExpressionList> exp_list_;
+
+  DelStatement(std::unique_ptr<ExpressionList> exp_list, Position position)
+      : Statement(NodeType::kCaseStatement, position)
+      , exp_list_(std::move(exp_list)) {}
 };
 
 class IfStatement: public Statement {

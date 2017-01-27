@@ -284,6 +284,16 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitDelStatement(DelStatement* del_stmt) {
+    Level();
+    std::cout << "<del_stmt>\n";
+    level_++;
+
+    del_stmt->exp_list()->Accept(this);
+
+    level_--;
+  }
+
   void virtual VisitBreakStatement(BreakStatement* pbreak) {
     Level();
     std::cout << "<break>\n";

@@ -283,6 +283,7 @@ class Parser {
   ParserResult<Statement> ParserImportStmt();
   ParserResult<Statement> ParserImportIdStmt();
   ParserResult<Statement> ParserImportPathStmt();
+  ParserResult<Statement> ParserDelStmt();
 
   TokenStream ts_;
   AstNodeFactory factory_;
