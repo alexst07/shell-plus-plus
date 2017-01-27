@@ -16,7 +16,7 @@ if(CMAKE_COMPILER_IS_GNUCXX AND COV_TESTS)
     setup_target_for_coverage(seti_coverage "./shell/seti ../test/interpreter/run.seti" coverage)
 endif()
 
-target_link_libraries(seti_exe seti)
+target_link_libraries(seti_exe seti ${READLINE_LIBRARY})
 
 if(CMAKE_COMPILER_IS_GNUCXX AND COV_TESTS)
     target_link_libraries(seti_exe gcov)
