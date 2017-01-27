@@ -1,0 +1,5 @@
+site_name: Seti
+
+pages:
+    - Home: index.md
+    - Language: lang-basics.md
