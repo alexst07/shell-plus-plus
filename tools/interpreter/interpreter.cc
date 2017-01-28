@@ -16,7 +16,8 @@ int main(int argc, char **argv) {
 
   Interpreter i;
   try {
-    i.Exec(name);
+    ScriptStream file(name);
+    i.Exec(file);
   } catch (seti::RunTimeError& e) {
     std::cout << "Error: " << e.pos().line << ": " << e.pos().col
               << ": " << e.what() << "\n";

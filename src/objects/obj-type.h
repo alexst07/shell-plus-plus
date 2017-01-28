@@ -78,7 +78,8 @@ class ModuleImportObject: public Object {
       , module_name_(module_name)
       , is_file_path_(is_file_path) {
     try {
-      interpreter_.Exec(module_name_);
+      ScriptStream file(module_name_);
+      interpreter_.Exec(file);
     } catch (RunTimeError& e) {
       Message msg(Message::Severity::ERR, boost::format(e.msg()), e.pos().line,
                   e.pos().col);

@@ -17,7 +17,6 @@
 #include <string>
 #include <memory>
 #include <iostream>
-#include <fstream>
 #include <boost/filesystem.hpp>
 
 #include "stmt-executor.h"
@@ -74,17 +73,9 @@ void Interpreter::RegisterFileVars(const std::string& file) {
   InsertVar("__path__", obj_factory.NewString(parent_path.string()));
 }
 
-void Interpreter::Exec(std::string name) {
-  std::ifstream file(name);
-
-  if (!file.is_open()) {
-    throw RunTimeError(RunTimeError::ErrorCode::INTERPRETER_FILE,
-                       boost::format("can't open file: %1%")%name,
-                       Position{0, 0});
-  }
-
+void Interpreter::Exec(ScriptStream& file) {
   std::stringstream buffer;
-  buffer << file.rdbuf();
+  buffer << file.fs().rdbuf();
 
   Lexer l(buffer.str());
   TokenStream ts = l.Scanner();
@@ -93,7 +84,7 @@ void Interpreter::Exec(std::string name) {
   stmt_list_ = res.MoveAstNode();
 
   if (p.nerrors() == 0) {
-    RegisterFileVars(name);
+    RegisterFileVars(file.filename());
     RootExecutor executor(symbol_table_stack_);
     executor.Exec(stmt_list_.get());
   } else {
@@ -144,7 +135,7 @@ void Interpreter::ExecInterative(
   }
 }
 
-ObjectPtr Interpreter::LookupSymbol(const std::string& name) {
+std::shared_ptr<Object> Interpreter::LookupSymbol(const std::string& name) {
   std::shared_ptr<Object> obj;
   bool exists = false;
 

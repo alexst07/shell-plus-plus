@@ -35,7 +35,15 @@ Runner::Runner() {
 
 void Runner::Exec(std::string name) {
   try {
-    interpreter_.Exec(name);
+    internal::ScriptStream file(name);
+
+    if (!file.IsOpen()) {
+      throw RunTimeError(RunTimeError::ErrorCode::INTERPRETER_FILE,
+                         boost::format("can't open file: %1%")%name,
+                         internal::Position{0, 0});
+    }
+
+    interpreter_.Exec(file);
   } catch (RunTimeError& e) {
     std::cout << "Error: " << e.pos().line << ": " << e.pos().col
               << ": " << e.what() << "\n\n";

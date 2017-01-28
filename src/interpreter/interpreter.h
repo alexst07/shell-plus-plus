@@ -16,15 +16,27 @@
 #define SETI_INTERPRETER_H
 
 #include <functional>
+#include <fstream>
 
 #include "symbol-table.h"
-#include "ast/ast.h"
-#include "objects/abstract-obj.h"
 
 namespace seti {
 namespace internal {
 
-class RootExecutor;
+class Executor;
+
+class ScriptStream {
+ public:
+  ScriptStream(const std::string& filename)
+      : filename_(filename), fs_(filename) {}
+
+  std::ifstream& fs() { return fs_; }
+  const std::string& filename() const { return filename_; }
+  bool IsOpen() const { return fs_.is_open(); }
+ private:
+  std::string filename_;
+  std::ifstream fs_;
+};
 
 class Interpreter {
  public:
@@ -36,16 +48,16 @@ class Interpreter {
     return symbol_table_stack_;
   }
 
-  void Exec(std::string name);
+  void Exec(ScriptStream& file);
   void ExecInterative(const std::function<std::string(Executor *, bool)> &func);
 
-  ObjectPtr LookupSymbol(const std::string& name);
+  std::shared_ptr<Object> LookupSymbol(const std::string& name);
 
   Executor* ExecutorPtr();
 
  private:
   void RegisterVars();
-  void InsertVar(const std::string& name, ObjectPtr obj);
+  void InsertVar(const std::string& name, std::shared_ptr<Object> obj);
   void RegisterFileVars(const std::string& file);
 
   SymbolTablePtr symbol_table_;
