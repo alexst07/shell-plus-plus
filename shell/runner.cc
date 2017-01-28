@@ -21,9 +21,11 @@
 #include <iostream>
 #include <fstream>
 #include <readline/readline.h>
+#include <boost/filesystem.hpp>
 
 #include "env-shell.h"
 #include "objects/str-object.h"
+#include "utils/dir.h"
 
 namespace seti {
 
@@ -31,6 +33,14 @@ Runner::Runner() {
   using namespace internal;
 
   internal::EnvShell::instance()->InitShell();
+
+  namespace fs = boost::filesystem;
+
+  fs::path path_rc = fs::path(GetHome() + "/.setirc");
+
+  if (fs::exists(path_rc)) {
+    Exec(path_rc.string());
+  }
 }
 
 void Runner::Exec(std::string name) {
