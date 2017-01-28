@@ -33,14 +33,6 @@ Runner::Runner() {
   using namespace internal;
 
   internal::EnvShell::instance()->InitShell();
-
-  namespace fs = boost::filesystem;
-
-  fs::path path_rc = fs::path(GetHome() + "/.setirc");
-
-  if (fs::exists(path_rc)) {
-    Exec(path_rc.string());
-  }
 }
 
 void Runner::Exec(std::string name) {
@@ -66,6 +58,14 @@ void Runner::Exec(std::string name) {
 }
 
 void Runner::ExecInterative() {
+  namespace fs = boost::filesystem;
+
+  fs::path path_rc = fs::path(internal::GetHome() + "/.setirc");
+
+  if (fs::exists(path_rc)) {
+    Exec(path_rc.string());
+  }
+
   while (true) {
     try {
       interpreter_.ExecInterative([&](internal::Executor* exec, bool concat) {

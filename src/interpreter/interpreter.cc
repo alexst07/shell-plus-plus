@@ -43,8 +43,6 @@ Interpreter::Interpreter(bool main)
   module::path::RegisterModule(symbol_table_stack_);
   module::env::RegisterModule(symbol_table_stack_);
   cmds::stdf::RegisterCmds(symbol_table_stack_);
-
-  RegisterVars();
 }
 
 void Interpreter::InsertVar(const std::string& name, ObjectPtr obj) {
@@ -84,6 +82,7 @@ void Interpreter::Exec(ScriptStream& file) {
   stmt_list_ = res.MoveAstNode();
 
   if (p.nerrors() == 0) {
+    RegisterVars();
     RegisterFileVars(file.filename());
     RootExecutor executor(symbol_table_stack_);
     executor.Exec(stmt_list_.get());
@@ -120,6 +119,7 @@ void Interpreter::ExecInterative(
 
     if (p.nerrors() == 0) {
       concat = false;
+      RegisterVars();
       executor.Exec(stmt_list.get());
     } else {
       if (p.StmtIncomplete()) {
