@@ -104,13 +104,13 @@ void Interpreter::Exec(std::string name) {
 }
 
 void Interpreter::ExecInterative(
-    const std::function<std::string(bool concat)>& func) {
+    const std::function<std::string(Executor*, bool concat)>& func) {
   RootExecutor executor(symbol_table_stack_);
   bool concat = false;
   std::string str_source;
 
   while (true) {
-    std::string line = func(concat);
+    std::string line = func(&executor, concat);
     if (concat) {
       str_source += std::string("\n") +  line;
     } else {
@@ -142,6 +142,23 @@ void Interpreter::ExecInterative(
       }
     }
   }
+}
+
+ObjectPtr Interpreter::LookupSymbol(const std::string& name) {
+  std::shared_ptr<Object> obj;
+  bool exists = false;
+
+  std::tie(obj, exists) = symbol_table_stack_.LookupObj(name);
+
+  if (exists) {
+    return obj;
+  }
+
+  return obj = std::shared_ptr<Object>(nullptr);
+}
+
+Executor* Interpreter::ExecutorPtr() {
+
 }
 
 }

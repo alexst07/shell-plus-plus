@@ -23,6 +23,7 @@
 #include <readline/readline.h>
 
 #include "env-shell.h"
+#include "objects/str-object.h"
 
 namespace seti {
 
@@ -49,15 +50,40 @@ void Runner::Exec(std::string name) {
 void Runner::ExecInterative() {
   while (true) {
     try {
-      interpreter_.ExecInterative([](bool concat){
+      interpreter_.ExecInterative([&](internal::Executor* exec, bool concat) {
         char *input;
         std::string str_source;
+        std::string prompt;
 
         if (concat) {
-          input = readline("| ");
+          prompt = "| ";
+
+          internal::ObjectPtr obj_func = interpreter_.LookupSymbol("PS2");
+
+          if (obj_func) {
+            std::vector<internal::ObjectPtr> params;
+            internal::ObjectPtr obj = obj_func->Call(exec, std::move(params));
+
+            if (obj->type() == internal::Object::ObjectType::STRING) {
+              prompt = static_cast<internal::StringObject&>(*obj).value();
+            }
+          }
         } else {
-          input = readline("> ");
+          prompt = "> ";
+
+          internal::ObjectPtr obj_func = interpreter_.LookupSymbol("PS1");
+
+          if (obj_func) {
+            std::vector<internal::ObjectPtr> params;
+            internal::ObjectPtr obj = obj_func->Call(exec, std::move(params));
+
+            if (obj->type() == internal::Object::ObjectType::STRING) {
+              prompt = static_cast<internal::StringObject&>(*obj).value();
+            }
+          }
         }
+
+        input = readline(prompt.c_str());
 
         if (input == nullptr) {
           exit(0);

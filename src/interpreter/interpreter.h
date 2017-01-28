@@ -24,6 +24,8 @@
 namespace seti {
 namespace internal {
 
+class RootExecutor;
+
 class Interpreter {
  public:
   Interpreter(bool main = false);
@@ -35,7 +37,11 @@ class Interpreter {
   }
 
   void Exec(std::string name);
-  void ExecInterative(const std::function<std::string(bool concat)>& func);
+  void ExecInterative(const std::function<std::string(Executor *, bool)> &func);
+
+  ObjectPtr LookupSymbol(const std::string& name);
+
+  Executor* ExecutorPtr();
 
  private:
   void RegisterVars();
