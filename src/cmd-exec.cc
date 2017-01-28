@@ -74,8 +74,8 @@ Process& Process::operator=(Process&& p) {
 void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
                             bool foreground) {
   pid_t pid;
-  bool shell_is_interactive = EnvShell::instance()->shell_is_interactive();
   int shell_terminal = EnvShell::instance()->shell_terminal();
+  int shell_is_interactive = isatty(shell_terminal);
 
   if (shell_is_interactive) {
     // Put the process into the process group and give the process group
@@ -323,6 +323,8 @@ void Job::LaunchInternalCmd(CmdEntryPtr cmd) {
 }
 
 void Job::LaunchJob(int foreground) {
+  int shell_terminal = EnvShell::instance()->shell_terminal();
+
   // executes commands that change self process status
   // commands like cd and exit must be executed this way
   if (process_.size() == 1) {
@@ -366,7 +368,7 @@ void Job::LaunchJob(int foreground) {
     } else {
       // this is the parent process
       process_[i].pid_ = pid;
-      bool shell_is_interactive = EnvShell::instance()->shell_is_interactive();
+      int shell_is_interactive = isatty(shell_terminal);
 
       if (shell_is_interactive) {
         if (!pgid_) {
@@ -385,7 +387,7 @@ void Job::LaunchJob(int foreground) {
     infile = mypipe[0];
   }
 
-  bool shell_is_interactive = EnvShell::instance()->shell_is_interactive();
+  int shell_is_interactive = isatty(shell_terminal);
 
   if (!shell_is_interactive) {
     WaitForJob();
