@@ -66,9 +66,6 @@ ObjectPtr Type::Constructor(Executor* /*parent*/,
 // has a symbol table stack to store attributes
 ObjectPtr DeclClassType::Constructor(Executor* parent,
                                 std::vector<ObjectPtr>&& params) {
-  std::cout << ">>>> " << this->name() << "\n";
-  symbol_table_stack().Dump();
-
   ObjectFactory obj_factory(symbol_table_stack());
   ObjectPtr obj_self(obj_factory.NewDeclObject(this->name()));
 
@@ -107,6 +104,16 @@ std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object> self,
 
 std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
+  if (symbol_table_stack().ExistsSymbolInClass(name)) {
+    ObjectPtr att_obj = symbol_table_stack().LookupClass(name).SharedAccess();
+
+    if (att_obj->type() == ObjectType::FUNC) {
+      return static_cast<DeclClassType&>(*ObjType()).CallObject(name, self);
+    }
+
+    return att_obj;
+  }
+
   SymbolTableStack& st =
       static_cast<DeclClassType&>(*ObjType()).SymTableStack();
   ObjectPtr att_obj = st.Lookup(name, false).SharedAccess();
@@ -120,9 +127,7 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
 
 std::shared_ptr<Object>& DeclClassObject::AttrAssign(
     std::shared_ptr<Object> /*self*/, const std::string& name) {
-  SymbolTableStack& st =
-      static_cast<DeclClassType&>(*ObjType()).SymTableStack();
-  ObjectPtr& att_obj = st.Lookup(name, true).Ref();
+  ObjectPtr& att_obj = symbol_table_stack().LookupClass(name).Ref();
 
   return att_obj;
 }

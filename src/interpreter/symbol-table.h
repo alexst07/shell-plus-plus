@@ -299,11 +299,13 @@ class SymbolTableStack: public SymbolTableStackBase {
   SymbolTableStack(const SymbolTableStack& st) {
     stack_ = st.stack_;
     main_table_ = st.main_table_;
+    class_table_ = st.class_table_;
   }
 
   SymbolTableStack& operator=(const SymbolTableStack& st) {
     stack_ = st.stack_;
     main_table_ = st.main_table_;
+    class_table_ = st.class_table_;
 
     return *this;
   }
@@ -311,11 +313,13 @@ class SymbolTableStack: public SymbolTableStackBase {
   SymbolTableStack(SymbolTableStack&& st) {
     stack_ = std::move(st.stack_);
     main_table_ = st.main_table_;
+    class_table_ = st.class_table_;
   }
 
   SymbolTableStack& operator=(SymbolTableStack&& st) {
     stack_ = std::move(st.stack_);
     main_table_ = st.main_table_;
+    class_table_ = st.class_table_;
 
     return *this;
   }
@@ -426,6 +430,7 @@ class SymbolTableStack: public SymbolTableStackBase {
                 std::shared_ptr<Object> value) override {
     if (stack_.size() > 0) {
       stack_.back()->SetValue(name, value);
+      return;
     }
 
     main_table_.lock()->SetValue(name, value);
@@ -540,6 +545,36 @@ class SymbolTableStack: public SymbolTableStackBase {
     return statck;
   }
 
+  void NewClassTable() {
+     class_table_ = SymbolTablePtr(new SymbolTable);
+  }
+
+  SymbolAttr& LookupClass(const std::string& name) {
+    // search on main table if no symbol was found
+    auto it_obj = class_table_->Lookup(name);
+
+    if (it_obj != class_table_->end()) {
+      return it_obj->second;
+    }
+
+    SymbolAttr& ref = class_table_->SetValue(name);
+    return ref;
+
+    throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
+                       boost::format("symbol '%1%' not found")% name);
+  }
+
+  bool ExistsSymbolInClass(const std::string& name) {
+    // search on main table if no symbol was found
+    auto it_obj = class_table_->Lookup(name);
+
+    if (it_obj != class_table_->end()) {
+      return true;
+    }
+
+    return false;
+  }
+
   void Dump() override {
     std::cout << "main table copy: " << main_table_.use_count() << "\n";
     main_table_.lock()->Dump();
@@ -554,6 +589,7 @@ class SymbolTableStack: public SymbolTableStackBase {
  private:
   std::vector<SymbolTablePtr> stack_;
   std::weak_ptr<SymbolTable> main_table_;
+  std::shared_ptr<SymbolTable> class_table_;
 };
 
 }

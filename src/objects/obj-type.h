@@ -37,12 +37,10 @@ class DeclClassObject: public Object {
  public:
   DeclClassObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : Object(ObjectType::DECL_OBJ, obj_type, std::move(sym_table)) {
-    symbol_table_stack().NewTable();
+    symbol_table_stack().NewClassTable();
   }
 
-  virtual ~DeclClassObject() {
-    symbol_table_stack().Pop();
-  }
+  virtual ~DeclClassObject() {}
 
   std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
                                 const std::string& name) override;
@@ -398,4 +396,3 @@ class ModuleType: public TypeObject {
 }
 
 #endif  // SETI_OBJ_TYPE_H
-

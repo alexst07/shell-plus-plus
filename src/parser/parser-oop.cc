@@ -87,11 +87,10 @@ ParserResult<Declaration> Parser::ParserMethodDeclaration() {
 ParserResult<ClassBlock> Parser::ParserClassBlock() {
   // advance lbrace
   Advance();
-  ValidToken();
 
   std::vector<std::unique_ptr<Declaration>> decl_list;
 
-  while (token_.IsNot(TokenKind::EOS, TokenKind::RBRACE)) {
+  while (ValidToken().IsNot(TokenKind::EOS, TokenKind::RBRACE)) {
     ValidToken();
 
     switch (token_.GetKind()) {
