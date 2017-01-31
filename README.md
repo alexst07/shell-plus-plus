@@ -14,17 +14,31 @@ functional programming and others, to shell script.
   * Linux
   
 ## Compiling
-In the root of the project:
+
+### Fedora
 ```
-$ mkdir build
-$ cd build
+# dnf install gcc-c++ clang
+# dnf install boost boost-devel readline readline-devel cmake git
+$ git clone https://github.com/alexst07/seti.git
+$ cd seti
+$ mkdir build && cd build
 $ cmake ..
 $ make
+# make install
 ```
-## Installing
+
+### Ubuntu
 ```
-$ sudo make install
+# apt-get install -y build-essential
+# apt-get install -y libboost-all-dev libreadline6 libreadline6-dev git cmake
+$ git clone https://github.com/alexst07/seti.git
+$ cd seti
+$ mkdir build && cd build
+$ cmake ..
+$ make
+# make install
 ```
+
 # Running
 ## Hello world
 ```
