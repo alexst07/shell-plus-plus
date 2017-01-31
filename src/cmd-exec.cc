@@ -27,6 +27,51 @@
 namespace seti {
 namespace internal {
 
+Arguments::Arguments(std::vector<std::string>&& args): args_(std::move(args)) {
+  if (args_.size() > 1) {
+    globbuf_.gl_offs = 1;
+    int flag = GLOB_NOMAGIC | GLOB_MARK | GLOB_BRACE | GLOB_TILDE | GLOB_DOOFFS;
+
+    for (int i = 1; i < args_.size(); i++) {
+      if (i > 1) {
+        flag |= GLOB_APPEND;
+      }
+
+      glob(args_[i].c_str(), flag, nullptr, &globbuf_);
+    }
+
+    globbuf_.gl_pathv[0] = const_cast<char*>(args_[0].c_str());
+
+    // globbuf_.gl_pathc don't count the offset, so we need plus one
+    // on the memory allocation, on the loop and in the nullptr assignment
+    argv_ = new char*[globbuf_.gl_pathc + 2];
+
+    for (int i = 0; i <= globbuf_.gl_pathc; i++) {
+      argv_[i] = const_cast<char*>(globbuf_.gl_pathv[i]);
+    }
+
+    argv_[globbuf_.gl_pathc + 1] = nullptr;
+    return;
+  }
+
+  argv_ = new char*[2];
+  argv_[0] = const_cast<char*>(args_[0].c_str());
+  argv_[1] = nullptr;
+}
+
+Arguments::~Arguments() {
+  delete argv_;
+  globfree (&globbuf_);
+}
+
+char **Arguments::argsv() {
+  return argv_;
+}
+
+std::vector<std::string> Arguments::args() {
+  return std::move(args_);
+}
+
 Process::Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args)
     : args_(std::move(args)), sym_tab_(sym_tab.MainTable())
     , completed_(false)
@@ -152,9 +197,11 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
       shmat(EnvShell::instance()->shmid(), 0, 0);
   err->error = false;
 
+  Arguments glob_args(std::move(args));
+
   if (cmd) {
     try {
-      LaunchCmd(cmd);
+      LaunchCmd(cmd, std::move(glob_args.args()));
       exit(0);
     } catch (RunTimeError& e) {
       // set error on memory region
@@ -168,20 +215,18 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
     }
   }
 
-  char **argv = FillArgv(args);
+  int p = 0;
 
   // Exec the new process
-  execvp(argv[0], argv);
+  execvp(glob_args.argsv()[0], glob_args.argsv());
 
   // set error on memory region
   err->error = true;
   err->except_code = static_cast<int>(RunTimeError::ErrorCode::INVALID_COMMAND);
   err->err_code = errno;
-  int len = std::strlen(argv[0]);
+  int len = std::strlen(glob_args.argsv()[0]);
   len = len >= SETI_CMD_SIZE_MAX? SETI_CMD_SIZE_MAX-1: len;
-  memcpy(err->err_str, argv[0], len);
-
-  delete[] argv;
+  memcpy(err->err_str, glob_args.argsv()[0], len);
 
   // set \0 to end string
   err->err_str[len] = '\0';
@@ -190,8 +235,8 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
   exit(-1);
 }
 
-void Process::LaunchCmd(CmdEntryPtr cmd) {
-  cmd->Exec(parent_, std::move(args_));
+void Process::LaunchCmd(CmdEntryPtr cmd, std::vector<std::string>&& args) {
+  cmd->Exec(parent_, std::move(args));
 }
 
 char** Process::FillArgv(const std::vector<std::string>& args) {

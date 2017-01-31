@@ -22,6 +22,7 @@
 #include <functional>
 #include <boost/variant.hpp>
 #include <termios.h>
+#include <glob.h>
 
 #include "objects/abstract-obj.h"
 #include "interpreter/symbol-table.h"
@@ -107,6 +108,22 @@ struct CmdTable {
   bool expr_;
 };
 
+class Arguments {
+ public:
+  Arguments(std::vector<std::string>&& args);
+  ~Arguments();
+
+  char **argsv();
+
+  std::vector<std::string> args();
+
+  void Process();
+ private:
+  glob_t globbuf_;
+  std::vector<std::string>&& args_;
+  char **argv_;
+};
+
 struct Process {
   Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args);
 
@@ -123,7 +140,7 @@ struct Process {
   void LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
                      bool foreground);
 
-  void LaunchCmd(CmdEntryPtr cmd);
+  void LaunchCmd(CmdEntryPtr cmd, std::vector<std::string>&& args);
 
   char** FillArgv(const std::vector<std::string>& args);
 
@@ -178,4 +195,3 @@ struct Job {
 }
 
 #endif  // SETI_CMD_EXEC_H
-
