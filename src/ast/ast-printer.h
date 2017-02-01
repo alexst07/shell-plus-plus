@@ -120,6 +120,18 @@ class AstPrinter: public AstVisitor {
     std::cout << "<literal value: "<< lit_exp->value() << ">\n";
   }
 
+  void virtual VisitGlob(Glob* glob) {
+    inside_cmd_ = true;
+    Level();
+    std::cout << "<glob: ";
+    auto vec = glob->children();
+
+    for (const auto c: vec) {
+      c->Accept(this);
+    }
+    std::cout << ">\n";
+  }
+
   void virtual VisitAttribute(Attribute* att) {
     Level();
     std::cout << "<attribute>\n";
@@ -690,5 +702,3 @@ class AstPrinter: public AstVisitor {
 }
 }
 #endif  // SETTI_AST_TRAVERSAL_VISITOR_H
-
-

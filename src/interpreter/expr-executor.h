@@ -97,11 +97,23 @@ class ExpressionExecutor: public Executor {
 
   ObjectPtr ExecNull();
 
+  ObjectPtr ExecGlob(Glob* glob);
+
   void set_stop(StopFlag flag) override;
 
  private:
   bool pass_ref_;  // this attribute is only used to execute attribute expr
   ObjectFactory obj_factory_;
+};
+
+class GlobExecutor: public Executor {
+ public:
+  GlobExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  ObjectPtr Exec(Glob* glob_node);
+
+  std::string GetGlobStr(Glob* glob);
 };
 
 class ExprListExecutor: public Executor {
@@ -138,5 +150,3 @@ class FuncCallExecutor: public Executor {
 }
 
 #endif  // SETI_EXPR_EXECUTOR_H
-
-

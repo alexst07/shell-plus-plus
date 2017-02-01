@@ -32,6 +32,11 @@ class AstNodeFactory {
     return std::unique_ptr<NullExpression>(new NullExpression(fn_pos_()));
   }
 
+  inline std::unique_ptr<Glob> NewGlob(
+      std::vector<std::unique_ptr<AstNode>>&& pieces) {
+    return std::unique_ptr<Glob>(new Glob(std::move(pieces), fn_pos_()));
+  }
+
   inline std::unique_ptr<BinaryOperation> NewBinaryOperation(
       TokenKind token_kind, std::unique_ptr<Expression> left,
       std::unique_ptr<Expression> right) {

@@ -1475,6 +1475,39 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
   }
 }
 
+ParserResult<Expression> Parser::ParserGlobExp() {
+  // this method is called on LiteralExp, and it
+  // was already advenced there
+  std::vector<std::unique_ptr<AstNode>> pieces;
+
+  int num_pieces = 0;
+  while (token_.IsNot(TokenKind::MOD)) {
+    num_pieces++;
+
+    if (token_ == TokenKind::EOS) {
+      ErrorMsg(boost::format("Invalid end before end glob"));
+      return ParserResult<Expression>(); // Error
+    }
+
+    // Puts piece of the command on a vector, this vector will be the
+    // entire glob expression
+    auto piece = factory_.NewCmdPiece(token_);
+    pieces.push_back(std::move(piece));
+    Advance();
+  }
+
+  // advance the token MOD
+  Advance();
+
+  // if the glob is empty there is an error
+  if (num_pieces == 0) {
+    ErrorMsg(boost::format("Glob can't be empty"));
+    return ParserResult<Expression>(); // Error
+  }
+
+  return ParserResult<Expression>(factory_.NewGlob(std::move(pieces)));
+}
+
 ParserResult<Expression> Parser::LiteralExp() {
   Token token(ValidToken());
   Advance();
@@ -1495,7 +1528,9 @@ ParserResult<Expression> Parser::LiteralExp() {
     return ParserResult<Expression>(factory_.NewLiteral(value, Literal::kBool));
   } else if (token.Is(TokenKind::KW_NULL)) {
     return ParserResult<Expression>(factory_.NewNullExpression());
-  } else {
+  } else if (token.Is(TokenKind::MOD)) {
+    return ParserGlobExp();
+  } else{
     ErrorMsg(boost::format("primary expression expected, got %1%")
         % Token::TokenValueToStr(token.GetValue()));
     SetTokenError(token);

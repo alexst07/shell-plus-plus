@@ -134,8 +134,8 @@ class Parser {
       return true;
     }
 
-    // match (...
-    if (tok == TokenKind::LPAREN) {
+    // match (..., %...,
+    if (tok.IsAny(TokenKind::LPAREN, TokenKind::MOD)) {
       return true;
     }
 
@@ -210,6 +210,7 @@ class Parser {
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserScopeIdentifier();
   ParserResult<Expression> ParserPrimaryExp();
+  ParserResult<Expression> ParserGlobExp();
   ParserResult<Expression> ParserPostExp();
   ParserResult<Expression> ParserUnaryExp();
   ParserResult<Expression> ParserTerm();
@@ -297,4 +298,3 @@ class Parser {
 }
 
 #endif  // SETI_PARSER_H
-

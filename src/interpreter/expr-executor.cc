@@ -14,6 +14,8 @@
 
 #include "expr-executor.h"
 
+#include <glob.h>
+
 #include <string>
 #include <boost/variant.hpp>
 
@@ -118,6 +120,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecNull();
       break;
 
+    case AstNode::NodeType::kGlob:
+      return ExecGlob(static_cast<Glob*>(node));
+      break;
+
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid expression opcode"),
@@ -194,6 +200,11 @@ ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) try {
   }
 } catch (RunTimeError& e) {
   throw RunTimeError(e.err_code(), e.msg(), node->pos());
+}
+
+ObjectPtr ExpressionExecutor::ExecGlob(Glob* glob) {
+  GlobExecutor glob_exec(this, symbol_table_stack());
+  return glob_exec.Exec(glob);
 }
 
 ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
@@ -514,6 +525,44 @@ void FuncCallExecutor::set_stop(StopFlag flag) {
   if (flag == StopFlag::kThrow) {
     parent()->set_stop(flag);
   }
+}
+
+std::string GlobExecutor::GetGlobStr(Glob* glob) {
+  std::vector<AstNode*> pieces = glob->children();
+  std::string str_glob = "";
+
+  // assign the glob to string
+  for (AstNode* piece: pieces) {
+    CmdPiece* part = static_cast<CmdPiece*>(piece);
+
+    str_glob += part->cmd_str();
+
+    if (part->blank_after()) {
+      str_glob += " ";
+    }
+  }
+
+  return str_glob;
+}
+
+ObjectPtr GlobExecutor::Exec(Glob* glob_node) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  std::string glob_str = GetGlobStr(glob_node);
+  std::vector<ObjectPtr> glob_obj;
+
+  glob_t globbuf;
+  int flag = GLOB_NOMAGIC | GLOB_MARK | GLOB_BRACE | GLOB_TILDE;
+
+  glob(glob_str.c_str(), flag, NULL, &globbuf);
+
+  for (int i = 0; i < globbuf.gl_pathc; i++) {
+    ObjectPtr str_obj = obj_factory.NewString(std::string(globbuf.gl_pathv[i]));
+    glob_obj.push_back(str_obj);
+  }
+
+  globfree(&globbuf);
+
+  return obj_factory.NewArray(std::move(glob_obj));
 }
 
 }

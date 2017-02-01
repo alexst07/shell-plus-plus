@@ -114,6 +114,7 @@ namespace internal {
   V(FunctionCall)               \
   V(CmdExpression)              \
   V(Slice)                      \
+  V(Glob)                       \
   V(ThisFunction)               \
   V(SuperPropertyReference)     \
   V(SuperCallReference)         \
@@ -1743,6 +1744,38 @@ class NullExpression: public Expression {
 
   NullExpression(Position position)
       : Expression(NodeType::kNullExpression, position) {}
+};
+
+class Glob: public Expression {
+ public:
+  ~Glob() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitGlob(this);
+  }
+
+  std::vector<AstNode*> children() noexcept {
+    std::vector<AstNode*> vec;
+
+    for (auto&& piece: pieces_) {
+      vec.push_back(piece.get());
+    }
+
+    return vec;
+  }
+
+  size_t num_children() const noexcept {
+    return pieces_.size();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<AstNode>> pieces_;
+
+  Glob(std::vector<std::unique_ptr<AstNode>>&& pieces, Position position)
+      : Expression(NodeType::kGlob, position)
+      , pieces_(std::move(pieces)) {}
 };
 
 class Literal: public Expression {
