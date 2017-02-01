@@ -30,7 +30,7 @@ namespace internal {
 Arguments::Arguments(std::vector<std::string>&& args): args_(std::move(args)) {
   if (args_.size() > 1) {
     globbuf_.gl_offs = 1;
-    int flag = GLOB_NOMAGIC | GLOB_MARK | GLOB_BRACE | GLOB_TILDE | GLOB_DOOFFS;
+    int flag = GLOB_NOMAGIC | GLOB_BRACE | GLOB_TILDE | GLOB_DOOFFS;
 
     for (int i = 1; i < args_.size(); i++) {
       if (i > 1) {
@@ -69,7 +69,14 @@ char **Arguments::argsv() {
 }
 
 std::vector<std::string> Arguments::args() {
-  return std::move(args_);
+  std::vector<std::string> arg_vec;
+
+  int p = 0;
+  while (argv_[p]) {
+    arg_vec.push_back(std::string(argv_[p++]));
+  }
+
+  return arg_vec;
 }
 
 Process::Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args)
@@ -352,7 +359,10 @@ void Job::PutJobInBackground(int cont) {
 
 void Job::LaunchInternalCmd(CmdEntryPtr cmd) {
   static_cast<CmdInEntry&>(*cmd).SetStdFd(stdout_, stderr_, stdin_);
-  cmd->Exec(parent_, std::move(process_[0].args_));
+
+  Arguments glob_args(std::move(process_[0].args_));
+
+  cmd->Exec(parent_, std::move(glob_args.args()));
 
   if (stdin_ != STDIN_FILENO) {
     close (stdin_);
