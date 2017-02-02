@@ -61,9 +61,14 @@ private:
   Token ScanNumber();
   char ScanStringEscape();
   char ScanWordEscape();
+  char ScanAnsiEscapeCode();
 
   inline bool IsLetter(char c) {
     return ((c >= 'a' && c <= 'z') || ( c >= 'A' && c <= 'Z'));
+  }
+
+  inline bool IsOctalChar(char c) {
+    return (c >= '0' && c < '8');
   }
 
   inline bool IsDigit(char c) {
@@ -103,6 +108,10 @@ private:
 
     // Always increment line position, because the first char on line is '1'
     line_pos_++;
+  }
+
+  inline void Back() {
+    --buffer_cursor_;
   }
 
   inline char PeekAhead() {

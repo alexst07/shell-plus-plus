@@ -34,6 +34,18 @@ void Lexer::ErrorMsg(const boost::format& fmt_msg) {
   nerror_++;
 }
 
+char Lexer::ScanAnsiEscapeCode() {
+  std::string number = "";
+  while (IsOctalChar(c_)) {
+    number += c_;
+    Advance();
+  }
+
+  Back();
+
+  return static_cast<char>(std::stoi(number,nullptr,8));
+}
+
 char Lexer::ScanStringEscape() {
   Advance();
 
@@ -44,6 +56,15 @@ char Lexer::ScanStringEscape() {
     case '\'':  // fall through
     case '"' :  // fall through
     case '\\': break;
+
+    case '0' :
+      if (IsOctalChar(PeekAhead())) {
+        c = ScanAnsiEscapeCode();
+      } else {
+        c = '\0';
+      }
+      break;
+
     case 'b' : c = '\b'; break;
     case 'f' : c = '\f'; break;
     case 'n' : c = '\n'; break;
