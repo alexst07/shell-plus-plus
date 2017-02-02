@@ -228,7 +228,6 @@ class Token {
 
   static bool CmdValidToken(const Token& tok) {
     switch (tok.GetKind()) {
-      case TokenKind::KW_NULL:        // null
       case TokenKind::SHL:            // <<
       case TokenKind::SAR:            // >>
       case TokenKind::SSHL:           // <<<
