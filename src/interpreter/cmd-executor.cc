@@ -285,8 +285,25 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
 
       // handle expression inside the command, ex: ls ${expr + 2}
       CmdValueExpr* cmd_expr = static_cast<CmdValueExpr*>(piece);
-      str_part +=  ResolveCmdExpr(this, cmd_expr);
+
+      std::vector<std::string> vec_part =
+          ResolveFullTypeCmdExpr(this, cmd_expr);
+
+      // if vector has more than one element, it could be an array or tuple,
+      // if it has only one element, then, must be a string, if it is a string
+      // the blank space after must be considered
+      if (vec_part.size() > 1) {
+        for (const auto& part: vec_part) {
+          cmd.push_back(part);
+        }
+
+        // when pass array to command, it must be considered blank space after
+        str_part = "";
+        continue;
+      }
+
       blank_after = cmd_expr->blank_after();
+      str_part += vec_part[0];
 
       if (blank_after) {
         cmd.push_back(str_part);
@@ -586,6 +603,42 @@ std::string ResolveCmdExpr(Executor* parent, CmdValueExpr* cmd_expr) {
 
   std::string part = static_cast<StringObject&>(*str_obj).value();
   return part;
+}
+
+std::vector<std::string> ResolveFullTypeCmdExpr(Executor* parent,
+                                                CmdValueExpr* cmd_expr) {
+  ExpressionExecutor expr(parent, parent->symbol_table_stack());
+  ObjectPtr obj = expr.Exec(cmd_expr->expr());
+
+  // get cmd method overload
+  ObjectPtr res_obj(obj->ObjCmd());
+
+  std::vector<std::string> vec_res;
+
+  if (res_obj->type() == Object::ObjectType::STRING) {
+    const std::string& part = static_cast<StringObject&>(*res_obj).value();
+    vec_res.push_back(part);
+    return vec_res;
+  }
+
+  ObjectFactory factory(parent->symbol_table_stack());
+
+  long int len = res_obj->Len();
+
+  for (int i = 0; i < len; i++) {
+    ObjectPtr int_obj(factory.NewInt(i));
+    ObjectPtr str_obj = res_obj->GetItem(int_obj);
+
+    if (str_obj->type() != Object::ObjectType::STRING) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("element: %1% must be string")%i);
+    }
+
+    const std::string& part = static_cast<StringObject&>(*str_obj).value();
+    vec_res.push_back(part);
+  }
+
+  return vec_res;
 }
 
 int CreateFile(std::string file_name) {

@@ -119,6 +119,11 @@ ObjectPtr ArrayObject::ObjIter(ObjectPtr obj) {
   return obj_factory.NewArrayIter(obj);
 }
 
+ObjectPtr ArrayObject::ObjCmd() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewArray(value_);
+}
+
 void ArrayObject::DelItem(ObjectPtr index) {
   if (index->type() == ObjectType::INT) {
     // remove the item pointed by index

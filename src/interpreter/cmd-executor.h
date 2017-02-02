@@ -97,6 +97,10 @@ class CmdPipeSequenceExecutor: public Executor {
 // functions to manipulate command
 std::string ResolveCmdExpr(Executor *parent, CmdValueExpr *cmd_expr);
 
+// execute an expression for array types or simple string type
+std::vector<std::string> ResolveFullTypeCmdExpr(Executor* parent,
+                                                CmdValueExpr* cmd_expr);
+
 // functions to manipulate file
 int CreateFile(std::string file_name);
 int AppendFile(std::string file_name);
@@ -106,4 +110,3 @@ int ReadFile(std::string file_name);
 }
 
 #endif  // SETI_CMD_EXECUTOR_H
-

@@ -111,6 +111,15 @@ class ObjectFactory {
                                      std::move(SymTableStack())));
   }
 
+  ObjectPtr NewTuple(const std::vector<std::shared_ptr<Object>>& value) {
+    std::vector<std::shared_ptr<Object>> v(value.size());
+    std::copy (value.begin(), value.end(), v.begin());
+
+    auto obj_type = symbol_table_.Lookup("tuple", false).SharedAccess();
+    return ObjectPtr(new TupleObject(std::move(v), obj_type,
+                                     std::move(SymTableStack())));
+  }
+
   ObjectPtr NewArray(std::vector<std::unique_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.Lookup("array", false).SharedAccess();
     return ObjectPtr(new ArrayObject(std::move(value), obj_type,
@@ -120,6 +129,15 @@ class ObjectFactory {
   ObjectPtr NewArray(std::vector<std::shared_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.Lookup("array", false).SharedAccess();
     return ObjectPtr(new ArrayObject(std::move(value), obj_type,
+                                     std::move(SymTableStack())));
+  }
+
+  ObjectPtr NewArray(const std::vector<std::shared_ptr<Object>>& value) {
+    std::vector<std::shared_ptr<Object>> v(value.size());
+    std::copy (value.begin(), value.end(), v.begin());
+
+    auto obj_type = symbol_table_.Lookup("array", false).SharedAccess();
+    return ObjectPtr(new ArrayObject(std::move(v), obj_type,
                                      std::move(SymTableStack())));
   }
 

@@ -91,6 +91,8 @@ class ArrayObject: public Object {
 
    ObjectPtr GetItem(ObjectPtr index) override;
 
+   ObjectPtr ObjCmd() override;
+
    void DelItem(ObjectPtr index) override;
 
    ObjectPtr& GetItemRef(ObjectPtr index) override;
