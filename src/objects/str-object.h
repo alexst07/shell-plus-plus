@@ -185,6 +185,38 @@ class StringSplitFunc: public FuncObject {
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
 };
 
+class StringReplaceFunc: public FuncObject {
+ public:
+  StringReplaceFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class StringReplaceFirstFunc: public FuncObject {
+ public:
+  StringReplaceFirstFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class StringReplaceLastFunc: public FuncObject {
+ public:
+  StringReplaceLastFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class StringEraseAllFunc: public FuncObject {
+ public:
+  StringEraseAllFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
 }
 }
 

@@ -153,6 +153,13 @@ StringType::StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<StringEndsWithFunc>("ends_with", symbol_table_stack(), *this);
   RegisterMethod<StringSplitFunc>("split", symbol_table_stack(), *this);
   RegisterMethod<StringFindFunc>("find", symbol_table_stack(), *this);
+  RegisterMethod<StringReplaceFunc>("replace", symbol_table_stack(), *this);
+  RegisterMethod<StringReplaceFunc>("replace_first", symbol_table_stack(),
+                                    *this);
+  RegisterMethod<StringReplaceFunc>("replace_last", symbol_table_stack(),
+                                    *this);
+  RegisterMethod<StringEraseAllFunc>("erase_all", symbol_table_stack(),
+                                     *this);
 }
 
 ObjectPtr StringType::Constructor(Executor* /*parent*/,
@@ -314,6 +321,79 @@ ObjectPtr StringSplitFunc::Call(Executor* /*parent*/,
   }
 
   return obj_factory.NewArray(std::move(obj_split));
+}
+
+ObjectPtr StringReplaceFunc::Call(Executor* /*parent*/,
+                                  std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
+
+  StringObject& obj = static_cast<StringObject&>(*params[0]);
+  StringObject& obj_find = static_cast<StringObject&>(*params[1]);
+  StringObject& obj_replace = static_cast<StringObject&>(*params[2]);
+
+  std::string& str = const_cast<std::string&>(obj.value());
+  std::string& str_find = const_cast<std::string&>(obj_find.value());
+  std::string& str_replace = const_cast<std::string&>(obj_replace.value());
+
+  boost::replace_all(str, str_find, str_replace);
+
+  return params[0];
+}
+
+ObjectPtr StringReplaceFirstFunc::Call(Executor* /*parent*/,
+                                  std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
+
+  StringObject& obj = static_cast<StringObject&>(*params[0]);
+  StringObject& obj_find = static_cast<StringObject&>(*params[1]);
+  StringObject& obj_replace = static_cast<StringObject&>(*params[2]);
+
+  std::string& str = const_cast<std::string&>(obj.value());
+  std::string& str_find = const_cast<std::string&>(obj_find.value());
+  std::string& str_replace = const_cast<std::string&>(obj_replace.value());
+
+  boost::replace_first(str, str_find, str_replace);
+
+  return params[0];
+}
+
+ObjectPtr StringReplaceLastFunc::Call(Executor* /*parent*/,
+                                  std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
+
+  StringObject& obj = static_cast<StringObject&>(*params[0]);
+  StringObject& obj_find = static_cast<StringObject&>(*params[1]);
+  StringObject& obj_replace = static_cast<StringObject&>(*params[2]);
+
+  std::string& str = const_cast<std::string&>(obj.value());
+  std::string& str_find = const_cast<std::string&>(obj_find.value());
+  std::string& str_replace = const_cast<std::string&>(obj_replace.value());
+
+  boost::replace_last(str, str_find, str_replace);
+
+  return params[0];
+}
+
+ObjectPtr StringEraseAllFunc::Call(Executor* /*parent*/,
+                                  std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+
+  StringObject& obj = static_cast<StringObject&>(*params[0]);
+  StringObject& obj_find = static_cast<StringObject&>(*params[1]);
+
+  std::string& str = const_cast<std::string&>(obj.value());
+  std::string& str_find = const_cast<std::string&>(obj_find.value());
+
+  boost::erase_all(str, str_find);
+
+  return params[0];
 }
 
 }
