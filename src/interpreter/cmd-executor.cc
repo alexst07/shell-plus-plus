@@ -27,6 +27,7 @@
 #include "scope-executor.h"
 #include "utils/scope-exit.h"
 #include "objects/obj-type.h"
+#include "parser/extract_expr.h"
 
 namespace seti {
 namespace internal {
@@ -273,7 +274,14 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
       is_cmd_piece = true;
       CmdPiece* cmd_part = static_cast<CmdPiece*>(piece);
 
-      str_part += cmd_part->cmd_str();
+      // if the token of piece is a string, this string
+      // must be parsed to extract commands if they exist
+      if (cmd_part->token() == TokenKind::STRING_LITERAL) {
+        str_part += ExtractCmdExprFromString(this, cmd_part->cmd_str());
+      } else {
+        str_part += cmd_part->cmd_str();
+      }
+
       blank_after = cmd_part->blank_after();
 
       if (blank_after) {
@@ -639,6 +647,49 @@ std::vector<std::string> ResolveFullTypeCmdExpr(Executor* parent,
   }
 
   return vec_res;
+}
+
+std::string ExtractCmdExprFromString(Executor* parent, const std::string& str) {
+  bool has_expr = true;
+  std::string src = str;
+  int start = -1;
+  int end = -1;
+  std::string result = "";
+
+  while (has_expr) {
+    ExtractExpr cmd_expr(src);
+    cmd_expr.Extract();
+    if (cmd_expr.has_expr()) {
+      start = cmd_expr.start_pos();
+      end = cmd_expr.end_pos();
+
+      // start - 1: gets the ${, because start indicates char {
+      // end - (start - 2): gets until the end }
+      std::string src_expr_cmd = src.substr(start -1, end - (start - 2));
+
+      // gets the part of string before the expression ${}
+      result += src.substr(0, start -1);
+
+      ParserResult<Cmd> expr_cmd = ParserExpr(src_expr_cmd);
+      result += ResolveCmdExpr(parent, static_cast<CmdValueExpr*>(
+          expr_cmd.MoveAstNode().get()));
+
+      if (end >= (src.length() - 2)) {
+        has_expr = false;
+        result += src.substr(end + 1);
+      } else {
+        has_expr = true;
+        src = src.substr(end + 1);
+      }
+    } else {
+      has_expr = false;
+
+      // gets the last part, after the expression ${}
+      result += src;
+    }
+  }
+
+  return result;
 }
 
 int CreateFile(std::string file_name) {

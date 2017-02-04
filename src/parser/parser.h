@@ -46,6 +46,10 @@ class Parser {
     return ParserStmtList();
   }
 
+  ParserResult<Cmd> AstGenCmdExpr() {
+    return ParserExpCmd();
+  }
+
   inline uint nerrors() const {
     return nerror_;
   }

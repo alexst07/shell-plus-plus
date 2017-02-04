@@ -101,6 +101,8 @@ std::string ResolveCmdExpr(Executor *parent, CmdValueExpr *cmd_expr);
 std::vector<std::string> ResolveFullTypeCmdExpr(Executor* parent,
                                                 CmdValueExpr* cmd_expr);
 
+std::string ExtractCmdExprFromString(Executor* parent, const std::string& str);
+
 // functions to manipulate file
 int CreateFile(std::string file_name);
 int AppendFile(std::string file_name);
