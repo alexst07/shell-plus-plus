@@ -37,6 +37,7 @@ class RunTimeError : public std::exception {
     NULL_ACCESS,
     SYMBOL_NOT_FOUND,
     CMD_NOT_FOUND,
+    BAD_ALLOC,
     OUT_OF_RANGE,
     KEY_NOT_FOUND,
     ID_NOT_FOUND,

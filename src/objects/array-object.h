@@ -104,6 +104,8 @@ class ArrayObject: public Object {
      value_.push_back(obj);
    }
 
+   void Insert(int index, ObjectPtr obj);
+
    inline void set(size_t i, std::unique_ptr<Object> obj) {
      Object* obj_ptr = obj.release();
      value_[i] = std::shared_ptr<Object>(obj_ptr);
@@ -127,6 +129,10 @@ class ArrayObject: public Object {
 
    size_t ArraySize() const noexcept {
      return value_.size();
+   }
+
+   std::vector<std::shared_ptr<Object>>& value() {
+     return value_;
    }
 
    std::string Print() override;
@@ -156,6 +162,62 @@ class ArrayJoinFunc: public FuncObject {
 class ArrayAppendFunc: public FuncObject {
  public:
   ArrayAppendFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayExtendFunc: public FuncObject {
+ public:
+  ArrayExtendFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayInsertFunc: public FuncObject {
+ public:
+  ArrayInsertFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayRemoveFunc: public FuncObject {
+ public:
+  ArrayRemoveFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayPopFunc: public FuncObject {
+ public:
+  ArrayPopFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayClearFunc: public FuncObject {
+ public:
+  ArrayClearFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayIndexFunc: public FuncObject {
+ public:
+  ArrayIndexFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class ArrayCountFunc: public FuncObject {
+ public:
+  ArrayCountFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);

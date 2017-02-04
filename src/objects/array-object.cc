@@ -219,6 +219,17 @@ ObjectPtr& ArrayObject::GetItemRef(ObjectPtr index) {
   return ElementRef(static_cast<IntObject&>(*index).value());
 }
 
+void ArrayObject::Insert(int index, ObjectPtr obj)
+try {
+  value_.insert (value_.begin() + index, obj);
+} catch (std::out_of_range&) {
+  throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                     boost::format("index out of range"));
+} catch (std::bad_alloc&) {
+  throw RunTimeError(RunTimeError::ErrorCode::BAD_ALLOC,
+                     boost::format("bad alloc"));
+}
+
 std::string ArrayObject::Print() {
   std::string str;
   str = "[";
@@ -246,6 +257,7 @@ ArrayType::ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<ArrayAppendFunc>("append", symbol_table_stack(), *this);
   RegisterMethod<ArrayForEachFunc>("for_each", symbol_table_stack(), *this);
   RegisterMethod<ArrayMapFunc>("map", symbol_table_stack(), *this);
+  RegisterMethod<ArrayExtendFunc>("extend", symbol_table_stack(), *this);
 }
 
 ObjectPtr ArrayType::Constructor(Executor* /*parent*/,
@@ -300,6 +312,115 @@ ObjectPtr ArrayAppendFunc::Call(Executor* /*parent*/,
   }
 
   return params[0];
+}
+
+ObjectPtr ArrayExtendFunc::Call(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, extend)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], array, ARRAY)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+  ArrayObject& array_ext = static_cast<ArrayObject&>(*params[1]);
+
+  for (const auto& item: array_ext.value()) {
+    array_obj.Append(item);
+  }
+
+  return params[0];
+}
+
+ObjectPtr ArrayInsertFunc::Call(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 3, insert)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], index, INT)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+  int index = static_cast<IntObject&>(*params[1]).value();
+
+  array_obj.Insert(index, params[2]);
+
+  return params[0];
+}
+
+ObjectPtr ArrayRemoveFunc::Call(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, insert)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+  std::vector<ObjectPtr>& vec = array_obj.value();
+
+  vec.erase(std::remove_if(vec.begin(), vec.end(),
+                           [&params](ObjectPtr& obj) {
+                             return static_cast<BoolObject&>(
+                               *obj->Equal(params[1])).value();
+                           }),
+    vec.end());
+
+  return params[0];
+}
+
+ObjectPtr ArrayPopFunc::Call(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, insert)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], index, INT)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+  int index = static_cast<IntObject&>(*params[1]).value();
+
+  ObjectPtr obj = array_obj.value()[index];
+
+  array_obj.value().erase(array_obj.value().begin() + index);
+
+  return obj;
+}
+
+ObjectPtr ArrayClearFunc::Call(Executor* /*parent*/,
+                              std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, clear)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+
+  array_obj.value().clear();
+
+  return params[0];
+}
+
+ObjectPtr ArrayIndexFunc::Call(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, append)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  int i = 0;
+  for (auto& item: array_obj.value()) {
+    if (item->Equal(params[1])) {
+      return obj_factory.NewInt(i);
+    }
+
+    i++;
+  }
+
+  return obj_factory.NewBool(false);
+}
+
+ObjectPtr ArrayCountFunc::Call(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, append)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  int i = 0;
+  for (auto& item: array_obj.value()) {
+    if (item->Equal(params[1])) {
+      i++;
+    }
+  }
+
+  return obj_factory.NewInt(i);
 }
 
 ObjectPtr ArrayForEachFunc::Call(Executor* parent,
