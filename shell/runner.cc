@@ -21,6 +21,7 @@
 #include <iostream>
 #include <fstream>
 #include <readline/readline.h>
+#include <readline/history.h>
 #include <boost/filesystem.hpp>
 
 #include "env-shell.h"
@@ -108,6 +109,7 @@ void Runner::ExecInterative() {
         }
 
         str_source = input;
+        add_history(input);
         free(input);
         return str_source;
       });
