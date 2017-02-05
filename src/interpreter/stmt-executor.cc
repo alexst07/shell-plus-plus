@@ -289,6 +289,16 @@ void StmtExecutor::Exec(AstNode* node) {
       del.Exec(static_cast<DelStatement*>(node));
     } break;
 
+    case AstNode::NodeType::kStatementList: {
+      StmtListExecutor stmt_list(this, symbol_table_stack());
+      stmt_list.Exec(node);
+    } break;
+
+    case AstNode::NodeType::kBlock: {
+      StmtListExecutor stmt_list(this, symbol_table_stack());
+      stmt_list.Exec(static_cast<Block*>(node)->stmt_list());
+    } break;
+
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid opcode of statement"),
