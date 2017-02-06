@@ -60,6 +60,19 @@ ObjectPtr LenFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewInt(static_cast<int>(size));
 }
 
+ObjectPtr CompFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, comp)
+
+  ObjectPtr obj_resp = params[0]->Lesser(params[1]);
+
+  if (obj_resp->type() != Object::ObjectType::BOOL) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("operator less must return bool"));
+  }
+
+  return obj_resp;
+}
+
 ObjectPtr AssertFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   SETI_FUNC_CHECK_NUM_PARAMS(params, 2, assert)
   SETI_FUNC_CHECK_PARAM_TYPE(params[0], test, BOOL)

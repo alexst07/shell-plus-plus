@@ -223,6 +223,27 @@ class ArrayCountFunc: public FuncObject {
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
 };
 
+class ArraySortFunc: public FuncObject {
+ public:
+  ArraySortFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params);
+
+ private:
+  bool Comp(ObjectPtr obj1, ObjectPtr obj2);
+  bool CompWithFunc(Executor* parent, ObjectPtr func, ObjectPtr obj1,
+                    ObjectPtr obj2);
+};
+
+class ArrayReverseFunc: public FuncObject {
+ public:
+  ArrayReverseFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params);
+};
+
 class ArrayForEachFunc: public FuncObject {
  public:
   ArrayForEachFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)

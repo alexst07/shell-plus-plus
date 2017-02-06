@@ -258,6 +258,14 @@ ArrayType::ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<ArrayForEachFunc>("for_each", symbol_table_stack(), *this);
   RegisterMethod<ArrayMapFunc>("map", symbol_table_stack(), *this);
   RegisterMethod<ArrayExtendFunc>("extend", symbol_table_stack(), *this);
+  RegisterMethod<ArrayInsertFunc>("insert", symbol_table_stack(), *this);
+  RegisterMethod<ArrayRemoveFunc>("remove", symbol_table_stack(), *this);
+  RegisterMethod<ArrayPopFunc>("pop", symbol_table_stack(), *this);
+  RegisterMethod<ArrayClearFunc>("clear", symbol_table_stack(), *this);
+  RegisterMethod<ArrayIndexFunc>("index", symbol_table_stack(), *this);
+  RegisterMethod<ArrayCountFunc>("count", symbol_table_stack(), *this);
+  RegisterMethod<ArraySortFunc>("sort", symbol_table_stack(), *this);
+  RegisterMethod<ArrayReverseFunc>("reverse", symbol_table_stack(), *this);
 }
 
 ObjectPtr ArrayType::Constructor(Executor* /*parent*/,
@@ -337,6 +345,11 @@ ObjectPtr ArrayInsertFunc::Call(Executor* /*parent*/,
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   int index = static_cast<IntObject&>(*params[1]).value();
 
+  if (index < 0 || index > array_obj.value().size()) {
+    throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                       boost::format("index out of range"));
+  }
+
   array_obj.Insert(index, params[2]);
 
   return params[0];
@@ -344,7 +357,7 @@ ObjectPtr ArrayInsertFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayRemoveFunc::Call(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, insert)
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, remove)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   std::vector<ObjectPtr>& vec = array_obj.value();
@@ -360,12 +373,17 @@ ObjectPtr ArrayRemoveFunc::Call(Executor* /*parent*/,
 }
 
 ObjectPtr ArrayPopFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, insert)
+                             std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, pop)
   SETI_FUNC_CHECK_PARAM_TYPE(params[1], index, INT)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   int index = static_cast<IntObject&>(*params[1]).value();
+
+  if (index < 0 || index >= array_obj.value().size()) {
+    throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                       boost::format("index out of range"));
+  }
 
   ObjectPtr obj = array_obj.value()[index];
 
@@ -387,7 +405,7 @@ ObjectPtr ArrayClearFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayIndexFunc::Call(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, append)
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, index)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
@@ -406,8 +424,8 @@ ObjectPtr ArrayIndexFunc::Call(Executor* /*parent*/,
 }
 
 ObjectPtr ArrayCountFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, append)
+                               std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, count)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
@@ -421,6 +439,71 @@ ObjectPtr ArrayCountFunc::Call(Executor* /*parent*/,
   }
 
   return obj_factory.NewInt(i);
+}
+
+bool ArraySortFunc::Comp(ObjectPtr obj1, ObjectPtr obj2) {
+  ObjectPtr obj_resp = obj1->Lesser(obj2);
+
+  if (obj_resp->type() != Object::ObjectType::BOOL) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("operator less must return bool"));
+  }
+
+  return static_cast<BoolObject&>(*obj_resp).value();
+}
+
+bool ArraySortFunc::CompWithFunc(Executor* parent, ObjectPtr func,
+                                 ObjectPtr obj1, ObjectPtr obj2) {
+  std::vector<ObjectPtr> fparams = {obj1, obj2};
+
+  ObjectPtr obj_resp = func->Call(parent, std::move(fparams));
+
+  if (obj_resp->type() != Object::ObjectType::BOOL) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("operator less must return bool"));
+  }
+
+  return static_cast<BoolObject&>(*obj_resp).value();
+}
+
+ObjectPtr ArraySortFunc::Call(Executor* parent,
+                              std::vector<ObjectPtr>&& params) {
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+  std::vector<ObjectPtr>& vec = array_obj.value();
+
+  if (params.size() == 1) {
+    using namespace std::placeholders;
+
+    std::sort(vec.begin(), vec.end(),
+        std::bind(&ArraySortFunc::Comp, this,_1, _2));
+
+    return params[0];
+  } else if (params.size() == 2) {
+    using namespace std::placeholders;
+
+    SETI_FUNC_CHECK_PARAM_TYPE(params[1], comp, FUNC)
+
+    std::sort(vec.begin(), vec.end(),
+        std::bind(&ArraySortFunc::CompWithFunc, this, parent, params[1],
+                  _1, _2));
+
+    return params[0];
+  }
+
+  throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                     boost::format("num args incompatible"));
+}
+
+ObjectPtr ArrayReverseFunc::Call(Executor* parent,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, reverse)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+  std::vector<ObjectPtr>& vec = array_obj.value();
+
+  std::reverse(vec.begin(), vec.end());
+
+  return params[0];
 }
 
 ObjectPtr ArrayForEachFunc::Call(Executor* parent,
@@ -438,8 +521,8 @@ ObjectPtr ArrayForEachFunc::Call(Executor* parent,
 }
 
 ObjectPtr ArrayMapFunc::Call(Executor* parent,
-                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, for_each)
+                             std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, map)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 

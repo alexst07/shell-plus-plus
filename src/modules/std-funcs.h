@@ -76,6 +76,18 @@ class LenFunc: public FuncObject {
   ObjectFactory obj_factory_;
 };
 
+class CompFunc: public FuncObject {
+ public:
+  CompFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* /*pare'nt*/, std::vector<ObjectPtr>&& params);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
 class AssertFunc: public FuncObject {
  public:
   AssertFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
@@ -106,6 +118,7 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
     {"print_err",             ObjectMethod<PrintErrFunc>(sym_table)},
     {"read",                  ObjectMethod<ReadFunc>(sym_table)},
     {"len",                   ObjectMethod<LenFunc>(sym_table)},
+    {"comp",                  ObjectMethod<CompFunc>(sym_table)},
     {"assert",                ObjectMethod<AssertFunc>(sym_table)},
     {"is_interactive",        ObjectMethod<IsInteractiveFunc>(sym_table)}
   };
@@ -122,5 +135,3 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
 }
 
 #endif  // SETI_STD_FUNCS_H
-
-
