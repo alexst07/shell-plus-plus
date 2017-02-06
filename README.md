@@ -3,8 +3,10 @@
 Seti is a programming language that aims bring features from modern languages, 
 as facility to manipulate data structures, object oriented programming, 
 functional programming and others, to shell script.
+https://alexst07.github.io/seti/
 
-![syntax highlighting](https://lh6.googleusercontent.com/rT232JzzoAp7QfhDwvYsjYc6WRksSA6Gp5DZcG9Arr12EJ5pEMDx1yQuoD9JJ-CzQ_njl-LXwm0UVec=w1366-h622-rw)
+# How it looks like:
+![syntax highlighting](https://github.com/alexst07/seti/blob/gh-pages/img/seti.png)
 
 # Building
 
