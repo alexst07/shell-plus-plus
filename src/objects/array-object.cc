@@ -137,7 +137,7 @@ void ArrayObject::DelItem(ObjectPtr index) {
     int end = value_.size();
     int step = 1;
 
-    std::tie(start, end, step) = SliceLogic(slice, value_.size());
+    std::tie(start, end, std::ignore) = SliceLogic(slice, value_.size());
 
     if (end > value_.size()) {
       throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
@@ -146,13 +146,35 @@ void ArrayObject::DelItem(ObjectPtr index) {
                          %end%value_.size());
     }
 
-    for (int i = start; i < end; i += step) {
-      value_.erase(value_.begin()+i);
-    }
+    value_.erase(value_.begin() + start, value_.begin() + end);
   } else {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("index must be int"));
   }
+}
+
+ObjectPtr ArrayObject::Equal(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (obj->type() != ObjectType::ARRAY) {
+    return obj_factory.NewBool(false);
+  }
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*obj);
+
+  if (array_obj.value().size() != value_.size()) {
+    return obj_factory.NewBool(false);
+  }
+
+  bool r = true;
+
+  // Test each element on tuple
+  for (size_t i = 0; i < value_.size(); i++) {
+    ObjectPtr bool_obj = value_[i]->Equal(array_obj.value()[i]);
+    r = r && (static_cast<BoolObject&>(*bool_obj).value());
+  }
+
+  return obj_factory.NewBool(r);
 }
 
 bool ArrayObject::operator==(const Object& obj) const {
@@ -413,7 +435,8 @@ ObjectPtr ArrayIndexFunc::Call(Executor* /*parent*/,
 
   int i = 0;
   for (auto& item: array_obj.value()) {
-    if (item->Equal(params[1])) {
+    ObjectPtr bool_obj = item->Equal(params[1]);
+    if (static_cast<BoolObject&>(*bool_obj).value()) {
       return obj_factory.NewInt(i);
     }
 
@@ -433,7 +456,8 @@ ObjectPtr ArrayCountFunc::Call(Executor* /*parent*/,
 
   int i = 0;
   for (auto& item: array_obj.value()) {
-    if (item->Equal(params[1])) {
+    ObjectPtr bool_obj = item->Equal(params[1]);
+    if (static_cast<BoolObject&>(*bool_obj).value()) {
       i++;
     }
   }

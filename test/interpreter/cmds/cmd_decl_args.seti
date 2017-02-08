@@ -1,6 +1,6 @@
 # execute decl command
 # --output:start
-# test/
+# test
 # my_file.txt
 # other.txt
 # --output:end
