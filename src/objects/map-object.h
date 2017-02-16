@@ -23,9 +23,40 @@
 #include "ast/ast.h"
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
+#include "obj-type.h"
 
 namespace seti {
 namespace internal {
+
+class MapIterObject: public BaseIter {
+ public:
+  MapIterObject(ObjectPtr map_obj, ObjectPtr obj_type,
+                SymbolTableStack&& sym_table);
+
+  virtual ~MapIterObject() {}
+
+  ObjectPtr Equal(ObjectPtr obj) override;
+
+  ObjectPtr Next() override;
+
+  ObjectPtr HasNext() override;
+
+  std::string Print() override {
+    return std::string("[map_iter]");
+  }
+
+ private:
+  // it uses the array object and position insted of c++ iterator
+  // because the iterator object has need a shared_reference
+  // of object, because the array could be removed from memory
+  // if the object was created inside a loop for example
+  // and the iterator could be used outside this loop
+  ObjectPtr map_obj_;
+  std::unordered_map<size_t, std::vector<std::pair<ObjectPtr, ObjectPtr>>>
+      ::iterator pos_;
+
+  size_t pos_vec_;
+};
 
 class MapObject: public Object {
  public:
@@ -99,36 +130,6 @@ class MapObject: public Object {
 
  private:
    Map value_;
-};
-
-class MapIterObject: public Object {
- public:
-  MapIterObject(ObjectPtr map_obj, ObjectPtr obj_type,
-                SymbolTableStack&& sym_table);
-
-  virtual ~MapIterObject() {}
-
-  ObjectPtr Equal(ObjectPtr obj) override;
-
-  ObjectPtr Next() override;
-
-  ObjectPtr HasNext() override;
-
-  std::string Print() override {
-    return std::string("[map_iter]");
-  }
-
- private:
-  // it uses the array object and position insted of c++ iterator
-  // because the iterator object has need a shared_reference
-  // of object, because the array could be removed from memory
-  // if the object was created inside a loop for example
-  // and the iterator could be used outside this loop
-  ObjectPtr map_obj_;
-  std::unordered_map<size_t, std::vector<std::pair<ObjectPtr, ObjectPtr>>>
-      ::iterator pos_;
-
-  size_t pos_vec_;
 };
 
 }

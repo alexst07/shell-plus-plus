@@ -21,7 +21,7 @@ namespace internal {
 
 MapIterObject::MapIterObject(ObjectPtr map_obj, ObjectPtr obj_type,
                              SymbolTableStack&& sym_table)
-    : Object(ObjectType::MAP_ITER, obj_type, std::move(sym_table)) {
+    : BaseIter(ObjectType::MAP_ITER, obj_type, std::move(sym_table)) {
   if (map_obj->type() != ObjectType::MAP) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type is not map"));

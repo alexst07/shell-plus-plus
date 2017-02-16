@@ -30,7 +30,7 @@
 namespace seti {
 namespace internal {
 
-class ArrayIterObject: public Object {
+class ArrayIterObject: public BaseIter {
  public:
   ArrayIterObject(ObjectPtr array_obj, ObjectPtr obj_type,
                   SymbolTableStack&& sym_table);

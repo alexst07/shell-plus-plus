@@ -29,7 +29,7 @@
 namespace seti {
 namespace internal {
 
-class CmdIterObject: public Object {
+class CmdIterObject: public BaseIter {
  public:
   CmdIterObject(std::string delim, int outerr, ObjectPtr cmd_obj,
                 ObjectPtr obj_type, SymbolTableStack&& sym_table);

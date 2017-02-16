@@ -28,7 +28,7 @@ namespace internal {
 
 ArrayIterObject::ArrayIterObject(ObjectPtr array_obj, ObjectPtr obj_type,
                                  SymbolTableStack&& sym_table)
-    : Object(ObjectType::ARRAY_ITER, obj_type, std::move(sym_table))
+    : BaseIter(ObjectType::ARRAY_ITER, obj_type, std::move(sym_table))
     , pos_(0) {
   if (array_obj->type() != ObjectType::ARRAY) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,

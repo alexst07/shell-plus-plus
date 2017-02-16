@@ -27,7 +27,7 @@ namespace internal {
 
 CmdIterObject::CmdIterObject(std::string delim, int outerr, ObjectPtr cmd_obj,
                              ObjectPtr obj_type, SymbolTableStack&& sym_table)
-    : Object(ObjectType::CMD_ITER, obj_type, std::move(sym_table))
+    : BaseIter(ObjectType::CMD_ITER, obj_type, std::move(sym_table))
     , pos_(0) {
   if (cmd_obj->type() != ObjectType::CMD) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,

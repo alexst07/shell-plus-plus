@@ -33,6 +33,18 @@
 namespace seti {
 namespace internal {
 
+class BaseIter: public Object {
+ public:
+  ObjectPtr ObjIter(ObjectPtr obj) override {
+    return obj;
+  }
+
+ protected:
+   BaseIter(ObjectType type, std::shared_ptr<Object> obj_type,
+            SymbolTableStack&& sym_table)
+       : Object(type, obj_type, std::move(sym_table)) {}
+};
+
 class DeclClassObject: public Object {
  public:
   DeclClassObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
