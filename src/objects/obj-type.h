@@ -45,6 +45,30 @@ class BaseIter: public Object {
        : Object(type, obj_type, std::move(sym_table)) {}
 };
 
+class RangeIterObject: public BaseIter {
+ public:
+  RangeIterObject(int start, int end, int step, ObjectPtr obj_type,
+                  SymbolTableStack&& sym_table);
+
+  virtual ~RangeIterObject() {}
+
+  ObjectPtr Equal(ObjectPtr obj) override;
+
+  ObjectPtr Next() override;
+
+  ObjectPtr HasNext() override;
+
+  std::string Print() override {
+    return std::string("[range_iter]");
+  }
+
+ private:
+  int start_;
+  int step_;
+  int end_;
+  int value_;
+};
+
 class DeclClassObject: public Object {
  public:
   DeclClassObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
@@ -313,6 +337,17 @@ class CmdIterType: public TypeObject {
   virtual ~CmdIterType() {}
 
   ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&&) override;
+};
+
+class RangeIterType: public TypeObject {
+ public:
+  RangeIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("range_iter", obj_type, std::move(sym_table)) {}
+
+  virtual ~RangeIterType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override;
 };
 
 class ArrayIterType: public TypeObject {

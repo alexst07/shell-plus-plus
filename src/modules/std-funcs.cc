@@ -73,6 +73,12 @@ ObjectPtr CompFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_resp;
 }
 
+ObjectPtr RangeFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  ObjectPtr obj = obj_factory_.NewRangeIterType();
+  RangeIterType& range_it_type = static_cast<RangeIterType&>(*obj);
+  return range_it_type.Constructor(nullptr, std::move(params));
+}
+
 ObjectPtr AssertFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   SETI_FUNC_CHECK_NUM_PARAMS(params, 2, assert)
   SETI_FUNC_CHECK_PARAM_TYPE(params[0], test, BOOL)

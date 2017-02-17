@@ -26,6 +26,56 @@
 namespace seti {
 namespace internal {
 
+RangeIterObject::RangeIterObject(int start, int end, int step,
+                                 ObjectPtr obj_type,
+                                 SymbolTableStack&& sym_table)
+    : BaseIter(ObjectType::ARRAY_ITER, obj_type, std::move(sym_table))
+    , start_(start)
+    , step_(step)
+    , end_(end)
+    , value_(start_) {}
+
+ObjectPtr RangeIterObject::Next() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr ret_obj = obj_factory.NewInt(value_);
+
+  value_ += step_;
+  return ret_obj;
+}
+
+ObjectPtr RangeIterObject::HasNext() {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (step_ > 0) {
+    if (value_ >= end_) {
+      return obj_factory.NewBool(false);
+    }
+
+    return obj_factory.NewBool(true);
+  }
+
+  if (value_ <= end_) {
+    return obj_factory.NewBool(false);
+  }
+
+  return obj_factory.NewBool(true);
+}
+
+ObjectPtr RangeIterObject::Equal(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (obj->type() != ObjectType::RANGE_ITER) {
+    return obj_factory.NewBool(false);
+  }
+
+  RangeIterObject& range_it = static_cast<RangeIterObject&>(*obj);
+
+  bool v = start_ == range_it.start_ && step_ == range_it.step_ &&
+      end_ == range_it.end_ && value_ == range_it.value_;
+
+  return obj_factory.NewBool(true);
+}
+
 ObjectPtr TypeObject::CallObject(const std::string& name,
                                  ObjectPtr self_param) {
   ObjectPtr obj = symbol_table_stack().Lookup(name, false).SharedAccess();
@@ -230,6 +280,34 @@ ObjectPtr RealType::Constructor(Executor* /*parent*/,
   }
 
   return params[0]->ObjReal();
+}
+
+ObjectPtr RangeIterType::Constructor(Executor* /*parent*/,
+                                     std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, range_iter)
+  SETI_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 3, range_iter)
+
+  SETI_FUNC_CHECK_PARAM_TYPE(params[0], range_iter, INT)
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], range_iter, INT)
+
+  int step;
+  int start = static_cast<IntObject&>(*params[0]).value();
+  int end = static_cast<IntObject&>(*params[1]).value();
+
+  if (params.size() == 3) {
+    SETI_FUNC_CHECK_PARAM_TYPE(params[2], range_iter, INT)
+    step = static_cast<IntObject&>(*params[2]).value();
+  } else {
+    if (end > start) {
+      step = 1;
+    } else {
+      step = -1;
+    }
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj(obj_factory.NewRangeIter(start, end, step));
+  return obj;
 }
 
 ObjectPtr ArrayIterType::Constructor(Executor* /*parent*/,

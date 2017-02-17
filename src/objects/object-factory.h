@@ -141,6 +141,12 @@ class ObjectFactory {
                                      std::move(SymTableStack())));
   }
 
+  ObjectPtr NewRangeIter(int start, int end, int step) {
+    auto obj_type = symbol_table_.Lookup("range_iter", false).SharedAccess();
+    return ObjectPtr(new RangeIterObject(start, end, step, obj_type,
+                                         std::move(SymTableStack())));
+  }
+
   ObjectPtr NewArrayIter(ObjectPtr array) {
     auto obj_type = symbol_table_.Lookup("array_iter", false).SharedAccess();
     return ObjectPtr(new ArrayIterObject(array, obj_type,
@@ -241,6 +247,12 @@ class ObjectFactory {
   ObjectPtr NewArrayType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return std::make_shared<ArrayType>(obj_type, std::move(SymTableStack()));
+  }
+
+  ObjectPtr NewRangeIterType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return std::make_shared<RangeIterType>(obj_type,
+                                           std::move(SymTableStack()));
   }
 
   ObjectPtr NewArrayIterType() {

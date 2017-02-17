@@ -46,6 +46,7 @@ class Object {
     TYPE,
     ARRAY_ITER,
     MAP_ITER,
+    RANGE_ITER,
     TUPLE_ITER,
     CMD_ITER,
     DECL_TYPE,
