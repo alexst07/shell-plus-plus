@@ -208,6 +208,25 @@ bool MapObject::Exists(ObjectPtr obj_index) {
   return false;
 }
 
+void MapObject::DelItem(ObjectPtr index) {
+  size_t hash = index->Hash();
+
+  auto it = value_.find(hash);
+
+  if (it != value_.end()) {
+    it->second.erase(std::remove_if(it->second.begin(), it->second.end(),
+                     [&index](std::pair<ObjectPtr, ObjectPtr> item) {
+      ObjectPtr v_obj = item.first->Equal(index);
+      if (v_obj->type() != ObjectType::BOOL) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                           boost::format("comparation returned not bool"));
+      }
+
+      return static_cast<BoolObject&>(*v_obj).value();
+    }), it->second.end());
+  }
+}
+
 long int MapObject::Len() {
   long int size = 0;
 

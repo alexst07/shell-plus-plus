@@ -101,6 +101,8 @@ class MapObject: public Object {
 
   long int Len() override;
 
+  void DelItem(ObjectPtr index) override;
+
   const Map& value() const noexcept {
     return value_;
   }
