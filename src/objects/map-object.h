@@ -134,6 +134,37 @@ class MapObject: public Object {
    Map value_;
 };
 
+class MapType: public ContainerType {
+ public:
+  MapType(ObjectPtr obj_type, SymbolTableStack&& sym_table);
+
+  virtual ~MapType() {}
+};
+
+class MapKeysFunc: public FuncObject {
+ public:
+  MapKeysFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class MapValuesFunc: public FuncObject {
+ public:
+  MapValuesFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class MapClearFunc: public FuncObject {
+ public:
+  MapClearFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
 }
 }
 

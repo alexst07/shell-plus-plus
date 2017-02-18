@@ -15,6 +15,7 @@
 #include "map-object.h"
 
 #include "object-factory.h"
+#include "utils/check.h"
 
 namespace seti {
 namespace internal {
@@ -235,6 +236,65 @@ long int MapObject::Len() {
   }
 
   return size;
+}
+
+MapType::MapType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+    : ContainerType("map", obj_type, std::move(sym_table)) {
+  RegisterMethod<MapKeysFunc>("keys", symbol_table_stack(), *this);
+  RegisterMethod<MapValuesFunc>("values", symbol_table_stack(), *this);
+  RegisterMethod<MapClearFunc>("clear", symbol_table_stack(), *this);
+}
+
+ObjectPtr MapKeysFunc::Call(Executor* parent,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, keys)
+
+  MapObject& map_obj = static_cast<MapObject&>(*params[0]);
+
+  auto map_elems = map_obj.value();
+
+  std::vector<ObjectPtr> keys;
+
+  for (const auto& map_elem: map_elems) {
+    for (const auto& elem: map_elem.second) {
+      keys.push_back(elem.first);
+    }
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewArray(std::move(keys));
+}
+
+ObjectPtr MapValuesFunc::Call(Executor* parent,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, values)
+
+  MapObject& map_obj = static_cast<MapObject&>(*params[0]);
+
+  auto map_elems = map_obj.value();
+
+  std::vector<ObjectPtr> keys;
+
+  for (const auto& map_elem: map_elems) {
+    for (const auto& elem: map_elem.second) {
+      keys.push_back(elem.second);
+    }
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewArray(std::move(keys));
+}
+
+ObjectPtr MapClearFunc::Call(Executor* parent,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, clear)
+
+  MapObject& map_obj = static_cast<MapObject&>(*params[0]);
+
+  auto map_elems = map_obj.value();
+  map_elems.clear();
+
+  return params[0];
 }
 
 }

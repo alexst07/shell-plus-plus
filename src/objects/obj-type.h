@@ -393,14 +393,6 @@ class ContainerType: public TypeObject {
   }
 };
 
-class MapType: public ContainerType {
- public:
-  MapType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : ContainerType("map", obj_type, std::move(sym_table)) {}
-
-  virtual ~MapType() {}
-};
-
 class TupleType: public ContainerType {
  public:
   TupleType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
