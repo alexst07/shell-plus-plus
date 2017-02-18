@@ -124,7 +124,7 @@ class MapObject: public Object {
       }
     }
 
-    str = str.substr(0, str.length() - 3);
+    str = str.substr(0, str.length() - 2);
     str += "}";
 
     return str;
