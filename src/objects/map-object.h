@@ -103,6 +103,8 @@ class MapObject: public Object {
 
   void DelItem(ObjectPtr index) override;
 
+  ObjectPtr In(ObjectPtr obj) override;
+
   const Map& value() const noexcept {
     return value_;
   }

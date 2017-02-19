@@ -209,6 +209,31 @@ bool MapObject::Exists(ObjectPtr obj_index) {
   return false;
 }
 
+ObjectPtr MapObject::In(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  size_t hash = obj->Hash();
+
+  auto it = value_.find(hash);
+
+  if (it != value_.end()) {
+    for (auto& e: it->second) {
+      ObjectPtr obj_cond = e.first->Equal(obj);
+      if (obj_cond->type() != ObjectType::BOOL) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                           boost::format("equal method must return bool"));
+      }
+
+      bool v = static_cast<BoolObject&>(*obj_cond).value();
+
+      if (v) {
+        return obj_factory.NewBool(true);
+      }
+    }
+  }
+
+  return obj_factory.NewBool(false);
+}
+
 void MapObject::DelItem(ObjectPtr index) {
   size_t hash = index->Hash();
 
