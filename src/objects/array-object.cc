@@ -177,6 +177,26 @@ ObjectPtr ArrayObject::Equal(ObjectPtr obj) {
   return obj_factory.NewBool(r);
 }
 
+ObjectPtr ArrayObject::In(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  for (auto& item: value_) {
+    ObjectPtr obj_cond = item->Equal(obj);
+    if (obj_cond->type() != ObjectType::BOOL) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("equal method must return bool"));
+    }
+
+    bool v = static_cast<BoolObject&>(*obj_cond).value();
+
+    if (v) {
+      return obj_factory.NewBool(true);
+    }
+  }
+
+  return obj_factory.NewBool(false);
+}
+
 bool ArrayObject::operator==(const Object& obj) const {
   if (obj.type() != ObjectType::ARRAY) {
     return false;

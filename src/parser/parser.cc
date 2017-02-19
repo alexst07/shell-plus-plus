@@ -1039,7 +1039,8 @@ ParserResult<Expression> Parser::ParserComparisonExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  while (Token::IsComparisonToken(token_.GetKind())) {
+  while (Token::IsComparisonToken(token_.GetKind()) ||
+         token_ == TokenKind::KW_IN) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();

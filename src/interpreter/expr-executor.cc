@@ -404,6 +404,10 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
         res = left->GreatEqual(right);
         break;
 
+      case TokenKind::KW_IN:
+        res = right->In(left);
+        break;
+
       default:
         throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                            boost::format("invalid bin operation opcode"));

@@ -210,6 +210,11 @@ class Object {
                        boost::format("type has no == operator"));
   }
 
+  virtual std::shared_ptr<Object> In(std::shared_ptr<Object>) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("type has no in operator"));
+  }
+
   virtual std::shared_ptr<Object> NotEqual(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type has no == operator"));
