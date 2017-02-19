@@ -33,12 +33,12 @@ void AssignExecutor::Exec(AstNode* node) {
 
   TokenKind assign_kind = assign_node->assign_kind();
 
-  // Executes the left side of assignment
-  auto vars = AssignList(assign_node->lexp_list());
-
   // Executes the right sid of assignment
   AssignableListExecutor assignables(this, symbol_table_stack());
   auto values = assignables.Exec(assign_node->rvalue_list());
+
+  // Executes the left side of assignment
+  auto vars = AssignList(assign_node->lexp_list());
 
   // Assignment can be done only when the tuples have the same size
   // or there is only one variable on the left side
