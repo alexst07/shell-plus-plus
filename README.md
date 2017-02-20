@@ -8,6 +8,13 @@ https://alexst07.github.io/seti/
 # How it looks like:
 ![syntax highlighting](https://github.com/alexst07/seti/blob/gh-pages/img/seti.png)
 
+# Resources
+ * Easy to manipulate data structure, as in python.
+ * Lambda functions.
+ * Classes.
+ * Calls commands like in Bash.
+ * Pipe, redirection to or from files, sub shell.
+
 # Building
 
 ## Requirements:
