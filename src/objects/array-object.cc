@@ -272,6 +272,24 @@ try {
                      boost::format("bad alloc"));
 }
 
+ObjectPtr ArrayObject::Add(ObjectPtr obj) {
+  SETI_FUNC_CHECK_PARAM_TYPE(obj, array, ARRAY)
+
+  std::vector<ObjectPtr> vec_obj;
+  ArrayObject& array_ext = static_cast<ArrayObject&>(*obj);
+
+  for (const auto& item: value_) {
+    vec_obj.push_back(item);
+  }
+
+  for (const auto& item: array_ext.value()) {
+    vec_obj.push_back(item);
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewArray(std::move(vec_obj));
+}
+
 std::string ArrayObject::Print() {
   std::string str;
   str = "[";
