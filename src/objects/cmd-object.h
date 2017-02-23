@@ -104,8 +104,7 @@ class CmdObject: public Object {
 
 class CmdType: public TypeObject {
  public:
-  CmdType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : TypeObject("cmdobj", obj_type, std::move(sym_table)) {}
+  CmdType(ObjectPtr obj_type, SymbolTableStack&& sym_table);
 
   virtual ~CmdType() {}
 
@@ -115,6 +114,14 @@ class CmdType: public TypeObject {
 class CmdOutFunc: public FuncObject {
  public:
   CmdOutFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class CmdErrFunc: public FuncObject {
+ public:
+  CmdErrFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);

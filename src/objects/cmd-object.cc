@@ -110,6 +110,13 @@ std::shared_ptr<Object> CmdObject::Attr(std::shared_ptr<Object> self,
   return static_cast<TypeObject&>(*obj_type).CallObject(name, self);
 }
 
+CmdType::CmdType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+    : TypeObject("cmdobj", obj_type, std::move(sym_table)) {
+  RegisterMethod<CmdOutFunc>("out", symbol_table_stack(), *this);
+  RegisterMethod<CmdErrFunc>("err", symbol_table_stack(), *this);
+  RegisterMethod<CmdDelimFunc>("delim", symbol_table_stack(), *this);
+}
+
 ObjectPtr CmdType::Constructor(Executor* /*parent*/,
                                std::vector<ObjectPtr>&& /*params*/) {
   throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
@@ -126,8 +133,18 @@ ObjectPtr CmdOutFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(cmd_obj.str_stdout());
 }
 
-ObjectPtr CmdDelimFunc::Call(Executor* /*parent*/,
+ObjectPtr CmdErrFunc::Call(Executor* /*parent*/,
                            std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, out)
+
+  CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(cmd_obj.str_stderr());
+}
+
+ObjectPtr CmdDelimFunc::Call(Executor* /*parent*/,
+                             std::vector<ObjectPtr>&& params) {
   SETI_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, delim)
 
   CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
