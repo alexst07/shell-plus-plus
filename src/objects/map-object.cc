@@ -105,6 +105,38 @@ ObjectPtr MapObject::ObjIter(ObjectPtr obj) {
   return obj_factory.NewMapIter(obj);
 }
 
+ObjectPtr MapObject::Update(ObjectPtr obj, bool override) {
+  SETI_FUNC_CHECK_PARAM_TYPE(obj, add, MAP)
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr map_ptr = obj_factory.NewMap();
+
+  MapObject& new_map = static_cast<MapObject&>(*map_ptr);
+  new_map.value_ = value_;
+
+  MapObject& obj_map = static_cast<MapObject&>(*obj);
+
+  // iterate over map to get buckets
+  for (auto& bucket: obj_map.value_) {
+    // iterate over buckets
+    for (auto& pair: bucket.second) {
+      if (override) {
+        new_map.Insert_(pair.first) = pair.second;
+      } else {
+        if (!Exists(pair.first)) {
+          new_map.Insert_(pair.first) = pair.second;
+        }
+      }
+    }
+  }
+
+  return map_ptr;
+}
+
+ObjectPtr MapObject::Add(ObjectPtr obj) {
+  return Update(obj, false);
+}
+
 ObjectPtr& MapObject::ElementRef(ObjectPtr obj_index) {
   if (Exists(obj_index)) {
     size_t hash = obj_index->Hash();
@@ -268,6 +300,8 @@ MapType::MapType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<MapKeysFunc>("keys", symbol_table_stack(), *this);
   RegisterMethod<MapValuesFunc>("values", symbol_table_stack(), *this);
   RegisterMethod<MapClearFunc>("clear", symbol_table_stack(), *this);
+  RegisterMethod<MapUpdateFunc>("update", symbol_table_stack(), *this);
+  RegisterMethod<MapExistsFunc>("exists", symbol_table_stack(), *this);
 }
 
 ObjectPtr MapKeysFunc::Call(Executor* parent,
@@ -320,6 +354,37 @@ ObjectPtr MapClearFunc::Call(Executor* parent,
   map_elems.clear();
 
   return params[0];
+}
+
+ObjectPtr MapUpdateFunc::Call(Executor* parent,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, update)
+
+  MapObject& map_obj = static_cast<MapObject&>(*params[0]);
+
+  bool override = false;
+  if (params.size() == 3) {
+    SETI_FUNC_CHECK_PARAM_TYPE(params[2], override, BOOL)
+    override = static_cast<BoolObject&>(*params[2]).value();
+  }
+
+  SETI_FUNC_CHECK_PARAM_TYPE(params[1], map, MAP)
+
+  map_obj.Update(params[1], override);
+
+  return params[0];
+}
+
+ObjectPtr MapExistsFunc::Call(Executor* parent,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, exists)
+
+  MapObject& map_obj = static_cast<MapObject&>(*params[0]);
+
+  bool exists = map_obj.Exists(params[1]);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(exists);
 }
 
 }

@@ -72,6 +72,9 @@ class MapObject: public Object {
       : Object(ObjectType::MAP, obj_type, std::move(sym_table))
       , value_(std::move(value)) {}
 
+  MapObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::MAP, obj_type, std::move(sym_table)) {}
+
   std::size_t Hash() const override {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("map object has no hash method"));
@@ -84,6 +87,10 @@ class MapObject: public Object {
   ObjectPtr& GetItemRef(ObjectPtr index) override;
 
   ObjectPtr ObjIter(ObjectPtr obj) override;
+
+  ObjectPtr Add(ObjectPtr obj) override;
+
+  ObjectPtr Update(ObjectPtr obj, bool override);
 
   // Return the reference for an object on the map, if there is no
   // entry for this index, create a new empty with this entry and
@@ -162,6 +169,22 @@ class MapValuesFunc: public FuncObject {
 class MapClearFunc: public FuncObject {
  public:
   MapClearFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class MapUpdateFunc: public FuncObject {
+ public:
+  MapUpdateFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class MapExistsFunc: public FuncObject {
+ public:
+  MapExistsFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);

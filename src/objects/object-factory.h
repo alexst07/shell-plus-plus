@@ -165,6 +165,11 @@ class ObjectFactory {
                                    std::move(SymTableStack())));
   }
 
+  ObjectPtr NewMap() {
+    auto obj_type = symbol_table_.Lookup("map", false).SharedAccess();
+    return ObjectPtr(new MapObject(obj_type, std::move(SymTableStack())));
+  }
+
   ObjectPtr NewModule(const std::string& module, bool is_file_path) {
     auto obj_type = symbol_table_.Lookup("module", false).SharedAccess();
     return ObjectPtr(new ModuleImportObject(module, is_file_path, obj_type,
@@ -330,6 +335,11 @@ void AlocTypes(SymbolTableStack& symbol_table);
 // Pass the variable as value or reference depending on type
 inline ObjectPtr PassVar(ObjectPtr obj, SymbolTableStack& symbol_table_stack) {
   ObjectFactory obj_factory(symbol_table_stack);
+
+  if (!obj) {
+    return obj_factory.NewNull();
+  }
+
   switch (obj->type()) {
     case Object::ObjectType::NIL:
       return obj_factory.NewNull();
