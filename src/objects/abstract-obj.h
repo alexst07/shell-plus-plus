@@ -43,6 +43,7 @@ class Object {
     TUPLE,
     FUNC,
     CMD,
+    REGEX,
     TYPE,
     ARRAY_ITER,
     MAP_ITER,

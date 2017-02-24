@@ -29,6 +29,7 @@
 #include "cmd-object.h"
 #include "map-object.h"
 #include "tuple-object.h"
+#include "regex.h"
 
 namespace seti {
 namespace internal {
@@ -170,6 +171,12 @@ class ObjectFactory {
     return ObjectPtr(new MapObject(obj_type, std::move(SymTableStack())));
   }
 
+  ObjectPtr NewRegex(const std::string str) {
+    auto obj_type = symbol_table_.Lookup("regex", false).SharedAccess();
+    return ObjectPtr(new RegexObject(str, obj_type,
+                                     std::move(SymTableStack())));
+  }
+
   ObjectPtr NewModule(const std::string& module, bool is_file_path) {
     auto obj_type = symbol_table_.Lookup("module", false).SharedAccess();
     return ObjectPtr(new ModuleImportObject(module, is_file_path, obj_type,
@@ -280,6 +287,11 @@ class ObjectFactory {
   ObjectPtr NewMapType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return std::make_shared<MapType>(obj_type, std::move(SymTableStack()));
+  }
+
+  ObjectPtr NewRegexType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return std::make_shared<RegexType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewModuleType() {

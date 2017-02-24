@@ -99,6 +99,11 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertEntry(static_cast<const MapType&>(*type_map).name(),
                            std::move(symbol_map));
 
+  ObjectPtr type_regex = obj_factory.NewRegexType();
+  SymbolAttr symbol_regex(type_regex, true);
+  symbol_table.InsertEntry(static_cast<const RegexType&>(*type_regex).name(),
+                          std::move(symbol_regex));
+
   ObjectPtr type_module = obj_factory.NewModuleType();
   SymbolAttr symbol_module(type_module, true);
   symbol_table.InsertEntry(static_cast<const ModuleType&>(*type_module).name(),

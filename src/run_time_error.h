@@ -51,6 +51,7 @@ class RunTimeError : public std::exception {
     ASSERT,
     PARSER,
     INTERPRETER_FILE,
+    REGEX,
     CUSTON
   };
 
