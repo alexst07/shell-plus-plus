@@ -184,6 +184,12 @@ class ObjectFactory {
                                     std::move(SymTableStack())));
   }
 
+  ObjectPtr NewPath(const boost::filesystem::path& path) {
+    auto obj_type = symbol_table_.Lookup("path", false).SharedAccess();
+    return ObjectPtr(new PathObject(path, obj_type,
+                                    std::move(SymTableStack())));
+  }
+
   ObjectPtr NewModule(const std::string& module, bool is_file_path) {
     auto obj_type = symbol_table_.Lookup("module", false).SharedAccess();
     return ObjectPtr(new ModuleImportObject(module, is_file_path, obj_type,

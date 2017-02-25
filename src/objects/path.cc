@@ -14,6 +14,9 @@
 
 #include "path.h"
 
+#include <unistd.h>
+#include <sys/stat.h>
+
 #include "obj-type.h"
 #include "object-factory.h"
 #include "utils/check.h"
@@ -23,8 +26,13 @@ namespace internal {
 
 PathObject::PathObject(const std::string& str_path, ObjectPtr obj_type,
     SymbolTableStack&& sym_table)
-    : Object(ObjectType::REGEX, obj_type, std::move(sym_table))
+    : Object(ObjectType::PATH, obj_type, std::move(sym_table))
     , path_{str_path} {}
+
+PathObject::PathObject(const boost::filesystem::path& path, ObjectPtr obj_type,
+    SymbolTableStack&& sym_table)
+    : Object(ObjectType::PATH, obj_type, std::move(sym_table))
+    , path_{path} {}
 
 ObjectPtr PathObject::ObjString() {
   ObjectFactory obj_factory(symbol_table_stack());
@@ -56,8 +64,30 @@ ObjectPtr PathObject::Equal(ObjectPtr obj) {
 
 PathType::PathType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
     : TypeObject("path", obj_type, std::move(sym_table)) {
-  RegisterMethod<PathExistsFunc>("exits", symbol_table_stack(), *this);
   RegisterStaticMethod<PathPwdStaticFunc>("pwd",  symbol_table_stack(), *this);
+  RegisterMethod<PathExistsFunc>("exits", symbol_table_stack(), *this);
+  RegisterMethod<PathIsRegularFileFunc>("is_regular_file",
+                                        symbol_table_stack(), *this);
+  RegisterMethod<PathIsDirFunc>("is_dir", symbol_table_stack(), *this);
+  RegisterMethod<PathIsSymLinkFunc>("is_sym_link", symbol_table_stack(), *this);
+  RegisterMethod<PathIsReadableFunc>("is_readable",
+                                     symbol_table_stack(), *this);
+  RegisterMethod<PathIsWritableFunc>("is_writable",
+                                     symbol_table_stack(), *this);
+  RegisterMethod<PathIsExecutableFunc>("is_exec", symbol_table_stack(), *this);
+  RegisterMethod<PathOwnerUidFunc>("uid_owner", symbol_table_stack(), *this);
+  RegisterMethod<PathOwnerGidFunc>("gid_owner", symbol_table_stack(), *this);
+  RegisterMethod<PathRootNameFunc>("root_name", symbol_table_stack(), *this);
+  RegisterMethod<PathRootDirectoryFunc>("root_dir",
+                                        symbol_table_stack(), *this);
+  RegisterMethod<PathRootPathFunc>("root_path", symbol_table_stack(), *this);
+  RegisterMethod<PathRelativePathFunc>("relative_path",
+                                       symbol_table_stack(), *this);
+  RegisterMethod<PathParentPathFunc>("parent_path",
+                                     symbol_table_stack(), *this);
+  RegisterMethod<PathFilenameFunc>("filename", symbol_table_stack(), *this);
+  RegisterMethod<PathStemFunc>("stem", symbol_table_stack(), *this);
+  RegisterMethod<PathExtensionFunc>("extension", symbol_table_stack(), *this);
 }
 
 ObjectPtr PathType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
@@ -97,6 +127,218 @@ ObjectPtr PathExistsFunc::Call(Executor* /*parent*/,
 
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewBool(fs::exists(path));
+}
+
+ObjectPtr PathIsRegularFileFunc::Call(Executor* /*parent*/,
+                               std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(fs::is_regular_file(path));
+}
+
+ObjectPtr PathIsDirFunc::Call(Executor* /*parent*/,
+                               std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(fs::is_directory(path));
+}
+
+ObjectPtr PathIsSymLinkFunc::Call(Executor* /*parent*/,
+                               std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(fs::is_symlink(path));
+}
+
+ObjectPtr PathIsReadableFunc::Call(Executor* /*parent*/,
+                               std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_readable)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  std::string str_path = path.string();
+  if (access(str_path.c_str(), R_OK) < 0) {
+    return obj_factory.NewBool(false);
+  }
+
+  return obj_factory.NewBool(true);
+}
+
+ObjectPtr PathIsWritableFunc::Call(Executor* /*parent*/,
+                                   std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_readable)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  std::string str_path = path.string();
+  if (access(str_path.c_str(), W_OK) < 0) {
+   return obj_factory.NewBool(false);
+  }
+
+  return obj_factory.NewBool(true);
+}
+
+ObjectPtr PathIsExecutableFunc::Call(Executor* /*parent*/,
+                                     std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_exec)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  std::string str_path = path.string();
+  if (access(str_path.c_str(), X_OK) < 0) {
+  return obj_factory.NewBool(false);
+  }
+
+  return obj_factory.NewBool(true);
+}
+
+ObjectPtr PathOwnerUidFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_executable)
+
+  namespace fs = boost::filesystem;
+
+  struct stat sb;
+
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+  std::string str_path = path.string();
+
+  if (stat(str_path.c_str(), &sb) == -1) {
+  throw RunTimeError(RunTimeError::ErrorCode::FILE,
+                     boost::format("%1%")%strerror(errno));
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewInt(sb.st_uid);
+}
+
+ObjectPtr PathOwnerGidFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, is_executable)
+
+  namespace fs = boost::filesystem;
+
+  struct stat sb;
+
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+  std::string str_path = path.string();
+
+  if (stat(str_path.c_str(), &sb) == -1) {
+  throw RunTimeError(RunTimeError::ErrorCode::FILE,
+                     boost::format("%1%")%strerror(errno));
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewInt(sb.st_gid);
+}
+
+ObjectPtr PathRootNameFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewPath(path.root_name());
+}
+
+ObjectPtr PathRootDirectoryFunc::Call(Executor* /*parent*/,
+                                      std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewPath(path.root_directory());
+}
+
+ObjectPtr PathRootPathFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewPath(path.root_path());
+}
+
+ObjectPtr PathRelativePathFunc::Call(Executor* /*parent*/,
+                                     std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewPath(path.relative_path());
+}
+
+ObjectPtr PathParentPathFunc::Call(Executor* /*parent*/,
+                                   std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewPath(path.parent_path());
+}
+
+ObjectPtr PathFilenameFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewPath(path.filename());
+}
+
+ObjectPtr PathStemFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewPath(path.stem());
+}
+
+ObjectPtr PathExtensionFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewPath(path.extension());
 }
 
 }

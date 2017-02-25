@@ -25,7 +25,6 @@
 #include "parser/parser.h"
 #include "parser/lexer.h"
 #include "modules/std-funcs.h"
-#include "modules/path.h"
 #include "objects/object-factory.h"
 #include "modules/std-cmds.h"
 #include "modules/env.h"
@@ -40,7 +39,6 @@ Interpreter::Interpreter(bool main)
   AlocTypes(symbol_table_stack_);
 
   module::stdf::RegisterModule(symbol_table_stack_);
-  // module::path::RegisterModule(symbol_table_stack_);
   module::env::RegisterModule(symbol_table_stack_);
   cmds::stdf::RegisterCmds(symbol_table_stack_);
 }
