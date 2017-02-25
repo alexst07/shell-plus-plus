@@ -91,6 +91,11 @@ ObjectPtr TypeObject::CallObject(const std::string& name,
   return obj;
 }
 
+ObjectPtr TypeObject::CallStaticObject(const std::string& name) {
+  ObjectPtr obj = symbol_table_stack().Lookup(name, false).SharedAccess();
+  return obj;
+}
+
 ObjectPtr Type::Constructor(Executor* /*parent*/,
                             std::vector<ObjectPtr>&& params) {
   if (params.size() != 1) {

@@ -44,6 +44,7 @@ class Object {
     FUNC,
     CMD,
     REGEX,
+    PATH,
     TYPE,
     ARRAY_ITER,
     MAP_ITER,

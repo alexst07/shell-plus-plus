@@ -30,6 +30,7 @@
 #include "map-object.h"
 #include "tuple-object.h"
 #include "regex.h"
+#include "path.h"
 
 namespace seti {
 namespace internal {
@@ -177,6 +178,12 @@ class ObjectFactory {
                                      std::move(SymTableStack())));
   }
 
+  ObjectPtr NewPath(const std::string str) {
+    auto obj_type = symbol_table_.Lookup("path", false).SharedAccess();
+    return ObjectPtr(new PathObject(str, obj_type,
+                                    std::move(SymTableStack())));
+  }
+
   ObjectPtr NewModule(const std::string& module, bool is_file_path) {
     auto obj_type = symbol_table_.Lookup("module", false).SharedAccess();
     return ObjectPtr(new ModuleImportObject(module, is_file_path, obj_type,
@@ -294,6 +301,11 @@ class ObjectFactory {
     return std::make_shared<RegexType>(obj_type, std::move(SymTableStack()));
   }
 
+  ObjectPtr NewPathType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return std::make_shared<PathType>(obj_type, std::move(SymTableStack()));
+  }
+
   ObjectPtr NewModuleType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return std::make_shared<ModuleType>(obj_type, std::move(SymTableStack()));
@@ -332,6 +344,13 @@ void RegisterMethod(const std::string& fname, SymbolTableStack& symbol_table,
   auto func_type = symbol_table.Lookup("function", false).SharedAccess();
   ObjectPtr obj_func(new Fn(func_type, std::move(sym_stack)));
   type.RegiterMethod(fname, obj_func);
+}
+
+template<class Fn>
+void RegisterStaticMethod(const std::string& fname,
+                          SymbolTableStack& symbol_table,
+                          TypeObject& type) {
+  RegisterMethod<Fn>(fname, symbol_table, type);
 }
 
 template<class Fn>

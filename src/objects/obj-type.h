@@ -220,6 +220,8 @@ class TypeObject: public Object {
   // this method is useful to execute member method from objects
   virtual ObjectPtr CallObject(const std::string& name, ObjectPtr self_param);
 
+  virtual ObjectPtr CallStaticObject(const std::string& name);
+
   const std::string& name() const noexcept {
     return name_;
   }

@@ -40,7 +40,7 @@ Interpreter::Interpreter(bool main)
   AlocTypes(symbol_table_stack_);
 
   module::stdf::RegisterModule(symbol_table_stack_);
-  module::path::RegisterModule(symbol_table_stack_);
+  // module::path::RegisterModule(symbol_table_stack_);
   module::env::RegisterModule(symbol_table_stack_);
   cmds::stdf::RegisterCmds(symbol_table_stack_);
 }
