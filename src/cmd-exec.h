@@ -122,6 +122,7 @@ class Arguments {
   glob_t globbuf_;
   std::vector<std::string>&& args_;
   char **argv_;
+  bool aloc_glob_;
 };
 
 struct Process {

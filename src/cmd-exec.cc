@@ -27,7 +27,9 @@
 namespace seti {
 namespace internal {
 
-Arguments::Arguments(std::vector<std::string>&& args): args_(std::move(args)) {
+Arguments::Arguments(std::vector<std::string>&& args)
+    : args_(std::move(args))
+    , aloc_glob_(false) {
   if (args_.size() > 1) {
     globbuf_.gl_offs = 1;
     int flag = GLOB_NOMAGIC | GLOB_BRACE | GLOB_TILDE | GLOB_DOOFFS;
@@ -38,6 +40,7 @@ Arguments::Arguments(std::vector<std::string>&& args): args_(std::move(args)) {
       }
 
       glob(args_[i].c_str(), flag, nullptr, &globbuf_);
+      aloc_glob_ = true;
     }
 
     globbuf_.gl_pathv[0] = const_cast<char*>(args_[0].c_str());
@@ -60,8 +63,13 @@ Arguments::Arguments(std::vector<std::string>&& args): args_(std::move(args)) {
 }
 
 Arguments::~Arguments() {
-  delete argv_;
-  globfree (&globbuf_);
+  if (argv_ != nullptr) {
+    delete argv_;
+  }
+
+  if (aloc_glob_) {
+    globfree (&globbuf_);
+  }
 }
 
 char **Arguments::argsv() {
