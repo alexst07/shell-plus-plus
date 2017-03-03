@@ -20,6 +20,7 @@
 #include <memory>
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <boost/filesystem.hpp>
@@ -29,6 +30,15 @@
 #include "utils/dir.h"
 
 namespace shpp {
+
+static sigjmp_buf ctrlc_buf;
+
+void HandleSignals(int signo) {
+  if (signo == SIGINT) {
+    std::cout << "\n";
+    siglongjmp(ctrlc_buf, 1);
+  }
+}
 
 Runner::Runner() {
   using namespace internal;
@@ -60,6 +70,12 @@ void Runner::Exec(std::string name) {
 
 void Runner::ExecInterative() {
   namespace fs = boost::filesystem;
+  using std::placeholders::_1;
+
+  if (signal(SIGINT, HandleSignals) == SIG_ERR) {
+    std::cerr << "failed to register interrupts with kernel\n";
+    exit(-1);
+  }
 
   fs::path path_rc = fs::path(internal::GetHome() + "/.shpprc");
 
@@ -101,6 +117,8 @@ void Runner::ExecInterative() {
             }
           }
         }
+
+        while (sigsetjmp(ctrlc_buf, 1) != 0 );
 
         input = readline(prompt.c_str());
 

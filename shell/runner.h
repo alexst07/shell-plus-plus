@@ -15,6 +15,10 @@
 #ifndef SHPP_MAIN_INTERPRETER_H
 #define SHPP_MAIN_INTERPRETER_H
 
+#include <setjmp.h>
+#include <signal.h>
+#include <boost/optional.hpp>
+
 #include "interpreter/symbol-table.h"
 #include "ast/ast.h"
 #include "interpreter/interpreter.h"
