@@ -66,6 +66,8 @@ class CmdObject: public Object {
 
    ObjectPtr ObjArray() override;
 
+   ObjectPtr In(ObjectPtr obj) override;
+
    const std::string& str_stdout() const noexcept {
      return str_stdout_;
    }

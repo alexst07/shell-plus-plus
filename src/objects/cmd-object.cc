@@ -110,6 +110,43 @@ std::shared_ptr<Object> CmdObject::Attr(std::shared_ptr<Object> self,
   return static_cast<TypeObject&>(*obj_type).CallObject(name, self);
 }
 
+ObjectPtr CmdObject::In(ObjectPtr obj) {
+  ObjectPtr obj_type = obj->ObjType();
+
+  TypeObject& type = static_cast<TypeObject&>(*obj_type);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  std::string str_cmd = str_stdout_;
+  boost::trim_if(str_cmd, boost::is_any_of(delim_));
+
+  std::vector<ObjectPtr> arr_obj;
+  std::vector<std::string> arr_str;
+
+  if (str_cmd.empty()) {
+    return obj_factory.NewBool(false);
+  }
+
+  boost::algorithm::split(arr_str, str_cmd, boost::is_any_of(delim_),
+                          boost::algorithm::token_compress_on);
+
+  for (auto& s: arr_str) {
+    std::vector<ObjectPtr> params_array = {obj_factory.NewString(s)};
+    ObjectPtr obj_comp = type.Constructor(nullptr, std::move(params_array));
+    ObjectPtr obj_bool = obj_comp->Equal(obj);
+
+    if (obj_bool->type() == ObjectType::BOOL) {
+      bool v = static_cast<BoolObject&>(*obj_bool).value();
+
+      if (v) {
+        return obj_factory.NewBool(true);
+      }
+    }
+  }
+
+  return obj_factory.NewBool(false);
+}
+
 CmdType::CmdType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
     : TypeObject("cmdobj", obj_type, std::move(sym_table)) {
   RegisterMethod<CmdOutFunc>("out", symbol_table_stack(), *this);
