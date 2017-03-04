@@ -1,6 +1,6 @@
 # Introduction
 
-Seti is a programming language that aims bring features from modern languages, 
+Shell++ is a programming language that aims bring features from modern languages, 
 as facility to manipulate data structures, object oriented programming, 
 functional programming and others, to shell script.
 https://alexst07.github.io/shpp/
