@@ -3,7 +3,7 @@
 Shell++ is a programming language that aims bring features from modern languages, 
 as facility to manipulate data structures, object oriented programming, 
 functional programming and others, to shell script.
-https://alexst07.github.io/shpp/
+https://alexst07.github.io/shell-plus-plus/
 
 # How it looks like:
 ![syntax highlighting](https://raw.githubusercontent.com/alexst07/shell-plus-plus/gh-pages/img/shpp.png)
@@ -30,8 +30,8 @@ https://alexst07.github.io/shpp/
 ```
 # dnf install gcc-c++ clang
 # dnf install boost boost-devel readline readline-devel cmake git
-$ git clone https://github.com/alexst07/shpp.git
-$ cd shpp
+$ git clone https://github.com/alexst07/shell-plus-plus
+$ cd shell-plus-plus
 $ mkdir build && cd build
 $ cmake ..
 $ make
@@ -42,8 +42,8 @@ $ make
 ```
 # apt-get install -y build-essential
 # apt-get install -y libboost-all-dev libreadline6 libreadline6-dev git cmake
-$ git clone https://github.com/alexst07/shpp.git
-$ cd shpp
+$ git clone https://github.com/alexst07/shell-plus-plus
+$ cd shell-plus-plus
 $ mkdir build && cd build
 $ cmake ..
 $ make
