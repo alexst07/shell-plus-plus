@@ -1,0 +1,22 @@
+class Test {
+  func __init__(a) {
+    this.a = a
+  }
+
+  class Inner {
+    func __init__(a) {
+      this.a = a
+    }
+
+    func Get() {
+      return this
+    }
+
+    func A() {
+      return this.a
+    }
+  }
+}
+
+obj = Test.Inner(5)
+print(obj.Get().A())
