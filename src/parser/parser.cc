@@ -16,7 +16,7 @@
 
 #include <sstream>
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 ParserResult<Statement> Parser::ParserImportStmt() {

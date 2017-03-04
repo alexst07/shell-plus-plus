@@ -29,7 +29,7 @@
 #include "objects/obj-type.h"
 #include "parser/extract_expr.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 void SetFdAsync(int fd) {

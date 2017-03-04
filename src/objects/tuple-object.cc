@@ -17,7 +17,7 @@
 #include "simple-object.h"
 #include "object-factory.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 std::size_t TupleObject::Hash() const {

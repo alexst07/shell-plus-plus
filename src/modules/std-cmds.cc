@@ -23,7 +23,7 @@
 
 #include "objects/obj-type.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 namespace cmds {
 namespace stdf {

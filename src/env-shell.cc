@@ -20,7 +20,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 EnvShell *EnvShell::instance_ = 0;

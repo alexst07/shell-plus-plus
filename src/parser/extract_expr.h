@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_EXTRACT_EXPRESSION_H
-#define SETI_EXTRACT_EXPRESSION_H
+#ifndef SHPP_EXTRACT_EXPRESSION_H
+#define SHPP_EXTRACT_EXPRESSION_H
 
 #include <string>
 #include <memory>
@@ -26,7 +26,7 @@
 #include "parser_result.h"
 #include "ast/ast.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class ExtractExpr {
@@ -70,4 +70,4 @@ ParserResult<Cmd> ParserExpr(const std::string& src);
 }
 }
 
-#endif  // SETI_EXTRACT_EXPRESSION_H
+#endif  // SHPP_EXTRACT_EXPRESSION_H

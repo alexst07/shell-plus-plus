@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_CMD_ENTRY_H
-#define SETI_CMD_ENTRY_H
+#ifndef SHPP_CMD_ENTRY_H
+#define SHPP_CMD_ENTRY_H
 
 #include <memory>
 
 #include "interpreter/executor.h"
 #include "interpreter/symbol-table.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 // command entry class
@@ -115,6 +115,6 @@ private:
 }
 }
 
-#endif  // SETI_CMD_ENTRY_H
+#endif  // SHPP_CMD_ENTRY_H
 
 

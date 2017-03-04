@@ -23,7 +23,7 @@
 #include "interpreter/stmt-executor.h"
 #include "utils/check.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 RangeIterObject::RangeIterObject(int start, int end, int step,
@@ -262,7 +262,7 @@ ObjectPtr IntType::Constructor(Executor* /*parent*/,
 }
 
 ObjectPtr SliceType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 3, slice)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 3, slice)
 
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewSlice(params[0], params[1], params[2]);
@@ -289,18 +289,18 @@ ObjectPtr RealType::Constructor(Executor* /*parent*/,
 
 ObjectPtr RangeIterType::Constructor(Executor* /*parent*/,
                                      std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, range_iter)
-  SETI_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 3, range_iter)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, range_iter)
+  SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 3, range_iter)
 
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], range_iter, INT)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], range_iter, INT)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], range_iter, INT)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], range_iter, INT)
 
   int step;
   int start = static_cast<IntObject&>(*params[0]).value();
   int end = static_cast<IntObject&>(*params[1]).value();
 
   if (params.size() == 3) {
-    SETI_FUNC_CHECK_PARAM_TYPE(params[2], range_iter, INT)
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[2], range_iter, INT)
     step = static_cast<IntObject&>(*params[2]).value();
   } else {
     if (end > start) {

@@ -23,7 +23,7 @@
 #include "simple-object.h"
 #include "utils/check.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 ArrayIterObject::ArrayIterObject(ObjectPtr array_obj, ObjectPtr obj_type,
@@ -273,7 +273,7 @@ try {
 }
 
 ObjectPtr ArrayObject::Add(ObjectPtr obj) {
-  SETI_FUNC_CHECK_PARAM_TYPE(obj, array, ARRAY)
+  SHPP_FUNC_CHECK_PARAM_TYPE(obj, array, ARRAY)
 
   std::vector<ObjectPtr> vec_obj;
   ArrayObject& array_ext = static_cast<ArrayObject&>(*obj);
@@ -341,12 +341,12 @@ ObjectPtr ArrayType::Constructor(Executor* /*parent*/,
 
 ObjectPtr ArrayJoinFunc::Call(Executor* /*parent*/,
                               std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, join)
+  SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, join)
 
   std::string delim = "";
 
   if (params.size() == 2) {
-    SETI_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
     delim = static_cast<StringObject&>(*params[1]).value();
   }
 
@@ -371,7 +371,7 @@ ObjectPtr ArrayJoinFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayAppendFunc::Call(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, append)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, append)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
@@ -384,8 +384,8 @@ ObjectPtr ArrayAppendFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayExtendFunc::Call(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, extend)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], array, ARRAY)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, extend)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], array, ARRAY)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   ArrayObject& array_ext = static_cast<ArrayObject&>(*params[1]);
@@ -399,8 +399,8 @@ ObjectPtr ArrayExtendFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayInsertFunc::Call(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 3, insert)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], index, INT)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 3, insert)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], index, INT)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   int index = static_cast<IntObject&>(*params[1]).value();
@@ -417,7 +417,7 @@ ObjectPtr ArrayInsertFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayRemoveFunc::Call(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, remove)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, remove)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   std::vector<ObjectPtr>& vec = array_obj.value();
@@ -434,8 +434,8 @@ ObjectPtr ArrayRemoveFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayPopFunc::Call(Executor* /*parent*/,
                              std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, pop)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], index, INT)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, pop)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], index, INT)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   int index = static_cast<IntObject&>(*params[1]).value();
@@ -454,7 +454,7 @@ ObjectPtr ArrayPopFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayClearFunc::Call(Executor* /*parent*/,
                               std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, clear)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, clear)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
@@ -465,7 +465,7 @@ ObjectPtr ArrayClearFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayIndexFunc::Call(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, index)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, index)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
@@ -486,7 +486,7 @@ ObjectPtr ArrayIndexFunc::Call(Executor* /*parent*/,
 
 ObjectPtr ArrayCountFunc::Call(Executor* /*parent*/,
                                std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, count)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, count)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
@@ -543,7 +543,7 @@ ObjectPtr ArraySortFunc::Call(Executor* parent,
   } else if (params.size() == 2) {
     using namespace std::placeholders;
 
-    SETI_FUNC_CHECK_PARAM_TYPE(params[1], comp, FUNC)
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[1], comp, FUNC)
 
     std::sort(vec.begin(), vec.end(),
         std::bind(&ArraySortFunc::CompWithFunc, this, parent, params[1],
@@ -558,7 +558,7 @@ ObjectPtr ArraySortFunc::Call(Executor* parent,
 
 ObjectPtr ArrayReverseFunc::Call(Executor* parent,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, reverse)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, reverse)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   std::vector<ObjectPtr>& vec = array_obj.value();
@@ -570,7 +570,7 @@ ObjectPtr ArrayReverseFunc::Call(Executor* parent,
 
 ObjectPtr ArrayForEachFunc::Call(Executor* parent,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, for_each)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, for_each)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
@@ -584,7 +584,7 @@ ObjectPtr ArrayForEachFunc::Call(Executor* parent,
 
 ObjectPtr ArrayMapFunc::Call(Executor* parent,
                              std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, map)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, map)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 

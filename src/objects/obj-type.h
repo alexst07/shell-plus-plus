@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_OBJ_TYPE_H
-#define SETI_OBJ_TYPE_H
+#ifndef SHPP_OBJ_TYPE_H
+#define SHPP_OBJ_TYPE_H
 
 #include <string>
 #include <memory>
@@ -30,7 +30,7 @@
 #include "func-object.h"
 #include "interpreter/interpreter.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class BaseIter: public Object {
@@ -436,4 +436,4 @@ class ModuleType: public TypeObject {
 }
 }
 
-#endif  // SETI_OBJ_TYPE_H
+#endif  // SHPP_OBJ_TYPE_H

@@ -19,11 +19,11 @@
 #include "runner.h"
 
 void help() {
-  std::cerr << "seti [file]\n";
+  std::cerr << "shpp [file]\n";
 }
 
 int main(int argc, char **argv) {
-  seti::Runner runner;
+  shpp::Runner runner;
 
   if (argc == 1) {
     runner.ExecInterative();

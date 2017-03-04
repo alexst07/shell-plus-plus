@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_MAP_OBJECT_H
-#define SETI_MAP_OBJECT_H
+#ifndef SHPP_MAP_OBJECT_H
+#define SHPP_MAP_OBJECT_H
 
 #include <memory>
 #include <iostream>
@@ -25,7 +25,7 @@
 #include "abstract-obj.h"
 #include "obj-type.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class MapIterObject: public BaseIter {
@@ -193,4 +193,4 @@ class MapExistsFunc: public FuncObject {
 }
 }
 
-#endif  // SETI_MAP_OBJECT_H
+#endif  // SHPP_MAP_OBJECT_H

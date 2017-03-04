@@ -13,7 +13,7 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8)
-project(seti C CXX)
+project(shpp C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
@@ -42,8 +42,8 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-SETI_OPTION(BUILD_UNIT_TESTS "Build unit tests" OFF)
-SETI_OPTION(COV_TESTS "Coverage tests" OFF)
+SHPP_OPTION(BUILD_UNIT_TESTS "Build unit tests" OFF)
+SHPP_OPTION(COV_TESTS "Coverage tests" OFF)
 
 if (COV_TESTS)
   # put on debug

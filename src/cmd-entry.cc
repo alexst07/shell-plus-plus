@@ -3,7 +3,7 @@
 #include "interpreter/scope-executor.h"
 #include "utils/scope-exit.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 void CmdDeclEntry::Exec(Executor* parent, std::vector<std::string>&& args) {

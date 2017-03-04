@@ -18,7 +18,7 @@
 #include "object-factory.h"
 #include "utils/check.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 RegexObject::RegexObject(const std::string& str_expr, ObjectPtr obj_type,
@@ -73,8 +73,8 @@ RegexType::RegexType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
 }
 
 ObjectPtr RegexType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, regex)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], regex, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, regex)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], regex, STRING)
 
   const std::string& str = static_cast<StringObject&>(*params[0]).value();
 
@@ -84,8 +84,8 @@ ObjectPtr RegexType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
 
 ObjectPtr RegexMatchFunc::Call(Executor* /*parent*/,
                                std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, match)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], match, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, match)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], match, STRING)
 
   RegexObject& regex_obj = static_cast<RegexObject&>(*params[0]);
   const std::string& str = static_cast<StringObject&>(*params[1]).value();
@@ -96,9 +96,9 @@ ObjectPtr RegexMatchFunc::Call(Executor* /*parent*/,
 
 ObjectPtr RegexSearchFunc::Call(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, search)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], search, REGEX)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], search, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, search)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], search, REGEX)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], search, STRING)
 
   RegexObject& regex_obj = static_cast<RegexObject&>(*params[0]);
   const std::string& str = static_cast<StringObject&>(*params[1]).value();

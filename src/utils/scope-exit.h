@@ -1,7 +1,7 @@
-#ifndef SETI_SCOPE_EXIT_H
-#define SETI_SCOPE_EXIT_H
+#ifndef SHPP_SCOPE_EXIT_H
+#define SHPP_SCOPE_EXIT_H
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 template <typename T>
@@ -26,5 +26,5 @@ void IgnoreUnused (T const &) {}
 }
 }
 
-#endif  // SETI_SCOPE_EXIT_H
+#endif  // SHPP_SCOPE_EXIT_H
 

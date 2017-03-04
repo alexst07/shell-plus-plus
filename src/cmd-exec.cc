@@ -24,7 +24,7 @@
 
 #include "interpreter/cmd-executor.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 Arguments::Arguments(std::vector<std::string>&& args)
@@ -224,7 +224,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
       err->except_code = static_cast<int>(e.code_);
       err->err_code = 0;
       int len = e.msg().length();
-      len = len >= SETI_CMD_SIZE_MAX? SETI_CMD_SIZE_MAX-1: len;
+      len = len >= SHPP_CMD_SIZE_MAX? SHPP_CMD_SIZE_MAX-1: len;
       memcpy(err->err_str, e.msg().c_str(), len);
       exit(-1);
     }
@@ -240,7 +240,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
   err->except_code = static_cast<int>(RunTimeError::ErrorCode::INVALID_COMMAND);
   err->err_code = errno;
   int len = std::strlen(glob_args.argsv()[0]);
-  len = len >= SETI_CMD_SIZE_MAX? SETI_CMD_SIZE_MAX-1: len;
+  len = len >= SHPP_CMD_SIZE_MAX? SHPP_CMD_SIZE_MAX-1: len;
   memcpy(err->err_str, glob_args.argsv()[0], len);
 
   // set \0 to end string

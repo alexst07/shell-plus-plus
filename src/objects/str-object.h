@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_STR_OBJECT_H
-#define SETI_STR_OBJECT_H
+#ifndef SHPP_STR_OBJECT_H
+#define SHPP_STR_OBJECT_H
 
 #include <memory>
 #include <iostream>
@@ -25,7 +25,7 @@
 #include "func-object.h"
 #include "slice-object.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class StringObject: public Object {
@@ -220,4 +220,4 @@ class StringEraseAllFunc: public FuncObject {
 }
 }
 
-#endif  // SETI_STR_OBJECT_H
+#endif  // SHPP_STR_OBJECT_H

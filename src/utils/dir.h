@@ -1,5 +1,5 @@
-#ifndef SETI_DIR_H
-#define SETI_DIR_H
+#ifndef SHPP_DIR_H
+#define SHPP_DIR_H
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 std::string GetHome() {
@@ -23,4 +23,4 @@ std::string GetHome() {
 }
 }
 
-#endif  // SETI_DIR_H
+#endif  // SHPP_DIR_H

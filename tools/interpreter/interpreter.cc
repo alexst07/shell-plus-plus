@@ -5,7 +5,7 @@
 #include "interpreter/interpreter.h"
 
 int main(int argc, char **argv) {
-  using namespace seti::internal;
+  using namespace shpp::internal;
 
   if (argc < 2) {
     std::cout << "usage: interpreter <file>\n";
@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
   try {
     ScriptStream file(name);
     i.Exec(file);
-  } catch (seti::RunTimeError& e) {
+  } catch (shpp::RunTimeError& e) {
     std::cout << "Error: " << e.pos().line << ": " << e.pos().col
               << ": " << e.what() << "\n";
   }

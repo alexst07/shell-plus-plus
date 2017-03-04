@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_CMD_EXEC_H
-#define SETI_CMD_EXEC_H
+#ifndef SHPP_CMD_EXEC_H
+#define SHPP_CMD_EXEC_H
 
 #include <string>
 #include <memory>
@@ -29,7 +29,7 @@
 #include "cmd-entry.h"
 #include "env-shell.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 typedef std::vector<std::string> SimpleCmdData;
@@ -195,4 +195,4 @@ struct Job {
 }
 }
 
-#endif  // SETI_CMD_EXEC_H
+#endif  // SHPP_CMD_EXEC_H

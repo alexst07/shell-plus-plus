@@ -18,15 +18,15 @@
 
 #include "utils/check.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 namespace module {
 namespace env {
 
 ObjectPtr SetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, set)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], value, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, set)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], value, STRING)
 
   const std::string& var = static_cast<StringObject&>(*params[0]).value();
   const std::string& value = static_cast<StringObject&>(*params[1]).value();
@@ -38,8 +38,8 @@ ObjectPtr SetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr GetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, get)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, get)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
 
   const std::string& var = static_cast<StringObject&>(*params[0]).value();
 
@@ -55,8 +55,8 @@ ObjectPtr GetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr ExistsFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, get)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, get)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
 
   const std::string& var = static_cast<StringObject&>(*params[0]).value();
 
@@ -73,9 +73,9 @@ ObjectPtr ExistsFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr AppendFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, append)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], value, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, append)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], value, STRING)
 
   const std::string& var = static_cast<StringObject&>(*params[0]).value();
   const std::string& value = static_cast<StringObject&>(*params[1]).value();
@@ -97,8 +97,8 @@ ObjectPtr AppendFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr UnsetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, get)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, get)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
 
   const std::string& var = static_cast<StringObject&>(*params[0]).value();
 

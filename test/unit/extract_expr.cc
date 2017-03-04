@@ -5,7 +5,7 @@
 #include "interpreter/cmd-executor.h"
 
 TEST(Token, Print) {
-  using namespace seti::internal;
+  using namespace shpp::internal;
   std::cout << "adfsdf";
   std::cout << "adfsdf";
   std::cout << "adfsdf";

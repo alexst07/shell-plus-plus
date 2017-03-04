@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_ENV_SHELL_H
-#define SETI_ENV_SHELL_H
+#ifndef SHPP_ENV_SHELL_H
+#define SHPP_ENV_SHELL_H
 
 #include <sys/types.h>
 #include <termios.h>
@@ -23,16 +23,16 @@
 #include "ast/ast.h"
 #include "interpreter/interpreter.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
-#define SETI_CMD_SIZE_MAX 256
+#define SHPP_CMD_SIZE_MAX 256
 
 struct CmdSharedError {
   int err_code;
   int except_code;
   bool error;
-  char err_str[SETI_CMD_SIZE_MAX];
+  char err_str[SHPP_CMD_SIZE_MAX];
 };
 
 class EnvShell {
@@ -84,6 +84,6 @@ class EnvShell {
 }
 }
 
-#endif  // SETI_ENV_SHELL_H
+#endif  // SHPP_ENV_SHELL_H
 
 

@@ -17,7 +17,7 @@
 #include "parser.h"
 #include "run_time_error.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 ExtractExpr::ExtractExpr(const std::string& src)

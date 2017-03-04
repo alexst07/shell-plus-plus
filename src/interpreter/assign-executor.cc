@@ -20,7 +20,7 @@
 #include "expr-executor.h"
 #include "objects/func-object.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 void AssignExecutor::Exec(AstNode* node) {

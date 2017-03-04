@@ -18,7 +18,7 @@
 #include <iostream>
 #include <boost/variant.hpp>
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 void AlocTypes(SymbolTableStack& symbol_table) {

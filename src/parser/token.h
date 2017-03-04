@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_TOKEN_H
-#define SETI_TOKEN_H
+#ifndef SHPP_TOKEN_H
+#define SHPP_TOKEN_H
 
 #include <string>
 #include <memory>
@@ -23,7 +23,7 @@
 #include <tuple>
 #include <boost/variant.hpp>
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 enum class TokenKind {

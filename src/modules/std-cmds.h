@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_STD_CMDS_H
-#define SETI_STD_CMDS_H
+#ifndef SHPP_STD_CMDS_H
+#define SHPP_STD_CMDS_H
 
 #include <string>
 #include <memory>
@@ -23,7 +23,7 @@
 
 #include "cmd-entry.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 namespace cmds {
 namespace stdf {
@@ -54,6 +54,6 @@ inline void RegisterCmds(SymbolTableStack& sym_table) {
 }
 }
 
-#endif  // SETI_STD_CMDS_H
+#endif  // SHPP_STD_CMDS_H
 
 

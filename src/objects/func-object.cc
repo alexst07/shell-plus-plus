@@ -22,7 +22,7 @@
 #include "interpreter/stmt-executor.h"
 #include "utils/scope-exit.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 ObjectPtr FuncWrapperObject::Call(Executor* parent,

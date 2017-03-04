@@ -22,7 +22,7 @@
 #include "cmd-executor.h"
 #include "stmt-executor.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 std::vector<ObjectPtr> AssignableListExecutor::Exec(

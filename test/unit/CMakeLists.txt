@@ -8,7 +8,7 @@ foreach(local_file ${SOURCES_TEST})
   get_filename_component(local_filename ${local_file} NAME_WE)
 
   add_executable(${local_filename} ${local_file})
-  target_link_libraries(${local_filename} seti ${CMAKE_THREAD_LIBS_INIT}
+  target_link_libraries(${local_filename} shpp ${CMAKE_THREAD_LIBS_INIT}
     ${GTEST_BOTH_LIBRARIES}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY})

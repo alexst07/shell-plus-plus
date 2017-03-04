@@ -29,7 +29,7 @@
 #include "modules/std-cmds.h"
 #include "modules/env.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 Interpreter::Interpreter(bool main)

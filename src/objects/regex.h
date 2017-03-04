@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_REGEX_OBJECT_H
-#define SETI_REGEX_OBJECT_H
+#ifndef SHPP_REGEX_OBJECT_H
+#define SHPP_REGEX_OBJECT_H
 
 #include <memory>
 #include <iostream>
@@ -27,7 +27,7 @@
 #include "obj-type.h"
 #include "func-object.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class RegexObject: public Object {
@@ -87,4 +87,4 @@ class RegexSearchFunc: public FuncObject {
 }
 }
 
-#endif  // SETI_REGEX_OBJECT_H
+#endif  // SHPP_REGEX_OBJECT_H

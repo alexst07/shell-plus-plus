@@ -4,7 +4,7 @@ include(CMakeParseArguments)
 # Can accept condition to control when option is available for user.
 # Usage:
 #   option(<option_variable> "help string describing the option" <initial value or boolean expression> [IF <condition>])
-macro(SETI_OPTION variable description value)
+macro(SHPP_OPTION variable description value)
   set(__value ${value})
   set(__condition "")
   set(__varname "__value")

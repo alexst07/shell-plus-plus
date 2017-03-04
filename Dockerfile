@@ -8,9 +8,9 @@ RUN \
   apt-get install -y build-essential && \
   apt-get install -y software-properties-common && \
   apt-get install -y libboost-all-dev libreadline6 libreadline6-dev git cmake && \
-  git clone https://github.com/alexst07/seti.git &&\
+  git clone https://github.com/alexst07/shpp.git &&\
   rm -rf /var/lib/apt/lists/* &&\
-  cd seti && mkdir build && cd build &&\
+  cd shpp && mkdir build && cd build &&\
   cmake .. &&\
   make install
 

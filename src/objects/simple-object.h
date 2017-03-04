@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_INT_OBJECT_H
-#define SETI_INT_OBJECT_H
+#ifndef SHPP_INT_OBJECT_H
+#define SHPP_INT_OBJECT_H
 
 #include <memory>
 #include <iostream>
@@ -23,7 +23,7 @@
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class NullObject: public Object {
@@ -451,4 +451,4 @@ class RealObject: public Object {
 }
 }
 
-#endif  // SETI_OBJ_TYPE_H
+#endif  // SHPP_OBJ_TYPE_H

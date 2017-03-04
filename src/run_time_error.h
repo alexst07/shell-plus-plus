@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_RUN_TIME_ERROR_H
-#define SETI_RUN_TIME_ERROR_H
+#ifndef SHPP_RUN_TIME_ERROR_H
+#define SHPP_RUN_TIME_ERROR_H
 
 #include <exception>
 #include <string>
@@ -22,7 +22,7 @@
 #include "ast/ast.h"
 #include "msg.h"
 
-namespace seti {
+namespace shpp {
 
 /**
  * @brief Class to represent an run time error
@@ -119,4 +119,4 @@ class RunTimeError : public std::exception {
 
 }
 
-#endif  // SETI_RUN_TIME_ERROR_H
+#endif  // SHPP_RUN_TIME_ERROR_H

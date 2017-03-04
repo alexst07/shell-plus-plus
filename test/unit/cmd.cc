@@ -4,7 +4,7 @@
 #include "cmd-exec.h"
 
 TEST(Token, Print) {
-  using namespace seti::internal;
+  using namespace shpp::internal;
 
   SymbolTableStack stack;
   Job job(stack);

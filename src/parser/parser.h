@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_PARSER_H
-#define SETI_PARSER_H
+#ifndef SHPP_PARSER_H
+#define SHPP_PARSER_H
 
 #include <string>
 #include <memory>
@@ -28,7 +28,7 @@
 #include "parser_result.h"
 #include "ast/ast.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class Parser {
@@ -301,4 +301,4 @@ class Parser {
 }
 }
 
-#endif  // SETI_PARSER_H
+#endif  // SHPP_PARSER_H

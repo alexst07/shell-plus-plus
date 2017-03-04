@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_EXPR_EXECUTOR_H
-#define SETI_EXPR_EXECUTOR_H
+#ifndef SHPP_EXPR_EXECUTOR_H
+#define SHPP_EXPR_EXECUTOR_H
 
 #include <string>
 #include <memory>
@@ -26,7 +26,7 @@
 #include "executor.h"
 #include "objects/object-factory.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class AssignableListExecutor: public Executor {
@@ -149,4 +149,4 @@ class FuncCallExecutor: public Executor {
 }
 }
 
-#endif  // SETI_EXPR_EXECUTOR_H
+#endif  // SHPP_EXPR_EXECUTOR_H

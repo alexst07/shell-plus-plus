@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_SYMBOL_TABLE_H
-#define SETI_SYMBOL_TABLE_H
+#ifndef SHPP_SYMBOL_TABLE_H
+#define SHPP_SYMBOL_TABLE_H
 
 #include <iostream>
 #include <string>
@@ -24,7 +24,7 @@
 
 #include "run_time_error.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class Object;
@@ -595,4 +595,4 @@ class SymbolTableStack: public SymbolTableStackBase {
 }
 }
 
-#endif  // SETI_SYMBOL_TABLE_H
+#endif  // SHPP_SYMBOL_TABLE_H

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_FUNC_OBJ_H
-#define SETI_FUNC_OBJ_H
+#ifndef SHPP_FUNC_OBJ_H
+#define SHPP_FUNC_OBJ_H
 
 #include <string>
 #include <memory>
@@ -24,7 +24,7 @@
 #include "run_time_error.h"
 #include "obj-type.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class FuncObject: public Object {
@@ -118,4 +118,4 @@ class FuncDeclObject: public FuncObject {
 }
 }
 
-#endif  // SETI_FUNC_OBJ_H
+#endif  // SHPP_FUNC_OBJ_H

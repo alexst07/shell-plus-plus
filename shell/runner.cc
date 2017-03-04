@@ -28,7 +28,7 @@
 #include "objects/str-object.h"
 #include "utils/dir.h"
 
-namespace seti {
+namespace shpp {
 
 Runner::Runner() {
   using namespace internal;
@@ -61,7 +61,7 @@ void Runner::Exec(std::string name) {
 void Runner::ExecInterative() {
   namespace fs = boost::filesystem;
 
-  fs::path path_rc = fs::path(internal::GetHome() + "/.setirc");
+  fs::path path_rc = fs::path(internal::GetHome() + "/.shpprc");
 
   if (fs::exists(path_rc)) {
     Exec(path_rc.string());

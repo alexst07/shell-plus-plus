@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_SLICE_OBJECT_H
-#define SETI_SLICE_OBJECT_H
+#ifndef SHPP_SLICE_OBJECT_H
+#define SHPP_SLICE_OBJECT_H
 
 #include <memory>
 #include <iostream>
@@ -25,7 +25,7 @@
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class SliceObject: public Object {
@@ -86,4 +86,4 @@ std::tuple<int, int, int> SliceLogic(const SliceObject& slice, int size);
 }
 }
 
-#endif  // SETI_SLICE_OBJECT_H
+#endif  // SHPP_SLICE_OBJECT_H

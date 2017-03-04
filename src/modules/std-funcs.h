@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_STD_FUNCS_H
-#define SETI_STD_FUNCS_H
+#ifndef SHPP_STD_FUNCS_H
+#define SHPP_STD_FUNCS_H
 
 #include <string>
 #include <memory>
@@ -23,7 +23,7 @@
 
 #include "objects/object-factory.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 namespace module {
 namespace stdf {
@@ -147,4 +147,4 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
 }
 }
 
-#endif  // SETI_STD_FUNCS_H
+#endif  // SHPP_STD_FUNCS_H

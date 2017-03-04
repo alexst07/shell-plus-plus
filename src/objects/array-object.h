@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_ARRAY_OBJECT_H
-#define SETI_ARRAY_OBJECT_H
+#ifndef SHPP_ARRAY_OBJECT_H
+#define SHPP_ARRAY_OBJECT_H
 
 #include <memory>
 #include <iostream>
@@ -27,7 +27,7 @@
 #include "func-object.h"
 #include "obj-type.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class ArrayIterObject: public BaseIter {
@@ -269,4 +269,4 @@ class ArrayMapFunc: public FuncObject {
 }
 }
 
-#endif  // SETI_ARRAY_OBJECT_H
+#endif  // SHPP_ARRAY_OBJECT_H

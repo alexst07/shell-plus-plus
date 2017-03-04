@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_STMT_EXECUTOR_H
-#define SETI_STMT_EXECUTOR_H
+#ifndef SHPP_STMT_EXECUTOR_H
+#define SHPP_STMT_EXECUTOR_H
 
 #include <string>
 #include <memory>
@@ -26,7 +26,7 @@
 #include "executor.h"
 #include "objects/object-factory.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class StmtListExecutor: public Executor {
@@ -285,6 +285,6 @@ class DelStmtExecutor: public Executor {
 }
 }
 
-#endif  // SETI_STMT_EXECUTOR_H
+#endif  // SHPP_STMT_EXECUTOR_H
 
 

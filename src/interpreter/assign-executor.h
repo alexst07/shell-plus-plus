@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_ASSIGN_EXECUTOR_H
-#define SETI_ASSIGN_EXECUTOR_H
+#ifndef SHPP_ASSIGN_EXECUTOR_H
+#define SHPP_ASSIGN_EXECUTOR_H
 
 #include <string>
 #include <memory>
@@ -26,7 +26,7 @@
 #include "symbol-table.h"
 #include "objects/object-factory.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 // Class to execute assignment operation
@@ -82,6 +82,6 @@ class AssignExecutor: public Executor {
 }
 }
 
-#endif  // SETI_ASSIGN_EXECUTOR_H
+#endif  // SHPP_ASSIGN_EXECUTOR_H
 
 

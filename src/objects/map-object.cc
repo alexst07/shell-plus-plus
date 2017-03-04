@@ -17,7 +17,7 @@
 #include "object-factory.h"
 #include "utils/check.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 MapIterObject::MapIterObject(ObjectPtr map_obj, ObjectPtr obj_type,
@@ -106,7 +106,7 @@ ObjectPtr MapObject::ObjIter(ObjectPtr obj) {
 }
 
 ObjectPtr MapObject::Update(ObjectPtr obj, bool override) {
-  SETI_FUNC_CHECK_PARAM_TYPE(obj, add, MAP)
+  SHPP_FUNC_CHECK_PARAM_TYPE(obj, add, MAP)
 
   ObjectFactory obj_factory(symbol_table_stack());
   ObjectPtr map_ptr = obj_factory.NewMap();
@@ -306,7 +306,7 @@ MapType::MapType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
 
 ObjectPtr MapKeysFunc::Call(Executor* parent,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, keys)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, keys)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
 
@@ -326,7 +326,7 @@ ObjectPtr MapKeysFunc::Call(Executor* parent,
 
 ObjectPtr MapValuesFunc::Call(Executor* parent,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, values)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, values)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
 
@@ -346,7 +346,7 @@ ObjectPtr MapValuesFunc::Call(Executor* parent,
 
 ObjectPtr MapClearFunc::Call(Executor* parent,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, clear)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, clear)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
 
@@ -358,17 +358,17 @@ ObjectPtr MapClearFunc::Call(Executor* parent,
 
 ObjectPtr MapUpdateFunc::Call(Executor* parent,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, update)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, update)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
 
   bool override = false;
   if (params.size() == 3) {
-    SETI_FUNC_CHECK_PARAM_TYPE(params[2], override, BOOL)
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[2], override, BOOL)
     override = static_cast<BoolObject&>(*params[2]).value();
   }
 
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], map, MAP)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], map, MAP)
 
   map_obj.Update(params[1], override);
 
@@ -377,7 +377,7 @@ ObjectPtr MapUpdateFunc::Call(Executor* parent,
 
 ObjectPtr MapExistsFunc::Call(Executor* parent,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, exists)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
 

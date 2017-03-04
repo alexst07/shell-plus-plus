@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_AST_TRAVERSAL_VISITOR_H
-#define SETI_AST_TRAVERSAL_VISITOR_H
+#ifndef SHPP_AST_TRAVERSAL_VISITOR_H
+#define SHPP_AST_TRAVERSAL_VISITOR_H
 
 #include <string>
 #include <iostream>
@@ -23,7 +23,7 @@
 
 #include "ast.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class AstPrinter: public AstVisitor {

@@ -5,7 +5,7 @@
 #include "ast/ast-printer.h"
 
 TEST(Lexer, Check) {
-  using namespace seti::internal;
+  using namespace shpp::internal;
 
   Lexer l("z = (6 << 2), 5 +4* -4+51-(\n\n\n\"oi\" - wef[6*2]->sef[es[\n5+1\n]]) /\n78+t->p(\n4*3,\n ad[4])\n\np[1], a = a && b,t[p]->f()");
   std::cout << "Lexer\n";

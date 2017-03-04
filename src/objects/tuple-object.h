@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_TUPLE_OBJECT_H
-#define SETI_TUPLE_OBJECT_H
+#ifndef SHPP_TUPLE_OBJECT_H
+#define SHPP_TUPLE_OBJECT_H
 
 #include <memory>
 #include <iostream>
@@ -25,7 +25,7 @@
 #include "abstract-obj.h"
 #include "slice-object.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class TupleObject: public Object {
@@ -100,4 +100,4 @@ class TupleObject: public Object {
 }
 }
 
-#endif  // SETI_TUPLE_OBJECT_H
+#endif  // SHPP_TUPLE_OBJECT_H

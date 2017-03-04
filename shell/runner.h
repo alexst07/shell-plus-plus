@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_MAIN_INTERPRETER_H
-#define SETI_MAIN_INTERPRETER_H
+#ifndef SHPP_MAIN_INTERPRETER_H
+#define SHPP_MAIN_INTERPRETER_H
 
 #include "interpreter/symbol-table.h"
 #include "ast/ast.h"
 #include "interpreter/interpreter.h"
 
-namespace seti {
+namespace shpp {
 
 class Runner {
  public:
@@ -36,6 +36,6 @@ class Runner {
 
 }
 
-#endif  // SETI_MAIN_INTERPRETER_H
+#endif  // SHPP_MAIN_INTERPRETER_H
 
 

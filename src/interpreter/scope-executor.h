@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_SCOPE_EXECUTOR_H
-#define SETI_SCOPE_EXECUTOR_H
+#ifndef SHPP_SCOPE_EXECUTOR_H
+#define SHPP_SCOPE_EXECUTOR_H
 
 #include <string>
 #include <memory>
@@ -23,7 +23,7 @@
 #include "ast/ast.h"
 #include "executor.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class ScopeExecutor: public Executor {
@@ -86,4 +86,4 @@ class BlockExecutor: public ScopeExecutor {
 }
 }
 
-#endif  // SETI_SCOPE_EXECUTOR_H
+#endif  // SHPP_SCOPE_EXECUTOR_H

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Run tests for seti interpreter
+# Run tests for shpp interpreter
 
 func get_file_lines(file) {
     content = $(cat ${file})
@@ -69,10 +69,10 @@ func compare_lines(out_lines, expected_lines) {
     return true
 }
 
-# seti interpreter has several limitations at this moment
+# shpp interpreter has several limitations at this moment
 # on the future this test must be improved
 
-seti_path = "../build/shell/seti"
+shpp_path = "../build/shell/shpp"
 test_path = "../test/interpreter/"
 
 folders = []
@@ -89,7 +89,7 @@ for folder in folders {
     for f in $(ls ${folder}) {
         file = folder +"/"+ f
         fres = get_file_output(file)
-        fout = $(./${seti_path} ${file})
+        fout = $(./${shpp_path} ${file})
 
         if compare_lines(fout, fres) {
             echo test ${file} correct

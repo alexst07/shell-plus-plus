@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_PATH_OBJECT_H
-#define SETI_PATH_OBJECT_H
+#ifndef SHPP_PATH_OBJECT_H
+#define SHPP_PATH_OBJECT_H
 
 #include <memory>
 #include <iostream>
@@ -27,7 +27,7 @@
 #include "obj-type.h"
 #include "func-object.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class PathObject: public Object {
@@ -219,4 +219,4 @@ class PathExtensionFunc: public FuncObject {
 }
 }
 
-#endif  // SETI_PATH_OBJECT_H
+#endif  // SHPP_PATH_OBJECT_H

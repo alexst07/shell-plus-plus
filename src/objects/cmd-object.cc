@@ -22,7 +22,7 @@
 #include "object-factory.h"
 #include "utils/check.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 CmdIterObject::CmdIterObject(std::string delim, int outerr, ObjectPtr cmd_obj,
@@ -162,7 +162,7 @@ ObjectPtr CmdType::Constructor(Executor* /*parent*/,
 
 ObjectPtr CmdOutFunc::Call(Executor* /*parent*/,
                            std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, out)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, out)
 
   CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
 
@@ -172,7 +172,7 @@ ObjectPtr CmdOutFunc::Call(Executor* /*parent*/,
 
 ObjectPtr CmdErrFunc::Call(Executor* /*parent*/,
                            std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, out)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, out)
 
   CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
 
@@ -182,12 +182,12 @@ ObjectPtr CmdErrFunc::Call(Executor* /*parent*/,
 
 ObjectPtr CmdDelimFunc::Call(Executor* /*parent*/,
                              std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, delim)
+  SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, delim)
 
   CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
 
   if (params.size() == 2) {
-    SETI_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
     std::string delim = static_cast<StringObject&>(*params[1]).value();
     cmd_obj.set_delim(delim);
     return params[0];

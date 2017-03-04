@@ -17,7 +17,7 @@
 #include "stmt-executor.h"
 #include "utils/scope-exit.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 void ScopeExecutor::PushDeferStmt(std::tuple<Statement *, SymbolTableStack> s) {

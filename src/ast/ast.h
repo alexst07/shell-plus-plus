@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_AST_H
-#define SETI_AST_H
+#ifndef SHPP_AST_H
+#define SHPP_AST_H
 
 #include <string>
 #include <memory>
@@ -25,7 +25,7 @@
 #include "parser/token.h"
 #include "parser/lexer.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 #define DECLARATION_NODE_LIST(V) \
@@ -1817,4 +1817,4 @@ class Literal: public Expression {
 #include "ast-class-inl.h"
 #include "ast-factory-inl.h"
 
-#endif  // SETI_AST_H
+#endif  // SHPP_AST_H

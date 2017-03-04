@@ -22,7 +22,7 @@
 #include "object-factory.h"
 #include "utils/check.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 ObjectPtr StringObject::ObjInt() {
@@ -194,7 +194,7 @@ ObjectPtr StringGetterFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringToLowerFunc::Call(Executor* /*parent*/,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, to_lower)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, to_lower)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   std::string& str = const_cast<std::string&>(str_obj.value());
@@ -205,7 +205,7 @@ ObjectPtr StringToLowerFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringToUpperFunc::Call(Executor* /*parent*/,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, to_upper)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, to_upper)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   std::string& str = const_cast<std::string&>(str_obj.value());
@@ -216,7 +216,7 @@ ObjectPtr StringToUpperFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringTrimmFunc::Call(Executor* /*parent*/,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, trim)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, trim)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   std::string& str = const_cast<std::string&>(str_obj.value());
@@ -227,7 +227,7 @@ ObjectPtr StringTrimmFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringTrimmLeftFunc::Call(Executor* /*parent*/,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, trim_left)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, trim_left)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   std::string& str = const_cast<std::string&>(str_obj.value());
@@ -238,7 +238,7 @@ ObjectPtr StringTrimmLeftFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringTrimmRightFunc::Call(Executor* /*parent*/,
                                  std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, trim_right)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, trim_right)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   std::string& str = const_cast<std::string&>(str_obj.value());
@@ -252,14 +252,14 @@ ObjectPtr StringFindFunc::Call(Executor* /*parent*/,
   int pos = 0;
 
   if (params.size() == 3) {
-    SETI_FUNC_CHECK_PARAM_TYPE(params[2], pos, INT)
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[2], pos, INT)
 
     pos = static_cast<IntObject&>(*params[2]).value();
   } else {
-    SETI_FUNC_CHECK_NUM_PARAMS(params, 2, find)
+    SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, find)
   }
 
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   std::string& self = const_cast<std::string&>(str_obj.value());
@@ -279,8 +279,8 @@ ObjectPtr StringFindFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringEndsWithFunc::Call(Executor* /*parent*/,
                                    std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
 
   std::string str_obj = static_cast<StringObject&>(*params[0]).value();
   std::string str = static_cast<StringObject&>(*params[1]).value();
@@ -302,8 +302,8 @@ ObjectPtr StringEndsWithFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringSplitFunc::Call(Executor* /*parent*/,
                                 std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, split)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, split)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   std::string& str = const_cast<std::string&>(str_obj.value());
@@ -325,9 +325,9 @@ ObjectPtr StringSplitFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringReplaceFunc::Call(Executor* /*parent*/,
                                   std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
 
   StringObject& obj = static_cast<StringObject&>(*params[0]);
   StringObject& obj_find = static_cast<StringObject&>(*params[1]);
@@ -344,9 +344,9 @@ ObjectPtr StringReplaceFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringReplaceFirstFunc::Call(Executor* /*parent*/,
                                   std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
 
   StringObject& obj = static_cast<StringObject&>(*params[0]);
   StringObject& obj_find = static_cast<StringObject&>(*params[1]);
@@ -363,9 +363,9 @@ ObjectPtr StringReplaceFirstFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringReplaceLastFunc::Call(Executor* /*parent*/,
                                   std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
 
   StringObject& obj = static_cast<StringObject&>(*params[0]);
   StringObject& obj_find = static_cast<StringObject&>(*params[1]);
@@ -382,8 +382,8 @@ ObjectPtr StringReplaceLastFunc::Call(Executor* /*parent*/,
 
 ObjectPtr StringEraseAllFunc::Call(Executor* /*parent*/,
                                   std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
 
   StringObject& obj = static_cast<StringObject&>(*params[0]);
   StringObject& obj_find = static_cast<StringObject&>(*params[1]);

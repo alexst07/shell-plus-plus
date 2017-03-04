@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_MSG_H
-#define SETI_MSG_H
+#ifndef SHPP_MSG_H
+#define SHPP_MSG_H
 
 #include <string>
 #include <memory>
 #include <vector>
 #include <boost/format.hpp>
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class Message {

@@ -3,10 +3,10 @@
 Seti is a programming language that aims bring features from modern languages, 
 as facility to manipulate data structures, object oriented programming, 
 functional programming and others, to shell script.
-https://alexst07.github.io/seti/
+https://alexst07.github.io/shpp/
 
 # How it looks like:
-![syntax highlighting](https://github.com/alexst07/seti/blob/gh-pages/img/seti.png)
+![syntax highlighting](https://github.com/alexst07/shpp/blob/gh-pages/img/shpp.png)
 
 # Resources
  * Easy to manipulate data structure, as in python.
@@ -30,8 +30,8 @@ https://alexst07.github.io/seti/
 ```
 # dnf install gcc-c++ clang
 # dnf install boost boost-devel readline readline-devel cmake git
-$ git clone https://github.com/alexst07/seti.git
-$ cd seti
+$ git clone https://github.com/alexst07/shpp.git
+$ cd shpp
 $ mkdir build && cd build
 $ cmake ..
 $ make
@@ -42,8 +42,8 @@ $ make
 ```
 # apt-get install -y build-essential
 # apt-get install -y libboost-all-dev libreadline6 libreadline6-dev git cmake
-$ git clone https://github.com/alexst07/seti.git
-$ cd seti
+$ git clone https://github.com/alexst07/shpp.git
+$ cd shpp
 $ mkdir build && cd build
 $ cmake ..
 $ make
@@ -53,10 +53,10 @@ $ make
 # Running
 ## Hello world
 ```
-$ seti
+$ shpp
 > echo hello world
 ```
 ## Running a file
 ```
-$ seti file.seti
+$ shpp file.shpp
 ```

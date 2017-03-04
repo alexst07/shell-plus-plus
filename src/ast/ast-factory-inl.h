@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_AST_H
+#ifndef SHPP_AST_H
 #error This file may only be included from ast.h.
 #endif
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class AstNodeFactory {

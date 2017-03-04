@@ -16,7 +16,7 @@
 
 #include "simple-object.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 SliceObject::SliceObject(ObjectPtr obj_start, ObjectPtr obj_end,

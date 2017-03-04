@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_CMD_EXECUTOR_H
-#define SETI_CMD_EXECUTOR_H
+#ifndef SHPP_CMD_EXECUTOR_H
+#define SHPP_CMD_EXECUTOR_H
 
 #include <tuple>
 
 #include "executor.h"
 #include "cmd-exec.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 typedef std::tuple<int, std::string, std::string> CmdExprData;
@@ -111,4 +111,4 @@ int ReadFile(std::string file_name);
 }
 }
 
-#endif  // SETI_CMD_EXECUTOR_H
+#endif  // SHPP_CMD_EXECUTOR_H

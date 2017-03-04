@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_INTERPRETER_H
-#define SETI_INTERPRETER_H
+#ifndef SHPP_INTERPRETER_H
+#define SHPP_INTERPRETER_H
 
 #include <functional>
 #include <fstream>
 
 #include "symbol-table.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class Executor;
@@ -69,6 +69,6 @@ class Interpreter {
 }
 }
 
-#endif  // SETI_INTERPRETER_H
+#endif  // SHPP_INTERPRETER_H
 
 

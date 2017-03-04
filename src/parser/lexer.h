@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_LEXER_H
-#define SETI_LEXER_H
+#ifndef SHPP_LEXER_H
+#define SHPP_LEXER_H
 
 #include <string>
 #include <memory>
@@ -24,7 +24,7 @@
 #include "token.h"
 #include "msg.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class Lexer {
@@ -181,4 +181,4 @@ private:
 }
 }
 
-#endif  // SETI_LEXER_H
+#endif  // SHPP_LEXER_H

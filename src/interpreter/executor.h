@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_EXECUTOR_H
-#define SETI_EXECUTOR_H
+#ifndef SHPP_EXECUTOR_H
+#define SHPP_EXECUTOR_H
 
 #include <string>
 #include <memory>
@@ -24,7 +24,7 @@
 #include "objects/obj-type.h"
 #include "symbol-table.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class Executor {
@@ -114,4 +114,4 @@ class Executor {
 }
 }
 
-#endif  // SETI_EXECUTOR_H
+#endif  // SHPP_EXECUTOR_H

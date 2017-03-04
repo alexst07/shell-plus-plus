@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_CMD_OBJECT_H
-#define SETI_CMD_OBJECT_H
+#ifndef SHPP_CMD_OBJECT_H
+#define SHPP_CMD_OBJECT_H
 
 #include <memory>
 #include <iostream>
@@ -26,7 +26,7 @@
 #include "obj-type.h"
 #include "func-object.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class CmdIterObject: public BaseIter {
@@ -140,4 +140,4 @@ class CmdDelimFunc: public FuncObject {
 }
 }
 
-#endif  // SETI_CMD_OBJECT_H
+#endif  // SHPP_CMD_OBJECT_H

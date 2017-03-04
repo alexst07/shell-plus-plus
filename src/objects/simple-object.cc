@@ -20,7 +20,7 @@
 #include "obj-type.h"
 #include "object-factory.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 ObjectPtr NullObject::ObjBool() {

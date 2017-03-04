@@ -16,7 +16,7 @@
 
 #include "utils/check.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 namespace module {
 namespace stdf {
@@ -42,7 +42,7 @@ ObjectPtr PrintErrFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr ReadFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
 
   std::string str;
 
@@ -53,7 +53,7 @@ ObjectPtr ReadFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr LenFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 1, len)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, len)
 
   long int size = params[0]->Len();
 
@@ -61,7 +61,7 @@ ObjectPtr LenFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr CompFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, comp)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, comp)
 
   ObjectPtr obj_resp = params[0]->Lesser(params[1]);
 
@@ -80,9 +80,9 @@ ObjectPtr RangeFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr AssertFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 2, assert)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[0], test, BOOL)
-  SETI_FUNC_CHECK_PARAM_TYPE(params[1], msg, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, assert)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], test, BOOL)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], msg, STRING)
 
   bool v = static_cast<BoolObject&>(*params[0]).value();
   std::string msg = static_cast<StringObject&>(*params[1]).value();
@@ -96,7 +96,7 @@ ObjectPtr AssertFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr IsInteractiveFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SETI_FUNC_CHECK_NUM_PARAMS(params, 0, params)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 0, params)
 
   int shell_terminal;
   int shell_is_interactive;

@@ -4,7 +4,7 @@
 #include "parser/lexer.h"
 
 TEST(Lexer, Check) {
-  using namespace seti::internal;
+  using namespace shpp::internal;
 
   Lexer l(":! <= ->rwe\n asdf; \n4.5.7 af/ds /home/alex/tst ./test/qua\\ sdf/sdf.txt\n"
           "if test == 4.48 { while (true) {echo \"aasdf\"}}");
@@ -19,7 +19,7 @@ TEST(Lexer, Check) {
 }
 
 TEST(Lexer, Comment) {
-  using namespace seti::internal;
+  using namespace shpp::internal;
 
   Lexer l(" for asdf in sdf[4]\\\n hello {# comment\n echo oi}");
   std::cout << "Lexer\n";
@@ -33,7 +33,7 @@ TEST(Lexer, Comment) {
 }
 
 TEST(Lexer, Error) {
-  using namespace seti::internal;
+  using namespace shpp::internal;
 
   Lexer l("\"asdfsd\n in sdf[4] {# comment\n echo oi}");
   std::cout << "Lexer\n";

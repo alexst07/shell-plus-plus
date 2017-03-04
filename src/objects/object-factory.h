@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_OBJECT_FACTORY_H
-#define SETI_OBJECT_FACTORY_H
+#ifndef SHPP_OBJECT_FACTORY_H
+#define SHPP_OBJECT_FACTORY_H
 
 #include <string>
 #include <memory>
@@ -32,7 +32,7 @@
 #include "regex.h"
 #include "path.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class ObjectFactory {
@@ -406,4 +406,4 @@ inline ObjectPtr PassVar(ObjectPtr obj, SymbolTableStack& symbol_table_stack) {
 }
 }
 
-#endif  // SETI_OBJECT_FACTORY_H
+#endif  // SHPP_OBJECT_FACTORY_H

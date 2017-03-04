@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_PARSER_RESULT_H
-#define SETI_PARSER_RESULT_H
+#ifndef SHPP_PARSER_RESULT_H
+#define SHPP_PARSER_RESULT_H
 
 #include <string>
 #include <memory>
@@ -24,7 +24,7 @@
 #include "msg.h"
 #include "lexer.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 template<class T>

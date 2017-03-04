@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SETI_ABSTRACT_OBJ_H
-#define SETI_ABSTRACT_OBJ_H
+#ifndef SHPP_ABSTRACT_OBJ_H
+#define SHPP_ABSTRACT_OBJ_H
 
 #include <string>
 #include <memory>
@@ -24,7 +24,7 @@
 #include "run_time_error.h"
 #include "interpreter/symbol-table.h"
 
-namespace seti {
+namespace shpp {
 namespace internal {
 
 class Executor;
@@ -320,4 +320,4 @@ typedef std::shared_ptr<Object> ObjectPtr;
 }
 }
 
-#endif  // SETI_ABSTRACT_OBJ_H
+#endif  // SHPP_ABSTRACT_OBJ_H

@@ -6,7 +6,7 @@
 #include "ast/ast-printer.h"
 
 int main(int argc, char **argv) {
-  using namespace seti::internal;
+  using namespace shpp::internal;
 
   if (argc < 2) {
     std::cout << "usage: print_ast <file>\n";
