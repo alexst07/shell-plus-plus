@@ -6,7 +6,7 @@ functional programming and others, to shell script.
 https://alexst07.github.io/shpp/
 
 # How it looks like:
-![syntax highlighting](https://github.com/alexst07/shpp/blob/gh-pages/img/shpp.png)
+![syntax highlighting](https://github.com/alexst07/shpp/blob/gh-pages/img/shpp2.png)
 
 # Resources
  * Easy to manipulate data structure, as in python.
