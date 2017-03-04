@@ -2,7 +2,7 @@
 
 ## Hello World
 
-In seti there are several ways to print information on screen, you can use shell
+In shell++ there are several ways to print information on screen, you can use shell
 commands or the function print.
 
 
@@ -11,12 +11,12 @@ Using shell commands:
 echo Hello World
 ```
 
-Using seti print function:
+Using shell++ print function:
 ```go
 print("Hello World")
 ```
 ## Comments
-In seti comments are everything that comes after #
+In shell++ comments are everything that comes after #
 ```python
 # comment
 print("hello world") # print hello world
@@ -26,7 +26,7 @@ print("hello world") # print hello world
 ```go
 my_var = 7
 ```
-if my_var doesn't exists, seti will create my_var and attributes 7 to it,
+if my_var doesn't exists, shell++ will create my_var and attributes 7 to it,
 if it already exists, the value 7 will be attributed to my_var
 
 ## Basic types
@@ -36,7 +36,7 @@ my_var = 7
 print(type(my_var))  # int
 ```
 
-Like in other languages, int in seti has oprations as add, sub, div and mult
+Like in other languages, int in shell++ has oprations as add, sub, div and mult
 
 ```go
 v1 = 7
@@ -50,7 +50,7 @@ v3 += v1%v2 # mod
 my_var = 7.5
 print(type(my_var))  # real
 ```
-Like in other languages, real in seti has oprations as add, sub, div and mult
+Like in other languages, real in shell++ has oprations as add, sub, div and mult
 ```go
 v1 = 7.1
 v2 = 3.3
@@ -307,7 +307,7 @@ print:
 
 ## Shell commands
 
-To execute others programs in seti is very similar the way that works others
+To execute others programs in shell++ is very similar the way that works others
 shell languages.
 
 ### Simple command
@@ -355,7 +355,7 @@ cmd1 || cmd2
 If cmd1 has exit status 0 (correct), doesn't execute cmd2, if not, executes cmd2
 
 ### Background commands
-As in bash, to put a command in background in seti, the command must end with &
+As in bash, to put a command in background in shell++, the command must end with &
 
 ```bash
 ls &
@@ -372,7 +372,7 @@ ls | grep some > file &
 cmd1 || cmd2 &
 ```
 ### Assign commands to variables
-Almost everything in seti is a an object, in fact only commands are not
+Almost everything in shell++ is a an object, in fact only commands are not
 objects, but the result of commands can be stored on an object
 
 ```bash
@@ -450,7 +450,7 @@ res = func(5, 6)  # 11
 res1 = func(5)  # 9
 ```
 ### variadic
-in seti functions support variadic parameters too:
+in shell++ functions support variadic parameters too:
 
 ```go
 func make_and_print_tuple(t...) {
@@ -496,7 +496,7 @@ print(v)  # 10
 ```
 
 ## Declaration of commands
-Commands are the only thing in seti that is not an object, it means, you can't
+Commands are the only thing in shell++ that is not an object, it means, you can't
 assign a command to a variable
 
 ```go
