@@ -16,7 +16,7 @@ cat file | grep -e "a.b" > test.txt
 func ftest(a) {
   v = ["echo", "ls", a]
   
-  # clousure
+  # closures
   return func(x) {
     return v.append(x)
   }
