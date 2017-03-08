@@ -214,7 +214,7 @@ class Parser {
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserScopeIdentifier();
   ParserResult<Expression> ParserPrimaryExp();
-  ParserResult<Expression> ParserGlobExp();
+  ParserResult<Expression> ParserGlobExp(bool recursive = false);
   ParserResult<Expression> ParserPostExp();
   ParserResult<Expression> ParserUnaryExp();
   ParserResult<Expression> ParserTerm();

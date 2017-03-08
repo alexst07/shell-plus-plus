@@ -1768,14 +1768,21 @@ class Glob: public Expression {
     return pieces_.size();
   }
 
+  bool recursive() const noexcept {
+    return recursive_;
+  }
+
  private:
   friend class AstNodeFactory;
 
   std::vector<std::unique_ptr<AstNode>> pieces_;
+  bool recursive_;
 
-  Glob(std::vector<std::unique_ptr<AstNode>>&& pieces, Position position)
+  Glob(std::vector<std::unique_ptr<AstNode>>&& pieces, bool recursive,
+       Position position)
       : Expression(NodeType::kGlob, position)
-      , pieces_(std::move(pieces)) {}
+      , pieces_(std::move(pieces))
+      , recursive_(recursive) {}
 };
 
 class Literal: public Expression {

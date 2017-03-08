@@ -1476,7 +1476,7 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
   }
 }
 
-ParserResult<Expression> Parser::ParserGlobExp() {
+ParserResult<Expression> Parser::ParserGlobExp(bool recursive) {
   // this method is called on LiteralExp, and it
   // was already advenced there
   std::vector<std::unique_ptr<AstNode>> pieces;
@@ -1506,7 +1506,8 @@ ParserResult<Expression> Parser::ParserGlobExp() {
     return ParserResult<Expression>(); // Error
   }
 
-  return ParserResult<Expression>(factory_.NewGlob(std::move(pieces)));
+  return ParserResult<Expression>(factory_.NewGlob(std::move(pieces),
+                                                   recursive));
 }
 
 ParserResult<Expression> Parser::LiteralExp() {
@@ -1531,6 +1532,8 @@ ParserResult<Expression> Parser::LiteralExp() {
     return ParserResult<Expression>(factory_.NewNullExpression());
   } else if (token.Is(TokenKind::MOD)) {
     return ParserGlobExp();
+  } else if (token.Is(TokenKind::RGLOB)) {
+    return ParserGlobExp(true); // recursive
   } else{
     ErrorMsg(boost::format("primary expression expected, got %1%")
         % Token::TokenValueToStr(token.GetValue()));

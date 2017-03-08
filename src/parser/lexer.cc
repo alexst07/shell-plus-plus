@@ -349,6 +349,8 @@ TokenStream Lexer::Scanner() {
         Advance();
         if (c_ == '=') {
           token = Select(TokenKind::ASSIGN_MOD);
+        } else if (c_ == '%') {
+          token = Select(TokenKind::RGLOB);
         } else {
           token = GetToken(TokenKind::MOD);
         }

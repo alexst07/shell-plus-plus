@@ -33,8 +33,9 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<Glob> NewGlob(
-      std::vector<std::unique_ptr<AstNode>>&& pieces) {
-    return std::unique_ptr<Glob>(new Glob(std::move(pieces), fn_pos_()));
+      std::vector<std::unique_ptr<AstNode>>&& pieces, bool recursive) {
+    return std::unique_ptr<Glob>(new Glob(std::move(pieces), recursive,
+                                 fn_pos_()));
   }
 
   inline std::unique_ptr<BinaryOperation> NewBinaryOperation(

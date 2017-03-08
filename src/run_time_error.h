@@ -52,6 +52,7 @@ class RunTimeError : public std::exception {
     PARSER,
     INTERPRETER_FILE,
     REGEX,
+    GLOB,
     CUSTON
   };
 
