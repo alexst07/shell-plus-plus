@@ -53,6 +53,13 @@ for file in %*.txt% {
  * reference counter
  * operator overriding
 
+# Why another programming language?
+I wanted a language that runs shell commands like Bash, and manipulate data structure with the ease of Python, I searched, but I did not find any that met my requirements, so I decided to use my free time to create one.
+
+This is still in development, but it has already made life easier for me in many day-to-day tasks, maybe this might be useful for someone else, so I shared it on github.
+
+However everything here can change without warning, because to date, the only purpose of it is MAKE MY LIFE EASIER AND ONLY THAT.
+
 # Building
 
 ## Requirements:
