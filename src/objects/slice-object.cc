@@ -95,7 +95,7 @@ std::tuple<int, int, int> SliceLogic(const SliceObject& slice, int size) {
   }
 
   if (start < 0) {
-    start = 0;
+    start = size - abs(start);
   }
 
   if (start > size) {
@@ -104,6 +104,10 @@ std::tuple<int, int, int> SliceLogic(const SliceObject& slice, int size) {
 
   if (end > size) {
     end = size;
+  }
+
+  if (start > end) {
+    start = end;
   }
 
   return std::tuple<int, int, int>(start, end, step);
