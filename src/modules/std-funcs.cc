@@ -15,6 +15,7 @@
 #include "std-funcs.h"
 
 #include "utils/check.h"
+#include "utils/glob.h"
 
 namespace shpp {
 namespace internal {
@@ -108,6 +109,31 @@ ObjectPtr IsInteractiveFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   bool v = shell_is_interactive?true:false;
 
   return obj_factory_.NewBool(v);
+}
+
+ObjectPtr GlobFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, params)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], msg, STRING)
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  const std::string& glob_str = static_cast<StringObject&>(*params[0]).value();
+
+  std::vector<ObjectPtr> glob_obj = ExecGlob(glob_str, symbol_table_stack());
+  return obj_factory.NewArray(std::move(glob_obj));
+}
+
+ObjectPtr GlobRFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, params)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], msg, STRING)
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  const std::string& glob_str = static_cast<StringObject&>(*params[0]).value();
+
+  std::vector<ObjectPtr> glob_obj =
+      ListTree(boost::filesystem::current_path(), glob_str,
+      symbol_table_stack());
+
+  return obj_factory.NewArray(std::move(glob_obj));
 }
 
 }
