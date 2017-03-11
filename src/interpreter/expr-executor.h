@@ -113,20 +113,6 @@ class GlobExecutor: public Executor {
       : Executor(parent, symbol_table_stack) {}
 
   ObjectPtr Exec(Glob* glob_node);
-
-  std::vector<ObjectPtr> ExecGlob(const std::string& glob_str,
-      const std::string& root_str = "");
-
-  boost::filesystem::recursive_directory_iterator CreateRIterator(
-      boost::filesystem::path path);
-
-  std::vector<ObjectPtr> ExecDir(boost::filesystem::path path,
-      const std::string& glob_str, const std::string& root_str = "");
-
-  std::vector<ObjectPtr> ListTree(boost::filesystem::path path,
-      const std::string& glob_str);
-
-  std::string GetGlobStr(Glob* glob);
 };
 
 class ExprListExecutor: public Executor {
