@@ -1,5 +1,6 @@
 # if else test
 # --output:start
+# test1 test2 test3
 # [1, 3, 8, 4, 5, 2]
 # [1, 2, 3, 4, 5, 8]
 # [8, 5, 4, 3, 2, 1]
@@ -27,8 +28,10 @@
 # 8
 # 78
 # 84
-# test1 test2 test3
 # --output:end
+
+str_arr = ["test1", "test2", "test3"]
+echo ${str_arr}
 
 arr = [1]
 arr.append(3, 4, 2)
@@ -92,6 +95,3 @@ print("after del: ", arr)
 for i in arr {
   print(i)
 }
-
-str_arr = ["test1", "test2", "test3"]
-echo ${str_arr}
