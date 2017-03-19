@@ -31,7 +31,7 @@ class Runner {
 
   ~Runner() = default;
 
-  void Exec(std::string file_name);
+  void Exec(std::string file_name, std::vector<std::string>&& args = {});
   void ExecInterative();
 
  private:
@@ -41,5 +41,3 @@ class Runner {
 }
 
 #endif  // SHPP_MAIN_INTERPRETER_H
-
-

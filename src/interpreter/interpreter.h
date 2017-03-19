@@ -48,7 +48,7 @@ class Interpreter {
     return symbol_table_stack_;
   }
 
-  void Exec(ScriptStream& file);
+  void Exec(ScriptStream& file, std::vector<std::string>&& args = {});
   void ExecInterative(const std::function<std::string(Executor *, bool)> &func);
 
   std::shared_ptr<Object> LookupSymbol(const std::string& name);
@@ -57,6 +57,7 @@ class Interpreter {
 
  private:
   void RegisterVars();
+  void RegisterArgs(std::vector<std::string>&& args);
   void InsertVar(const std::string& name, std::shared_ptr<Object> obj);
   void RegisterFileVars(const std::string& file);
 
@@ -70,5 +71,3 @@ class Interpreter {
 }
 
 #endif  // SHPP_INTERPRETER_H
-
-

@@ -46,7 +46,7 @@ Runner::Runner() {
   internal::EnvShell::instance()->InitShell();
 }
 
-void Runner::Exec(std::string name) {
+void Runner::Exec(std::string name, std::vector<std::string>&& args) {
   try {
     internal::ScriptStream file(name);
 
@@ -56,7 +56,7 @@ void Runner::Exec(std::string name) {
                          internal::Position{0, 0});
     }
 
-    interpreter_.Exec(file);
+    interpreter_.Exec(file, std::move(args));
   } catch (RunTimeError& e) {
     std::cout << "Error: " << e.pos().line << ": " << e.pos().col
               << ": " << e.what() << "\n\n";

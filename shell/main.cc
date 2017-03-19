@@ -15,6 +15,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <string>
 
 #include "runner.h"
 
@@ -22,16 +24,26 @@ void help() {
   std::cerr << "shpp [file]\n";
 }
 
+std::vector<std::string> Args(int argc, char **argv) {
+  std::vector<std::string> args;
+
+  if (argc > 2) {
+    for (int i = 2; i < argc; i++) {
+      args.push_back(std::string(argv[i]));
+    }
+  }
+
+  return args;
+}
+
 int main(int argc, char **argv) {
   shpp::Runner runner;
 
   if (argc == 1) {
     runner.ExecInterative();
-  } else if (argc == 2) {
-    runner.Exec(argv[1]);
   } else {
-    help();
-    return -1;
+    std::vector<std::string> args = Args(argc, argv);
+    runner.Exec(argv[1], std::move(args));
   }
 
   return 0;

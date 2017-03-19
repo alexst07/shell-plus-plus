@@ -69,7 +69,20 @@ void Interpreter::RegisterFileVars(const std::string& file) {
   InsertVar("__path__", obj_factory.NewString(parent_path.string()));
 }
 
-void Interpreter::Exec(ScriptStream& file) {
+void Interpreter::RegisterArgs(std::vector<std::string>&& args) {
+  std::vector<ObjectPtr> vec;
+  ObjectFactory obj_factory(symbol_table_stack_);
+
+  for (const auto& arg: args) {
+    ObjectPtr obj = obj_factory.NewString(arg);
+    vec.push_back(obj);
+  }
+
+  ObjectPtr obj_args = obj_factory.NewArray(std::move(vec));
+  InsertVar("args", obj_args);
+}
+
+void Interpreter::Exec(ScriptStream& file, std::vector<std::string>&& args) {
   std::stringstream buffer;
   buffer << file.fs().rdbuf();
 
@@ -82,6 +95,8 @@ void Interpreter::Exec(ScriptStream& file) {
   if (p.nerrors() == 0) {
     RegisterVars();
     RegisterFileVars(file.filename());
+    RegisterArgs(std::move(args));
+
     RootExecutor executor(symbol_table_stack_);
     executor.Exec(stmt_list_.get());
   } else {
