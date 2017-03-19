@@ -40,7 +40,7 @@ void HandleSignals(int signo) {
   }
 }
 
-Runner::Runner() {
+Runner::Runner(): interpreter_(true) {
   using namespace internal;
 
   internal::EnvShell::instance()->InitShell();
