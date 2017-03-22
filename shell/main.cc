@@ -27,8 +27,8 @@ void help() {
 std::vector<std::string> Args(int argc, char **argv) {
   std::vector<std::string> args;
 
-  if (argc > 2) {
-    for (int i = 2; i < argc; i++) {
+  if (argc > 1) {
+    for (int i = 1; i < argc; i++) {
       args.push_back(std::string(argv[i]));
     }
   }

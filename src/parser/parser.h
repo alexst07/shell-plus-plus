@@ -138,8 +138,9 @@ class Parser {
       return true;
     }
 
-    // match (..., %...,
-    if (tok.IsAny(TokenKind::LPAREN, TokenKind::MOD)) {
+    // match (..., %..., $(...
+    if (tok.IsAny(TokenKind::LPAREN, TokenKind::MOD,
+                  TokenKind::DOLLAR_LPAREN)) {
       return true;
     }
 
