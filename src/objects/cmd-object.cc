@@ -110,6 +110,43 @@ std::shared_ptr<Object> CmdObject::Attr(std::shared_ptr<Object> self,
   return static_cast<TypeObject&>(*obj_type).CallObject(name, self);
 }
 
+ObjectPtr CmdObject::ObjCmd() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(str_stdout_);
+}
+
+bool CmdObject::Compare(ObjectPtr obj) {
+  ObjectPtr obj_type = obj->ObjType();
+
+  TypeObject& type = static_cast<TypeObject&>(*obj_type);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  std::vector<ObjectPtr> params_array = {obj_factory.NewString(str_stdout_)};
+  ObjectPtr obj_comp = type.Constructor(nullptr, std::move(params_array));
+  ObjectPtr obj_bool = obj_comp->Equal(obj);
+
+  if (obj_bool->type() == ObjectType::BOOL) {
+    bool v = static_cast<BoolObject&>(*obj_bool).value();
+
+    if (v) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+ObjectPtr CmdObject::Equal(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(Compare(obj));
+}
+
+ObjectPtr CmdObject::NotEqual(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(!Compare(obj));
+}
+
 ObjectPtr CmdObject::In(ObjectPtr obj) {
   ObjectPtr obj_type = obj->ObjType();
 

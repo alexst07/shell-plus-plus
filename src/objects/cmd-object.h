@@ -18,6 +18,7 @@
 #include <memory>
 #include <iostream>
 #include <vector>
+#include <boost/algorithm/string.hpp>
 
 #include "run_time_error.h"
 #include "ast/ast.h"
@@ -58,7 +59,10 @@ class CmdObject: public Object {
       , status_(status)
       , str_stdout_(std::move(str_stdout))
       , str_stderr_(std::move(str_stderr))
-      , delim_("\n") {}
+      , delim_("\n") {
+        boost::trim(str_stdout_);
+        boost::trim(str_stderr_);
+      }
 
    virtual ~CmdObject() {}
 
@@ -77,6 +81,14 @@ class CmdObject: public Object {
    }
 
    ObjectPtr ObjString() override;
+
+   ObjectPtr ObjCmd() override;
+
+   bool Compare(ObjectPtr obj);
+
+   ObjectPtr Equal(ObjectPtr obj) override;
+
+   ObjectPtr NotEqual(ObjectPtr obj) override;
 
    std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
                                 const std::string& name) override;
