@@ -113,12 +113,20 @@ ObjectPtr StringObject::NotEqual(ObjectPtr obj) {
 }
 
 ObjectPtr StringObject::Add(ObjectPtr obj) {
-  if (obj->type() != ObjectType::STRING) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type not supported"));
+  ObjectPtr target_obj;
+
+  if (obj->type() == ObjectType::STRING) {
+    target_obj = obj;
+  } else {
+    target_obj = obj->ObjString();
   }
 
-  StringObject& obj_str = static_cast<StringObject&>(*obj);
+  if (target_obj->type() != ObjectType::STRING) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("string interface return no string"));
+  }
+
+  StringObject& obj_str = static_cast<StringObject&>(*target_obj);
   std::string r = value_ + obj_str.value_;
 
   ObjectFactory obj_factory(symbol_table_stack());

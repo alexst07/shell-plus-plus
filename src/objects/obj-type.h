@@ -226,6 +226,10 @@ class TypeObject: public Object {
     return name_;
   }
 
+  virtual std::string ObjectName() {
+    return name_;
+  }
+
   virtual bool RegiterMethod(const std::string& name, ObjectPtr obj) {
     SymbolAttr sym_entry(obj, true);
     return symbol_table_stack().InsertEntry(name, std::move(sym_entry));

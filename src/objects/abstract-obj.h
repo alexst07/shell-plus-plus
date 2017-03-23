@@ -67,227 +67,275 @@ class Object {
 
   virtual long int Len() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no len interface"));
+                       boost::format("%1% has no len interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::size_t Hash() const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no hash interface"));
+                       boost::format("%1% has no hash interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual bool operator==(const Object& obj) const {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no print method"));
+                       boost::format("%1% has no print method")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> ObjBool() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no bool interface"));
+                       boost::format("%1% has no bool interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> ObjString() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no string interface"));
+                       boost::format("%1% has no string interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> ObjInt() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no int interface"));
+                       boost::format("%1% has no int interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> ObjReal() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no real interface"));
+                       boost::format("%1% has no real interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> ObjCmd() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no cmd interface"));
+                       boost::format("%1% has no cmd interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> ObjArray() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no array interface"));
+                       boost::format("%1% has no array interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Call(
       Executor*, std::vector<std::shared_ptr<Object>>&&) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no call interface"));
+                       boost::format("%1% has no call interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> GetItem(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no get_item interface"));
+                       boost::format("%1% has no get_item interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object>& GetItemRef(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no get_item interface"));
+                       boost::format("%1% has no get_item interface")
+                       %ObjType()->ObjectName());
   }
 
   // This method must receive the self object to apply the iterator
   virtual std::shared_ptr<Object> ObjIter(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no iter interface"));
+                       boost::format("%1% has no iter interface")
+                       %ObjType()->ObjectName());
   }
 
   virtual void DelItem(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has del operation"));
+                       boost::format("%1% has del operation")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Add(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no + operator"));
+                       boost::format("%1% has no + operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Sub(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no - operator"));
+                       boost::format("%1% has no - operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Mult(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no * operator"));
+                       boost::format("%1% has no * operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Div(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no / operator"));
+                       boost::format("%1% has no / operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> DivMod(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no % operator"));
+                       boost::format("%1% has no % operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> RightShift(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no >> operator"));
+                       boost::format("%1% has no >> operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> LeftShift(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no << operator"));
+                       boost::format("%1% has no << operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Lesser(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no < operator"));
+                       boost::format("%1% has no < operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Greater(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no > operator"));
+                       boost::format("%1% has no > operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Copy() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no copy method"));
+                       boost::format("%1% has no copy method")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Next() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no next method"));
+                       boost::format("%1% has no next method")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> HasNext() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no has_next method"));
+                       boost::format("%1% has no has_next method")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> LessEqual(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no >= operator"));
+                       boost::format("%1% has no >= operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> GreatEqual(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no <= operator"));
+                       boost::format("%1% has no <= operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Equal(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no == operator"));
+                       boost::format("%1% has no == operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> In(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no in operator"));
+                       boost::format("%1% has no in operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> NotEqual(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no == operator"));
+                       boost::format("%1% has no == operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> BitAnd(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no & operator"));
+                       boost::format("%1% has no & operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> BitOr(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no | operator"));
+                       boost::format("%1% has no | operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> BitXor(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no ^ operator"));
+                       boost::format("%1% has no ^ operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> BitNot() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no ~ operator"));
+                       boost::format("%1% has no ~ operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> And(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no && operator"));
+                       boost::format("%1% has no && operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Or(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no && operator"));
+                       boost::format("%1% has no && operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> UnaryAdd() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no unary + operator"));
+                       boost::format("%1% has no unary + operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> UnarySub() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no unary - operator"));
+                       boost::format("%1% has no unary - operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Not() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no not operator"));
+                       boost::format("%1% has no not operator")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Begin() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no begin method"));
+                       boost::format("%1% has no begin method")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> End() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no end method"));
+                       boost::format("%1% has no end method")
+                       %ObjType()->ObjectName());
   }
 
   virtual std::shared_ptr<Object> Attr(std::shared_ptr<Object>,
                                         const std::string&) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no attr method"));
+                       boost::format("%1% has no attr method")
+                       %ObjType()->ObjectName());
   }
 
   // this method must be used when arrow operation is on left side
   virtual std::shared_ptr<Object>& AttrAssign(std::shared_ptr<Object>,
                                         const std::string&) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type has no attr method"));
+                       boost::format("%1% has no attr method")
+                       %ObjType()->ObjectName());
+  }
+
+  virtual std::string ObjectName() {
+    return std::string("type");
   }
 
   std::shared_ptr<Object> ObjType() const noexcept {
