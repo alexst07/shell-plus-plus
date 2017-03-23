@@ -44,6 +44,8 @@ class PathObject: public Object {
 
    ObjectPtr ObjString() override;
 
+   ObjectPtr ObjCmd() override;
+
    ObjectPtr Attr(std::shared_ptr<Object> self,
                   const std::string& name) override;
 
@@ -211,6 +213,14 @@ class PathStemFunc: public FuncObject {
 class PathExtensionFunc: public FuncObject {
  public:
   PathExtensionFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class PathAbsoluteFunc: public FuncObject {
+ public:
+  PathAbsoluteFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);

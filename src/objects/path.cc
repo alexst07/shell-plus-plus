@@ -39,6 +39,11 @@ ObjectPtr PathObject::ObjString() {
   return obj_factory.NewString(path_.string());
 }
 
+ObjectPtr PathObject::ObjCmd() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(path_.string());
+}
+
 boost::filesystem::path& PathObject::value() {
   return path_;
 }
@@ -88,6 +93,7 @@ PathType::PathType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<PathFilenameFunc>("filename", symbol_table_stack(), *this);
   RegisterMethod<PathStemFunc>("stem", symbol_table_stack(), *this);
   RegisterMethod<PathExtensionFunc>("extension", symbol_table_stack(), *this);
+  RegisterMethod<PathAbsoluteFunc>("absolute", symbol_table_stack(), *this);
 }
 
 ObjectPtr PathType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
@@ -339,6 +345,17 @@ ObjectPtr PathExtensionFunc::Call(Executor* /*parent*/,
 
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewPath(path.extension());
+}
+
+ObjectPtr PathAbsoluteFunc::Call(Executor* /*parent*/,
+                                 std::vector<ObjectPtr>&& params) {
+  namespace fs = boost::filesystem;
+
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewPath(canonical(path));
 }
 
 }
