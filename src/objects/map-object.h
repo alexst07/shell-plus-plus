@@ -90,6 +90,9 @@ class MapObject: public Object {
 
   ObjectPtr Add(ObjectPtr obj) override;
 
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
+                               const std::string& name) override;
+
   ObjectPtr Update(ObjectPtr obj, bool override);
 
   // Return the reference for an object on the map, if there is no

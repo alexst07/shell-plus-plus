@@ -241,6 +241,12 @@ bool MapObject::Exists(ObjectPtr obj_index) {
   return false;
 }
 
+std::shared_ptr<Object> MapObject::Attr(std::shared_ptr<Object> self,
+                                        const std::string& name) {
+  ObjectPtr obj_type = ObjType();
+  return static_cast<TypeObject&>(*obj_type).CallObject(name, self);
+}
+
 ObjectPtr MapObject::In(ObjectPtr obj) {
   ObjectFactory obj_factory(symbol_table_stack());
   size_t hash = obj->Hash();
