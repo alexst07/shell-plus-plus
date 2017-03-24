@@ -56,6 +56,8 @@ class NullObject: public Object {
 
   ObjectPtr Or(ObjectPtr obj) override;
 
+  ObjectPtr Not() override;
+
   std::string Print() override {
     return std::string("[null]");
   }

@@ -57,6 +57,11 @@ ObjectPtr NullObject::Or(ObjectPtr obj) {
   return obj->ObjBool();
 }
 
+ObjectPtr NullObject::Not() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(true);
+}
+
 ObjectPtr BoolObject::ObjBool() {
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewBool(value_);
