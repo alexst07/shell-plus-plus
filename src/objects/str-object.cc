@@ -168,6 +168,8 @@ StringType::StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
                                     *this);
   RegisterMethod<StringEraseAllFunc>("erase_all", symbol_table_stack(),
                                      *this);
+  RegisterMethod<StringCountFunc>("count", symbol_table_stack(),
+                                  *this);
 }
 
 ObjectPtr StringType::Constructor(Executor* /*parent*/,
@@ -283,6 +285,26 @@ ObjectPtr StringFindFunc::Call(Executor* /*parent*/,
   }
 
   return obj_factory.NewInt(f);
+}
+
+ObjectPtr StringCountFunc::Call(Executor* /*parent*/,
+                                std::vector<ObjectPtr>&& params) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, find)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
+
+  StringObject& str_obj = static_cast<StringObject&>(*params[0]);
+  std::string& self = const_cast<std::string&>(str_obj.value());
+  const std::string& str = static_cast<StringObject&>(*params[1]).value();
+
+  int count = 0;
+  size_t npos = self.find(str, 0); // fist occurrence
+  while(npos != std::string::npos) {
+    count++;
+    npos = self.find(str, npos+1);
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewInt(count);
 }
 
 ObjectPtr StringEndsWithFunc::Call(Executor* /*parent*/,
