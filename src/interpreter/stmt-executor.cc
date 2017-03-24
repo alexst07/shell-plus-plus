@@ -367,7 +367,13 @@ void IfElseExecutor::Exec(IfStatement* node) {
     block_exec.Exec(node->then_block());
   } else {
     if (node->has_else()) {
-      block_exec.Exec(node->else_block());
+      // chain multiple if-else statements: if {...} else if {...} else
+      if (node->else_block()->type() == AstNode::NodeType::kIfStatement) {
+        IfElseExecutor if_exec(this, symbol_table_stack());
+        if_exec.Exec(static_cast<IfStatement*>(node->else_block()));
+      } else {
+        block_exec.Exec(node->else_block());
+      }
     }
   }
 

@@ -501,22 +501,26 @@ ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
   AssignableListExecutor assignable_list(this, symbol_table_stack());
   auto vec = assignable_list.Exec(node->rvalue_list());
 
-  switch (fobj->type()) {
-    case Object::ObjectType::FUNC: {
-      return static_cast<FuncObject&>(*fobj).Call(this, std::move(vec));
-      break;
-    }
+  try {
+    switch (fobj->type()) {
+      case Object::ObjectType::FUNC: {
+        return static_cast<FuncObject&>(*fobj).Call(this, std::move(vec));
+        break;
+      }
 
-    case Object::ObjectType::TYPE: {
-      return static_cast<TypeObject&>(*fobj).Constructor(this, std::move(vec));
-      break;
-    }
+      case Object::ObjectType::TYPE: {
+        return static_cast<TypeObject&>(*fobj).Constructor(this, std::move(vec));
+        break;
+      }
 
-    default: {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("object is not callable"),
-                         node->func_exp()->pos());
+      default: {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                          boost::format("object is not callable"),
+                          node->func_exp()->pos());
+      }
     }
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos());
   }
 }
 
