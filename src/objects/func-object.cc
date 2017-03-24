@@ -79,7 +79,7 @@ void FuncDeclObject::HandleArguments(std::vector<ObjectPtr>&& params) {
       symbol_table_.SetEntry(params_[i], params[i]);
     }
 
-    for (size_t i = no_values_params; i < params_.size(); i++) {
+    for (size_t i = params.size(); i < params_.size(); i++) {
       symbol_table_.SetEntry(params_[i],
                              default_values_[i - no_values_params]);
     }

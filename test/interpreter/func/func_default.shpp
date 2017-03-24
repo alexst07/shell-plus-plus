@@ -1,6 +1,8 @@
 # function default parameter test
 # --output:start
 # 87alex
+# 7testalex
+# 7xal
 # --output:end
 
 func f(i, a = 5 + 2, b = "alex") {
@@ -8,3 +10,5 @@ func f(i, a = 5 + 2, b = "alex") {
 }
 
 f(8)
+f(7, "test")
+f(7, "x", "al")
