@@ -71,7 +71,7 @@ class Object {
                        %ObjType()->ObjectName());
   }
 
-  virtual std::size_t Hash() const {
+  virtual std::size_t Hash() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("%1% has no hash interface")
                        %ObjType()->ObjectName());

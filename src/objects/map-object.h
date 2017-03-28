@@ -75,7 +75,7 @@ class MapObject: public Object {
   MapObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : Object(ObjectType::MAP, obj_type, std::move(sym_table)) {}
 
-  std::size_t Hash() const override {
+  std::size_t Hash() override {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("map object has no hash method"));
   }

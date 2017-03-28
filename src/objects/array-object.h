@@ -125,7 +125,7 @@ class ArrayObject: public Object {
 
    ObjectPtr ObjArray() override;
 
-   std::size_t Hash() const override;
+   std::size_t Hash() override;
 
    long int Len() override {
      return value_.size();

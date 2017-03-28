@@ -69,40 +69,6 @@ class RangeIterObject: public BaseIter {
   int value_;
 };
 
-class DeclClassObject: public Object {
- public:
-  DeclClassObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::DECL_OBJ, obj_type, std::move(sym_table)) {
-    symbol_table_stack().NewClassTable();
-  }
-
-  virtual ~DeclClassObject() {}
-
-  std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
-                                const std::string& name) override;
-
-  std::shared_ptr<Object>& AttrAssign(std::shared_ptr<Object>,
-                                        const std::string& name) override;
-
-  ObjectPtr Add(ObjectPtr obj) override;
-
-  std::string Print() override {
-    // TODO: call print function
-    return std::string("object");
-  }
-
-  SymbolTableStack& SymTable() {
-    return symbol_table_stack();
-  }
-
-  void SetSelf(ObjectPtr self_obj) {
-    self_ = self_obj;
-  }
-
- private:
-  std::weak_ptr<Object> self_;
-};
-
 class ModuleImportObject: public Object {
  public:
   ModuleImportObject(std::string module_name, bool is_file_path,
@@ -194,7 +160,7 @@ class TypeObject: public Object {
 
   virtual ~TypeObject() {}
 
-  std::size_t Hash() const override {
+  std::size_t Hash() override {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("type object has no hash method"));
   }
@@ -253,32 +219,6 @@ class Type: public TypeObject {
   virtual ~Type() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
-};
-
-class DeclClassType: public TypeObject {
- public:
-  DeclClassType(const std::string& name, ObjectPtr obj_type,
-             SymbolTableStack&& sym_table)
-      : TypeObject(name, obj_type, std::move(sym_table)) {}
-
-  virtual ~DeclClassType() {}
-
-  bool RegiterMethod(const std::string& name, ObjectPtr obj) override {
-    SymbolAttr sym_entry(obj, true);
-    return symbol_table_stack().InsertEntry(name, std::move(sym_entry));
-  }
-
-  ObjectPtr CallObject(const std::string& name, ObjectPtr self_param) override;
-
-  std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
-                               const std::string& name) override;
-
-  SymbolTableStack& SymTableStack() noexcept {
-    return symbol_table_stack();
-  }
-
-  ObjectPtr Constructor(Executor* parent,
                         std::vector<ObjectPtr>&& params) override;
 };
 

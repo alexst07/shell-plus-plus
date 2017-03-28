@@ -34,7 +34,7 @@ class FuncObject: public Object {
 
   virtual ~FuncObject() {}
 
-  std::size_t Hash() const override {
+  std::size_t Hash() override {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("func object has no hash method"));
   }

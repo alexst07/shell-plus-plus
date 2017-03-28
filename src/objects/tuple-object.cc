@@ -20,7 +20,7 @@
 namespace shpp {
 namespace internal {
 
-std::size_t TupleObject::Hash() const {
+std::size_t TupleObject::Hash() {
   if (value_.empty()) {
     throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
                        boost::format("hash of empty tuple is not valid"));

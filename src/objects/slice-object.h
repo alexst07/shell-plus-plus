@@ -57,7 +57,7 @@ class SliceObject: public Object {
 
   inline bool has_step() const noexcept { return has_step_; }
 
-  std::size_t Hash() const override {
+  std::size_t Hash() override {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("slice object has no hash method"));
   }

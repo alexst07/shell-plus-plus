@@ -31,6 +31,7 @@
 #include "tuple-object.h"
 #include "regex.h"
 #include "path.h"
+#include "decl-class-object.h"
 
 namespace shpp {
 namespace internal {

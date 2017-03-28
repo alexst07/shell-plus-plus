@@ -33,7 +33,7 @@ class NullObject: public Object {
 
   virtual ~NullObject() {}
 
-  std::size_t Hash() const override {
+  std::size_t Hash() override {
     throw RunTimeError(RunTimeError::ErrorCode::NULL_ACCESS,
                        boost::format("null object has no hash method"));
   }
@@ -82,7 +82,7 @@ class BoolObject: public Object {
 
   inline bool value() const noexcept { return value_; }
 
-  std::size_t Hash() const override {
+  std::size_t Hash() override {
     std::hash<bool> bool_hash;
     return bool_hash(value_);
   }
@@ -134,7 +134,7 @@ class IntObject: public Object {
 
   inline int value() const noexcept { return value_; }
 
-  std::size_t Hash() const override {
+  std::size_t Hash() override {
     std::hash<int> int_hash;
     return int_hash(value_);
   }
@@ -338,7 +338,7 @@ class RealObject: public Object {
 
   ObjectPtr ObjString() override;
 
-  std::size_t Hash() const override {
+  std::size_t Hash() override {
     std::hash<float> float_hash;
     return float_hash(value_);
   }

@@ -72,7 +72,7 @@ class TupleObject: public Object {
 
    ObjectPtr& GetItemRef(ObjectPtr index) override;
 
-   std::size_t Hash() const override;
+   std::size_t Hash() override;
 
    bool operator==(const Object& obj) const override;
 

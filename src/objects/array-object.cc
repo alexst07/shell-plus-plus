@@ -89,7 +89,7 @@ ArrayObject::ArrayObject(std::vector<std::shared_ptr<Object>>&& value,
 ArrayObject::ArrayObject(const ArrayObject& obj)
     : Object(obj), value_(obj.value_) {}
 
-std::size_t ArrayObject::Hash() const {
+std::size_t ArrayObject::Hash() {
   if (value_.empty()) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("hash of empty array is not valid"));

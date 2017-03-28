@@ -55,7 +55,7 @@ class StringObject: public Object {
 
   ObjectPtr ObjReal() override;
 
-  std::size_t Hash() const override {
+  std::size_t Hash() override {
     std::hash<std::string> str_hash;
     return str_hash(value_);
   }
