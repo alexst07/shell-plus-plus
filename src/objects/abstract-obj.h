@@ -77,9 +77,9 @@ class Object {
                        %ObjType()->ObjectName());
   }
 
-  virtual bool operator==(const Object& obj) const {
+  virtual bool operator==(const Object& obj) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("%1% has no print method")
+                       boost::format("%1% has no equal method")
                        %ObjType()->ObjectName());
   }
 
@@ -129,6 +129,13 @@ class Object {
   virtual std::shared_ptr<Object> GetItem(std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("%1% has no get_item interface")
+                       %ObjType()->ObjectName());
+  }
+
+  virtual std::shared_ptr<Object> SetItem(std::shared_ptr<Object>,
+      std::shared_ptr<Object>) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("%1% has no set_item interface")
                        %ObjType()->ObjectName());
   }
 

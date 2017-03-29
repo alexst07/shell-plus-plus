@@ -81,123 +81,123 @@ ObjectPtr DeclClassObject::Add(ObjectPtr obj) {
 }
 
 ObjectPtr DeclClassObject::Sub(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__sub__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::Mult(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__mul__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::Div(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__div__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::DivMod(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__mod__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::RightShift(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__rshift__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::LeftShift(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__lshift__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::Lesser(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__lt__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::Greater(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__gt__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::LessEqual(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__le__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::GreatEqual(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__ge__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::Equal(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__eq__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::In(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__contains__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::NotEqual(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__ne__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::BitAnd(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__rand__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::BitOr(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__ror__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::BitXor(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__rxor__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::BitNot() {
-  return Caller("__add__", self_.lock());
+  return Caller("__rinvert__", self_.lock());
 }
 
 ObjectPtr DeclClassObject::And(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__and__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::Or(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__or__", self_.lock(), obj);
 }
 
 ObjectPtr DeclClassObject::GetItem(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  return Caller("__getitem__", self_.lock(), obj);
 }
 
-ObjectPtr& DeclClassObject::GetItemRef(ObjectPtr obj) {
-
+ObjectPtr DeclClassObject::ObjIter(ObjectPtr /*obj*/) {
+  return Caller("__iter__", self_.lock());
 }
 
-ObjectPtr DeclClassObject::ObjIter(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
-}
-
-void DeclClassObject::DelItem(ObjectPtr obj) {
-  Caller("__add__", self_.lock(), obj);
+void DeclClassObject::DelItem(ObjectPtr /*obj*/) {
+  Caller("__del__", self_.lock());
 }
 
 ObjectPtr DeclClassObject::UnaryAdd() {
-  return Caller("__bool__", self_.lock());
+  return Caller("__pos__", self_.lock());
 }
 
 ObjectPtr DeclClassObject::UnarySub() {
-  return Caller("__bool__", self_.lock());
+  return Caller("__neg__", self_.lock());
 }
 
 ObjectPtr DeclClassObject::Not() {
-  return Caller("__bool__", self_.lock());
+  return Caller("__invert__", self_.lock());
 }
 
 ObjectPtr DeclClassObject::Begin() {
-  return Caller("__bool__", self_.lock());
+  return Caller("__begin__", self_.lock());
 }
 
 ObjectPtr DeclClassObject::End() {
-  return Caller("__bool__", self_.lock());
+  return Caller("__end__", self_.lock());
 }
 
 ObjectPtr DeclClassObject::Next() {
-  return Caller("__bool__", self_.lock());
+  return Caller("__next__", self_.lock());
 }
 
 ObjectPtr DeclClassObject::HasNext() {
-  return Caller("__bool__", self_.lock());
+  return Caller("__has_next__", self_.lock());
+}
+
+ObjectPtr DeclClassObject::Call(Executor*, std::vector<ObjectPtr>&& params) {
+  return Caller("__call__", std::move(params));
 }
 
 std::string DeclClassObject::Print() {
@@ -227,7 +227,7 @@ std::size_t DeclClassObject::Hash() {
 
   if (obj->type() != ObjectType::INT) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                      boost::format("__len__ func must return integer"));
+                      boost::format("__hash__ func must return integer"));
   }
 
   return static_cast<std::size_t>(static_cast<IntObject&>(*obj).value());
@@ -243,6 +243,22 @@ ObjectPtr DeclClassObject::ObjCmd() {
 
 ObjectPtr DeclClassObject::ObjString() {
   return Caller("__str__", self_.lock());
+}
+
+ObjectPtr DeclClassObject::Caller(const std::string& fname,
+                                  std::vector<ObjectPtr>&& params) {
+  SymbolTableStack& st =
+      static_cast<DeclClassType&>(*ObjType()).SymTableStack();
+  ObjectPtr func_obj = st.Lookup(fname, false).SharedAccess();
+
+  if (func_obj->type() != ObjectType::FUNC) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                      boost::format("symbol %1% must be func")%fname);
+  }
+
+  params.insert(params.begin(), self_.lock());
+
+  return static_cast<FuncObject&>(*func_obj).Call(nullptr, std::move(params));
 }
 
 }

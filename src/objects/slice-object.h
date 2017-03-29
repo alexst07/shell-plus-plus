@@ -62,7 +62,7 @@ class SliceObject: public Object {
                        boost::format("slice object has no hash method"));
   }
 
-  bool operator==(const Object& obj) const override;
+  bool operator==(const Object& obj) override;
 
   std::string Print() override {
     return std::string("[slice ") + std::to_string(start_ ) + ", " +

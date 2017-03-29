@@ -131,7 +131,7 @@ class ArrayObject: public Object {
      return value_.size();
    }
 
-   bool operator==(const Object& obj) const override;
+   bool operator==(const Object& obj) override;
 
    size_t ArraySize() const noexcept {
      return value_.size();

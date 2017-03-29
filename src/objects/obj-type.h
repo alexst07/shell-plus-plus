@@ -165,7 +165,7 @@ class TypeObject: public Object {
                        boost::format("type object has no hash method"));
   }
 
-  bool operator==(const Object& obj) const override {
+  bool operator==(const Object& obj) override {
     if (obj.type() != ObjectType::TYPE) {
       return false;
     }

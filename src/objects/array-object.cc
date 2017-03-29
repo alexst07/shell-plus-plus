@@ -197,7 +197,7 @@ ObjectPtr ArrayObject::In(ObjectPtr obj) {
   return obj_factory.NewBool(false);
 }
 
-bool ArrayObject::operator==(const Object& obj) const {
+bool ArrayObject::operator==(const Object& obj) {
   if (obj.type() != ObjectType::ARRAY) {
     return false;
   }

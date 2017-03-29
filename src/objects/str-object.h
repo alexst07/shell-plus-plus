@@ -60,7 +60,7 @@ class StringObject: public Object {
     return str_hash(value_);
   }
 
-  bool operator==(const Object& obj) const override {
+  bool operator==(const Object& obj) override {
     if (obj.type() != ObjectType::STRING) {
       return false;
     }

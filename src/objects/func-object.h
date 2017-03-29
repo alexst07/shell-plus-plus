@@ -39,11 +39,6 @@ class FuncObject: public Object {
                        boost::format("func object has no hash method"));
   }
 
-  bool operator==(const Object& obj) const override {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("func object has no compare method"));
-  }
-
   std::string Print() override {
     return std::string("[function]");
   }

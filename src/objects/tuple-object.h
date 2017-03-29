@@ -74,7 +74,7 @@ class TupleObject: public Object {
 
    std::size_t Hash() override;
 
-   bool operator==(const Object& obj) const override;
+   bool operator==(const Object& obj) override;
 
    long int Len() override {
      return value_.size();

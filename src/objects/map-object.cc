@@ -147,7 +147,7 @@ ObjectPtr& MapObject::ElementRef(ObjectPtr obj_index) {
   }
 }
 
-bool MapObject::operator==(const Object& obj) const {
+bool MapObject::operator==(const Object& obj) {
   if (obj.type() != ObjectType::MAP) {
     return false;
   }

@@ -150,11 +150,11 @@ class DeclClassObject: public Object {
 
   ObjectPtr GetItem(ObjectPtr obj) override;
 
-  ObjectPtr& GetItemRef(ObjectPtr obj) override;
-
   ObjectPtr ObjIter(ObjectPtr obj) override;
 
   void DelItem(ObjectPtr obj) override;
+
+  ObjectPtr Call(Executor*, std::vector<ObjectPtr>&& params) override;
 
   SymbolTableStack& SymTable() {
     return symbol_table_stack();
@@ -168,7 +168,7 @@ class DeclClassObject: public Object {
   template<typename Obj, typename ...Objs>
   ObjectPtr Caller(const std::string& fname, Obj arg, Objs... args) {
     SymbolTableStack& st =
-      static_cast<DeclClassType&>(*ObjType()).SymTableStack();
+        static_cast<DeclClassType&>(*ObjType()).SymTableStack();
     ObjectPtr func_obj = st.Lookup(fname, false).SharedAccess();
 
     if (func_obj->type() != ObjectType::FUNC) {
@@ -182,6 +182,8 @@ class DeclClassObject: public Object {
                                                     std::move(params));
   }
 
+  ObjectPtr Caller(const std::string& fname, std::vector<ObjectPtr>&& params);
+
   std::weak_ptr<Object> self_;
 };
 
@@ -189,4 +191,3 @@ class DeclClassObject: public Object {
 }
 
 #endif  // SHPP_DECL_CLASS_OBJECT_H
-

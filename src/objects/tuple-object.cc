@@ -36,7 +36,7 @@ std::size_t TupleObject::Hash() {
   return hash;
 }
 
-bool TupleObject::operator==(const Object& obj) const {
+bool TupleObject::operator==(const Object& obj) {
   if (obj.type() != ObjectType::TUPLE) {
     return false;
   }

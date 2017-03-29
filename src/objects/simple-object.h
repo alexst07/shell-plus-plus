@@ -38,7 +38,7 @@ class NullObject: public Object {
                        boost::format("null object has no hash method"));
   }
 
-  bool operator==(const Object& obj) const override {
+  bool operator==(const Object& obj) override {
     if (obj.type() == ObjectType::NIL) {
       return true;
     }
@@ -87,7 +87,7 @@ class BoolObject: public Object {
     return bool_hash(value_);
   }
 
-  bool operator==(const Object& obj) const override {
+  bool operator==(const Object& obj) override {
     if (obj.type() != ObjectType::BOOL) {
       return false;
     }
@@ -143,7 +143,7 @@ class IntObject: public Object {
 
   ObjectPtr ObjReal() override;
 
-  bool operator==(const Object& obj) const override {
+  bool operator==(const Object& obj) override {
     if (obj.type() != ObjectType::INT) {
       return false;
     }
@@ -343,7 +343,7 @@ class RealObject: public Object {
     return float_hash(value_);
   }
 
-  bool operator==(const Object& obj) const override {
+  bool operator==(const Object& obj) override {
     if (obj.type() != ObjectType::REAL) {
       return false;
     }

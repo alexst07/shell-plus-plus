@@ -60,7 +60,7 @@ SliceObject::SliceObject(ObjectPtr obj_start, ObjectPtr obj_end,
   }
 }
 
-bool SliceObject::operator==(const Object& obj) const {
+bool SliceObject::operator==(const Object& obj) {
   if (obj.type() != ObjectType::SLICE) {
     return false;
   }

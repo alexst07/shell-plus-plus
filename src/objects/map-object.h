@@ -80,7 +80,7 @@ class MapObject: public Object {
                        boost::format("map object has no hash method"));
   }
 
-  bool operator==(const Object& obj) const override;
+  bool operator==(const Object& obj) override;
 
   ObjectPtr GetItem(ObjectPtr index) override;
 

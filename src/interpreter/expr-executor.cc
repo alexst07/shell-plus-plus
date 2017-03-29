@@ -514,9 +514,7 @@ ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
       }
 
       default: {
-        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                          boost::format("object is not callable"),
-                          node->func_exp()->pos());
+        return fobj->Call(this, std::move(vec));
       }
     }
   } catch (RunTimeError& e) {
