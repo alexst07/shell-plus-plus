@@ -11,7 +11,7 @@ boost:
   - 1.60.0
 
 before_install:
-  - sudo apt-get install -y libreadline6 libreadline6-dev
+  - sudo apt-get install -y libreadline6 libreadline6-dev libboost-all-dev
 
 # Build steps
 script:
