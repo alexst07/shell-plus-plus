@@ -81,6 +81,16 @@ ObjectPtr CmdObject::ObjString()  {
   return obj_factory.NewString(str_stdout());
 }
 
+ObjectPtr CmdObject::ObjBool()  {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(status_ == 0?true:false);
+}
+
+ObjectPtr CmdObject::Not()  {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(status_ == 0?false:true);
+}
+
 ObjectPtr CmdObject::ObjArray() {
   ObjectFactory obj_factory(symbol_table_stack());
 
@@ -188,6 +198,7 @@ CmdType::CmdType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
     : TypeObject("cmdobj", obj_type, std::move(sym_table)) {
   RegisterMethod<CmdOutFunc>("out", symbol_table_stack(), *this);
   RegisterMethod<CmdErrFunc>("err", symbol_table_stack(), *this);
+  RegisterMethod<CmdStatusFunc>("status", symbol_table_stack(), *this);
   RegisterMethod<CmdDelimFunc>("delim", symbol_table_stack(), *this);
 }
 
@@ -234,6 +245,16 @@ ObjectPtr CmdDelimFunc::Call(Executor* /*parent*/,
 
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewString(delim);
+}
+
+ObjectPtr CmdStatusFunc::Call(Executor* /*parent*/,
+                           std::vector<ObjectPtr>&& params) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, out)
+
+  CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewInt(cmd_obj.status());
 }
 
 }

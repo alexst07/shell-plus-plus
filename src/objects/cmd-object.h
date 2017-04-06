@@ -84,6 +84,10 @@ class CmdObject: public Object {
 
    ObjectPtr ObjCmd() override;
 
+   ObjectPtr ObjBool() override;
+
+   ObjectPtr Not() override;
+
    bool Compare(ObjectPtr obj);
 
    ObjectPtr Equal(ObjectPtr obj) override;
@@ -107,6 +111,10 @@ class CmdObject: public Object {
 
    const std::string delim() {
      return delim_;
+   }
+
+   int status() const {
+     return status_;
    }
 
  private:
@@ -144,6 +152,14 @@ class CmdErrFunc: public FuncObject {
 class CmdDelimFunc: public FuncObject {
  public:
   CmdDelimFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+};
+
+class CmdStatusFunc: public FuncObject {
+ public:
+  CmdStatusFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
   ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
