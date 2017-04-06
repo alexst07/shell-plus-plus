@@ -94,5 +94,12 @@ ObjectPtr& TupleObject::GetItemRef(ObjectPtr index) {
   return ElementRef(static_cast<IntObject&>(*index).value());
 }
 
+ObjectPtr TupleObject::ObjArray() {
+  std::vector<ObjectPtr> values = value_;
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewArray(std::move(values));
+}
+
 }
 }
