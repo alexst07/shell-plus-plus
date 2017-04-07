@@ -103,6 +103,9 @@ class ArrayObject: public Object {
 
    ObjectPtr& GetItemRef(ObjectPtr index) override;
 
+   void SetItem(std::shared_ptr<Object> index,
+       std::shared_ptr<Object> value) override;
+
    std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
                                 const std::string& name) override;
 

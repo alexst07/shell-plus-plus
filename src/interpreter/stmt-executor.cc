@@ -434,61 +434,6 @@ void WhileExecutor::set_stop(StopFlag flag) {
   }
 }
 
-void ForInExecutor::Assign(std::vector<std::reference_wrapper<ObjectPtr>>& vars,
-                           std::vector<ObjectPtr>& it_values) {
-  ObjectFactory obj_factory(symbol_table_stack());
-
-  // Assignment can be done only when the tuples have the same size
-  // or there is only one variable on the test side
-  // a, b, c = 1, 2, 3; a = 1, 2, 3; a, b = f
-  if ((vars.size() != 1) && (it_values.size() != 1) &&
-      (vars.size() != it_values.size())) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("different size of tuples"));
-  }
-
-  if ((vars.size() == 1) && (it_values.size() == 1)) {
-    vars[0].get() = it_values[0]->Next();
-  } else if ((vars.size() == 1) && (it_values.size() != 1)) {
-    std::vector<ObjectPtr> values;
-
-    // Call next method from every iterator
-    for (auto& v: it_values) {
-      values.push_back(v->Next());
-    }
-
-    ObjectPtr tuple_obj(obj_factory.NewTuple(std::move(values)));
-    vars[0].get() = tuple_obj;
-  } else if ((vars.size() != 1) && (it_values.size() == 1)) {
-    // get iterator point element
-    ObjectPtr obj_ptr = it_values[0]->Next();
-
-    // only tuple object is accept on this case
-    if (obj_ptr->type() != Object::ObjectType::TUPLE) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("expect tuple object as test"));
-    }
-
-    // numbers of variables must be equal the number of tuple elements
-    TupleObject &tuple_obj = static_cast<TupleObject&>(*obj_ptr);
-    if (vars.size() != tuple_obj.Size()) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-          boost::format("numbers of variables: %1% and "
-                        "numbers of tuples: %2% are "
-                        "incompatibles")% vars.size() % tuple_obj.Size());
-    }
-
-    for (size_t i = 0; i < vars.size(); i++) {
-      vars[i].get() = tuple_obj.Element(i);
-    }
-  } else {
-    // on this case there are the same number of variables and values
-    for (size_t i = 0; i < vars.size(); i++) {
-      vars[i].get() = it_values[i]->Next();
-    }
-  }
-}
-
 void ForInExecutor::Exec(ForInStatement* node) {
   // create a new table for while scope
   symbol_table_stack().NewTable();
@@ -500,10 +445,7 @@ void ForInExecutor::Exec(ForInStatement* node) {
   });
   IgnoreUnused(cleanup);
 
-  AssignExecutor assign_exec(this, symbol_table_stack());
-
-  // Executes the left side of for statemente
-  auto vars = assign_exec.AssignList(node->exp_list());
+  std::vector<Expression*> exp_list = node->exp_list()->children();
 
   // Executes the test side of for statemente
   ExprListExecutor expr_list(this, symbol_table_stack());
@@ -542,9 +484,7 @@ void ForInExecutor::Exec(ForInStatement* node) {
     }
 
     try {
-      // assign the it_values->Next to vars references to be used inside
-      // block of for statemente
-      Assign(vars, it_values);
+      Assign(exp_list, it_values);
     } catch (RunTimeError& e) {
       throw RunTimeError(e.err_code(), e.msg(), node->pos());
     }
@@ -554,9 +494,24 @@ void ForInExecutor::Exec(ForInStatement* node) {
 
   BlockExecutor block_exec(this, symbol_table_stack());
 
+  // executes for statement in fact
   while (fn_exp()) {
     block_exec.Exec(node->block());
   }
+}
+
+void ForInExecutor::Assign(std::vector<Expression*>& exp_list,
+    std::vector<ObjectPtr>& it_values) {
+  // assign the it_values->Next to vars references to be used inside
+  // block of for statemente
+  AssignExecutor assign_exec(this, symbol_table_stack());
+
+  std::vector<ObjectPtr> values;
+  for (size_t i = 0; i < it_values.size(); i++) {
+    values.push_back(it_values[i]->Next());
+  }
+
+  assign_exec.Assign(exp_list, values);
 }
 
 void ForInExecutor::set_stop(StopFlag flag) {

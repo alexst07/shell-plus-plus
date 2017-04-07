@@ -154,8 +154,8 @@ class ForInExecutor: public Executor {
   // Entry point to execute for in
   void Exec(ForInStatement *node);
 
-  void Assign(std::vector<std::reference_wrapper<ObjectPtr>>& vars,
-              std::vector<ObjectPtr>& it_values);
+  void Assign(std::vector<Expression*>& exp_list, 
+      std::vector<ObjectPtr>& it_values);
 
   void set_stop(StopFlag flag) override;
 
@@ -286,5 +286,3 @@ class DelStmtExecutor: public Executor {
 }
 
 #endif  // SHPP_STMT_EXECUTOR_H
-
-

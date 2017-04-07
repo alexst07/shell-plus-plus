@@ -86,6 +86,9 @@ class MapObject: public Object {
 
   ObjectPtr& GetItemRef(ObjectPtr index) override;
 
+  void SetItem(std::shared_ptr<Object> index,
+      std::shared_ptr<Object> value) override;
+
   ObjectPtr ObjIter(ObjectPtr obj) override;
 
   ObjectPtr Add(ObjectPtr obj) override;

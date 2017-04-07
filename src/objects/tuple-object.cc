@@ -94,6 +94,24 @@ ObjectPtr& TupleObject::GetItemRef(ObjectPtr index) {
   return ElementRef(static_cast<IntObject&>(*index).value());
 }
 
+void TupleObject::SetItem(std::shared_ptr<Object> index,
+    std::shared_ptr<Object> value) {
+  if (index->type() != ObjectType::INT) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("index type not valid"));
+  }
+
+  int num_index = static_cast<IntObject&>(*index).value();
+
+  if (num_index >= value_.size() ||  num_index < 0) {
+    throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                       boost::format("value: %1% out of range of tuple")
+                       %num_index);
+  }
+
+  value_[num_index] = value;
+}
+
 ObjectPtr TupleObject::ObjArray() {
   std::vector<ObjectPtr> values = value_;
 

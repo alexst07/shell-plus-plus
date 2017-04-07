@@ -12,10 +12,10 @@
                        #func% num);                                            \
   }
 
-#define SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, num, func)                    \
+#define SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, num, func)                 \
   if (params.size() < num) {                                                   \
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,                   \
-                       boost::format("%1% takes at least %2% argument")%        \
+                       boost::format("%1% takes at least %2% argument")%       \
                        #func% num);                                            \
   }
 

@@ -81,12 +81,17 @@ ObjectPtr RangeFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr AssertFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, assert)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, assert)
+  SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, assert)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], test, BOOL)
-  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], msg, STRING)
+
+  std::string msg = "Assert throw error";
+  if (params.size() == 2) {
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[1], msg, STRING)
+    std::string msg = static_cast<StringObject&>(*params[1]).value();
+  }
 
   bool v = static_cast<BoolObject&>(*params[0]).value();
-  std::string msg = static_cast<StringObject&>(*params[1]).value();
 
   if (!v) {
     throw RunTimeError(RunTimeError::ErrorCode::ASSERT,

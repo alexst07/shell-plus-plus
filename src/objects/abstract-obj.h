@@ -132,7 +132,7 @@ class Object {
                        %ObjType()->ObjectName());
   }
 
-  virtual std::shared_ptr<Object> SetItem(std::shared_ptr<Object>,
+  virtual void SetItem(std::shared_ptr<Object>,
       std::shared_ptr<Object>) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("%1% has no set_item interface")

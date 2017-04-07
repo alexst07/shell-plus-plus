@@ -43,37 +43,27 @@ class AssignExecutor: public Executor {
   // Entry point to execute assign operations
   void Exec(AstNode* node);
 
-  ObjectPtr& AssignIdentifier(AstNode* node, bool create = false);
+  void Assign(std::vector<Expression*>& left_exp_vec,
+              std::vector<ObjectPtr>& values,
+              TokenKind assign_kind = TokenKind::ASSIGN);
 
-  ObjectPtr& AssignArray(AstNode* node);
+  void AssignIdentifier(AstNode* node, ObjectPtr value, TokenKind token,
+                        bool create = false);
 
-  ObjectPtr& AssignAtrribute(AstNode* node);
+  void AssignOperation(Expression* left_exp, ObjectPtr value, TokenKind token);
 
-  // Gets the pointer of a symbol to assign a value
-  ObjectPtr& AssignmentAcceptorExpr(AstNode* node);
+  void AssignAtrribute(AstNode* node, ObjectPtr value, TokenKind token);
 
-  std::vector<std::reference_wrapper<ObjectPtr>>
-  AssignList(AstNode* node);
+  void AssignArray(AstNode* node, ObjectPtr value, TokenKind token);
 
-  // Executes assignable values, that could be a list
-  // with functions or expressions
-  std::unique_ptr<Object> ExecAssignable(AstNode* node);
+  void AssignmentAcceptorExpr(AstNode* node, ObjectPtr value, TokenKind token);
 
-  // Executes assignable list, it can be function or expression
-  std::vector<std::unique_ptr<Object>> ExecAssignableList(AstNode* node);
+  void set_stop(StopFlag flag);
 
-  ObjectPtr& RefArray(Array& array_node, ArrayObject& obj);
+  void AssignToRef(ObjectPtr& ref, ObjectPtr value, TokenKind token);
 
-  ObjectPtr& RefTuple(Array& array_node, TupleObject& obj);
-
-  ObjectPtr& RefMap(Array& array_node, MapObject& obj);
-
-  ObjectPtr& RefArrow(Attribute& att_node, ObjectPtr& obj);
-
-  void AssignOperation(std::reference_wrapper<ObjectPtr> ref, ObjectPtr value,
-                       TokenKind token);
-
-  void set_stop(StopFlag flag) override;
+  void AssignToArray(ObjectPtr arr, ObjectPtr index, ObjectPtr value,
+                     TokenKind token);
 
  private:
   ObjectFactory obj_factory_;
@@ -83,5 +73,3 @@ class AssignExecutor: public Executor {
 }
 
 #endif  // SHPP_ASSIGN_EXECUTOR_H
-
-

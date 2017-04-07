@@ -174,6 +174,11 @@ bool MapObject::operator==(const Object& obj) {
   return true;
 }
 
+void MapObject::SetItem(std::shared_ptr<Object> index,
+    std::shared_ptr<Object> value) {
+  ElementRef(index) = value;
+}
+
 std::shared_ptr<Object> MapObject::Element(ObjectPtr obj_index) {
   size_t hash = obj_index->Hash();
 

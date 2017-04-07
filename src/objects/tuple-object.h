@@ -72,6 +72,9 @@ class TupleObject: public Object {
 
    ObjectPtr& GetItemRef(ObjectPtr index) override;
 
+   void SetItem(std::shared_ptr<Object> index,
+       std::shared_ptr<Object> value) override;
+
    ObjectPtr ObjArray() override;
 
    std::size_t Hash() override;

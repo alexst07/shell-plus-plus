@@ -37,24 +37,33 @@ void AssignExecutor::Exec(AstNode* node) {
   AssignableListExecutor assignables(this, symbol_table_stack());
   auto values = assignables.Exec(assign_node->rvalue_list());
 
-  // Executes the left side of assignment
-  auto vars = AssignList(assign_node->lexp_list());
+  ExpressionList* left_exp_list = assign_node->lexp_list();
+  size_t num_left_exp = left_exp_list->num_children();
+  std::vector<Expression*> left_exp_vec = left_exp_list->children();
+
+  Assign(left_exp_vec, values, assign_kind);
+}
+
+void AssignExecutor::Assign(std::vector<Expression*>& left_exp_vec,
+                            std::vector<ObjectPtr>& values,
+                            TokenKind assign_kind) {
+  size_t num_left_exp = left_exp_vec.size();
 
   // Assignment can be done only when the tuples have the same size
   // or there is only one variable on the left side
   // a, b, c = 1, 2, 3; a = 1, 2, 3; a, b = f
-  if ((vars.size() != 1) && (values.size() != 1) &&
-      (vars.size() != values.size())) {
+  if ((num_left_exp != 1) && (values.size() != 1) &&
+      (num_left_exp != values.size())) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("different size of tuples"));
   }
 
-  if ((vars.size() == 1) && (values.size() == 1)) {
-    AssignOperation(vars[0], values[0], assign_kind);
-  } else if ((vars.size() == 1) && (values.size() != 1)) {
+  if ((num_left_exp == 1) && (values.size() == 1)) {
+    AssignOperation(left_exp_vec[0], values[0], assign_kind);
+  } else if ((num_left_exp == 1) && (values.size() != 1)) {
     ObjectPtr tuple_obj(obj_factory_.NewTuple(std::move(values)));
-    AssignOperation(vars[0], tuple_obj, assign_kind);
-  } else if ((vars.size() != 1) && (values.size() == 1)) {
+    AssignOperation(left_exp_vec[0], tuple_obj, assign_kind);
+  } else if ((num_left_exp != 1) && (values.size() == 1)) {
     // only tuple object is accept on this case
     if (values[0]->type() != Object::ObjectType::TUPLE) {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -63,166 +72,74 @@ void AssignExecutor::Exec(AstNode* node) {
 
     // numbers of variables must be equal the number of tuple elements
     TupleObject &tuple_obj = static_cast<TupleObject&>(*values[0]);
-    if (vars.size() != tuple_obj.Size()) {
+    if (num_left_exp != tuple_obj.Size()) {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
           boost::format("numbers of variables: %1% and "
                         "numbers of tuples: %2% are "
-                        "incompatibles")% vars.size() % tuple_obj.Size());
+                        "incompatibles")% num_left_exp % tuple_obj.Size());
     }
 
-    for (size_t i = 0; i < vars.size(); i++) {
-      AssignOperation(vars[i], tuple_obj.Element(i), assign_kind);
+    for (size_t i = 0; i < num_left_exp; i++) {
+      AssignOperation(left_exp_vec[i], tuple_obj.Element(i), assign_kind);
     }
   } else {
     // on this case there are the same number of variables and values
-    for (size_t i = 0; i < vars.size(); i++) {
-      AssignOperation(vars[i], values[i], assign_kind);
+    for (size_t i = 0; i < num_left_exp; i++) {
+      AssignOperation(left_exp_vec[i], values[i], assign_kind);
     }
   }
 }
 
-void AssignExecutor::AssignOperation(std::reference_wrapper<ObjectPtr> ref,
-                                     ObjectPtr value, TokenKind token) {
-  switch (token) {
-    case TokenKind::ASSIGN:
-      ref.get() = value;
-      break;
-
-    case TokenKind::ASSIGN_BIT_OR:
-      ref.get() = ref.get()->BitOr(value);
-      break;
-
-    case TokenKind::ASSIGN_BIT_XOR:
-      ref.get() = ref.get()->BitXor(value);
-      break;
-
-    case TokenKind::ASSIGN_BIT_AND:
-      ref.get() = ref.get()->BitAnd(value);
-      break;
-
-    case TokenKind::ASSIGN_SHL:
-      ref.get() = ref.get()->LeftShift(value);
-      break;
-
-    case TokenKind::ASSIGN_SAR:
-      ref.get() = ref.get()->RightShift(value);
-      break;
-
-    case TokenKind::ASSIGN_ADD:
-      ref.get() = ref.get()->Add(value);
-      break;
-
-    case TokenKind::ASSIGN_SUB:
-      ref.get() = ref.get()->Sub(value);
-      break;
-
-    case TokenKind::ASSIGN_MUL:
-      ref.get() = ref.get()->Mult(value);
-      break;
-
-    case TokenKind::ASSIGN_DIV:
-      ref.get() = ref.get()->Div(value);
-      break;
-
-    case TokenKind::ASSIGN_MOD:
-      ref.get() = ref.get()->DivMod(value);
-      break;
-
-    default:
-      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                         boost::format("not valid assignment operation"));
-  }
+void AssignExecutor::AssignOperation(Expression* left_exp, ObjectPtr value,
+                                     TokenKind token) {
+  AssignmentAcceptorExpr(left_exp, value, token);
 }
 
-ObjectPtr& AssignExecutor::AssignIdentifier(AstNode* node, bool create) {
+void AssignExecutor::AssignIdentifier(AstNode* node, ObjectPtr value,
+                                      TokenKind token, bool create) {
   Identifier* id_node = static_cast<Identifier*>(node);
   const std::string& name = id_node->name();
-  return symbol_table_stack().Lookup(name, create).Ref();
+  ObjectPtr& ref = symbol_table_stack().Lookup(name, create).Ref();
+  AssignToRef(ref, value, token);
 }
 
-ObjectPtr& AssignExecutor::RefArray(Array& array_node, ArrayObject& obj) {
-  // Executes index expression of array
-  ExpressionExecutor expr_exec(this, symbol_table_stack());
-  ObjectPtr index(expr_exec.Exec(array_node.index_exp()));
-
-  // Array accept only integer index
-  if (index->type() != Object::ObjectType::INT) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("array index must be integer"));
-  }
-
-  // Gets the value of integer object
-  int num = static_cast<IntObject*>(index.get())->value();
-
-  return static_cast<ArrayObject&>(obj).ElementRef(size_t(num));
-}
-
-ObjectPtr& AssignExecutor::RefTuple(Array& array_node, TupleObject& obj) {
-  // Executes index expression of tuple
-  ExpressionExecutor expr_exec(this, symbol_table_stack());
-  ObjectPtr index(expr_exec.Exec(array_node.index_exp()));
-
-  // Tuple accept only integer index
-  if (index->type() != Object::ObjectType::INT) {
-    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("tuple index must be integer"));
-  }
-
-  // Gets the value of integer object
-  int num = static_cast<IntObject*>(index.get())->value();
-
-  return static_cast<TupleObject&>(obj).ElementRef(size_t(num));
-}
-
-ObjectPtr& AssignExecutor::RefMap(Array& array_node, MapObject& obj) {
-  // Executes index expression of map
-  ExpressionExecutor expr_exec(this, symbol_table_stack());
-  ObjectPtr index(expr_exec.Exec(array_node.index_exp()));
-
-  return static_cast<MapObject&>(obj).ElementRef(index);
-}
-
-ObjectPtr& AssignExecutor::AssignAtrribute(AstNode* node) {
+void AssignExecutor::AssignAtrribute(AstNode* node, ObjectPtr value,
+                                     TokenKind token) {
   Attribute* att_node = static_cast<Attribute*>(node);
   Expression* att_exp = att_node->exp();
 
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr exp_obj(expr_exec.Exec(att_exp));
 
-  return exp_obj->AttrAssign(exp_obj, att_node->id()->name());
+  ObjectPtr& ref = exp_obj->AttrAssign(exp_obj, att_node->id()->name());
+  AssignToRef(ref, value, token);
 }
 
-// TODO: Executes for map and custon objects
-ObjectPtr& AssignExecutor::AssignArray(AstNode* node) {
+void AssignExecutor::AssignArray(AstNode* node, ObjectPtr value,
+                                 TokenKind token) {
   Array* array_node = static_cast<Array*>(node);
   Expression* arr_exp = array_node->arr_exp();
 
-  ObjectPtr& obj = AssignmentAcceptorExpr(arr_exp);
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr arr_obj = expr_exec.Exec(arr_exp, true);
+  ObjectPtr index = expr_exec.Exec(array_node->index_exp(), true);
 
-  if (obj->type() == Object::ObjectType::ARRAY) {
-    return RefArray(*array_node, *static_cast<ArrayObject*>(obj.get()));
-  } else if (obj->type() == Object::ObjectType::TUPLE) {
-    return RefTuple(*array_node, *static_cast<TupleObject*>(obj.get()));
-  } else if (obj->type() == Object::ObjectType::MAP) {
-    return RefMap(*array_node, *static_cast<MapObject*>(obj.get()));
-  }
-
-  throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                     boost::format("__get__element not overload"));
+  AssignToArray(arr_obj, index, value, token);
 }
 
-ObjectPtr& AssignExecutor::AssignmentAcceptorExpr(AstNode* node) {
+void AssignExecutor::AssignmentAcceptorExpr(AstNode* node, ObjectPtr value,
+                                            TokenKind token) {
   switch(node->type()) {
     case AstNode::NodeType::kIdentifier:
-      return AssignIdentifier(node, true);
+      AssignIdentifier(node, value, token, true);
       break;
 
     case AstNode::NodeType::kArray:
-      return AssignArray(node);
+      AssignArray(node, value, token);
       break;
 
     case AstNode::NodeType::kAttribute:
-      return AssignAtrribute(node);
+      AssignAtrribute(node, value, token);
       break;
 
     default:
@@ -231,21 +148,114 @@ ObjectPtr& AssignExecutor::AssignmentAcceptorExpr(AstNode* node) {
   }
 }
 
-std::vector<std::reference_wrapper<ObjectPtr>>
-AssignExecutor::AssignList(AstNode* node) {
-  ExpressionList* node_list = static_cast<ExpressionList*>(node);
-  std::vector<std::reference_wrapper<ObjectPtr>> vec;
-
-  for (Expression* exp: node_list->children()) {
-    vec.push_back(
-        std::reference_wrapper<ObjectPtr>(AssignmentAcceptorExpr(exp)));
-  }
-
-  return vec;
-}
-
 void AssignExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
+}
+
+void AssignExecutor::AssignToRef(ObjectPtr& ref, ObjectPtr value,
+                                 TokenKind token) {
+  switch (token) {
+    case TokenKind::ASSIGN:
+      ref = value;
+      break;
+
+    case TokenKind::ASSIGN_BIT_OR:
+      ref = ref->BitOr(value);
+      break;
+
+    case TokenKind::ASSIGN_BIT_XOR:
+      ref = ref->BitXor(value);
+      break;
+
+    case TokenKind::ASSIGN_BIT_AND:
+      ref = ref->BitAnd(value);
+      break;
+
+    case TokenKind::ASSIGN_SHL:
+      ref = ref->LeftShift(value);
+      break;
+
+    case TokenKind::ASSIGN_SAR:
+      ref = ref->RightShift(value);
+      break;
+
+    case TokenKind::ASSIGN_ADD:
+      ref = ref->Add(value);
+      break;
+
+    case TokenKind::ASSIGN_SUB:
+      ref = ref->Sub(value);
+      break;
+
+    case TokenKind::ASSIGN_MUL:
+      ref = ref->Mult(value);
+      break;
+
+    case TokenKind::ASSIGN_DIV:
+      ref = ref->Div(value);
+      break;
+
+    case TokenKind::ASSIGN_MOD:
+      ref = ref->DivMod(value);
+      break;
+
+    default:
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("not valid assignment operation"));
+  }
+}
+
+void AssignExecutor::AssignToArray(ObjectPtr arr, ObjectPtr index,
+                                   ObjectPtr value, TokenKind token) {
+  switch (token) {
+    case TokenKind::ASSIGN:
+      arr->SetItem(index, value);
+      break;
+
+    case TokenKind::ASSIGN_BIT_OR:
+      arr->SetItem(index, arr->GetItem(index)->BitOr(value));
+      break;
+
+    case TokenKind::ASSIGN_BIT_XOR:
+      arr->SetItem(index, arr->GetItem(index)->BitXor(value));
+      break;
+
+    case TokenKind::ASSIGN_BIT_AND:
+      arr->SetItem(index, arr->GetItem(index)->BitAnd(value));
+      break;
+
+    case TokenKind::ASSIGN_SHL:
+      arr->SetItem(index, arr->GetItem(index)->LeftShift(value));
+      break;
+
+    case TokenKind::ASSIGN_SAR:
+      arr->SetItem(index, arr->GetItem(index)->RightShift(value));
+      break;
+
+    case TokenKind::ASSIGN_ADD:
+      arr->SetItem(index, arr->GetItem(index)->Add(value));
+      break;
+
+    case TokenKind::ASSIGN_SUB:
+      arr->SetItem(index, arr->GetItem(index)->Sub(value));
+      break;
+
+    case TokenKind::ASSIGN_MUL:
+      arr->SetItem(index, arr->GetItem(index)->Mult(value));
+      break;
+
+    case TokenKind::ASSIGN_DIV:
+      arr->SetItem(index, arr->GetItem(index)->Div(value));
+      break;
+
+    case TokenKind::ASSIGN_MOD:
+      arr->SetItem(index, arr->GetItem(index)->DivMod(value));
+      break;
+
+    default:
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+                         boost::format("not valid assignment operation"));
+  }
 }
 
 }
