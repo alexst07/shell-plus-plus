@@ -141,7 +141,7 @@ ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {
     try {
       array_obj = obj_factory_.NewArray(std::move(vec));
     } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
     }
 
     return array_obj;
@@ -152,7 +152,7 @@ ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {
     try {
       array_obj = obj_factory_.NewArray(std::move(vec));
     } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
     }
 
     return array_obj;
@@ -181,7 +181,7 @@ ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {
     // creates the map object
     map = obj_factory_.NewMap(std::move(map_vec));
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 
   return map;
@@ -198,7 +198,7 @@ ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) try {
     return PassVar(obj, symbol_table_stack());
   }
 } catch (RunTimeError& e) {
-  throw RunTimeError(e.err_code(), e.msg(), node->pos());
+  throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
 }
 
 ObjectPtr ExpressionExecutor::ExecGlob(Glob* glob) {
@@ -219,7 +219,8 @@ ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
   try {
     val = array_obj->GetItem(index);
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), array_node->index_exp()->pos());
+    throw RunTimeError(e.err_code(), e.msg(), array_node->index_exp()->pos(),
+        e.messages());
   }
 
   if (pass_ref_) {
@@ -234,7 +235,10 @@ try {
   FuncCallExecutor fcall_exec(this, symbol_table_stack());
   return fcall_exec.Exec(node);
 } catch (RunTimeError& e) {
-  throw RunTimeError(e.err_code(), e.msg(), e.pos());
+  e.messages().Push(std::move(Message(Message::Severity::ERR,
+      boost::format("on function call"),
+      node->pos().line, node->pos().col)));
+  throw RunTimeError(e.err_code(), e.msg(), e.pos(), e.messages());
 }
 
 ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) try {
@@ -262,7 +266,7 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) try {
     } break;
   }
 } catch (RunTimeError& e) {
-  throw RunTimeError(e.err_code(), e.msg(), node->pos());
+  throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
 }
 
 ObjectPtr ExpressionExecutor::ExecNotExpr(AstNode* node) {
@@ -273,7 +277,7 @@ ObjectPtr ExpressionExecutor::ExecNotExpr(AstNode* node) {
     try {
       return exp->Not();
     } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
     }
   }
 
@@ -283,7 +287,7 @@ ObjectPtr ExpressionExecutor::ExecNotExpr(AstNode* node) {
   try {
     return exp->Not();
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 }
 
@@ -318,7 +322,7 @@ ObjectPtr ExpressionExecutor::ExecUnary(AstNode* node) {
                            boost::format("invalid unary operation opcode"));
     }
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 }
 
@@ -412,7 +416,7 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
                            boost::format("invalid bin operation opcode"));
     }
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 
   return res;
@@ -426,7 +430,7 @@ ObjectPtr ExpressionExecutor::ExecAttribute(Attribute* node) {
   try {
     return exp->Attr(exp, name);
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 }
 
@@ -448,7 +452,7 @@ ObjectPtr ExpressionExecutor::ExecSlice(Slice* node) {
   try {
     return obj_factory_.NewSlice(start, end, step);
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 }
 
@@ -467,7 +471,7 @@ ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
                                         std::move(std::string(""))));
     return obj;
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 }
 
@@ -518,7 +522,7 @@ ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
       }
     }
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), e.pos(), e.messages());
   }
 }
 

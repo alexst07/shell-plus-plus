@@ -58,14 +58,26 @@ class RunTimeError : public std::exception {
 
   RunTimeError();
 
-  RunTimeError(ErrorCode code, const boost::format& msg)
-      : code_(code), msg_(boost::str(msg)), pos_{0, 0} {}
+  RunTimeError(ErrorCode code, const boost::format& msg,
+      const internal::Messages& msgs = internal::Messages())
+      : code_(code)
+      , msg_(boost::str(msg))
+      , pos_{0, 0}
+      , stack_msg_{msgs} {}
 
-  RunTimeError(ErrorCode code, const boost::format& msg, internal::Position pos)
-      : code_(code), msg_(boost::str(msg)), pos_{pos} {}
+  RunTimeError(ErrorCode code, const boost::format& msg, internal::Position pos,
+      const internal::Messages& msgs = internal::Messages())
+      : code_(code)
+      , msg_(boost::str(msg))
+      , pos_{pos}
+      , stack_msg_{msgs} {}
 
-  RunTimeError(ErrorCode code, const std::string& msg, internal::Position pos)
-      : code_(code), msg_(msg), pos_{pos} {}
+  RunTimeError(ErrorCode code, const std::string& msg, internal::Position pos,
+      const internal::Messages& msgs = internal::Messages())
+      : code_(code)
+      , msg_(msg)
+      , pos_{pos}
+      , stack_msg_{msgs} {}
 
   virtual ~RunTimeError() noexcept  = default;
 
@@ -73,13 +85,17 @@ class RunTimeError : public std::exception {
       : code_(rt_err.code_)
       , msg_(rt_err.msg_)
       , pos_(rt_err.pos_)
-      , stack_msg_(rt_err.stack_msg_) {}
+      , stack_msg_(rt_err.stack_msg_)
+      , str_line_error_(rt_err.str_line_error_)
+      , file_(rt_err.file_) {}
 
   RunTimeError& operator=(const RunTimeError& rt_err) {
     code_ = rt_err.code_;
     msg_ = rt_err.msg_;
     pos_ = rt_err.pos_;
     stack_msg_ = rt_err.stack_msg_;
+    str_line_error_ = rt_err.str_line_error_;
+    file_ = rt_err.file_;
 
     return *this;
   }
@@ -112,10 +128,28 @@ class RunTimeError : public std::exception {
     return stack_msg_;
   }
 
+  void file(const std::string& str_file) {
+    file_ = str_file;
+  }
+
+  std::string file() const {
+    return file_;
+  }
+
+  void line_error(const std::string& str_line) {
+    str_line_error_ = str_line;
+  }
+
+  std::string line_error() const {
+    return str_line_error_;
+  }
+
   ErrorCode code_;
   std::string msg_;
   internal::Position pos_;
   internal::Messages stack_msg_;
+  std::string str_line_error_;
+  std::string file_;
 };
 
 }

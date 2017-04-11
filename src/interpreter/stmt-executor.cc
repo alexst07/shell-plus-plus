@@ -123,7 +123,7 @@ ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
 
     return fobj;
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), fdecl_node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), fdecl_node->pos(), e.messages());
   }
 }
 
@@ -139,7 +139,7 @@ void FuncDeclExecutor::Exec(AstNode* node) {
     symbol_table_stack().InsertEntry(fdecl_node->name()->name(),
                                      std::move(entry));
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 }
 
@@ -355,7 +355,7 @@ void IfElseExecutor::Exec(IfStatement* node) {
   try {
     cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->exp()->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->exp()->pos(), e.messages());
   }
 
   // create a new table for if else scope
@@ -401,7 +401,8 @@ void WhileExecutor::Exec(WhileStatement* node) {
     try {
       return static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
     } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), node->exp()->pos());
+      throw RunTimeError(e.err_code(), e.msg(), node->exp()->pos(),
+          e.messages());
     }
   };
 
@@ -486,7 +487,7 @@ void ForInExecutor::Exec(ForInStatement* node) {
     try {
       Assign(exp_list, it_values);
     } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
     }
 
     return true;
@@ -592,7 +593,7 @@ void SwitchExecutor::Exec(SwitchStatement* node) {
     try {
       comp = MatchAnyExp(obj_exp_switch, std::move(obj_res_list));
     } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), c->pos());
+      throw RunTimeError(e.err_code(), e.msg(), c->pos(), e.messages());
     }
 
     if (comp) {
@@ -656,7 +657,7 @@ void CmdDeclExecutor::Exec(AstNode* node) {
   try {
     symbol_table_stack().SetCmd(id, cmd_ptr);
   } catch (RunTimeError& e) {
-    throw RunTimeError(e.err_code(), e.msg(), node->pos());
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 }
 
@@ -686,7 +687,7 @@ void ImportExecutor::Exec(ImportStatement *node) {
     try {
       obj_module = obj_factory.NewModule(module_path, true);
     } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
     }
 
     // module entry on symbol table
@@ -695,7 +696,7 @@ void ImportExecutor::Exec(ImportStatement *node) {
     try {
       symbol_table_stack().SetEntry(id_entry, obj_module);
     } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), node->pos());
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
     }
   }
 }

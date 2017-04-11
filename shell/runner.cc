@@ -58,12 +58,16 @@ void Runner::Exec(std::string name, std::vector<std::string>&& args) {
 
     interpreter_.Exec(file, std::move(args));
   } catch (RunTimeError& e) {
-    std::cout << "Error: " << e.pos().line << ": " << e.pos().col
-              << ": " << e.what() << "\n\n";
+    std::cout << "File: '" << e.file()  << "'"
+              << "\n  line: " << e.pos().line
+              << "  >> " << e.line_error() << "\n"
+              << "Error: " << e.what() << "\n\n";
 
     for (auto& msg: e.messages()) {
-      std::cout << "Error: " << msg.line() << ": " << msg.pos()
-                << ": " << msg.msg() << "\n";
+      std::cout << "File: '" << msg.file()  << "'"
+                << "\n  line: " << msg.line()
+                << "  >> " << msg.line_error() << "\n"
+                << "Error: " << msg.msg() << "\n\n";
     }
   }
 }

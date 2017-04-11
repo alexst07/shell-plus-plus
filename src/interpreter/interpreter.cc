@@ -18,6 +18,7 @@
 #include <memory>
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "stmt-executor.h"
 #include "executor.h"
@@ -91,18 +92,33 @@ void Interpreter::Exec(ScriptStream& file, std::vector<std::string>&& args) {
   Parser p(std::move(ts));
   auto res = p.AstGen();
   stmt_list_ = res.MoveAstNode();
+  try {
+    if (p.nerrors() == 0) {
+      RegisterVars();
+      RegisterFileVars(file.filename());
+      RegisterArgs(std::move(args));
 
-  if (p.nerrors() == 0) {
-    RegisterVars();
-    RegisterFileVars(file.filename());
-    RegisterArgs(std::move(args));
+      RootExecutor executor(symbol_table_stack_);
+      executor.Exec(stmt_list_.get());
+    } else {
+      Message msg = p.Msgs();
+      throw RunTimeError(RunTimeError::ErrorCode::PARSER, msg.msg(),
+                         Position{msg.line(), msg.pos()});
+    }
+  } catch (RunTimeError& e) {
+    // split the lines of file in a array to set line of error on each message
+    std::vector<std::string> file_lines = SplitFileLines(buffer.str());
 
-    RootExecutor executor(symbol_table_stack_);
-    executor.Exec(stmt_list_.get());
-  } else {
-    Message msg = p.Msgs();
-    throw RunTimeError(RunTimeError::ErrorCode::PARSER, msg.msg(),
-                       Position{msg.line(), msg.pos()});
+    // set filename and the line of the erro on each message
+    for (auto& msg: e.messages()) {
+      msg.file(file.filename());
+      // subtract 1 because vector starts on 0 and line on 1
+      msg.line_error(file_lines[msg.line()-1]);
+    }
+
+    e.file(file.filename());
+    e.line_error(file_lines[e.pos().line-1]);
+    throw e;
   }
 }
 
@@ -163,6 +179,13 @@ std::shared_ptr<Object> Interpreter::LookupSymbol(const std::string& name) {
 
 Executor* Interpreter::ExecutorPtr() {
 
+}
+
+std::vector<std::string> SplitFileLines(const std::string str_file) {
+  std::vector<std::string> strs;
+  boost::split(strs, str_file, boost::is_any_of("\n"));
+
+  return strs;
 }
 
 }

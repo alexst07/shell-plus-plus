@@ -43,13 +43,17 @@ class Message {
       : severity_(msg.severity_)
       , msg_(msg.msg_)
       , line_(msg.line_)
-      , pos_(msg.pos_) {}
+      , pos_(msg.pos_)
+      , str_line_error_(msg.str_line_error_)
+      , file_(msg.file_) {}
 
   Message& operator=(const Message& msg) {
     severity_ = msg.severity_;
     msg_ = msg.msg_;
     line_ = msg.line_;
     pos_ = msg.pos_;
+    str_line_error_ = msg.str_line_error_;
+    file_ = msg.file_;
 
     return *this;
   }
@@ -66,6 +70,22 @@ class Message {
     return pos_;
   }
 
+  void file(const std::string& str_file) {
+    file_ = str_file;
+  }
+
+  std::string file() const {
+    return file_;
+  }
+
+  void line_error(const std::string& str_line) {
+    str_line_error_ = str_line;
+  }
+
+  std::string line_error() const {
+    return str_line_error_;
+  }
+
   friend std::ostream& operator<<(std::ostream& stream, const Message& msg);
   friend std::ostream& operator<<(std::ostream& stream, Message& msg);
 
@@ -74,6 +94,8 @@ class Message {
   uint pos_;
   boost::format msg_;
   Severity severity_;
+  std::string str_line_error_;
+  std::string file_;
 };
 
 inline std::ostream& operator<<(std::ostream& stream, const Message& msg) {
@@ -161,6 +183,10 @@ class Messages {
     return msg_vec_.end();
   }
 
+  const size_t size() const {
+    return msg_vec_.size();
+  }
+
  private:
   std::vector<Message> msg_vec_;
 };
@@ -169,4 +195,3 @@ class Messages {
 }
 
 #endif  // SETTI_MSG_H
-

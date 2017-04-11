@@ -67,6 +67,8 @@ class Interpreter {
   bool main_;
 };
 
+std::vector<std::string> SplitFileLines(const std::string str_file);
+
 }
 }
 
