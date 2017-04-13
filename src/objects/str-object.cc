@@ -86,6 +86,19 @@ ObjectPtr StringObject::Element(const SliceObject& slice) {
   return obj_factory.NewString(str);
 }
 
+// string is always true, even when it is empty
+// to test if the string is empty, a compare function
+// must be used
+ObjectPtr StringObject::ObjBool() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(true);
+}
+
+ObjectPtr StringObject::Not() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(false);
+}
+
 ObjectPtr StringObject::Equal(ObjectPtr obj) {
   ObjectFactory obj_factory(symbol_table_stack());
 

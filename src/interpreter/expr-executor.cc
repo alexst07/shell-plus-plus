@@ -238,7 +238,14 @@ try {
   e.messages().Push(std::move(Message(Message::Severity::ERR,
       boost::format("on function call"),
       node->pos().line, node->pos().col)));
-  throw RunTimeError(e.err_code(), e.msg(), e.pos(), e.messages());
+
+  // when the exception is thrown inside some object function
+  // this object doesn't have the position of the node, so
+  // we have to check if the line is 0 to set the correct line
+  // on this case
+  Position pos = {e.pos().line == 0? node->pos().line:e.pos().line,
+      e.pos().col == 0? node->pos().col:e.pos().col};
+  throw RunTimeError(e.err_code(), e.msg(), pos, e.messages());
 }
 
 ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) try {

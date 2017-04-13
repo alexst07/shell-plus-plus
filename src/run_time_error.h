@@ -41,6 +41,7 @@ class RunTimeError : public std::exception {
     OUT_OF_RANGE,
     KEY_NOT_FOUND,
     ID_NOT_FOUND,
+    INVALID_ARGS,
     INCOMPATIBLE_TYPE,
     FUNC_PARAMS,
     ZERO_DIV,

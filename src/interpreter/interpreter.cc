@@ -117,7 +117,8 @@ void Interpreter::Exec(ScriptStream& file, std::vector<std::string>&& args) {
     }
 
     e.file(file.filename());
-    e.line_error(file_lines[e.pos().line-1]);
+    int pos = e.pos().line < 1? 1: e.pos().line;
+    e.line_error(file_lines[pos - 1]);
     throw e;
   }
 }

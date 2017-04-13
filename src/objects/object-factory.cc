@@ -74,6 +74,11 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertEntry(static_cast<const CmdIterType&>(
                            *type_cmd_iter).name(), std::move(symbol_cmd_iter));
 
+  ObjectPtr type_file_iter = obj_factory.NewFileIterType();
+  SymbolAttr symbol_file_iter(type_file_iter, true);
+  symbol_table.InsertEntry(static_cast<const FileIterType&>(
+      *type_file_iter).name(), std::move(symbol_file_iter));
+
   ObjectPtr type_array_iter = obj_factory.NewArrayIterType();
   SymbolAttr symbol_array_iter(type_array_iter, true);
   symbol_table.InsertEntry(static_cast<const ArrayIterType&>(
@@ -108,6 +113,11 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   SymbolAttr symbol_path(type_path, true);
   symbol_table.InsertEntry(static_cast<const PathType&>(*type_path).name(),
                           std::move(symbol_path));
+
+  ObjectPtr type_file = obj_factory.NewFileType();
+  SymbolAttr symbol_file(type_file, true);
+  symbol_table.InsertEntry(static_cast<const FileType&>(*type_file).name(),
+                          std::move(symbol_file));
 
   ObjectPtr type_module = obj_factory.NewModuleType();
   SymbolAttr symbol_module(type_module, true);

@@ -45,12 +45,14 @@ class Object {
     CMD,
     REGEX,
     PATH,
+    FILE,
     TYPE,
     ARRAY_ITER,
     MAP_ITER,
     RANGE_ITER,
     TUPLE_ITER,
     CMD_ITER,
+    FILE_ITER,
     DECL_TYPE,
     DECL_OBJ,
     MODULE,
@@ -63,7 +65,11 @@ class Object {
     return type_;
   }
 
-  virtual std::string Print() = 0;
+  virtual std::string Print() {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("%1% has no print interface")
+                       %ObjType()->ObjectName());
+  }
 
   virtual long int Len() {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,

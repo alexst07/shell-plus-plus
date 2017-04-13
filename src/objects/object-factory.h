@@ -31,6 +31,7 @@
 #include "tuple-object.h"
 #include "regex.h"
 #include "path.h"
+#include "file-object.h"
 #include "decl-class-object.h"
 
 namespace shpp {
@@ -100,6 +101,12 @@ class ObjectFactory {
     auto obj_type = symbol_table_.Lookup("cmd_iter", false).SharedAccess();
     return ObjectPtr(new CmdIterObject(delim, outerr, cmd_obj, obj_type,
                                          std::move(SymTableStack())));
+  }
+
+  ObjectPtr NewFileIter(ObjectPtr file_obj) {
+    auto obj_type = symbol_table_.Lookup("file_iter", false).SharedAccess();
+    return ObjectPtr(new FileIterObject(file_obj, obj_type,
+                                        std::move(SymTableStack())));
   }
 
   ObjectPtr NewTuple(std::vector<std::unique_ptr<Object>>&& value) {
@@ -191,6 +198,12 @@ class ObjectFactory {
                                     std::move(SymTableStack())));
   }
 
+  ObjectPtr NewFile(const std::string& path, std::ios_base::openmode mode) {
+    auto obj_type = symbol_table_.Lookup("file", false).SharedAccess();
+    return ObjectPtr(new FileObject(path, mode, obj_type,
+                                    std::move(SymTableStack())));
+  }
+
   ObjectPtr NewModule(const std::string& module, bool is_file_path) {
     auto obj_type = symbol_table_.Lookup("module", false).SharedAccess();
     return ObjectPtr(new ModuleImportObject(module, is_file_path, obj_type,
@@ -270,6 +283,11 @@ class ObjectFactory {
     return std::make_shared<CmdIterType>(obj_type, std::move(SymTableStack()));
   }
 
+  ObjectPtr NewFileIterType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return std::make_shared<FileIterType>(obj_type, std::move(SymTableStack()));
+  }
+
   ObjectPtr NewArrayType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return std::make_shared<ArrayType>(obj_type, std::move(SymTableStack()));
@@ -311,6 +329,11 @@ class ObjectFactory {
   ObjectPtr NewPathType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return std::make_shared<PathType>(obj_type, std::move(SymTableStack()));
+  }
+
+  ObjectPtr NewFileType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return std::make_shared<FileType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewModuleType() {
