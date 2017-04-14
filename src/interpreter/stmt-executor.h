@@ -126,7 +126,8 @@ class IfElseExecutor: public Executor {
 class WhileExecutor: public Executor {
  public:
   WhileExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack) {}
+      : Executor(parent, symbol_table_stack)
+      , stop_flag_(StopFlag::kGo) {}
 
   // Entry point to execute while
   void Exec(WhileStatement* node);
@@ -149,12 +150,13 @@ class WhileExecutor: public Executor {
 class ForInExecutor: public Executor {
  public:
   ForInExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack) {}
+      : Executor(parent, symbol_table_stack)
+      , stop_flag_(StopFlag::kGo){}
 
   // Entry point to execute for in
   void Exec(ForInStatement *node);
 
-  void Assign(std::vector<Expression*>& exp_list, 
+  void Assign(std::vector<Expression*>& exp_list,
       std::vector<ObjectPtr>& it_values);
 
   void set_stop(StopFlag flag) override;

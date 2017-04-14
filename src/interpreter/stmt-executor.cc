@@ -430,7 +430,9 @@ void WhileExecutor::set_stop(StopFlag flag) {
     return;
   }
 
-  if (flag != StopFlag::kBreak && flag != StopFlag::kContinue) {
+  if (flag == StopFlag::kBreak || flag == StopFlag::kContinue) {
+    parent()->set_stop(StopFlag::kGo);
+  } else {
     parent()->set_stop(flag);
   }
 }
