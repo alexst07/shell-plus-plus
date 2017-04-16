@@ -84,6 +84,11 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertEntry(static_cast<const ArrayIterType&>(
       *type_array_iter).name(), std::move(symbol_array_iter));
 
+  ObjectPtr type_tuple_iter = obj_factory.NewTupleIterType();
+  SymbolAttr symbol_tuple_iter(type_tuple_iter, true);
+  symbol_table.InsertEntry(static_cast<const TupleIterType&>(
+      *type_tuple_iter).name(), std::move(symbol_tuple_iter));
+
   ObjectPtr type_range_iter = obj_factory.NewRangeIterType();
   SymbolAttr symbol_range_iter(type_range_iter, true);
   symbol_table.InsertEntry(static_cast<const RangeIterType&>(

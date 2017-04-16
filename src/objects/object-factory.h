@@ -163,6 +163,12 @@ class ObjectFactory {
                                          std::move(SymTableStack())));
   }
 
+  ObjectPtr NewTupleIter(ObjectPtr array) {
+    auto obj_type = symbol_table_.Lookup("tuple_iter", false).SharedAccess();
+    return ObjectPtr(new TupleIterObject(array, obj_type,
+                                         std::move(SymTableStack())));
+  }
+
   ObjectPtr NewMapIter(ObjectPtr map) {
     auto obj_type = symbol_table_.Lookup("map_iter", false).SharedAccess();
     return ObjectPtr(new MapIterObject(map, obj_type,
@@ -302,6 +308,12 @@ class ObjectFactory {
   ObjectPtr NewArrayIterType() {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     return std::make_shared<ArrayIterType>(obj_type,
+                                           std::move(SymTableStack()));
+  }
+
+  ObjectPtr NewTupleIterType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return std::make_shared<TupleIterType>(obj_type,
                                            std::move(SymTableStack()));
   }
 

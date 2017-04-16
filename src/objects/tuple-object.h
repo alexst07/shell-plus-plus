@@ -24,9 +24,48 @@
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
 #include "slice-object.h"
+#include "obj-type.h"
 
 namespace shpp {
 namespace internal {
+
+class TupleIterObject: public BaseIter {
+ public:
+  TupleIterObject(ObjectPtr array_obj, ObjectPtr obj_type,
+                  SymbolTableStack&& sym_table);
+
+  virtual ~TupleIterObject() {}
+
+  ObjectPtr Equal(ObjectPtr obj) override;
+
+  ObjectPtr Next() override;
+
+  ObjectPtr HasNext() override;
+
+  std::string Print() override {
+    return std::string("[tuple_iter]");
+  }
+
+ private:
+  // it uses the array object and position insted of c++ iterator
+  // because the iterator object has need a shared_reference
+  // of object, because the array could be removed from memory
+  // if the object was created inside a loop for example
+  // and the iterator could be used outside this loop
+  ObjectPtr tuple_obj_;
+  size_t pos_;
+};
+
+class TupleIterType: public TypeObject {
+ public:
+  TupleIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("tuple_iter", obj_type, std::move(sym_table)) {}
+
+  virtual ~TupleIterType() {}
+
+  ObjectPtr Constructor(Executor* /*parent*/,
+                        std::vector<ObjectPtr>&& params) override;
+};
 
 class TupleObject: public Object {
  public:
@@ -67,6 +106,8 @@ class TupleObject: public Object {
    }
 
    ObjectPtr Element(const SliceObject& slice);
+
+   ObjectPtr ObjIter(ObjectPtr obj) override;
 
    ObjectPtr GetItem(ObjectPtr index) override;
 

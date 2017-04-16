@@ -20,6 +20,68 @@
 namespace shpp {
 namespace internal {
 
+TupleIterObject::TupleIterObject(ObjectPtr tuple_obj, ObjectPtr obj_type,
+                                 SymbolTableStack&& sym_table)
+    : BaseIter(ObjectType::TUPLE_ITER, obj_type, std::move(sym_table))
+    , pos_(0) {
+  if (tuple_obj->type() != ObjectType::TUPLE) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("argument must be tuple"));
+  }
+
+  tuple_obj_ = tuple_obj;
+}
+
+ObjectPtr TupleIterObject::Equal(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (obj->type() != ObjectType::ARRAY_ITER) {
+    return obj_factory.NewBool(false);
+  }
+
+  TupleIterObject& other = static_cast<TupleIterObject&>(*obj);
+
+  bool ptr_eq = obj.get() == tuple_obj_.get();
+  bool pos_eq = other.pos_ == pos_;
+
+  return obj_factory.NewBool(ptr_eq && pos_eq);
+}
+
+ObjectPtr TupleIterObject::Next() {
+  TupleObject& tuple_obj = static_cast<TupleObject&>(*tuple_obj_);
+
+  if (pos_ >= tuple_obj.Size()) {
+    ObjectFactory obj_factory(symbol_table_stack());
+    return obj_factory.NewNull();
+  }
+
+  return tuple_obj.Element(pos_++);
+}
+
+ObjectPtr TupleIterObject::HasNext() {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  bool v = pos_ == static_cast<TupleObject&>(*tuple_obj_).Size();
+  return obj_factory.NewBool(!v);
+}
+
+ObjectPtr TupleIterType::Constructor(Executor* /*parent*/,
+                                     std::vector<ObjectPtr>&& params) {
+  if (params.size() != 1) {
+    throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                       boost::format("tuple_iter() takes exactly 1 argument"));
+  }
+
+  if (params[0]->type() != ObjectType::TUPLE) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("invalid type for tuple_iter"));
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr obj(obj_factory.NewTupleIter(params[0]));
+  return obj;
+}
+
 std::size_t TupleObject::Hash() {
   if (value_.empty()) {
     throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
@@ -72,6 +134,11 @@ ObjectPtr TupleObject::Element(const SliceObject& slice) {
 
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewArray(std::move(values));
+}
+
+ObjectPtr TupleObject::ObjIter(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewTupleIter(obj);
 }
 
 ObjectPtr TupleObject::GetItem(ObjectPtr index) {

@@ -179,6 +179,8 @@ class TypeObject: public Object {
     return false;
   }
 
+  ObjectPtr Equal(ObjectPtr obj) override;
+
   virtual ObjectPtr Constructor(Executor* parent,
                                 std::vector<ObjectPtr>&& params) = 0;
 

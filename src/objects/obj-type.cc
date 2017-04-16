@@ -96,6 +96,13 @@ ObjectPtr TypeObject::CallStaticObject(const std::string& name) {
   return obj;
 }
 
+ObjectPtr TypeObject::Equal(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  bool v = this->operator==(*obj);
+  return obj_factory.NewBool(v);
+}
+
 ObjectPtr Type::Constructor(Executor* /*parent*/,
                             std::vector<ObjectPtr>&& params) {
   if (params.size() != 1) {
