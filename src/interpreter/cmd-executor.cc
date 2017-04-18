@@ -311,7 +311,10 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
       }
 
       blank_after = cmd_expr->blank_after();
-      str_part += vec_part[0];
+
+      if (vec_part.size() > 0) {
+        str_part += vec_part[0];
+      }
 
       if (blank_after) {
         cmd.push_back(str_part);

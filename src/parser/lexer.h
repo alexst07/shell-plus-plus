@@ -88,6 +88,7 @@ private:
              c_ != '}' &&
              c_ != '|' &&
              c_ != '&' &&
+             c_ != '%' &&
              c_ != kEndOfInput;
     return b;
   }
