@@ -71,14 +71,14 @@ class RangeIterObject: public BaseIter {
 
 class ModuleImportObject: public Object {
  public:
-  ModuleImportObject(std::string module_name, bool is_file_path,
-                     ObjectPtr obj_type, SymbolTableStack&& sym_table)
+  ModuleImportObject(const std::string& module_name, const std::string& path,
+      bool is_file_path, ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
       , interpreter_(false)
       , module_name_(module_name)
       , is_file_path_(is_file_path) {
     try {
-      ScriptStream file(module_name_);
+      ScriptStream file(path + std::string("/") + module_name_);
       interpreter_.Exec(file);
     } catch (RunTimeError& e) {
       Message msg(Message::Severity::ERR, boost::format(e.msg()), e.pos().line,

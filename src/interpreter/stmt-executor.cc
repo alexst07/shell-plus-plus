@@ -24,6 +24,7 @@
 #include "objects/func-object.h"
 #include "cmd-executor.h"
 #include "utils/scope-exit.h"
+#include "utils/check.h"
 
 namespace shpp {
 namespace internal {
@@ -687,7 +688,11 @@ void ImportExecutor::Exec(ImportStatement *node) {
     ObjectPtr obj_module;
 
     try {
-      obj_module = obj_factory.NewModule(module_path, true);
+      ObjectPtr path_obj = symbol_table_stack().Lookup("__path__", false)
+          .SharedAccess();
+      SHPP_FUNC_CHECK_PARAM_TYPE(path_obj, import, STRING)
+      std::string path_str = static_cast<StringObject&>(*path_obj).value();
+      obj_module = obj_factory.NewModule(module_path, path_str, true);
     } catch (RunTimeError& e) {
       throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
     }
