@@ -7,6 +7,9 @@ language: cpp
 # Compiler selection
 addons:
   apt:
+    sources:
+      - boost-latest
+      - ubuntu-toolchain-r-test
     packages:
       - gdb
       - gcc-6
