@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>Language - Seti</title>
+        <title>Language - Shell++</title>
         <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="../css/base.css" rel="stylesheet">
@@ -38,7 +38,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="..">Seti</a>
+            <a class="navbar-brand" href="..">Shell++</a>
         </div>
 
         <!-- Expanded navigation -->
@@ -92,18 +92,18 @@
 
 <h1 id="language-basics">Language basics</h1>
 <h2 id="hello-world">Hello World</h2>
-<p>In seti there are several ways to print information on screen, you can use shell
+<p>In shell++ there are several ways to print information on screen, you can use shell
 commands or the function print.</p>
 <p>Using shell commands:</p>
 <pre><code class="sh">echo Hello World
 </code></pre>
 
-<p>Using seti print function:</p>
+<p>Using shell++ print function:</p>
 <pre><code class="go">print(&quot;Hello World&quot;)
 </code></pre>
 
 <h2 id="comments">Comments</h2>
-<p>In seti comments are everything that comes after #</p>
+<p>In shell++ comments are everything that comes after #</p>
 <pre><code class="python"># comment
 print(&quot;hello world&quot;) # print hello world
 </code></pre>
@@ -112,7 +112,7 @@ print(&quot;hello world&quot;) # print hello world
 <pre><code class="go">my_var = 7
 </code></pre>
 
-<p>if my_var doesn't exists, seti will create my_var and attributes 7 to it,
+<p>if my_var doesn't exists, shell++ will create my_var and attributes 7 to it,
 if it already exists, the value 7 will be attributed to my_var</p>
 <h2 id="basic-types">Basic types</h2>
 <h3 id="integer">integer</h3>
@@ -120,7 +120,7 @@ if it already exists, the value 7 will be attributed to my_var</p>
 print(type(my_var))  # int
 </code></pre>
 
-<p>Like in other languages, int in seti has oprations as add, sub, div and mult</p>
+<p>Like in other languages, int in shell++ has oprations as add, sub, div and mult</p>
 <pre><code class="go">v1 = 7
 v2 = 3
 v3 = v1 + v2*v1 - v2/v1
@@ -132,7 +132,7 @@ v3 += v1%v2 # mod
 print(type(my_var))  # real
 </code></pre>
 
-<p>Like in other languages, real in seti has oprations as add, sub, div and mult</p>
+<p>Like in other languages, real in shell++ has oprations as add, sub, div and mult</p>
 <pre><code class="go">v1 = 7.1
 v2 = 3.3
 v3 = v1 + v2*v1 - v2/v1
@@ -366,7 +366,7 @@ while i &lt; 10 {
 </code></pre>
 
 <h2 id="shell-commands">Shell commands</h2>
-<p>To execute others programs in seti is very similar the way that works others
+<p>To execute others programs in shell++ is very similar the way that works others
 shell languages.</p>
 <h3 id="simple-command">Simple command</h3>
 <pre><code class="bash">echo hello world
@@ -407,7 +407,7 @@ echo append this text &gt;&gt; file.txt
 
 <p>If cmd1 has exit status 0 (correct), doesn't execute cmd2, if not, executes cmd2</p>
 <h3 id="background-commands">Background commands</h3>
-<p>As in bash, to put a command in background in seti, the command must end with &amp;</p>
+<p>As in bash, to put a command in background in shell++, the command must end with &amp;</p>
 <pre><code class="bash">ls &amp;
 </code></pre>
 
@@ -421,7 +421,7 @@ echo append this text &gt;&gt; file.txt
 </code></pre>
 
 <h3 id="assign-commands-to-variables">Assign commands to variables</h3>
-<p>Almost everything in seti is a an object, in fact only commands are not
+<p>Almost everything in shell++ is a an object, in fact only commands are not
 objects, but the result of commands can be stored on an object</p>
 <pre><code class="bash">files = $(ls)
 </code></pre>
@@ -486,7 +486,7 @@ res1 = func(5)  # 9
 </code></pre>
 
 <h3 id="variadic">variadic</h3>
-<p>in seti functions support variadic parameters too:</p>
+<p>in shell++ functions support variadic parameters too:</p>
 <pre><code class="go">func make_and_print_tuple(t...) {
   for item in t {
     print(&quot;item: &quot;, item)
@@ -528,7 +528,7 @@ print(v)  # 10
 </code></pre>
 
 <h2 id="declaration-of-commands">Declaration of commands</h2>
-<p>Commands are the only thing in seti that is not an object, it means, you can't
+<p>Commands are the only thing in shell++ that is not an object, it means, you can't
 assign a command to a variable</p>
 <pre><code class="go">cmd test {
   echo test has ${len(args)} arguments

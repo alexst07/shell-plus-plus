@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="./img/favicon.ico">
-        <title>Seti</title>
+        <title>Shell++</title>
         <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="./css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="./css/base.css" rel="stylesheet">
@@ -38,7 +38,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href=".">Seti</a>
+            <a class="navbar-brand" href=".">Shell++</a>
         </div>
 
         <!-- Expanded navigation -->
@@ -81,16 +81,12 @@
         <li class="main "><a href="#building">Building</a></li>
             <li><a href="#requirements">Requirements:</a></li>
             <li><a href="#compiling">Compiling</a></li>
-            <li><a href="#installing">Installing</a></li>
-        <li class="main "><a href="#running">Running</a></li>
-            <li><a href="#hello-world">Hello world</a></li>
-            <li><a href="#running-a-file">Running a file</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
 <h1 id="introduction">Introduction</h1>
-<p>Seti is a programming language that aims bring features from modern languages,
+<p>Shell++ is a programming language that aims bring features from modern languages,
 as facility to manipulate data structures, object oriented programming,
 functional programming and others, to shell script.</p>
 <h1 id="building">Building</h1>
@@ -103,25 +99,82 @@ functional programming and others, to shell script.</p>
 <li>Linux</li>
 </ul>
 <h2 id="compiling">Compiling</h2>
-<p>In the root of the project:</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>First you need intall the requirements to build Shell++</p>
+<pre><code># apt-get install -y build-essential
+# apt-get install -y libboost-all-dev libreadline6 libreadline6-dev git cmake
+</code></pre>
+
+<p>With the requirements installed, make a clone of the repository</p>
+<pre><code>$ git clone git@github.com:alexst07/shell-plus-plus.git
+</code></pre>
+
+<p>After the clone, change to directory of the project</p>
+<pre><code>$ cd shell-plus-plus
+</code></pre>
+
+<p>To compile the project, you need create a directory when the cmake files will
+be generated, and so, build the project</p>
 <pre><code>$ mkdir build
 $ cd build
 $ cmake ..
 $ make
 </code></pre>
 
-<h2 id="installing">Installing</h2>
+<p>Now you can already use the Shell++, the binary is generated at shell/ directory.
+To use Shell++ to execute a script, first, create an example script called my.shpp.</p>
+<pre><code>echo my first script in shell++
+</code></pre>
+
+<p>In the build path, call the binary to execute your script</p>
+<pre><code>$ ./shell/shpp my.shpp
+</code></pre>
+
+<p>You should see the output:</p>
+<pre><code>my first script in shell++
+</code></pre>
+
+<p>If you saw this output your build is working, if you want install Shell++.</p>
 <pre><code>$ sudo make install
 </code></pre>
 
-<h1 id="running">Running</h1>
-<h2 id="hello-world">Hello world</h2>
-<pre><code>$ seti
-&gt; echo hello world
+<h3 id="fedora">Fedora</h3>
+<p>First you need intall the requirements to build Shell++</p>
+<pre><code># apt-get install -y build-essential
+# apt-get install -y libboost-all-dev libreadline6 libreadline6-dev git cmake
 </code></pre>
 
-<h2 id="running-a-file">Running a file</h2>
-<pre><code>$ seti file.seti
+<p>With the requirements installed, make a clone of the repository</p>
+<pre><code>$ git clone git@github.com:alexst07/shell-plus-plus.git
+</code></pre>
+
+<p>After the clone, change to directory of the project</p>
+<pre><code>$ cd shell-plus-plus
+</code></pre>
+
+<p>To compile the project, you need create a directory when the cmake files will
+be generated, and so, build the project</p>
+<pre><code>$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+</code></pre>
+
+<p>Now you can already use the Shell++, the binary is generated at shell/ directory.
+To use Shell++ to execute a script, first, create an example script called my.shpp.</p>
+<pre><code>echo my first script in shell++
+</code></pre>
+
+<p>In the build path, call the binary to execute your script</p>
+<pre><code>$ ./shell/shpp my.shpp
+</code></pre>
+
+<p>You should see the output:</p>
+<pre><code>my first script in shell++
+</code></pre>
+
+<p>If you saw this output your build is working, if you want install Shell++.</p>
+<pre><code>$ sudo make install
 </code></pre></div>
         </div>
 
@@ -161,5 +214,5 @@ $ make
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-01-27 22:11:16
+Build Date UTC : 2017-04-26 01:27:51
 -->
