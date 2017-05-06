@@ -51,9 +51,8 @@ void Runner::Exec(std::string name, std::vector<std::string>&& args) {
     internal::ScriptStream file(name);
 
     if (!file.IsOpen()) {
-      throw RunTimeError(RunTimeError::ErrorCode::INTERPRETER_FILE,
-                         boost::format("can't open file: %1%")%name,
-                         internal::Position{0, 0});
+      throw std::invalid_argument((boost::format("can't open file: %1%")%name)
+          .str());
     }
 
     interpreter_.Exec(file, std::move(args));
@@ -69,6 +68,8 @@ void Runner::Exec(std::string name, std::vector<std::string>&& args) {
                 << "  >> " << msg.line_error() << "\n"
                 << "Error: " << msg.msg() << "\n\n";
     }
+  } catch (std::invalid_argument& e) {
+    std::cout << "Error: " << e.what() << "\n\n";
   }
 }
 

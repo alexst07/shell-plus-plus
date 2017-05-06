@@ -30,6 +30,9 @@ class ScriptStream {
   ScriptStream(const std::string& filename)
       : filename_(filename), fs_(filename) {}
 
+  ScriptStream(const std::string& filename, std::ifstream&& fs)
+      : filename_(filename), fs_(std::move(fs)) {}
+
   std::ifstream& fs() { return fs_; }
   const std::string& filename() const { return filename_; }
   bool IsOpen() const { return fs_.is_open(); }
