@@ -482,6 +482,9 @@ TokenStream Lexer::Scanner() {
         } else if (c_ == '\\') {
           // Allows insert newline without insert a token
           if (PeekAhead() == '\n'){
+            // advance char '\'
+            Advance();
+            // advace char '\n'
             Advance();
             whitespace = true;
           } else {
