@@ -100,7 +100,7 @@ Token Lexer::ScanString() {
   Advance();
 
   while(true) {
-    if (c_ == '\n' || c_ == kEndOfInput) {
+    if (c_ == kEndOfInput) {
       ErrorMsg(boost::format("string literal not terminated"));
       break;
     }
