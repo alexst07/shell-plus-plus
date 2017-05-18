@@ -41,7 +41,7 @@ ObjectPtr StringObject::ObjInt() {
 }
 
 ObjectPtr StringObject::ObjReal() {
-  int v;
+  float v;
 
   try {
     v = std::stof(value_);
