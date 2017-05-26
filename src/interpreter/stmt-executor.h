@@ -55,6 +55,9 @@ class FuncDeclExecutor: public Executor {
 
   ObjectPtr FuncObj(AstNode* node);
 
+  template<class T>
+  ObjectPtr FuncObjAux(T node);
+
   void set_stop(StopFlag flag) override;
 
  protected:

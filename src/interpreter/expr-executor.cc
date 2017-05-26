@@ -41,9 +41,7 @@ ObjectPtr AssignableListExecutor::ExecAssignable(AstNode* node) {
   AssignableValue* assignable_node = static_cast<AssignableValue*>(node);
   AstNode* value = assignable_node->value();
 
-  if (value->type() == AstNode::NodeType::kFunctionDeclaration) {
-    return ExecLambdaFunc(value);
-  } else if (AstNode::IsExpression(value->type())) {
+  if (AstNode::IsExpression(value->type())) {
     ExpressionExecutor expr_exec(this, symbol_table_stack());
     return expr_exec.Exec(value);
   }
@@ -51,12 +49,6 @@ ObjectPtr AssignableListExecutor::ExecAssignable(AstNode* node) {
   throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                      boost::format("incompatible expression on assignable"),
                      node->pos());
-}
-
-ObjectPtr AssignableListExecutor::ExecLambdaFunc(AstNode* node) {
-  // executes lambda assignment
-  FuncDeclExecutor func_exec(this, symbol_table_stack(), false, true);
-  return func_exec.FuncObj(node);
 }
 
 void AssignableListExecutor::set_stop(StopFlag flag) {
@@ -123,11 +115,21 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecGlob(static_cast<Glob*>(node));
       break;
 
+    case AstNode::NodeType::kFunctionExpression:
+      return ExecLambdaFunc(node);
+      break;
+
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid expression opcode"),
                          node->pos());
   }
+}
+
+ObjectPtr ExpressionExecutor::ExecLambdaFunc(AstNode* node) {
+  // executes lambda assignment
+  FuncDeclExecutor func_exec(this, symbol_table_stack(), false, true);
+  return func_exec.FuncObj(node);
 }
 
 ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {

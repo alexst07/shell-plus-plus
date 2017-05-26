@@ -58,7 +58,19 @@ void StmtListExecutor::set_stop(StopFlag flag) {
 }
 
 ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
-  FunctionDeclaration* fdecl_node = static_cast<FunctionDeclaration*>(node);
+  if (node->type() == AstNode::NodeType::kFunctionDeclaration) {
+    return FuncObjAux<FunctionDeclaration*>(
+      static_cast<FunctionDeclaration*>(node));
+  } else {
+    return FuncObjAux<FunctionExpression*>(
+      static_cast<FunctionExpression*>(node));
+  }
+}
+
+template<class T>
+ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
+  // handle Function ast node, only decide if it is Declaration or
+  // Expression when it is needed
   auto vec = fdecl_node->children();
   size_t variadic_count = 0;
   std::vector<std::string> param_names;
@@ -109,8 +121,14 @@ ObjectPtr FuncDeclExecutor::FuncObj(AstNode* node) {
 
   std::string func_name = "";
 
-  if (!lambda_) {
-    func_name = fdecl_node->name()->name();
+  // now we need to know if the function is lambda or declaration
+  // TODO: on c++17 change this shit piece of code to if constexpr () {}
+  if (fdecl_node->type() == AstNode::NodeType::kFunctionDeclaration) {
+    // convert to AstNode and after convert to the correct type to avoid error
+    // because FunctionExpression and FunctionDeclaration has no relationship
+    // between one and anoter
+    func_name = static_cast<FunctionDeclaration*>(
+        static_cast<AstNode*>(fdecl_node))->name()->name();
   }
 
   try {

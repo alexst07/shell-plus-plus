@@ -504,13 +504,29 @@ class AstPrinter: public AstVisitor {
   void virtual VisitFunctionDeclaration(FunctionDeclaration* func_decl) {
     Level();
     std::cout << "<function variadic:"
-              << (func_decl->variadic()? "true": "false") << "anonymous: "
-              << (func_decl->is_anonymous()? "true": "false") << ">\n";
+              << (func_decl->variadic()? "true": "false") << "declaration: yes>\n";
     level_++;
 
-    if (!func_decl->is_anonymous()) {
-      func_decl->name()->Accept(this);
+    func_decl->name()->Accept(this);
+
+    auto vec = func_decl->children();
+
+    for (const auto c: vec) {
+      c->Accept(this);
     }
+
+    if (func_decl->has_block()) {
+      func_decl->block()->Accept(this);
+    }
+
+    level_--;
+  }
+
+    void virtual VisitFunctionExpression(FunctionExpression* func_decl) {
+    Level();
+    std::cout << "<function variadic:"
+              << (func_decl->variadic()? "true": "false") << ">\n";
+    level_++;
 
     auto vec = func_decl->children();
 

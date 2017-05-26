@@ -112,6 +112,7 @@ namespace internal {
   V(CompareOperation)           \
   V(ExpressionList)             \
   V(FunctionCall)               \
+  V(FunctionExpression)         \
   V(CmdExpression)              \
   V(Slice)                      \
   V(Glob)                       \

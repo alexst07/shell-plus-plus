@@ -253,7 +253,7 @@ class Parser {
   ParserResult<Statement> ParserCmdPipe();
   ParserResult<Statement> ParserCmdAndOr();
   ParserResult<Statement> ParserCmdFull();
-  ParserResult<FunctionDeclaration> ParserFunctionDeclaration(bool lambda);
+  ParserResult<AstNode> ParserFunctionDeclaration(bool lambda);
 
   // parser methods from class or interface
   // the method can be abastract or not

@@ -48,13 +48,9 @@ class CmdDeclaration: public Declaration {
       , id_(std::move(id)) {}
 };
 
-class FunctionDeclaration: public Declaration, public AssignableInterface {
+class Function {
  public:
-  virtual ~FunctionDeclaration() {}
-
-  virtual void Accept(AstVisitor* visitor) {
-    visitor->VisitFunctionDeclaration(this);
-  }
+  virtual ~Function() {}
 
   bool variadic() const noexcept {
    if (params_.empty()) {
@@ -62,18 +58,6 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
    }
 
    return params_.back()->variadic();
-  }
-
-  Identifier* name() const noexcept {
-    return name_.get();
-  }
-
-  bool is_anonymous() const noexcept {
-    if (name_) {
-      return false;
-    }
-
-    return true;
   }
 
   std::vector<FunctionParam*> children() noexcept {
@@ -106,16 +90,55 @@ class FunctionDeclaration: public Declaration, public AssignableInterface {
   friend class AstNodeFactory;
 
   std::vector<std::unique_ptr<FunctionParam>> params_;
-  std::unique_ptr<Identifier> name_;
   std::shared_ptr<Block> block_;
+
+ protected:
+  Function(std::vector<std::unique_ptr<FunctionParam>>&& params,
+           std::shared_ptr<Block> block)
+    : params_(std::move(params))
+    , block_(std::move(block)) {}
+};
+
+class FunctionDeclaration: public Function, public Declaration {
+ public:
+  virtual ~FunctionDeclaration() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitFunctionDeclaration(this);
+  }
+
+  Identifier* name() const noexcept {
+    return name_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Identifier> name_;
 
   FunctionDeclaration(std::vector<std::unique_ptr<FunctionParam>>&& params,
                       std::unique_ptr<Identifier> name,
                       std::shared_ptr<Block> block, Position position)
     : Declaration(NodeType::kFunctionDeclaration, position)
-    , name_(std::move(name))
-    , params_(std::move(params))
-    , block_(std::move(block)) {}
+    , Function(std::move(params), block)
+    , name_(std::move(name)) {}
+};
+
+class FunctionExpression: public Function, public Expression {
+ public:
+  virtual ~FunctionExpression() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitFunctionExpression(this);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  FunctionExpression(std::vector<std::unique_ptr<FunctionParam>>&& params,
+                     std::shared_ptr<Block> block, Position position)
+    : Expression(NodeType::kFunctionExpression, position)
+    , Function(std::move(params), block) {}
 };
 
 class ClassDeclList: public AstNode {

@@ -39,8 +39,6 @@ class AssignableListExecutor: public Executor {
 
   ObjectPtr ExecAssignable(AstNode* node);
 
-  ObjectPtr ExecLambdaFunc(AstNode* node);
-
   void set_stop(StopFlag flag) override;
 };
 
@@ -82,6 +80,9 @@ class ExpressionExecutor: public Executor {
 
   // Executes attribute
   ObjectPtr ExecAttribute(Attribute* node);
+
+  // Executes lambda
+  ObjectPtr ExecLambdaFunc(AstNode* node);
 
   // Executes cmd expression
   ObjectPtr ExecCmdExpr(CmdExpression* node);

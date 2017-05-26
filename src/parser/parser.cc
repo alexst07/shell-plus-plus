@@ -90,7 +90,7 @@ ParserResult<Statement> Parser::ParserImportPathStmt() {
 
 ParserResult<Statement> Parser::ParserStmtDecl() {
   if (token_ == TokenKind::KW_FUNC) {
-    ParserResult<FunctionDeclaration> func(ParserFunctionDeclaration(false));
+    ParserResult<AstNode> func(ParserFunctionDeclaration(false));
     return ParserResult<Statement>(func.MoveAstNode<Statement>());
   } else if (token_ == TokenKind::KW_CMD) {
     ParserResult<Declaration> cmd(ParserCmdDeclaration());
@@ -222,11 +222,11 @@ std::unique_ptr<Statement> Parser::ParserDeferableStmt() {
   return stmt;
 }
 
-ParserResult<FunctionDeclaration> Parser::ParserFunctionDeclaration(
+ParserResult<AstNode> Parser::ParserFunctionDeclaration(
     bool lambda) {
   if (token_ != TokenKind::KW_FUNC) {
     ErrorMsg(boost::format("expected function"));
-    return ParserResult<FunctionDeclaration>(); // Error
+    return ParserResult<AstNode>(); // Error
   }
 
   Position pos = {token_.Line(), token_.Col()};
@@ -240,7 +240,7 @@ ParserResult<FunctionDeclaration> Parser::ParserFunctionDeclaration(
   if (!lambda) {
     if (token_ != TokenKind::IDENTIFIER) {
       ErrorMsg(boost::format("expected identifier"));
-      return ParserResult<FunctionDeclaration>(); // Error
+      return ParserResult<AstNode>(); // Error
     }
 
     id = std::move(factory_.NewIdentifier(boost::get<std::string>(
@@ -252,7 +252,7 @@ ParserResult<FunctionDeclaration> Parser::ParserFunctionDeclaration(
 
   if (token_ != TokenKind::LPAREN) {
     ErrorMsg(boost::format("expected token '(' got %1%")% TokenValueStr());
-    return ParserResult<FunctionDeclaration>(); // Error
+    return ParserResult<AstNode>(); // Error
   }
 
   Advance();
@@ -268,11 +268,11 @@ ParserResult<FunctionDeclaration> Parser::ParserFunctionDeclaration(
     std::tie(func_params, ok) = ParserParamsList();
     if (token_ != TokenKind::RPAREN) {
       ErrorMsg(boost::format("expected token ')'"));
-      return ParserResult<FunctionDeclaration>(); // Error
+      return ParserResult<AstNode>(); // Error
     }
 
     if (!ok) {
-      return ParserResult<FunctionDeclaration>(); // Error
+      return ParserResult<AstNode>(); // Error
     }
 
     Advance();
@@ -281,8 +281,13 @@ ParserResult<FunctionDeclaration> Parser::ParserFunctionDeclaration(
 
   std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
 
-  return ParserResult<FunctionDeclaration>(factory_.NewFunctionDeclaration(
+  if (id) {
+    return ParserResult<AstNode>(factory_.NewFunctionDeclaration(
       std::move(func_params), std::move(id), std::move(block), pos));
+  }
+
+  return ParserResult<AstNode>(factory_.NewFunctionExpression(
+      std::move(func_params), std::move(block), pos));
 }
 
 ParserResult<Statement> Parser::ParserForInStmt() {
@@ -932,15 +937,9 @@ ParserResult<ExpressionList> Parser::ParserPostExpList() {
 }
 
 ParserResult<AssignableValue> Parser::ParserAssignable() {
-  if (token_ == TokenKind::KW_FUNC) {
-    ParserResult<FunctionDeclaration> flambda(ParserFunctionDeclaration(true));
-    return ParserResult<AssignableValue>(factory_
-        .NewAssignableValue<FunctionDeclaration>(flambda.MoveAstNode()));
-  } else {
-    ParserResult<Expression> exp(ParserOrExp());
-    return ParserResult<AssignableValue>(
-        factory_.NewAssignableValue<Expression>(exp.MoveAstNode()));
-  }
+  ParserResult<Expression> exp(ParserOrExp());
+  return ParserResult<AssignableValue>(
+      factory_.NewAssignableValue<Expression>(exp.MoveAstNode()));
 }
 
 ParserResult<AssignableList> Parser::ParserAssignableList() {
@@ -1471,6 +1470,9 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
 
     Advance(); // consume the token ')'
     return res;
+  } if (token_ == TokenKind::KW_FUNC) {
+    ParserResult<AstNode> flambda(ParserFunctionDeclaration(true));
+    return ParserResult<Expression>(flambda.MoveAstNode<Expression>());
   } else {
     return LiteralExp();
   }

@@ -258,6 +258,13 @@ class AstNodeFactory {
         std::move(params), std::move(name), std::move(block), pos));
   }
 
+  inline std::unique_ptr<FunctionExpression> NewFunctionExpression(
+      std::vector<std::unique_ptr<FunctionParam>>&& params,
+      std::unique_ptr<Block> block, Position pos) {
+    return std::unique_ptr<FunctionExpression>(new FunctionExpression(
+        std::move(params), std::move(block), pos));
+  }
+
   inline std::unique_ptr<ArrayInstantiation> NewArrayInstantiation(
       std::unique_ptr<AssignableList> elements) {
     return std::unique_ptr<ArrayInstantiation>(new ArrayInstantiation(
