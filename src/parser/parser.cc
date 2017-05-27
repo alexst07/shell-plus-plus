@@ -937,9 +937,62 @@ ParserResult<ExpressionList> Parser::ParserPostExpList() {
 }
 
 ParserResult<AssignableValue> Parser::ParserAssignable() {
-  ParserResult<Expression> exp(ParserOrExp());
-  return ParserResult<AssignableValue>(
-      factory_.NewAssignableValue<Expression>(exp.MoveAstNode()));
+  if (token_ == TokenKind::KW_LAMBDA) {
+    ParserResult<Expression> flambda(ParserLambda());
+    return ParserResult<AssignableValue>(
+        factory_.NewAssignableValue<Expression>(flambda.MoveAstNode()));
+  } else {
+    ParserResult<Expression> exp(ParserOrExp());
+    return ParserResult<AssignableValue>(
+        factory_.NewAssignableValue<Expression>(exp.MoveAstNode()));
+  }
+}
+
+ParserResult<Expression> Parser::ParserLambda() {
+  // advance lambda token
+  Advance();
+
+  std::vector<std::unique_ptr<FunctionParam>> func_params;
+  bool ok = true;
+
+  std::tie(func_params, ok) = ParserParamsList();
+
+  if (token_ != TokenKind::COLON) {
+    ErrorMsg(boost::format("Expected token ':', got %1%")
+        % Token::TokenValueToStr(token_.GetValue()));
+
+    return ParserResult<Expression>();
+  }
+
+  Advance();
+
+  Position pos = {token_.Line(), token_.Col()};
+
+  // mount assignment value
+  std::vector<std::unique_ptr<AssignableValue>> vec_values;
+  ParserResult<AssignableValue> value(ParserAssignable());
+  vec_values.push_back(value.MoveAstNode());
+
+  // mount assignment libboost-all-dev
+  ParserResult<AssignableList> assign_list(factory_.NewAssignableList(
+      std::move(vec_values)));
+
+  // mount return statement
+  ParserResult<Statement> ret_stmt(factory_.NewReturnStatement(
+      std::move(assign_list.MoveAstNode())));
+
+  // mount stmt list
+  std::vector<std::unique_ptr<Statement>> stmt_vec;
+  stmt_vec.push_back(ret_stmt.MoveAstNode());
+
+  ParserResult<StatementList> stmt_list(factory_.NewStatementList(
+      std::move(stmt_vec)));
+
+  // mount the block
+  ParserResult<Statement> block(factory_.NewBlock(stmt_list.MoveAstNode()));
+
+  return ParserResult<Expression>(factory_.NewFunctionExpression(
+      std::move(func_params), block.MoveAstNode<Block>(), pos));
 }
 
 ParserResult<AssignableList> Parser::ParserAssignableList() {
