@@ -126,6 +126,16 @@ class ExprListExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
+class EllipsisExprExecutor: public Executor {
+ public:
+  EllipsisExprExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  std::vector<ObjectPtr> Exec(AstNode* node);
+
+  void set_stop(StopFlag flag) override;
+};
+
 class FuncCallExecutor: public Executor {
  public:
   FuncCallExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)

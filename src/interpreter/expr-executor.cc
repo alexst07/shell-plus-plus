@@ -29,9 +29,15 @@ std::vector<ObjectPtr> AssignableListExecutor::Exec(
   AssignableList* assign_list_node = static_cast<AssignableList*>(node);
 
   std::vector<ObjectPtr> obj_vec;
+  EllipsisExprExecutor ellipsis_expr_executor(this, symbol_table_stack());
 
   for (AstNode* value: assign_list_node->children()) {
-    obj_vec.push_back(ExecAssignable(value));
+    if (value->type() == AstNode::NodeType::kEllipsisExpression) {
+      std::vector<ObjectPtr> elems = ellipsis_expr_executor.Exec(value);
+      obj_vec.insert(obj_vec.end(), elems.begin(), elems.end());
+    } else {
+      obj_vec.push_back(ExecAssignable(value));
+    }
   }
 
   return obj_vec;
@@ -495,9 +501,16 @@ std::vector<ObjectPtr> ExprListExecutor::Exec(
   std::vector<ObjectPtr> obj_vec;
 
   ExpressionExecutor expr_executor(this, symbol_table_stack());
+  EllipsisExprExecutor ellipsis_expr_executor(this, symbol_table_stack());
+
   std::vector<Expression*> expr_vec = expr_list_node->children();
   for (AstNode* value: expr_vec) {
-    obj_vec.push_back(expr_executor.Exec(value));
+    if (value->type() == AstNode::NodeType::kEllipsisExpression) {
+      std::vector<ObjectPtr> elems = ellipsis_expr_executor.Exec(value);
+      obj_vec.insert(obj_vec.end(), elems.begin(), elems.end());
+    } else {
+      obj_vec.push_back(expr_executor.Exec(value));
+    }
   }
 
   return obj_vec;
@@ -536,6 +549,51 @@ ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
 }
 
 void FuncCallExecutor::set_stop(StopFlag flag) {
+  // only throw is passed to outside function
+  // breaks, continues, are not allowed inside
+  // functions, and return is consumed by
+  // function
+  if (flag == StopFlag::kThrow) {
+    parent()->set_stop(flag);
+  }
+}
+
+std::vector<ObjectPtr> EllipsisExprExecutor::Exec(AstNode* node) {
+  EllipsisExpression* ellipsis_expr = static_cast<EllipsisExpression*>(node);
+  Expression* expr = ellipsis_expr->expr();
+
+  std::vector<ObjectPtr> obj_vec;
+
+  ExpressionExecutor expr_executor(this, symbol_table_stack());
+  ObjectPtr obj_expr = expr_executor.Exec(expr);
+
+  // execute iterator from expression object, put each item on a vector
+  // and this vector will be used to append expression list, so,
+  // with this feature is possible unpack elements on function arguments
+  ObjectPtr obj_iter = obj_expr->ObjIter(obj_expr);
+
+  // check if there is next value on iterator
+  auto check_iter = [&] () -> bool {
+    ObjectPtr has_next_obj = obj_iter->HasNext();
+    if (has_next_obj->type() != Object::ObjectType::BOOL) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                         boost::format("expect bool from __has_next__"),
+                         node->pos());
+    }
+
+    bool v = static_cast<BoolObject&>(*has_next_obj).value();
+    return v;
+  };
+
+  while (check_iter()) {
+    ObjectPtr next_obj = obj_iter->Next();
+    obj_vec.push_back(next_obj);
+  }
+
+  return obj_vec;
+}
+
+void EllipsisExprExecutor::set_stop(StopFlag flag) {
   // only throw is passed to outside function
   // breaks, continues, are not allowed inside
   // functions, and return is consumed by

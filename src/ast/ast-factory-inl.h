@@ -96,6 +96,12 @@ class AstNodeFactory {
                                                               fn_pos_()));
   }
 
+  inline std::unique_ptr<Expression> NewEllipsisExpression(
+      std::unique_ptr<Expression> expr) {
+    return std::unique_ptr<Expression>(new EllipsisExpression(std::move(expr),
+                                                              fn_pos_()));
+  }
+
   inline std::unique_ptr<StatementList> NewStatementList(
       std::vector<std::unique_ptr<Statement>> stmt_list) {
     return std::unique_ptr<StatementList>(new StatementList(

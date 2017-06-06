@@ -228,6 +228,7 @@ class Parser {
   ParserResult<Expression> ParserNotExp();
   ParserResult<Expression> ParserAndExp();
   ParserResult<Expression> ParserOrExp();
+  ParserResult<Expression> ParserEllipsisExp();
   ParserResult<Expression> ParserLambda();
   ParserResult<ExpressionList> ParserExpList();
   ParserResult<Statement> ParserStmt();

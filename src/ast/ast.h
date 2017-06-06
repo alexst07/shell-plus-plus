@@ -77,8 +77,6 @@ namespace internal {
   V(Assignment)               \
   V(CountOperation)           \
   V(Property)                 \
-  V(AssignableValue)          \
-  V(AssignableList)           \
   V(KeyValue)
 
 #define CALL_NODE_LIST(V) \
@@ -110,6 +108,8 @@ namespace internal {
   V(BinaryOperation)            \
   V(NotExpression)              \
   V(CompareOperation)           \
+  V(AssignableValue)            \
+  V(AssignableList)             \
   V(ExpressionList)             \
   V(FunctionCall)               \
   V(FunctionExpression)         \
@@ -121,6 +121,7 @@ namespace internal {
   V(SuperCallReference)         \
   V(CaseClause)                 \
   V(EmptyParentheses)           \
+  V(EllipsisExpression)         \
   V(DoExpression)
 
 #define CMD_NODE_LIST(V)   \
@@ -404,7 +405,7 @@ class ArrayInstantiation: public Expression {
       , elements_(std::move(elements)) {}
 };
 
-class AssignableValue: public AstNode, public AssignableInterface {
+class AssignableValue: public Expression {
  public:
   virtual ~AssignableValue() {}
 
@@ -423,7 +424,7 @@ class AssignableValue: public AstNode, public AssignableInterface {
 
  template<class T>
  AssignableValue(std::unique_ptr<T>&& value, Position position)
-     : AstNode(NodeType::kAssignableValue, position) {
+     : Expression(NodeType::kAssignableValue, position) {
    static_assert(std::is_base_of<AstNode,T>::value,
                  "Type is not derivated from AstNode");
 
@@ -695,6 +696,28 @@ class ExpressionList: public AstNode {
                  Position position)
       : AstNode(NodeType::kExpressionList, position)
       , exps_(std::move(exps)) {}
+};
+
+class EllipsisExpression: public Expression {
+ public:
+  virtual ~EllipsisExpression() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+  visitor->VisitEllipsisExpression(this);
+  }
+
+  Expression* expr() const noexcept {
+  return expr_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> expr_;
+
+  EllipsisExpression(std::unique_ptr<Expression> expr, Position position)
+    : Expression(NodeType::kEllipsisExpression, position)
+    , expr_(std::move(expr)) {}
 };
 
 class CmdExpression: public Expression {

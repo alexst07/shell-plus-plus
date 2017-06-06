@@ -1000,12 +1000,28 @@ ParserResult<AssignableList> Parser::ParserAssignableList() {
 
   do {
     ValidToken();
-    ParserResult<AssignableValue> value(ParserAssignable());
-    vec_values.push_back(value.MoveAstNode());
+    if (token_.Is(TokenKind::ELLIPSIS)) {
+      ParserResult<Expression> ellipsis_exp = ParserEllipsisExp();
+      vec_values.push_back(ellipsis_exp.MoveAstNode<AssignableValue>());
+    } else {
+      ParserResult<AssignableValue> value(ParserAssignable());
+      vec_values.push_back(value.MoveAstNode());
+    }
   } while (CheckComma());
 
   return ParserResult<AssignableList>(factory_.NewAssignableList(
       std::move(vec_values)));
+}
+
+ParserResult<Expression> Parser::ParserEllipsisExp() {
+  // advance ellipsis '...'
+  Advance();
+
+  ValidToken();
+  ParserResult<Expression> expr = ParserBitOrExp();
+
+  return ParserResult<Expression>(factory_.NewEllipsisExpression(
+      expr.MoveAstNode()));
 }
 
 ParserResult<ExpressionList> Parser::ParserExpList() {
@@ -1013,8 +1029,14 @@ ParserResult<ExpressionList> Parser::ParserExpList() {
 
   do {
     ValidToken();
-    ParserResult<Expression> exp = ParserOrExp();
-    vec_exp.push_back(exp.MoveAstNode());
+
+    if (token_.Is(TokenKind::ELLIPSIS)) {
+      ParserResult<Expression> ellipsis_exp = ParserEllipsisExp();
+      vec_exp.push_back(ellipsis_exp.MoveAstNode());
+    } else {
+      ParserResult<Expression> exp = ParserOrExp();
+      vec_exp.push_back(exp.MoveAstNode());
+    }
   } while (CheckComma());
 
   return ParserResult<ExpressionList>(factory_.NewExpressionList(
