@@ -151,17 +151,6 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
     setpgid (pid, pgid);
 
     if (foreground) {
-      // this part fix the problem of stuck on tcsetpgrp
-      // sources: https://dev.haiku-os.org/ticket/3417
-      // https://dev.haiku-os.org/attachment/ticket/3417/tcsetpgrp-test.c
-      // buf afeter put this part, the status return wrong for the commands
-      // this part must be understood better
-      sigset_t set, oset;
-      sigemptyset (&set);
-      sigaddset (&set, SIGCHLD);
-      sigaddset (&set, SIGTTOU);
-      sigemptyset (&oset);
-      sigprocmask (SIG_BLOCK, &set, &oset);
       tcsetpgrp(shell_terminal, pgid);
     }
 
@@ -310,13 +299,18 @@ bool Job::JobIsCompleted() {
 
 void Job::WaitForJob() {
   pid_t pid;
-  int status;
+  int status = 0;
+
+  // return signal SIGCHLD for default action to get the result of
+  // child process
+  signal(SIGCHLD, SIG_DFL);
 
   do {
     pid = waitpid (WAIT_ANY, &status, WUNTRACED);
   } while (!MarkProcessStatus(pid, status)
            && !JobIsStopped() && !JobIsCompleted());
 
+  // ignore signal SIGCHLD to avoid any zombie process
   signal(SIGCHLD, SIG_IGN);
 }
 
@@ -456,7 +450,6 @@ void Job::LaunchJob(int foreground) {
     WaitForJob();
     CheckCmdError();
   } else if (foreground) {
-    signal (SIGCHLD, SIG_DFL);
     PutJobInForeground(0);
     CheckCmdError();
   } else {
