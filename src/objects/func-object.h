@@ -72,23 +72,17 @@ class FuncDeclObject: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , id_(id)
       , start_node_(start_node)
-      , symbol_table_()
+      , symbol_table_{lambda?symbol_table:SymbolTableStack()}
       , params_(std::move(params))
       , default_values_(std::move(default_values))
       , variadic_(variadic)
       , lambda_(lambda) {
-    symbol_table_.Push(symbol_table.MainTable(), true);
-
     if (lambda) {
-      if (symbol_table.HasClassTable()) {
-        auto stack = symbol_table.GetUntilClassTable();
-        symbol_table_.Append(std::move(stack));
-      } else {
-        // if has function copy symbol table until the function
-        // if not, copy all stack of symbol table
-        auto stack = symbol_table.GetUntilFuncTable();
-        symbol_table_.Append(std::move(stack));
-      }
+      // if is lambda create a new symbol table on stack, it works like if stmt
+      symbol_table_.NewTable();
+    } else {
+      // if is function declaration get only the first symbol table
+      symbol_table_.Push(symbol_table.MainTable(), true);
     }
   }
 
