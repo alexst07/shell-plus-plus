@@ -955,16 +955,21 @@ ParserResult<Expression> Parser::ParserLambda() {
   std::vector<std::unique_ptr<FunctionParam>> func_params;
   bool ok = true;
 
-  std::tie(func_params, ok) = ParserParamsList();
+  if (token_ == TokenKind::COLON) {
+    // lambda without parameters
+    Advance();
+  } else {
+    std::tie(func_params, ok) = ParserParamsList();
 
-  if (token_ != TokenKind::COLON) {
-    ErrorMsg(boost::format("Expected token ':', got %1%")
-        % Token::TokenValueToStr(token_.GetValue()));
+    if (token_ != TokenKind::COLON) {
+      ErrorMsg(boost::format("Expected token ':', got %1%")
+          % Token::TokenValueToStr(token_.GetValue()));
 
-    return ParserResult<Expression>();
+      return ParserResult<Expression>();
+    }
+
+    Advance();
   }
-
-  Advance();
 
   Position pos = {token_.Line(), token_.Col()};
 
