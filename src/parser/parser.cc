@@ -636,7 +636,7 @@ ParserResult<Statement> Parser::ParserCmdPipe() {
 }
 
 bool Parser::IsIoRedirect() {
-  if (CmdValidInt() || IsIOToken(token_)) {
+  if (CmdValidInt() || IsIOToken(token_) || CmdValidAnd()) {
     return true;
   }
 
@@ -679,7 +679,7 @@ std::unique_ptr<CmdIoRedirect> Parser::ParserIoRedirectCmd() {
     integer = std::move(factory_.NewLiteral(
         token_.GetValue(), Literal::kInteger));
     Advance();
-  } else if (token_ == TokenKind::BIT_AND && IsIOToken(PeekAhead())) {
+  } else if (CmdValidAnd()) {
     // Check if the token is & follows by io token: &> or &>>
     all = true;
     Advance();

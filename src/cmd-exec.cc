@@ -169,14 +169,22 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
     close (infile);
   }
 
-  if (outfile != STDOUT_FILENO) {
+  if (outfile == errfile) {
+    // when redirect stdout and stderr to the same file
     dup2 (outfile, STDOUT_FILENO);
+    dup2 (outfile, STDERR_FILENO);
     close (outfile);
-  }
+  } else {
+    // when redirect stdout and stderr to different file
+    if (outfile != STDOUT_FILENO) {
+      dup2 (outfile, STDOUT_FILENO);
+      close (outfile);
+    }
 
-  if (errfile != STDERR_FILENO) {
-    dup2 (errfile, STDERR_FILENO);
-    close (errfile);
+    if (errfile != STDERR_FILENO) {
+      dup2 (errfile, STDERR_FILENO);
+      close (errfile);
+    }
   }
 
   std::vector<std::string> args;

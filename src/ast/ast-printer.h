@@ -378,7 +378,7 @@ class AstPrinter: public AstVisitor {
     }
 
     if (cmd_io->all()) {
-      std::cout << "&";
+      std::cout << "all(&)";
     }
 
     cmd_io->file_path_cmd()->Accept(this);

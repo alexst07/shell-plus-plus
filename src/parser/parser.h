@@ -178,10 +178,25 @@ class Parser {
   // Test if the integer inside a command should be parsed as
   // only an integer token, or it is the io output channel
   inline bool CmdValidInt() {
-    if ((token_ == TokenKind::INT_LITERAL) &&
+    if ((token_.Is(TokenKind::INT_LITERAL)) &&
         (token_.BlankAfter() == false) &&
         (PeekAhead() == TokenKind::GREATER_THAN ||
-        PeekAhead() == TokenKind::SAR)) {
+        PeekAhead() == TokenKind::SAR ||
+        PeekAhead() == TokenKind::SSAR)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // check if is redirecting all output descriptors, stdout and stderr
+  // ex: test_cmd &> file.txt
+  inline bool CmdValidAnd() {
+    if ((token_.Is(TokenKind::BIT_AND)) &&
+        (token_.BlankAfter() == false) &&
+        (PeekAhead() == TokenKind::GREATER_THAN ||
+        PeekAhead() == TokenKind::SAR ||
+        PeekAhead() == TokenKind::SSAR)) {
       return true;
     }
 
