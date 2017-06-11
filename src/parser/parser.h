@@ -167,6 +167,8 @@ class Parser {
       case TokenKind::SAR:
       case TokenKind::SSHL:
       case TokenKind::SSAR:
+      case TokenKind::GREAT_AND:
+      case TokenKind::LESS_AND:
         return true;
         break;
 
@@ -182,7 +184,8 @@ class Parser {
         (token_.BlankAfter() == false) &&
         (PeekAhead() == TokenKind::GREATER_THAN ||
         PeekAhead() == TokenKind::SAR ||
-        PeekAhead() == TokenKind::SSAR)) {
+        PeekAhead() == TokenKind::SSAR ||
+        PeekAhead() == TokenKind::GREAT_AND)) {
       return true;
     }
 
@@ -196,7 +199,8 @@ class Parser {
         (token_.BlankAfter() == false) &&
         (PeekAhead() == TokenKind::GREATER_THAN ||
         PeekAhead() == TokenKind::SAR ||
-        PeekAhead() == TokenKind::SSAR)) {
+        PeekAhead() == TokenKind::SSAR ||
+        PeekAhead() == TokenKind::GREAT_AND)) {
       return true;
     }
 

@@ -243,11 +243,13 @@ TokenStream Lexer::Scanner() {
         break;
 
       case '<':
-        // < <= << <<= <<<
+        // < <= <& << <<= <<<
         Advance();
         check_blank = c_;
         if (c_ == '=') {
           token = Select(TokenKind::LESS_EQ);
+        } else if (c_ == '<') {
+          token = Select(TokenKind::LESS_AND);
         } else if (c_ == '<') {
           Advance();
           if (c_ == '=') {
@@ -263,11 +265,13 @@ TokenStream Lexer::Scanner() {
         break;
 
       case '>':
-        // > >= >> >>= >>>
+        // > >= >& >> >>= >>>
         Advance();
         check_blank = c_;
         if (c_ == '=') {
           token = Select(TokenKind::GREATER_EQ);
+        } else if (c_ == '&') {
+          token = Select(TokenKind::GREAT_AND);
         } else if (c_ == '>') {
           Advance();
           if (c_ == '=') {

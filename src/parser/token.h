@@ -241,6 +241,8 @@ class Token {
       case TokenKind::EXCL_NOT:       // !
       case TokenKind::LESS_THAN:      // <
       case TokenKind::GREATER_THAN:   // >
+      case TokenKind::GREAT_AND:      // >&
+      case TokenKind::LESS_AND:       // <&
       case TokenKind::NWL:            // new line
       case TokenKind::SEMI_COLON:     // ;
       case TokenKind::EOS:            // eos
