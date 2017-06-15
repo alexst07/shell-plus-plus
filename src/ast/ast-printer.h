@@ -378,8 +378,10 @@ class AstPrinter: public AstVisitor {
     }
 
     if (cmd_io->all()) {
-      std::cout << "all(&)";
+      std::cout << "all(&) ";
     }
+
+    std::cout << "kind: " << token_value_str[int(cmd_io->kind())] << "\n";
 
     cmd_io->file_path_cmd()->Accept(this);
   }

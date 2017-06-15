@@ -15,6 +15,7 @@
 #ifndef SHPP_ENV_SHELL_H
 #define SHPP_ENV_SHELL_H
 
+#include <unordered_map>
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
@@ -33,6 +34,18 @@ struct CmdSharedError {
   int except_code;
   bool error;
   char err_str[SHPP_CMD_SIZE_MAX];
+};
+
+class FileDescriptorMap {
+ public:
+  FileDescriptorMap();
+
+  int& operator[](const std::string& name);
+
+  int operator[](const std::string& name) const;
+
+ private:
+  std::unordered_map<std::string, int> map_;
 };
 
 class EnvShell {
@@ -67,6 +80,10 @@ class EnvShell {
     return shmid_;
   }
 
+  FileDescriptorMap& fd_map() {
+    return fd_map_;
+  }
+
   ~EnvShell();
 
  private:
@@ -75,6 +92,7 @@ class EnvShell {
   static EnvShell *instance_;
 
   pid_t shell_pgid_;
+  FileDescriptorMap fd_map_;
   struct termios shell_tmodes_;
   int shell_terminal_;
   int shell_is_interactive_;
@@ -85,5 +103,3 @@ class EnvShell {
 }
 
 #endif  // SHPP_ENV_SHELL_H
-
-

@@ -23,6 +23,32 @@
 namespace shpp {
 namespace internal {
 
+FileDescriptorMap::FileDescriptorMap() {
+  map_["0"] =  STDIN_FILENO;
+  map_["1"] =  STDOUT_FILENO;
+  map_["2"] =  STDERR_FILENO;
+}
+
+int& FileDescriptorMap::operator[](const std::string& name) {
+  try {
+    return map_.at(name);
+  } catch (std::out_of_range& e) {
+    throw RunTimeError(RunTimeError::ErrorCode::FD_NOT_FOUND,
+                       boost::format("file descriptor '%1%' not found")
+                       %name);
+  }
+}
+
+int FileDescriptorMap::operator[](const std::string& name) const {
+  try {
+    return map_.at(name);
+  } catch (std::out_of_range& e) {
+    throw RunTimeError(RunTimeError::ErrorCode::FD_NOT_FOUND,
+                       boost::format("file descriptor '%1%' not found")
+                       %name);
+  }
+}
+
 EnvShell *EnvShell::instance_ = 0;
 
 void EnvShell::InitShell() {

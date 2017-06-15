@@ -45,6 +45,7 @@ class RunTimeError : public std::exception {
     INCOMPATIBLE_TYPE,
     FUNC_PARAMS,
     ZERO_DIV,
+    FD_NOT_FOUND,
     INVALID_OPCODE,
     FILE,
     INVALID_COMMAND,

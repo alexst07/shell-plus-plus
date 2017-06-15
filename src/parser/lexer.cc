@@ -248,7 +248,7 @@ TokenStream Lexer::Scanner() {
         check_blank = c_;
         if (c_ == '=') {
           token = Select(TokenKind::LESS_EQ);
-        } else if (c_ == '<') {
+        } else if (c_ == '&') {
           token = Select(TokenKind::LESS_AND);
         } else if (c_ == '<') {
           Advance();

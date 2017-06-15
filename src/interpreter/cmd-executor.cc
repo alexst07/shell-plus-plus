@@ -25,6 +25,7 @@
 #include "objects/str-object.h"
 #include "stmt-executor.h"
 #include "scope-executor.h"
+#include "env-shell.h"
 #include "utils/scope-exit.h"
 #include "objects/obj-type.h"
 #include "parser/extract_expr.h"
@@ -423,22 +424,29 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
 
     std::string file_name = FileName(this, l->file_path_cmd());
 
-    if (l->kind() == TokenKind::GREATER_THAN) {
+    if (l->kind() == TokenKind::GREATER_THAN)/* > */{
       fd = CreateFile(file_name);
-    } else if (l->kind() == TokenKind::SAR) {
+    } else if (l->kind() == TokenKind::SAR)/* >> */{
       fd = AppendFile(file_name);
-    } else if (l->kind() == TokenKind::LESS_THAN) {
+    } else if (l->kind() == TokenKind::LESS_THAN)/* < */{
       fd = ReadFile(file_name);
       job.stdin_ = fd;
-    } else if (l->kind() == TokenKind::SHL) {
+    } else if (l->kind() == TokenKind::SHL)/* << */{
       // when o redirect operator is <<, the string is used in stdin
       // so, the new lines or space must be keept, insted of file names
       // where we maust execute a trim operation
       file_name = FileName(this, l->file_path_cmd(), false);
       fd = Str2Pipe(file_name);
       job.stdin_ = fd;
-    } else if (l->kind() == TokenKind::SSHL) {
+    } else if (l->kind() == TokenKind::SSHL)/* <<< */{
       fd = Var2Pipe(file_name);
+      job.stdin_ = fd;
+    } else if (l->kind() == TokenKind::GREAT_AND)/* >& */{
+      FileDescriptorMap& fd_map = EnvShell::instance()->fd_map();
+      fd = fd_map[file_name];
+    } else if (l->kind() == TokenKind::LESS_AND)/* <& */{
+      FileDescriptorMap& fd_map = EnvShell::instance()->fd_map();
+      fd = fd_map[file_name];
       job.stdin_ = fd;
     }
 
@@ -456,7 +464,8 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
         }
       } else {
         if (l->kind() == TokenKind::GREATER_THAN ||
-            l->kind() == TokenKind::SAR) {
+            l->kind() == TokenKind::SAR ||
+            l->kind() == TokenKind::GREAT_AND) {
           job.stdout_ = fd;
         }
       }

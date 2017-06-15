@@ -145,6 +145,8 @@ struct Process {
 
   char** FillArgv(const std::vector<std::string>& args);
 
+  void CloseFileDescriptor(int fd);
+
   std::vector<std::string> args_;
   pid_t pid_;
   bool completed_;

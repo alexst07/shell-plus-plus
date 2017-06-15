@@ -131,6 +131,12 @@ Process& Process::operator=(Process&& p) {
   return *this;
 }
 
+void Process::CloseFileDescriptor(int fd) {
+  if (fd != STDOUT_FILENO && fd != STDERR_FILENO) {
+    close(fd);
+  }
+}
+
 void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
                             bool foreground) {
   pid_t pid;
@@ -165,25 +171,31 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
 
   // set the standard input/output channels of the new process
   if (infile != STDIN_FILENO) {
-    dup2 (infile, STDIN_FILENO);
-    close (infile);
+    dup2(infile, STDIN_FILENO);
+    CloseFileDescriptor(infile);
   }
 
   if (outfile == errfile) {
     // when redirect stdout and stderr to the same file
-    dup2 (outfile, STDOUT_FILENO);
-    dup2 (outfile, STDERR_FILENO);
-    close (outfile);
+    if (errfile != STDERR_FILENO) {
+      dup2(errfile, STDERR_FILENO);
+    }
+
+    if (outfile != STDOUT_FILENO) {
+      dup2(outfile, STDOUT_FILENO);
+    }
+
+    CloseFileDescriptor(outfile);
   } else {
     // when redirect stdout and stderr to different file
     if (outfile != STDOUT_FILENO) {
-      dup2 (outfile, STDOUT_FILENO);
-      close (outfile);
+      dup2(outfile, STDOUT_FILENO);
+      CloseFileDescriptor(outfile);
     }
 
     if (errfile != STDERR_FILENO) {
-      dup2 (errfile, STDERR_FILENO);
-      close (errfile);
+      dup2(errfile, STDERR_FILENO);
+      CloseFileDescriptor(errfile);
     }
   }
 
