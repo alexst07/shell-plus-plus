@@ -27,7 +27,7 @@ ObjectPtr PrintFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
     std::cout << e->Print();
   }
 
-  std::cout << "\n";
+  std::cout << std::endl;
 
   return obj_factory_.NewNull();
 }
@@ -37,7 +37,7 @@ ObjectPtr PrintErrFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
     std::cerr << e->Print();
   }
 
-  std::cerr << "\n";
+  std::cerr << std::endl;
 
   return obj_factory_.NewNull();
 }
