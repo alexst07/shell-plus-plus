@@ -99,6 +99,8 @@ class BoolObject: public Object {
 
   ObjectPtr ObjBool() override;
 
+  ObjectPtr ObjCmd() override;
+
   ObjectPtr Equal(ObjectPtr obj) override;
 
   ObjectPtr NotEqual(ObjectPtr obj) override;
@@ -192,6 +194,8 @@ class IntObject: public Object {
   ObjectPtr UnaryAdd() override;
 
   ObjectPtr UnarySub() override;
+
+  ObjectPtr ObjCmd() override;
 
   std::string Print() override {
     return std::to_string(value_);
@@ -352,6 +356,8 @@ class RealObject: public Object {
 
     return value_ == value;
   }
+
+  ObjectPtr ObjCmd() override;
 
   ObjectPtr OperationObj(ObjectPtr obj, int op);
 

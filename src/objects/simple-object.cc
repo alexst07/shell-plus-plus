@@ -67,6 +67,11 @@ ObjectPtr BoolObject::ObjBool() {
   return obj_factory.NewBool(value_);
 }
 
+ObjectPtr BoolObject::ObjCmd() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(value_?"true":"false");
+}
+
 ObjectPtr BoolObject::Equal(ObjectPtr obj) {
   ObjectFactory obj_factory(symbol_table_stack());
 
@@ -184,6 +189,11 @@ ObjectPtr IntObject::ObjReal() {
   ObjectPtr obj_real(obj_factory.NewReal(v));
 
   return obj_real;
+}
+
+ObjectPtr IntObject::ObjCmd() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(std::to_string(value_));
 }
 
 ObjectPtr IntObject::ObjString() {
@@ -381,6 +391,11 @@ ObjectPtr RealObject::ObjString() {
   ObjectPtr obj_str(obj_factory.NewString(v));
 
   return obj_str;
+}
+
+ObjectPtr RealObject::ObjCmd() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewString(std::to_string(value_));
 }
 
 ObjectPtr RealObject::OperationObjComp(ObjectPtr obj, int op) {
