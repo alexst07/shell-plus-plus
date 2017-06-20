@@ -43,12 +43,18 @@ ObjectPtr PrintErrFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr ReadFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
+  SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 1, read)
+
+  if (params.size()  == 1) {
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[0], prompt, STRING)
+    std::cout << static_cast<StringObject&>(*params[0]).value();
+  }
 
   std::string str;
 
-  std::cout << static_cast<StringObject&>(*params[0]).value();
-  std::cin >> str;
+  if (!(std::cin >> str)) {
+    return obj_factory_.NewNull();
+  }
 
   return obj_factory_.NewString(str);
 }
