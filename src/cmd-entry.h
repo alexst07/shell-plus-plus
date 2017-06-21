@@ -116,5 +116,3 @@ private:
 }
 
 #endif  // SHPP_CMD_ENTRY_H
-
-

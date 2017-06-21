@@ -314,8 +314,10 @@ class AstNodeFactory {
         std::move(id), std::move(block), fn_pos_()));
   }
 
-  inline std::unique_ptr<SubShell> NewSubShell(std::unique_ptr<Block> block) {
-    return std::unique_ptr<SubShell>(new SubShell(std::move(block), fn_pos_()));
+  inline std::unique_ptr<SubShell> NewSubShell(std::unique_ptr<Block> block,
+      bool self_process) {
+    return std::unique_ptr<SubShell>(new SubShell(std::move(block),
+      self_process, fn_pos_()));
   }
 
   inline std::unique_ptr<Slice> NewSlice(std::unique_ptr<Expression> start_exp,

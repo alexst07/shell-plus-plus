@@ -32,82 +32,6 @@
 namespace shpp {
 namespace internal {
 
-typedef std::vector<std::string> SimpleCmdData;
-
-struct CmdIoData {
-  using ObjectRef = std::reference_wrapper<ObjectPtr>;
-
-  enum class Direction {
-    IN,
-    IN_VARIABLE,
-    OUT,
-    OUT_APPEND,
-    OUT_VARIABLE
-  };
-
-  // it is handle as file or variable content depending
-  // of direction option
-  boost::variant<std::string, ObjectRef> content_;
-  bool all_;
-  int n_iface_;
-  Direction in_out_;
-};
-
-typedef std::list<CmdIoData> CmdIoListData;
-
-struct CmdIoRedirectData {
-  CmdIoListData io_list_;
-  SimpleCmdData cmd_;
-};
-
-class CmdPipeListData {
- public:
-  CmdPipeListData() = default;
-  ~CmdPipeListData() = default;
-
-  void Push(CmdIoRedirectData&& cmd) {
-    boost::variant<CmdIoRedirectData, std::string> v(std::move(cmd));
-    pipe_list_.push_back(std::move(v));
-  }
-
-  void Push(std::string&& cmd) {
-    boost::variant<CmdIoRedirectData, std::string> v(std::move(cmd));
-    pipe_list_.push_back(std::move(v));
-  }
-
- private:
-  std::vector<boost::variant<CmdIoRedirectData, std::string>> pipe_list_;
-};
-
-class CmdOperationData {
- public:
-  enum class Operation {
-    AND,
-    OR
-  };
-
-  CmdOperationData() = default;
-  ~CmdOperationData() = default;
-
-  void Push(CmdPipeListData&& cmd1, CmdPipeListData&& cmd2, Operation op) {
-    cmd_.push(std::move(cmd1));
-    cmd_.push(std::move(cmd2));
-    op_.push(op);
-  }
-
-  std::stack<CmdPipeListData> cmd_;
-  std::stack<Operation> op_;
-};
-
-
-typedef boost::variant<SimpleCmdData, CmdIoRedirectData,
-    CmdPipeListData, CmdOperationData> CmdData;
-
-struct CmdTable {
-  CmdData cmd_;
-  bool expr_;
-};
-
 class Arguments {
  public:
   Arguments(std::vector<std::string>&& args);
@@ -120,72 +44,133 @@ class Arguments {
   void Process();
  private:
   glob_t globbuf_;
-  std::vector<std::string>&& args_;
   char **argv_;
   bool aloc_glob_;
 };
 
-struct Process {
-  Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args);
+class ProcessBase {
+ public:
+  ProcessBase(SymbolTableStack& sym_tab, std::vector<std::string>&& args,
+      Executor* parent);
 
-  ~Process() = default;
+  virtual ~ProcessBase() = default;
 
-  Process(const Process& p);
+  ProcessBase(const ProcessBase& p) = delete;
 
-  Process& operator=(const Process& p);
+  ProcessBase& operator=(const ProcessBase& p) = delete;
 
-  Process(Process&& p);
+  ProcessBase(ProcessBase&& p) = delete;
 
-  Process& operator=(Process&& p);
+  ProcessBase& operator=(ProcessBase& p) = delete;
 
-  void LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
-                     bool foreground);
+  ProcessBase& operator=(ProcessBase&& p) = delete;
 
-  void LaunchCmd(CmdEntryPtr cmd, std::vector<std::string>&& args);
+  virtual void LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
+                     bool foreground) = 0;
 
-  char** FillArgv(const std::vector<std::string>& args);
+  virtual const std::vector<std::string>& Args() const;
 
-  void CloseFileDescriptor(int fd);
+  virtual std::vector<std::string>& Args();
 
+  virtual pid_t pid() const;
+
+  virtual ProcessBase& pid(pid_t v);
+
+  virtual bool completed() const;
+
+  virtual ProcessBase& completed(bool v);
+
+  virtual bool stopped() const;
+
+  virtual ProcessBase& stopped(bool v);
+
+  virtual int status() const;
+
+  virtual ProcessBase& status(int v);
+
+ protected:
+  inline SymbolTableStack& sym_tab() {
+    return sym_tab_;
+  }
+
+  inline Executor* parent() {
+    return parent_;
+  }
+
+ private:
   std::vector<std::string> args_;
+  SymbolTableStack sym_tab_;
   pid_t pid_;
   bool completed_;
   bool stopped_;
   int status_;
   Executor* parent_;
-  SymbolTableStack sym_tab_;
 };
 
+class Process: public ProcessBase {
+ public:
+  Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args,
+      Executor* parent);
 
-struct Job {
+  ~Process() = default;
+
+  void LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
+                     bool foreground) override;
+
+ private:
+  void LaunchCmd(CmdEntryPtr cmd, std::vector<std::string>&& args);
+
+  char** FillArgv(const std::vector<std::string>& args);
+};
+
+class ProcessSubShell: public ProcessBase {
+ public:
+  ProcessSubShell(SymbolTableStack& sym_tab, SubShell* sub_shell,
+      Executor* parent);
+
+  ~ProcessSubShell() = default;
+
+  void LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
+                     bool foreground) override;
+
+ private:
+  SubShell* sub_shell_;
+};
+
+class Job {
+ public:
   Job(SymbolTableStack& sym_tab, bool var_out_mode = false)
       : status_(0)
       , var_out_mode_(var_out_mode)
       , pgid_(0)
       , sym_tab_(sym_tab.MainTable()) {}
 
+  int Status();
   void LaunchJob (int foreground);
+  Job& Stdin(int stdin);
+  Job& Stdout(int stdout);
+  Job& Stderr(int stderr);
+  Job& AddProcess(std::unique_ptr<ProcessBase>&& p);
+
+ private:
   int MarkProcessStatus(pid_t pid, int status);
   bool JobIsStopped();
   bool JobIsCompleted();
   void WaitForJob();
-  int Status();
   void PutJobInForeground(int cont);
   void PutJobInBackground(int cont);
   void LaunchInternalCmd(CmdEntryPtr cmd);
-
   // check if there was some error on command execution
   // and throw an exception is it was happens
   void CheckCmdError();
 
-  std::vector<Process> process_;
+  std::vector<std::unique_ptr<ProcessBase>> process_;
   int stdin_, stdout_, stderr_;
   std::string strout_, strerr_;
   bool var_out_mode_;
   bool wait_;
   int status_;
   int shell_terminal_;
-  int shell_is_interactive_;
   pid_t pgid_;
   int shell_pgid_;
   struct termios tmodes_;

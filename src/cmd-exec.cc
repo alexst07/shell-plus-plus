@@ -23,27 +23,28 @@
 #include <sys/shm.h>
 
 #include "interpreter/cmd-executor.h"
+#include "interpreter/scope-executor.h"
+#include "utils/scope-exit.h"
 
 namespace shpp {
 namespace internal {
 
 Arguments::Arguments(std::vector<std::string>&& args)
-    : args_(std::move(args))
-    , aloc_glob_(false) {
-  if (args_.size() > 1) {
+    : aloc_glob_(false) {
+  if (args.size() > 1) {
     globbuf_.gl_offs = 1;
     int flag = GLOB_NOMAGIC | GLOB_BRACE | GLOB_TILDE | GLOB_DOOFFS;
 
-    for (int i = 1; i < args_.size(); i++) {
+    for (int i = 1; i < args.size(); i++) {
       if (i > 1) {
         flag |= GLOB_APPEND;
       }
 
-      glob(args_[i].c_str(), flag, nullptr, &globbuf_);
+      glob(args[i].c_str(), flag, nullptr, &globbuf_);
       aloc_glob_ = true;
     }
 
-    globbuf_.gl_pathv[0] = const_cast<char*>(args_[0].c_str());
+    globbuf_.gl_pathv[0] = const_cast<char*>(args[0].c_str());
 
     // globbuf_.gl_pathc don't count the offset, so we need plus one
     // on the memory allocation, on the loop and in the nullptr assignment
@@ -58,7 +59,7 @@ Arguments::Arguments(std::vector<std::string>&& args)
   }
 
   argv_ = new char*[2];
-  argv_[0] = const_cast<char*>(args_[0].c_str());
+  argv_[0] = const_cast<char*>(args[0].c_str());
   argv_[1] = nullptr;
 }
 
@@ -87,55 +88,60 @@ std::vector<std::string> Arguments::args() {
   return arg_vec;
 }
 
-Process::Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args)
-    : args_(std::move(args)), sym_tab_(sym_tab.MainTable())
+ProcessBase::ProcessBase(SymbolTableStack& sym_tab,
+    std::vector<std::string>&& args, Executor* parent)
+    : args_(std::move(args))
+    , sym_tab_(sym_tab.MainTable())
     , completed_(false)
-    , stopped_(false) {}
+    , stopped_(false)
+    , parent_(parent) {}
 
-Process::Process(const Process& p): sym_tab_(p.sym_tab_) {
-  args_ = p.args_;
-  pid_ = p.pid_;
-  completed_ = p.completed_;
-  stopped_ = p.stopped_;
-  status_ = p.status_;
+const std::vector<std::string>& ProcessBase::Args() const {
+  return args_;
 }
 
-Process& Process::operator=(const Process& p) {
-  args_ = p.args_;
-  pid_ = p.pid_;
-  completed_ = p.completed_;
-  stopped_ = p.stopped_;
-  status_ = p.status_;
-  sym_tab_ = p.sym_tab_;
+std::vector<std::string>& ProcessBase::Args() {
+  return args_;
+}
 
+pid_t ProcessBase::pid() const {
+  return pid_;
+}
+
+ProcessBase& ProcessBase::pid(pid_t v) {
+  pid_ = v;
   return *this;
 }
 
-Process::Process(Process&& p) {
-  args_ = std::move(p.args_);
-  pid_ = p.pid_;
-  completed_ = p.completed_;
-  stopped_ = p.stopped_;
-  status_ = p.status_;
-  sym_tab_ = std::move(p.sym_tab_);
+bool ProcessBase::completed() const {
+  return completed_;
 }
 
-Process& Process::operator=(Process&& p) {
-  args_ = std::move(p.args_);
-  pid_ = p.pid_;
-  completed_ = p.completed_;
-  stopped_ = p.stopped_;
-  status_ = p.status_;
-  sym_tab_ = std::move(p.sym_tab_);
-
+ProcessBase& ProcessBase::completed(bool v) {
+  completed_ = v;
   return *this;
 }
 
-void Process::CloseFileDescriptor(int fd) {
-  if (fd != STDOUT_FILENO && fd != STDERR_FILENO) {
-    close(fd);
-  }
+bool ProcessBase::stopped() const {
+  return stopped_;
 }
+
+ProcessBase& ProcessBase::stopped(bool v) {
+  stopped_ = v;
+  return *this;
+}
+
+int ProcessBase::status() const {
+  return status_;
+}
+
+ProcessBase& ProcessBase::status(int v) {
+  status_ = v;
+  return *this;
+}
+
+Process::Process(SymbolTableStack& sym_tab, std::vector<std::string>&& args,
+    Executor* parent):ProcessBase(sym_tab, std::move(args), parent) {}
 
 inline void Tcsetpgrp(pid_t pid) {
   // executes only when called from main process
@@ -153,7 +159,13 @@ inline void Tcsetattr(struct termios* tmodes) {
   }
 }
 
-void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
+inline void CloseFileDescriptor(int fd) {
+  if (fd != STDOUT_FILENO && fd != STDERR_FILENO) {
+    close(fd);
+  }
+}
+
+void SetUpFilesDescriptor(int infile, int outfile, int errfile, pid_t pgid,
                             bool foreground) {
   pid_t pid;
   int shell_terminal = EnvShell::instance()->shell_terminal();
@@ -214,24 +226,29 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
       CloseFileDescriptor(errfile);
     }
   }
+}
+
+void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
+                            bool foreground) {
+  SetUpFilesDescriptor(infile, outfile, errfile, pgid, foreground);
 
   std::vector<std::string> args;
 
-  if (sym_tab_.ExistsCmdAlias(args_[0])) {
-    args = sym_tab_.GetCmdAlias(args_[0]);
+  if (sym_tab().ExistsCmdAlias(Args()[0])) {
+    args = sym_tab().GetCmdAlias(Args()[0]);
 
     // append arguments
-    for (size_t i = 1; i < args_.size(); i++) {
-      args.push_back(args_[i]);
+    for (size_t i = 1; i < Args().size(); i++) {
+      args.push_back(Args()[i]);
     }
   } else {
     // append arguments
-    for (auto& e: args_) {
+    for (auto& e: Args()) {
       args.push_back(e);
     }
   }
 
-  CmdEntryPtr cmd = sym_tab_.LookupCmd(args[0]);
+  CmdEntryPtr cmd = sym_tab().LookupCmd(args[0]);
 
   CmdSharedError *err = (CmdSharedError*)
       shmat(EnvShell::instance()->shmid(), 0, 0);
@@ -276,7 +293,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
 }
 
 void Process::LaunchCmd(CmdEntryPtr cmd, std::vector<std::string>&& args) {
-  cmd->Exec(parent_, std::move(args));
+  cmd->Exec(parent(), std::move(args));
 }
 
 char** Process::FillArgv(const std::vector<std::string>& args) {
@@ -292,15 +309,46 @@ char** Process::FillArgv(const std::vector<std::string>& args) {
   return argv;
 }
 
+ProcessSubShell::ProcessSubShell(SymbolTableStack& sym_tab, SubShell* sub_shell,
+    Executor* parent)
+    : ProcessBase(sym_tab, std::move(std::vector<std::string>()), parent)
+    , sub_shell_(sub_shell) {}
+
+void ProcessSubShell::LaunchProcess(int infile, int outfile, int errfile,
+    pid_t pgid, bool foreground) {
+  SetUpFilesDescriptor(infile, outfile, errfile, pgid, foreground);
+
+  // create a simple symbol table
+  SymbolTablePtr table = SymbolTable::Create();
+
+  // push a simple symbol table to stack
+  sym_tab().Push(table);
+
+  BlockExecutor executor(parent(), sym_tab());
+
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    executor.ExecuteDeferStack();
+    sym_tab().Pop();
+  });
+  IgnoreUnused(cleanup);
+
+  // executes the block of sub-shell
+  executor.Exec(sub_shell_->block());
+
+  exit(0);
+}
+
 int Job::MarkProcessStatus(pid_t pid, int status) {
   if (pid > 0) {
     for (auto& p: process_) {
-      if (p.pid_ == pid) {
-        p.status_ = status;
+      if (p->pid() == pid) {
+        p->status(status);
+
         if (WIFSTOPPED (status)) {
-          p.stopped_ = true;
+          p->stopped(true);
         } else {
-          p.completed_ = true;
+          p->completed(true);
         }
         return 0;
       }
@@ -313,9 +361,28 @@ int Job::MarkProcessStatus(pid_t pid, int status) {
   return -1;
 }
 
+Job& Job::Stdin(int stdin) {
+  stdin_ = stdin;
+  return *this;
+}
+
+Job& Job::Stdout(int stdout) {
+  stdout_ = stdout;
+  return *this;
+}
+
+Job& Job::Stderr(int stderr) {
+  stderr_ = stderr;
+  return *this;
+}
+
+Job& Job::AddProcess(std::unique_ptr<ProcessBase>&& p) {
+  process_.push_back(std::move(p));
+}
+
 bool Job::JobIsStopped() {
   for (auto& p: process_) {
-    if (!p.completed_ && !p.stopped_) {
+    if (!p->completed() && !p->stopped()) {
       return false;
     }
   }
@@ -325,7 +392,7 @@ bool Job::JobIsStopped() {
 
 bool Job::JobIsCompleted() {
   for (auto& p: process_) {
-    if (!p.completed_) {
+    if (!p->completed()) {
       return false;
     }
   }
@@ -354,7 +421,7 @@ int Job::Status() {
   int status = 0;
 
   for (auto& p: process_) {
-    status |= p.status_;
+    status |= p->status();
   }
 
   return status;
@@ -403,7 +470,7 @@ void Job::PutJobInBackground(int cont) {
 void Job::LaunchInternalCmd(CmdEntryPtr cmd) {
   static_cast<CmdInEntry&>(*cmd).SetStdFd(stdout_, stderr_, stdin_);
 
-  Arguments glob_args(std::move(process_[0].args_));
+  Arguments glob_args(std::move(process_[0]->Args()));
 
   cmd->Exec(parent_, std::move(glob_args.args()));
 
@@ -426,12 +493,17 @@ void Job::LaunchJob(int foreground) {
   // executes commands that change self process status
   // commands like cd and exit must be executed this way
   if (process_.size() == 1) {
-    CmdEntryPtr cmd = sym_tab_.LookupCmd(process_[0].args_[0]);
+    // sub-shell has size of args equal to 0, so if it is not
+    // a sub-shell so try to check if it is a buitin command
+    if (process_[0]->Args().size() > 0) {
+      CmdEntryPtr cmd = sym_tab_.LookupCmd(process_[0]->Args()[0]);
 
-    if (cmd) {
-      if (cmd->type() == CmdEntry::Type::kIn) {
-        LaunchInternalCmd(cmd);
-        return;
+      if (cmd) {
+        if (cmd->type() == CmdEntry::Type::kIn) {
+          // execute the builtin command without fork a new process
+          LaunchInternalCmd(cmd);
+          return;
+        }
       }
     }
   }
@@ -458,14 +530,14 @@ void Job::LaunchJob(int foreground) {
     pid = fork ();
     if (pid == 0) {
       // this is the child process
-      process_[i].LaunchProcess(infile, outfile, stderr_, pgid_, foreground);
+      process_[i]->LaunchProcess(infile, outfile, stderr_, pgid_, foreground);
     } else if (pid < 0) {
       // the fork failed
       perror ("fork");
       exit (1);
     } else {
       // this is the parent process
-      process_[i].pid_ = pid;
+      process_[i]->pid(pid);
       int shell_is_interactive = isatty(shell_terminal);
 
       if (shell_is_interactive) {

@@ -612,7 +612,9 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitSubShell(SubShell* sub_shell) {
     Level();
-    std::cout << "<sub_shell>\n";
+    std::cout << "<sub_shell self-process:"
+      << sub_shell->self_process()
+      << ">\n";
     level_++;
     sub_shell->block()->Accept(this);
     level_--;

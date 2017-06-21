@@ -75,6 +75,11 @@ try {
       return ExecSimpleCmdWithResult(static_cast<SimpleCmd*>(node));
     } break;
 
+    case AstNode::NodeType::kSubShell: {
+      SubShellExecutor sub_shell(this, symbol_table_stack());
+      return sub_shell.Exec(static_cast<SubShell*>(node));
+    } break;
+
     case AstNode::NodeType::kCmdIoRedirectList: {
       CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
       return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node));
@@ -163,6 +168,11 @@ try {
       return ExecSimpleCmd(static_cast<SimpleCmd*>(node), background);
     } break;
 
+    case AstNode::NodeType::kSubShell: {
+      SubShellExecutor sub_shell(this, symbol_table_stack());
+      return sub_shell.Exec(static_cast<SubShell*>(node), background);
+    } break;
+
     case AstNode::NodeType::kCmdIoRedirectList: {
       CmdIoRedirectListExecutor cmd_io(this, symbol_table_stack());
       return cmd_io.Exec(static_cast<CmdIoRedirectList*>(node), background);
@@ -208,13 +218,14 @@ int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool background) {
   std::vector<std::string> cmd_args = simple_cmd.Exec(node);
 
   Job job(symbol_table_stack());
-  Process p(symbol_table_stack(), std::move(cmd_args));
-  job.process_.push_back(p);
-  job.shell_is_interactive_ = 0;
-  job.stderr_ = STDERR_FILENO;
-  job.stdout_ = STDOUT_FILENO;
-  job.stdin_ = STDIN_FILENO;
-  job.LaunchJob(!background);
+  std::unique_ptr<Process> p(new Process(symbol_table_stack(),
+      std::move(cmd_args), this));
+
+  job.AddProcess(std::move(p))
+      .Stderr(STDERR_FILENO)
+      .Stdout(STDOUT_FILENO)
+      .Stdin(STDIN_FILENO)
+      .LaunchJob(!background);
 
   if (!background) {
     return job.Status();
@@ -242,14 +253,15 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
   SetFdAsync(pipettes[WRITE]);
   SetFdAsync(pipe_err[WRITE]);
 
+  std::unique_ptr<Process> p(new Process(symbol_table_stack(),
+      std::move(cmd_args), this));
+
   Job job(symbol_table_stack());
-  Process p(symbol_table_stack(), std::move(cmd_args));
-  job.process_.push_back(p);
-  job.shell_is_interactive_ = 0;
-  job.stderr_ = pipe_err[WRITE];
-  job.stdout_ = pipettes[WRITE];
-  job.stdin_ = STDIN_FILENO;
-  job.LaunchJob(true);
+  job.Stdout(pipettes[WRITE])
+      .Stdin(STDIN_FILENO)
+      .Stderr(pipe_err[WRITE])
+      .AddProcess(std::move(p))
+      .LaunchJob(true);
 
   std::string str_out;
   std::string str_err;
@@ -336,6 +348,60 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
   }
 
   return cmd;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+int SubShellExecutor::Exec(SubShell *node, bool background) {
+  Job job(symbol_table_stack());
+  std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
+      node, this));
+
+  job.AddProcess(std::move(p))
+      .Stderr(STDERR_FILENO)
+      .Stdout(STDOUT_FILENO)
+      .Stdin(STDIN_FILENO)
+      .LaunchJob(!background);
+
+  if (!background) {
+    return job.Status();
+  } else {
+    // if not background, return as process success
+    return 0;
+  }
+}
+
+CmdExprData SubShellExecutor::Exec(SubShell *node) {
+  const int READ = 0;
+  const int WRITE = 1;
+
+  int pipettes[2];
+  int pipe_err[2];
+
+  pipe(pipettes);
+  pipe(pipe_err);
+
+  SetFdAsync(pipettes[WRITE]);
+  SetFdAsync(pipe_err[WRITE]);
+
+  std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
+      node, this));
+
+  Job job(symbol_table_stack());
+  job.Stdout(pipettes[WRITE])
+      .Stdin(STDIN_FILENO)
+      .Stderr(pipe_err[WRITE])
+      .AddProcess(std::move(p))
+      .LaunchJob(true);
+
+  std::string str_out;
+  std::string str_err;
+
+  std::tie(str_out, str_err) = ReadPipe(pipettes[READ], pipe_err[READ]);
+
+  close(pipettes[READ]);
+  close(pipe_err[READ]);
+
+  return CmdExprData(job.Status(), str_out, str_err);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,49 +499,57 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
       fd = AppendFile(file_name);
     } else if (l->kind() == TokenKind::LESS_THAN)/* < */{
       fd = ReadFile(file_name);
-      job.stdin_ = fd;
+      job.Stdin(fd);
     } else if (l->kind() == TokenKind::SHL)/* << */{
       // when o redirect operator is <<, the string is used in stdin
       // so, the new lines or space must be keept, insted of file names
       // where we maust execute a trim operation
       file_name = FileName(this, l->file_path_cmd(), false);
       fd = Str2Pipe(file_name);
-      job.stdin_ = fd;
+      job.Stdin(fd);
     } else if (l->kind() == TokenKind::SSHL)/* <<< */{
       fd = Var2Pipe(file_name);
-      job.stdin_ = fd;
+      job.Stdin(fd);
     } else if (l->kind() == TokenKind::GREAT_AND)/* >& */{
       FileDescriptorMap& fd_map = EnvShell::instance()->fd_map();
       fd = fd_map[file_name];
     } else if (l->kind() == TokenKind::LESS_AND)/* <& */{
       FileDescriptorMap& fd_map = EnvShell::instance()->fd_map();
       fd = fd_map[file_name];
-      job.stdin_ = fd;
+      job.Stdin(fd);
     }
 
     if (l->all()) {
-      job.stdout_ = fd;
-      job.stderr_ = fd;
+      job.Stdout(fd).Stderr(fd);
     } else {
       if (l->has_integer()) {
         int num = GetInteger(l->integer());
         // 2 is the error interface
         if (num == 2) {
-          job.stderr_ = fd;
+          job.Stderr(fd);
         } else if (num == 1) {
-          job.stdout_ = fd;
+          job.Stdout(fd);
         }
       } else {
         if (l->kind() == TokenKind::GREATER_THAN ||
             l->kind() == TokenKind::SAR ||
             l->kind() == TokenKind::GREAT_AND) {
-          job.stdout_ = fd;
+          job.Stdout(fd);
         }
       }
     }
   }
 
-  // io command can only have simple command
+  // io command can have simple command or sub-shell
+  if (node->cmd()->type() == AstNode::NodeType::kSubShell) {
+    std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
+        static_cast<SubShell*>(node->cmd()), this));
+    job.AddProcess(std::move(p));
+
+    return;
+  }
+
+  // handle simple command
   if (node->cmd()->type() != AstNode::NodeType::kSimpleCmd) {
     throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                        boost::format("invalid command ast"));
@@ -485,17 +559,17 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
   std::vector<std::string> cmd_args = simple_cmd.Exec(static_cast<SimpleCmd*>(
       node->cmd()));
 
-  Process p(symbol_table_stack(), std::move(cmd_args));
-  job.process_.push_back(std::move(p));
+  std::unique_ptr<Process> p(new Process(symbol_table_stack(),
+      std::move(cmd_args), this));
+  job.AddProcess(std::move(p));
 }
 
 int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
   // starts job struct
   Job job(symbol_table_stack());
-  job.shell_is_interactive_ = 0;
-  job.stderr_ = STDERR_FILENO;
-  job.stdout_ = STDOUT_FILENO;
-  job.stdin_ = STDIN_FILENO;
+  job.Stderr(STDERR_FILENO)
+      .Stdout(STDOUT_FILENO)
+      .Stdin(STDIN_FILENO);
 
   PrepareData(job, node);
   job.LaunchJob(!background);
@@ -518,10 +592,9 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
   SetFdAsync(pipe_err[WRITE]);
 
   Job job(symbol_table_stack());
-  job.shell_is_interactive_ = 0;
-  job.stderr_ = pipe_err[WRITE];
-  job.stdout_ = pipettes[WRITE];
-  job.stdin_ = STDIN_FILENO;
+  job.Stderr(pipe_err[WRITE])
+      .Stdout(pipettes[WRITE])
+      .Stdin(STDIN_FILENO);
 
   PrepareData(job, node);
   job.LaunchJob(true);
@@ -539,6 +612,15 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
 ////////////////////////////////////////////////////////////////////////////////
 
 void CmdPipeSequenceExecutor::AddCommand(Job& job, Cmd* cmd) {
+  // handle sub-shell command
+  if (cmd->type() == AstNode::NodeType::kSubShell) {
+    std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
+        static_cast<SubShell*>(cmd), this));
+    job.AddProcess(std::move(p));
+
+    return;
+  }
+
   // io command can only have simple command
   if (cmd->type() != AstNode::NodeType::kSimpleCmd) {
     throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
@@ -549,8 +631,9 @@ void CmdPipeSequenceExecutor::AddCommand(Job& job, Cmd* cmd) {
   std::vector<std::string> cmd_args =
       simple_cmd.Exec(static_cast<SimpleCmd*>(cmd));
 
-  Process p(symbol_table_stack(), std::move(cmd_args));
-  job.process_.push_back(std::move(p));
+  std::unique_ptr<Process> p(new Process(symbol_table_stack(),
+      std::move(cmd_args), this));
+  job.AddProcess(std::move(p));
 }
 
 void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
@@ -571,10 +654,9 @@ void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
 
 int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
   Job job(symbol_table_stack());
-  job.shell_is_interactive_ = 0;
-  job.stderr_ = STDERR_FILENO;
-  job.stdout_ = STDOUT_FILENO;
-  job.stdin_ = STDIN_FILENO;
+  job.Stderr(STDERR_FILENO)
+      .Stdout(STDOUT_FILENO)
+      .Stdin(STDIN_FILENO);
 
   PopulateCmd(job, node);
 
@@ -597,13 +679,11 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
   SetFdAsync(pipe_err[WRITE]);
 
   Job job(symbol_table_stack());
-  job.shell_is_interactive_ = 0;
-  job.stdin_ = STDIN_FILENO;
+  job.Stdin(STDIN_FILENO);
 
   PopulateCmd(job, node);
 
-  job.stderr_ = pipe_err[WRITE];
-  job.stdout_ = pipettes[WRITE];
+  job.Stderr(pipe_err[WRITE]).Stdout(pipettes[WRITE]);
 
   job.LaunchJob(true);
 

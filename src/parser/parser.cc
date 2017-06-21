@@ -643,6 +643,22 @@ bool Parser::IsIoRedirect() {
   return false;
 }
 
+ParserResult<Statement> Parser::ParserSubShell() {
+  Advance();
+
+  bool self_process = false;
+
+  if (token_ == TokenKind::BIT_AND) {
+    self_process = true;
+    Advance();
+  }
+
+  ParserResult<Statement> block(ParserBlock());
+
+  return ParserResult<Statement>(factory_.NewSubShell(block.MoveAstNode<Block>(),
+      self_process));
+}
+
 ParserResult<Statement> Parser::ParserIoRedirectCmdList() {
   ParserResult<Statement> simple_cmd(ParserSimpleCmd());
 
@@ -721,6 +737,11 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
   std::vector<std::unique_ptr<AstNode>> pieces;
 
   ValidToken();
+
+  // parser subshell if key word sub in found
+  if (token_ == TokenKind::KW_SHELL) {
+    return ParserSubShell();
+  }
 
   int num_pieces = 0;
   while (!IsCmdStopPoint()) {

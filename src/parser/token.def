@@ -103,6 +103,7 @@ STMT_KEYWORD(WHERE,         "where")
 STMT_KEYWORD(DEL,           "del")
 STMT_KEYWORD(CATCH,         "catch")
 STMT_KEYWORD(FROM,          "from")
+STMT_KEYWORD(SHELL,         "shell")
 
 // Expression keywords.
 KEYWORD(AS,                 "as")

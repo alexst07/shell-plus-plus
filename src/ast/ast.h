@@ -754,14 +754,20 @@ class SubShell: public Cmd {
   return block_.get();
  }
 
+ bool self_process() const {
+   return self_process_;
+ }
+
  private:
   friend class AstNodeFactory;
 
   std::unique_ptr<Block> block_;
+  bool self_process_;
 
-  SubShell(std::unique_ptr<Block> block,  Position position)
+  SubShell(std::unique_ptr<Block> block, bool self_process, Position position)
       : Cmd(NodeType::kSubShell, position)
-      , block_(std::move(block)) {}
+      , block_(std::move(block))
+      , self_process_(self_process) {}
 };
 
 class CmdFull: public Cmd {

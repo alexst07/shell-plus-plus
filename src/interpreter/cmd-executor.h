@@ -60,6 +60,16 @@ class SimpleCmdExecutor: public Executor {
   std::vector<std::string> Exec(SimpleCmd *node);
 };
 
+class SubShellExecutor: public Executor {
+ public:
+  SubShellExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  int Exec(SubShell *node, bool background);
+
+  CmdExprData Exec(SubShell *node);
+};
+
 class CmdIoRedirectListExecutor: public Executor {
  public:
   CmdIoRedirectListExecutor(Executor* parent,

@@ -276,6 +276,7 @@ class Parser {
   ParserResult<ExpressionList> ParserPostExpList();
   ParserResult<Statement> ParserForInStmt();
   ParserResult<Cmd> ParserExpCmd();
+  ParserResult<Statement> ParserSubShell();
   ParserResult<Statement> ParserSimpleCmd();
   std::unique_ptr<CmdIoRedirect> ParserIoRedirectCmd();
   ParserResult<Statement> ParserIoRedirectCmdList();
