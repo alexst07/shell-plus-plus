@@ -630,10 +630,47 @@ std::vector<std::string> ResolveFullTypeCmdExpr(Executor* parent,
   ExpressionExecutor expr(parent, parent->symbol_table_stack());
   ObjectPtr obj = expr.Exec(cmd_expr->expr());
 
+  std::vector<std::string> vec_res;
+
+  // check if is a simple cmd expression or an iterator command expression
+  if (cmd_expr->is_iterator()) {
+    // call iterator interace from expression, if is not found, throw an
+    // excpetion
+    ObjectPtr obj_iter = obj->ObjIter(obj);
+
+    // check if there is next value on iterator
+    auto check_iter = [&] () -> bool {
+      ObjectPtr has_next_obj = obj_iter->HasNext();
+      if (has_next_obj->type() != Object::ObjectType::BOOL) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                           boost::format("expect bool from __has_next__"));
+      }
+
+      bool v = static_cast<BoolObject&>(*has_next_obj).value();
+      return v;
+    };
+
+    while (check_iter()) {
+      ObjectPtr next_obj = obj_iter->Next();
+      ObjectPtr cmd_obj = next_obj->ObjCmd();
+
+      if (cmd_obj->type() == Object::ObjectType::STRING) {
+        const std::string& part = static_cast<StringObject&>(*cmd_obj).value();
+        vec_res.push_back(part);
+
+        continue;
+      }
+
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("cmd interface is not compatible with element '%1%'")
+          %cmd_obj->ObjType()->ObjectName());
+    }
+
+    return vec_res;
+  }
+
   // get cmd method overload
   ObjectPtr res_obj(obj->ObjCmd());
-
-  std::vector<std::string> vec_res;
 
   if (res_obj->type() == Object::ObjectType::STRING) {
     const std::string& part = static_cast<StringObject&>(*res_obj).value();
@@ -641,24 +678,9 @@ std::vector<std::string> ResolveFullTypeCmdExpr(Executor* parent,
     return vec_res;
   }
 
-  ObjectFactory factory(parent->symbol_table_stack());
-
-  long int len = res_obj->Len();
-
-  for (int i = 0; i < len; i++) {
-    ObjectPtr int_obj(factory.NewInt(i));
-    ObjectPtr str_obj = res_obj->GetItem(int_obj);
-
-    if (str_obj->type() != Object::ObjectType::STRING) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("element: %1% must be string")%i);
-    }
-
-    const std::string& part = static_cast<StringObject&>(*str_obj).value();
-    vec_res.push_back(part);
-  }
-
-  return vec_res;
+  throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+      boost::format("cmd interface is not compatible with '%1%'")
+      %res_obj->ObjType()->ObjectName());
 }
 
 std::string ExtractCmdExprFromString(Executor* parent, const std::string& str) {

@@ -108,6 +108,15 @@ class Parser {
     return Token::TokenValueToStr(token_.GetValue());
   }
 
+  inline bool IsCmdExprToken() {
+    if (token_ == TokenKind::DOLLAR_LBRACE ||
+        token_ == TokenKind::DOLLAR_AT_LBRACE) {
+      return true;
+    }
+
+    return false;
+  }
+
   void ErrorMsg(const boost::format& fmt_msg) {
     if (nerror_ == 0) {
       token_error_ = token_;

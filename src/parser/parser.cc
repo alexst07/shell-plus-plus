@@ -721,6 +721,7 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
   std::vector<std::unique_ptr<AstNode>> pieces;
 
   ValidToken();
+
   int num_pieces = 0;
   while (!IsCmdStopPoint()) {
     // Count if the command has some pieces
@@ -728,7 +729,7 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
 
     // Parser an expression inside command
     // ex: cmd -e ${v[0] + 1} -d
-    if (token_ == TokenKind::DOLLAR_LBRACE) {
+    if (IsCmdExprToken()) {
       ParserResult<Cmd> exp(ParserExpCmd());
       pieces.push_back(std::move(exp.MoveAstNode()));
       continue;
@@ -779,14 +780,15 @@ ParserResult<Declaration> Parser::ParserAliasDeclaration() {
 }
 
 ParserResult<Cmd> Parser::ParserExpCmd() {
-  // Parser an expression inside command
-  // ex: any_cmd -e ${v[0] + 1} -d
-  if (token_ != TokenKind::DOLLAR_LBRACE) {
-    ErrorMsg(boost::format("expected ${ token"));
-    return ParserResult<Cmd>(); // Error
+  bool is_iterator = false;
+
+  // check if the token is $@{, on this case it is an iterator cmd expression
+  if (token_ == TokenKind::DOLLAR_AT_LBRACE) {
+    is_iterator = true;
   }
 
   Advance();
+
   if (token_ == TokenKind::NWL) {
     ErrorMsg(boost::format("New line not allowed"));
     return ParserResult<Cmd>(); // Error
@@ -804,7 +806,7 @@ ParserResult<Cmd> Parser::ParserExpCmd() {
   Advance();
 
   return ParserResult<Cmd>(factory_.NewCmdValueExpr(exp.MoveAstNode(),
-                                                    has_space));
+                                                    has_space, is_iterator));
 }
 
 ParserResult<Statement> Parser::ParserReturnStmt() {

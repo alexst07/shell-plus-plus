@@ -1093,17 +1093,23 @@ class CmdValueExpr: public Cmd {
     return blank_after_;
   }
 
+  bool is_iterator() const noexcept {
+    return is_iterator_;
+  }
+
  private:
   friend class AstNodeFactory;
 
   std::unique_ptr<Expression> expr_;
   bool blank_after_;
+  bool is_iterator_;
 
   CmdValueExpr(std::unique_ptr<Expression> expr, bool blank_after,
-               Position position)
+      bool is_iterator, Position position)
       : Cmd(NodeType::kCmdValueExpr, position)
       , expr_(std::move(expr))
-      , blank_after_(blank_after) {}
+      , blank_after_(blank_after)
+      , is_iterator_(is_iterator) {}
 };
 
 class ForInStatement: public Statement {

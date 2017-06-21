@@ -353,9 +353,9 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<CmdValueExpr> NewCmdValueExpr(
-     std::unique_ptr<Expression> expr, bool has_blank_space) {
+     std::unique_ptr<Expression> expr, bool has_blank_space, bool is_iterator) {
     return std::unique_ptr<CmdValueExpr>(new CmdValueExpr(std::move(expr),
-        has_blank_space, fn_pos_()));
+        has_blank_space, is_iterator, fn_pos_()));
   }
 
   inline std::unique_ptr<ImportStatement> NewImportStatement(

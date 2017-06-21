@@ -416,17 +416,26 @@ TokenStream Lexer::Scanner() {
         token = Select(TokenKind::COMMA);
         break;
 
-      case '$':
+      case '$': {
         // $ $( ${
         Advance();
+        std::string  pre_word = "$";
         if (c_ == '(') {
           token = Select(TokenKind::DOLLAR_LPAREN);
         } else if (c_ == '{') {
           token = Select(TokenKind::DOLLAR_LBRACE);
+        } else if (c_ == '@') {
+          pre_word += "@";
+          Advance();
+          if (c_ == '{') {
+            token = Select(TokenKind::DOLLAR_AT_LBRACE);
+          } else {
+            token = ScanWord(pre_word);
+          }
         } else {
           token = GetToken(TokenKind::DOLLAR);
         }
-        break;
+      } break;
 
       case '(':
         token = Select(TokenKind::LPAREN);
