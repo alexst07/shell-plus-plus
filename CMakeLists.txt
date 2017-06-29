@@ -54,7 +54,7 @@ endif()
 #
 # Boost support
 #
-find_package(Boost COMPONENTS system filesystem REQUIRED)
+find_package(Boost COMPONENTS system filesystem locale REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 find_package (Threads REQUIRED)
 

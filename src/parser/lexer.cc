@@ -15,6 +15,7 @@
 #include "lexer.h"
 
 #include <sstream>
+#include <codecvt>
 
 namespace shpp {
 namespace internal {
@@ -46,7 +47,30 @@ char Lexer::ScanAnsiEscapeCode() {
   return static_cast<char>(std::stoi(number,nullptr,8));
 }
 
-char Lexer::ScanStringEscape() {
+std::string Lexer::ScanUnicodeEscapeCode() {
+  Advance();
+
+  std::string number = "";
+  while (IsHexChar(c_)) {
+    number += c_;
+    Advance();
+  }
+
+  Back();
+
+  uint32_t hex_number = static_cast<uint32_t>(std::stoi(number,nullptr,16));
+
+  // initialize wstring with 1 wchar_t
+  std::wstring str_hex(1, static_cast<wchar_t>(hex_number));
+
+  //setup converter from wstring to string
+  using convert_type = std::codecvt_utf8<wchar_t>;
+  std::wstring_convert<convert_type, wchar_t> converter;
+
+  return converter.to_bytes(str_hex);
+}
+
+std::string Lexer::ScanStringEscape() {
   Advance();
 
   char c = c_;
@@ -65,6 +89,14 @@ char Lexer::ScanStringEscape() {
       }
       break;
 
+    case 'u':
+      if (IsHexChar(PeekAhead())) {
+        return ScanUnicodeEscapeCode();
+      } else {
+        return "\\u";
+      }
+      break;
+
     case 'b' : c = '\b'; break;
     case 'f' : c = '\f'; break;
     case 'n' : c = '\n'; break;
@@ -72,7 +104,8 @@ char Lexer::ScanStringEscape() {
     case 't' : c = '\t'; break;
   }
 
-  return c;
+  // construct a string with 1 char c
+  return std::string(1, c);
 }
 
 char Lexer::ScanWordEscape() {

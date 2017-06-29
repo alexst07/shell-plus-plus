@@ -59,9 +59,10 @@ private:
   Token ScanString();
   Token ScanWord(const std::string& prestr = "");
   Token ScanNumber();
-  char ScanStringEscape();
+  std::string ScanStringEscape();
   char ScanWordEscape();
   char ScanAnsiEscapeCode();
+  std::string ScanUnicodeEscapeCode();
 
   inline bool IsLetter(char c) {
     return ((c >= 'a' && c <= 'z') || ( c >= 'A' && c <= 'Z'));
@@ -69,6 +70,10 @@ private:
 
   inline bool IsOctalChar(char c) {
     return (c >= '0' && c < '8');
+  }
+
+  inline bool IsHexChar(char c) {
+    return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
   }
 
   inline bool IsDigit(char c) {

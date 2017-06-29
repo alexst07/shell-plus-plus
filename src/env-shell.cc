@@ -14,6 +14,7 @@
 
 #include "env-shell.h"
 
+#include <boost/locale.hpp>
 #include <signal.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -58,6 +59,12 @@ void EnvShell::InitShell() {
 
   // starts the shared memory region
   shmid_ = shmget(IPC_PRIVATE, sizeof(CmdSharedError), 0640|IPC_CREAT);
+
+  // initialize global boost locale
+  boost::locale::generator gen;
+  auto loc = gen("");
+  std::locale::global(loc);
+  std::cout.imbue(loc);
 
   if (shell_is_interactive_) {
     // loop until we are in the foreground

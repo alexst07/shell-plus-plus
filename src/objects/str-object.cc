@@ -17,6 +17,7 @@
 #include <string>
 #include <boost/variant.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/locale.hpp>
 
 #include "obj-type.h"
 #include "object-factory.h"
@@ -221,7 +222,7 @@ ObjectPtr StringToLowerFunc::Call(Executor* /*parent*/,
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   std::string& str = const_cast<std::string&>(str_obj.value());
-  boost::to_lower(str);
+  str_obj.set_value(boost::locale::to_lower(str));
 
   return params[0];
 }
@@ -232,7 +233,7 @@ ObjectPtr StringToUpperFunc::Call(Executor* /*parent*/,
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   std::string& str = const_cast<std::string&>(str_obj.value());
-  boost::to_upper(str);
+  str_obj.set_value(boost::locale::to_upper(str));
 
   return params[0];
 }

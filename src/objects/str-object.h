@@ -51,6 +51,8 @@ class StringObject: public Object {
 
   inline const std::string& value() const noexcept { return value_; }
 
+  inline void set_value(const std::string& value) noexcept { value_ = value; }
+
   ObjectPtr ObjInt() override;
 
   ObjectPtr ObjReal() override;

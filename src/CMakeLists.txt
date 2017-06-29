@@ -28,6 +28,7 @@ target_link_libraries(shpp
   ${CMAKE_THREAD_LIBS_INIT}
   ${Boost_FILESYSTEM_LIBRARY}
   ${Boost_SYSTEM_LIBRARY}
+  ${Boost_LOCALE_LIBRARY}
   ${READLINE_LIBRARY})
 
 install(TARGETS shpp DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
