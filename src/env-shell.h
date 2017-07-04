@@ -76,6 +76,10 @@ class EnvShell {
     return shell_pgid_;
   }
 
+  pid_t shell_pid() {
+    return shell_pid_;
+  }
+
   int shmid() const noexcept {
     return shmid_;
   }
@@ -91,6 +95,7 @@ class EnvShell {
 
   static EnvShell *instance_;
 
+  pid_t shell_pid_;
   pid_t shell_pgid_;
   FileDescriptorMap fd_map_;
   struct termios shell_tmodes_;

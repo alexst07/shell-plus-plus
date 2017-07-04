@@ -60,6 +60,9 @@ void EnvShell::InitShell() {
   // starts the shared memory region
   shmid_ = shmget(IPC_PRIVATE, sizeof(CmdSharedError), 0640|IPC_CREAT);
 
+  // gets pid of shell main process
+  shell_pid_ = getpid();
+
   // initialize global boost locale
   boost::locale::generator gen;
   auto loc = gen("");

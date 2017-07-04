@@ -137,6 +137,22 @@ void Process::CloseFileDescriptor(int fd) {
   }
 }
 
+inline void Tcsetpgrp(pid_t pid) {
+  // executes only when called from main process
+  if (getpid() == EnvShell::instance()->shell_pid()) {
+    int shell_terminal = EnvShell::instance()->shell_terminal();
+    tcsetpgrp(shell_terminal, pid);
+  }
+}
+
+inline void Tcsetattr(struct termios* tmodes) {
+    // executes only when called from main process
+  if (getpid() == EnvShell::instance()->shell_pid()) {
+    int shell_terminal = EnvShell::instance()->shell_terminal();
+    tcsetattr(shell_terminal, TCSADRAIN, tmodes);
+  }
+}
+
 void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
                             bool foreground) {
   pid_t pid;
@@ -157,7 +173,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
     setpgid (pid, pgid);
 
     if (foreground) {
-      tcsetpgrp(shell_terminal, pgid);
+      Tcsetpgrp(pgid);
     }
 
     // Set the handling for job control signals back to the default
@@ -349,12 +365,12 @@ void Job::PutJobInForeground(int cont) {
   struct termios* tmodes = EnvShell::instance()->shell_tmodes();
   pid_t shell_pgid = EnvShell::instance()->shell_pgid();
 
-  // put the job into the foreground
-  tcsetpgrp (shell_terminal, pgid_);
+  Tcsetpgrp(pgid_);
 
   // send the job a continue signal, if necessary
   if (cont) {
-    tcsetattr (shell_terminal, TCSADRAIN, &shell_tmodes_);
+    Tcsetattr(&shell_tmodes_);
+
     if (kill (- pgid_, SIGCONT) < 0) {
       perror ("kill (SIGCONT)");
     }
@@ -363,12 +379,17 @@ void Job::PutJobInForeground(int cont) {
   // wait for it to report
   WaitForJob();
 
+  // if we are on subshell, so the shell can't back to foreground
+  if (getpid() != EnvShell::instance()->shell_pid()) {
+    return;
+  }
+
   // put the shell back in the foreground
-  tcsetpgrp(shell_terminal, shell_pgid);
+  Tcsetpgrp(shell_pgid);
 
   /* Restore the shell’s terminal modes.  */
   tcgetattr(shell_terminal, &shell_tmodes_);
-  tcsetattr(shell_terminal, TCSADRAIN, tmodes);
+  Tcsetattr(tmodes);
 }
 
 void Job::PutJobInBackground(int cont) {
