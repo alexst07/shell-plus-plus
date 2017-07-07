@@ -239,6 +239,9 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
   pipe(pipettes);
   pipe(pipe_err);
 
+  SetFdAsync(pipettes[WRITE]);
+  SetFdAsync(pipe_err[WRITE]);
+
   Job job(symbol_table_stack());
   Process p(symbol_table_stack(), std::move(cmd_args));
   job.process_.push_back(p);
@@ -511,6 +514,9 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
   pipe(pipettes);
   pipe(pipe_err);
 
+  SetFdAsync(pipettes[WRITE]);
+  SetFdAsync(pipe_err[WRITE]);
+
   Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
   job.stderr_ = pipe_err[WRITE];
@@ -586,6 +592,9 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
 
   pipe(pipettes);
   pipe(pipe_err);
+
+  SetFdAsync(pipettes[WRITE]);
+  SetFdAsync(pipe_err[WRITE]);
 
   Job job(symbol_table_stack());
   job.shell_is_interactive_ = 0;
