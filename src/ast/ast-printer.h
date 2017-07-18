@@ -553,6 +553,16 @@ class AstPrinter: public AstVisitor {
     }
   }
 
+  void virtual VisitLetExpression(LetExpression* let) {
+    Level();
+    std::cout << "<let>\n";
+    level_++;
+    let->assign()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "</let>\n";
+  }
+
   void virtual VisitAssignableValue(AssignableValue* value) {
     Level();
     std::cout << "<AssignableValue>\n";

@@ -90,6 +90,12 @@ class AstNodeFactory {
         assign_kind, std::move(lexp_list), std::move(rvalue_list), fn_pos_()));
   }
 
+  inline std::unique_ptr<LetExpression> NewLetExpression(
+      std::unique_ptr<AssignmentStatement> assign) {
+    return std::unique_ptr<LetExpression>(new LetExpression(
+        std::move(assign), fn_pos_()));
+  }
+
   inline std::unique_ptr<ExpressionList> NewExpressionList(
       std::vector<std::unique_ptr<Expression>> exps) {
     return std::unique_ptr<ExpressionList>(new ExpressionList(std::move(exps),

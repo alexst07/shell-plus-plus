@@ -365,6 +365,16 @@ void ReturnExecutor::set_stop(StopFlag flag) {
 }
 
 void IfElseExecutor::Exec(IfStatement* node) {
+  // create a new table for if else scope
+  symbol_table_stack().NewTable();
+
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    // remove the scope
+    symbol_table_stack().Pop();
+  });
+  IgnoreUnused(cleanup);
+
   // Executes if expresion
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr obj_exp = expr_exec.Exec(node->exp());
@@ -376,9 +386,6 @@ void IfElseExecutor::Exec(IfStatement* node) {
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(), node->exp()->pos(), e.messages());
   }
-
-  // create a new table for if else scope
-  symbol_table_stack().NewTable();
 
   BlockExecutor block_exec(this, symbol_table_stack());
 
@@ -395,9 +402,6 @@ void IfElseExecutor::Exec(IfStatement* node) {
       }
     }
   }
-
-  // remove the scope
-  symbol_table_stack().Pop();
 }
 
 void IfElseExecutor::set_stop(StopFlag flag) {
@@ -405,6 +409,16 @@ void IfElseExecutor::set_stop(StopFlag flag) {
 }
 
 void WhileExecutor::Exec(WhileStatement* node) {
+  // create a new table for while scope
+  symbol_table_stack().NewTable();
+
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    // remove the scope
+    symbol_table_stack().Pop();
+  });
+  IgnoreUnused(cleanup);
+
   // Executes if expresion
   ExpressionExecutor expr_exec(this, symbol_table_stack());
 
@@ -425,19 +439,18 @@ void WhileExecutor::Exec(WhileStatement* node) {
     }
   };
 
-  // create a new table for while scope
-  symbol_table_stack().NewTable();
-
-  // scope exit case an excpetion thrown
-  auto cleanup = MakeScopeExit([&]() {
-    // remove the scope
-    symbol_table_stack().Pop();
-  });
-  IgnoreUnused(cleanup);
-
-  BlockExecutor block_exec(this, symbol_table_stack());
-
   while (fn_exp(node->exp())) {
+    // create a new table for while scope
+    symbol_table_stack().NewTable();
+
+    // scope exit case an excpetion thrown
+    auto cleanup = MakeScopeExit([&]() {
+      // remove the scope
+      symbol_table_stack().Pop();
+    });
+    IgnoreUnused(cleanup);
+
+    BlockExecutor block_exec(this, symbol_table_stack());
     block_exec.Exec(node->block());
   }
 }
@@ -514,10 +527,19 @@ void ForInExecutor::Exec(ForInStatement* node) {
     return true;
   };
 
-  BlockExecutor block_exec(this, symbol_table_stack());
-
   // executes for statement in fact
   while (fn_exp()) {
+    // create a new table for while scope
+    symbol_table_stack().NewTable();
+
+    // scope exit case an excpetion thrown
+    auto cleanup = MakeScopeExit([&]() {
+      // remove the scope
+      symbol_table_stack().Pop();
+    });
+    IgnoreUnused(cleanup);
+
+    BlockExecutor block_exec(this, symbol_table_stack());
     block_exec.Exec(node->block());
   }
 }
@@ -587,6 +609,16 @@ bool SwitchExecutor::MatchAnyExp(ObjectPtr exp,
 }
 
 void SwitchExecutor::Exec(SwitchStatement* node) {
+  // create a new table for while scope
+  symbol_table_stack().NewTable();
+
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    // remove the scope
+    symbol_table_stack().Pop();
+  });
+  IgnoreUnused(cleanup);
+
   BlockExecutor block_exec(this, symbol_table_stack());
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr obj_exp_switch;
@@ -606,6 +638,16 @@ void SwitchExecutor::Exec(SwitchStatement* node) {
   std::vector<CaseStatement*> case_list = node->case_list();
 
   for (auto& c: case_list) {
+    // create a new table for while scope
+    symbol_table_stack().NewTable();
+
+    // scope exit case an excpetion thrown
+    auto cleanup = MakeScopeExit([&]() {
+      // remove the scope
+      symbol_table_stack().Pop();
+    });
+    IgnoreUnused(cleanup);
+
     ExprListExecutor expr_list_exec(this, symbol_table_stack());
     std::vector<ObjectPtr> obj_res_list = expr_list_exec.Exec(c->exp_list());
 
@@ -619,16 +661,6 @@ void SwitchExecutor::Exec(SwitchStatement* node) {
 
     if (comp) {
       any_case_executed = true;
-
-      // create a new table for while scope
-      symbol_table_stack().NewTable();
-
-      // scope exit case an excpetion thrown
-      auto cleanup = MakeScopeExit([&]() {
-        // remove the scope
-        symbol_table_stack().Pop();
-      });
-      IgnoreUnused(cleanup);
 
       // if any expression match with case expression, executes case's block
       block_exec.Exec(c->block());

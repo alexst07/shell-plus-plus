@@ -52,7 +52,7 @@ ObjectPtr ReadFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 
   std::string str;
 
-  if (!(std::cin >> str)) {
+  if (!std::getline(std::cin, str)) {
     return obj_factory_.NewNull();
   }
 

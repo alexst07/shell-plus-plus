@@ -256,11 +256,12 @@ class Parser {
   ParserResult<Expression> ParserNotExp();
   ParserResult<Expression> ParserAndExp();
   ParserResult<Expression> ParserOrExp();
+  ParserResult<Expression> ParserLetExp();
   ParserResult<Expression> ParserEllipsisExp();
   ParserResult<Expression> ParserLambda();
   ParserResult<ExpressionList> ParserExpList();
   ParserResult<Statement> ParserStmt();
-  ParserResult<Statement> ParserSimpleStmt();
+  ParserResult<Statement> ParserSimpleStmt(bool force_assignment = false);
   ParserResult<StatementList> ParserStmtList();
   ParserResult<Statement> ParserBlock();
   std::unique_ptr<Statement> ParserDeferableStmt();

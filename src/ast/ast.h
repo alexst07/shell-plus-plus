@@ -112,6 +112,7 @@ namespace internal {
   V(AssignableList)             \
   V(ExpressionList)             \
   V(FunctionCall)               \
+  V(LetExpression)              \
   V(FunctionExpression)         \
   V(CmdExpression)              \
   V(Slice)                      \
@@ -156,6 +157,13 @@ class Expression;
 struct Position {
   uint line;
   uint col;
+};
+
+static const char* ast_node_str[] = {
+  #define DECLARE_TYPE_CLASS(type) #type,
+    AST_NODE_LIST(DECLARE_TYPE_CLASS)
+  #undef DECLARE_TYPE_CLASS
+  ""
 };
 
 class AstNode {
@@ -1382,6 +1390,28 @@ class AssignmentStatement: public Statement {
       , assign_kind_(assign_kind)
       , lexp_(std::move(lexp))
       , rvalue_(std::move(rvalue)) {}
+};
+
+class LetExpression: public Expression {
+ public:
+  virtual ~LetExpression() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitLetExpression(this);
+  }
+
+  AssignmentStatement* assign() const noexcept {
+    return assign_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<AssignmentStatement> assign_;
+
+  LetExpression(std::unique_ptr<AssignmentStatement> assign, Position position)
+      : Expression(NodeType::kLetExpression, position)
+      , assign_(std::move(assign)) {}
 };
 
 class ExpressionStatement: public Statement {

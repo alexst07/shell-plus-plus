@@ -23,12 +23,47 @@
 namespace shpp {
 namespace internal {
 
+// TODO: when c++17 be avaiable this method can be joined with Exec using
+// if constexpr
+ObjectPtr AssignExecutor::ExecWithReturn(AstNode* node) {
+  AssignmentStatement* assign_node = static_cast<AssignmentStatement*>(node);
+
+  if (!assign_node->has_rvalue()) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("not valid right side expression"));
+  }
+
+  TokenKind assign_kind = assign_node->assign_kind();
+
+  // Executes the right sid of assignment
+  AssignableListExecutor assignables(this, symbol_table_stack());
+  auto values = assignables.Exec(assign_node->rvalue_list());
+
+  ExpressionList* left_exp_list = assign_node->lexp_list();
+  size_t num_left_exp = left_exp_list->num_children();
+  std::vector<Expression*> left_exp_vec = left_exp_list->children();
+
+  Assign(left_exp_vec, values, assign_kind);
+
+  if (values.size() == 1) {
+    // if there are only one expression on right side, so retun this object
+    return values[0];
+  } else if (values.size() > 1) {
+    // if there are more than one expression on right side, put all terms
+    // on a tuple, and return this tuple
+    return obj_factory_.NewTuple(std::move(values));
+  }
+
+  throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                     boost::format("not valid right side expression"));
+}
+
 void AssignExecutor::Exec(AstNode* node) {
   AssignmentStatement* assign_node = static_cast<AssignmentStatement*>(node);
 
   if (!assign_node->has_rvalue()) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("not valid left side expression"));
+                       boost::format("not valid right side expression"));
   }
 
   TokenKind assign_kind = assign_node->assign_kind();

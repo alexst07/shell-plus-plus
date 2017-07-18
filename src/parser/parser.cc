@@ -329,7 +329,7 @@ ParserResult<Statement> Parser::ParserIfStmt() {
   Advance();
   ValidToken();
 
-  ParserResult<Expression> exp(ParserOrExp());
+  ParserResult<Expression> exp(ParserLetExp());
 
   ValidToken();
 
@@ -372,7 +372,7 @@ ParserResult<Statement> Parser::ParserSwitchStmt() {
   if (ValidToken() == TokenKind::LBRACE) {
     exp = std::move(nullptr);
   } else {
-    exp = std::move(ParserOrExp());
+    exp = std::move(ParserLetExp());
   }
 
   if (token_ != TokenKind::LBRACE) {
@@ -497,7 +497,7 @@ ParserResult<Statement> Parser::ParserWhileStmt() {
   Advance();
   ValidToken();
 
-  ParserResult<Expression> exp(ParserOrExp());
+  ParserResult<Expression> exp(ParserLetExp());
 
   ValidToken();
 
@@ -815,7 +815,7 @@ ParserResult<Cmd> Parser::ParserExpCmd() {
     return ParserResult<Cmd>(); // Error
   }
 
-  ParserResult<Expression> exp(ParserOrExp());
+  ParserResult<Expression> exp(ParserLetExp());
 
   if (token_ != TokenKind::RBRACE) {
     ErrorMsg(boost::format("token '}' expected"));
@@ -877,7 +877,7 @@ std::unique_ptr<DefaultStatement> Parser::ParserDefaultStmt() {
         factory_.NewDefaultStatement(std::move(block)));
 }
 
-ParserResult<Statement> Parser::ParserSimpleStmt() {
+ParserResult<Statement> Parser::ParserSimpleStmt(bool force_assignment) {
   enum Type {kErro, kAssign, kExpStm};
   Type type = kErro;
   std::vector<std::unique_ptr<Expression>> vec_list;
@@ -895,6 +895,7 @@ ParserResult<Statement> Parser::ParserSimpleStmt() {
     if (token_.Is(TokenKind::COMMA)) {num_comma++;}
   } while (CheckComma());
 
+  // if there are comma on statement, so it has to be assignment statement
   if ((num_comma > 0) && token_.IsNot(TokenKind::ASSIGN)) {
     ErrorMsg(boost::format("assign expected"));
     return ParserResult<Statement>(); // Error
@@ -911,6 +912,13 @@ ParserResult<Statement> Parser::ParserSimpleStmt() {
     ValidToken();
 
     rvalue_list = ParserAssignableList();
+  }
+
+  // check if force_assignment is true, so the statment has to be assignment
+  // operation, it is useful in let expression
+  if (force_assignment && type != Type::kAssign) {
+    ErrorMsg(boost::format("expected assignment operation"));
+    return ParserResult<Statement>(); // Error
   }
 
   switch (type) {
@@ -965,7 +973,7 @@ ParserResult<AssignableValue> Parser::ParserAssignable() {
     return ParserResult<AssignableValue>(
         factory_.NewAssignableValue<Expression>(flambda.MoveAstNode()));
   } else {
-    ParserResult<Expression> exp(ParserOrExp());
+    ParserResult<Expression> exp(ParserLetExp());
     return ParserResult<AssignableValue>(
         factory_.NewAssignableValue<Expression>(exp.MoveAstNode()));
   }
@@ -1062,13 +1070,28 @@ ParserResult<ExpressionList> Parser::ParserExpList() {
       ParserResult<Expression> ellipsis_exp = ParserEllipsisExp();
       vec_exp.push_back(ellipsis_exp.MoveAstNode());
     } else {
-      ParserResult<Expression> exp = ParserOrExp();
+      ParserResult<Expression> exp = ParserLetExp();
       vec_exp.push_back(exp.MoveAstNode());
     }
   } while (CheckComma());
 
   return ParserResult<ExpressionList>(factory_.NewExpressionList(
       std::move(vec_exp)));
+}
+
+ParserResult<Expression> Parser::ParserLetExp() {
+  if (token_.Is(TokenKind::KW_LET)) {
+    Advance();
+    ValidToken();
+
+    // parser assignment operation
+    ParserResult<Statement> assign = ParserSimpleStmt(true);
+    return ParserResult<Expression>(factory_.NewLetExpression(
+        assign.MoveAstNode<AssignmentStatement>()));
+  }
+
+  // if it is not let expression, so execute the or expression
+  return ParserOrExp();
 }
 
 ParserResult<Expression> Parser::ParserOrExp() {
@@ -1378,7 +1401,7 @@ ParserResult<Expression> Parser::ParserPostExp() {
 }
 
 std::tuple<std::unique_ptr<KeyValue>, bool> Parser::ParserKeyValue() {
-  ParserResult<Expression> exp(ParserOrExp());
+  ParserResult<Expression> exp(ParserLetExp());
 
   ValidToken();
 
@@ -1509,7 +1532,7 @@ ParserResult<Expression> Parser::ParserSlice() {
     goto END_PART;
   }
 
-  start_exp = ParserOrExp();
+  start_exp = ParserLetExp();
   has_start = true;
 
   ValidToken();
@@ -1526,7 +1549,7 @@ ParserResult<Expression> Parser::ParserSlice() {
     }
 
     // Parser expression only if slice
-    end_exp = ParserOrExp();
+    end_exp = ParserLetExp();
     has_end = true;
   }
 
@@ -1564,7 +1587,7 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
   } else if (token_ == TokenKind::LPAREN) {
     // parser expression: (4+3)
     Advance(); // consume the token '('
-    ParserResult<Expression> res(ParserOrExp());
+    ParserResult<Expression> res(ParserLetExp());
 
     if (ValidToken() != TokenKind::RPAREN) {
       ErrorMsg(boost::format("Expected ')' in the end of expression"));

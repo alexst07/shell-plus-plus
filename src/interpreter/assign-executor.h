@@ -43,6 +43,9 @@ class AssignExecutor: public Executor {
   // Entry point to execute assign operations
   void Exec(AstNode* node);
 
+  // Execute assign operation as exec and return the the right side as object
+  ObjectPtr ExecWithReturn(AstNode* node);
+
   void Assign(std::vector<Expression*>& left_exp_vec,
               std::vector<ObjectPtr>& values,
               TokenKind assign_kind = TokenKind::ASSIGN);

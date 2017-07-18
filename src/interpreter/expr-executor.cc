@@ -17,6 +17,7 @@
 #include <string>
 #include <boost/variant.hpp>
 
+#include "assign-executor.h"
 #include "cmd-executor.h"
 #include "stmt-executor.h"
 #include "utils/glob.h"
@@ -125,6 +126,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecLambdaFunc(node);
       break;
 
+    case AstNode::NodeType::kLetExpression:
+      return ExecLetExpression(static_cast<LetExpression*>(node));
+      break;
+
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid expression opcode"),
@@ -193,6 +198,12 @@ ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {
   }
 
   return map;
+}
+
+ObjectPtr ExpressionExecutor::ExecLetExpression(LetExpression* node) {
+  AssignExecutor exec(this, symbol_table_stack());
+  auto p = exec.ExecWithReturn(node->assign());
+  return p;
 }
 
 ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) try {

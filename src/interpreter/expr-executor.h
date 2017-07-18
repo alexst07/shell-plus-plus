@@ -84,6 +84,9 @@ class ExpressionExecutor: public Executor {
   // Executes lambda
   ObjectPtr ExecLambdaFunc(AstNode* node);
 
+  // Executes let expression
+  ObjectPtr ExecLetExpression(LetExpression* node);
+
   // Executes cmd expression
   ObjectPtr ExecCmdExpr(CmdExpression* node);
 
