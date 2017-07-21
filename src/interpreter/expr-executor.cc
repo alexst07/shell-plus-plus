@@ -545,8 +545,15 @@ ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
         break;
       }
 
+      case Object::ObjectType::SPEC_FUNC: {
+        return static_cast<SpecialFuncObject&>(*fobj).SpecialCall(this,
+            std::move(vec), symbol_table_stack());
+        break;
+      }
+
       case Object::ObjectType::TYPE: {
-        return static_cast<TypeObject&>(*fobj).Constructor(this, std::move(vec));
+        return static_cast<TypeObject&>(*fobj).Constructor(this,
+            std::move(vec));
         break;
       }
 

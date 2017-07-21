@@ -148,6 +148,32 @@ class GlobRFunc: public FuncObject {
   ObjectFactory obj_factory_;
 };
 
+class EvalFunc: public SpecialFuncObject {
+ public:
+  EvalFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : SpecialFuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr SpecialCall(Executor* parent, std::vector<ObjectPtr>&& params,
+      SymbolTableStack& curret_sym_tab) override;
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
+class DumpSymbolTableFunc: public SpecialFuncObject {
+ public:
+  DumpSymbolTableFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : SpecialFuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr SpecialCall(Executor* parent, std::vector<ObjectPtr>&& params,
+      SymbolTableStack& curret_sym_tab) override;
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
 inline void RegisterModule(SymbolTableStack& sym_table) {
   ModuleCustonObject::MemberTable table = {
     {"print",                 ObjectMethod<PrintFunc>(sym_table)},
@@ -159,7 +185,9 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
     {"assert",                ObjectMethod<AssertFunc>(sym_table)},
     {"is_interactive",        ObjectMethod<IsInteractiveFunc>(sym_table)},
     {"glob",                  ObjectMethod<GlobFunc>(sym_table)},
-    {"globr",                 ObjectMethod<GlobRFunc>(sym_table)}
+    {"globr",                 ObjectMethod<GlobRFunc>(sym_table)},
+    {"dump_symbol_table",     ObjectMethod<DumpSymbolTableFunc>(sym_table)},
+    {"eval",                  ObjectMethod<EvalFunc>(sym_table)}
   };
 
   for (auto& pair: table) {

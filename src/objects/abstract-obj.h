@@ -42,6 +42,7 @@ class Object {
     MAP,
     TUPLE,
     FUNC,
+    SPEC_FUNC,
     CMD,
     REGEX,
     PATH,

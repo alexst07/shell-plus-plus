@@ -106,21 +106,35 @@ void Interpreter::Exec(ScriptStream& file, std::vector<std::string>&& args) {
                          Position{msg.line(), msg.pos()});
     }
   } catch (RunTimeError& e) {
-    // split the lines of file in a array to set line of error on each message
-    std::vector<std::string> file_lines = SplitFileLines(buffer.str());
+    ShowErrors(e, buffer.str(), file.filename());
+  }
+}
 
-    // set filename and the line of the erro on each message
-    for (auto& msg: e.messages()) {
-      msg.file(file.filename());
+void Interpreter::ShowErrors(RunTimeError& e, const std::string& code,
+    const std::string& filename) {
+  // split the lines of file in a array to set line of error on each message
+  std::vector<std::string> file_lines = SplitFileLines(code);
+
+  // set filename and the line of the erro on each message
+  for (auto& msg: e.messages()) {
+    msg.file(filename);
+
+    // if the type of error is EVAL, the line of file doesn't match with the
+    // line of real code, so at this time, the line won't be show
+    if (e.err_code() == RunTimeError::ErrorCode::EVAL) {
+      // insert empty line for EVAL error
+      msg.line_error("");
+    } else {
       // subtract 1 because vector starts on 0 and line on 1
       msg.line_error(file_lines[msg.line()-1]);
     }
 
-    e.file(file.filename());
-    int pos = e.pos().line < 1? 1: e.pos().line;
-    e.line_error(file_lines[pos - 1]);
-    throw e;
   }
+
+  e.file(filename);
+  int pos = e.pos().line < 1? 1: e.pos().line;
+  e.line_error(file_lines[pos - 1]);
+  throw e;
 }
 
 void Interpreter::ExecInterative(

@@ -63,6 +63,8 @@ class Interpreter {
   void RegisterArgs(std::vector<std::string>&& args);
   void InsertVar(const std::string& name, std::shared_ptr<Object> obj);
   void RegisterFileVars(const std::string& file);
+  void ShowErrors(RunTimeError& e, const std::string& code,
+      const std::string& filename);
 
   SymbolTablePtr symbol_table_;
   SymbolTableStack symbol_table_stack_;

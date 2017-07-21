@@ -44,6 +44,26 @@ class FuncObject: public Object {
   }
 };
 
+class SpecialFuncObject: public Object {
+ public:
+  SpecialFuncObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::SPEC_FUNC, obj_type, std::move(sym_table)) {}
+
+  virtual ~SpecialFuncObject() {}
+
+  std::size_t Hash() override {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("func object has no hash method"));
+  }
+
+  virtual ObjectPtr SpecialCall(Executor* parent,
+      std::vector<ObjectPtr>&& params, SymbolTableStack& curret_sym_tab) = 0;
+
+  std::string Print() override {
+    return std::string("[function]");
+  }
+};
+
 class FuncWrapperObject: public FuncObject {
  public:
   FuncWrapperObject(ObjectPtr obj_type, ObjectPtr func, ObjectPtr self,
