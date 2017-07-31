@@ -378,6 +378,7 @@ Job& Job::Stderr(int stderr) {
 
 Job& Job::AddProcess(std::unique_ptr<ProcessBase>&& p) {
   process_.push_back(std::move(p));
+  return *this;
 }
 
 bool Job::JobIsStopped() {
