@@ -34,7 +34,7 @@ class SetFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -46,7 +46,7 @@ class GetFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -58,7 +58,7 @@ class ExistsFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -70,7 +70,7 @@ class AppendFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -82,7 +82,7 @@ class UnsetFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;

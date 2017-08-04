@@ -71,7 +71,7 @@ class PathType: public TypeObject {
 
   ObjectPtr Attr(std::shared_ptr<Object>, const std::string& name) override;
 
-  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class PathPwdStaticFunc: public FuncObject {
@@ -79,7 +79,7 @@ class PathPwdStaticFunc: public FuncObject {
   PathPwdStaticFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathExistsFunc: public FuncObject {
@@ -87,7 +87,7 @@ class PathExistsFunc: public FuncObject {
   PathExistsFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathIsRegularFileFunc: public FuncObject {
@@ -95,7 +95,7 @@ class PathIsRegularFileFunc: public FuncObject {
   PathIsRegularFileFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathIsDirFunc: public FuncObject {
@@ -103,7 +103,7 @@ class PathIsDirFunc: public FuncObject {
   PathIsDirFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathIsSymLinkFunc: public FuncObject {
@@ -111,7 +111,7 @@ class PathIsSymLinkFunc: public FuncObject {
   PathIsSymLinkFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathIsReadableFunc: public FuncObject {
@@ -119,7 +119,7 @@ class PathIsReadableFunc: public FuncObject {
   PathIsReadableFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathIsWritableFunc: public FuncObject {
@@ -127,7 +127,7 @@ class PathIsWritableFunc: public FuncObject {
   PathIsWritableFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathIsExecutableFunc: public FuncObject {
@@ -135,7 +135,7 @@ class PathIsExecutableFunc: public FuncObject {
   PathIsExecutableFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathOwnerUidFunc: public FuncObject {
@@ -143,7 +143,7 @@ class PathOwnerUidFunc: public FuncObject {
   PathOwnerUidFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathOwnerGidFunc: public FuncObject {
@@ -151,7 +151,7 @@ class PathOwnerGidFunc: public FuncObject {
   PathOwnerGidFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathRootNameFunc: public FuncObject {
@@ -159,7 +159,7 @@ class PathRootNameFunc: public FuncObject {
   PathRootNameFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathRootDirectoryFunc: public FuncObject {
@@ -167,7 +167,7 @@ class PathRootDirectoryFunc: public FuncObject {
   PathRootDirectoryFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathRootPathFunc: public FuncObject {
@@ -175,7 +175,7 @@ class PathRootPathFunc: public FuncObject {
   PathRootPathFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathRelativePathFunc: public FuncObject {
@@ -183,7 +183,7 @@ class PathRelativePathFunc: public FuncObject {
   PathRelativePathFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathParentPathFunc: public FuncObject {
@@ -191,7 +191,7 @@ class PathParentPathFunc: public FuncObject {
   PathParentPathFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathFilenameFunc: public FuncObject {
@@ -199,7 +199,7 @@ class PathFilenameFunc: public FuncObject {
   PathFilenameFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathStemFunc: public FuncObject {
@@ -207,7 +207,7 @@ class PathStemFunc: public FuncObject {
   PathStemFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathExtensionFunc: public FuncObject {
@@ -215,7 +215,7 @@ class PathExtensionFunc: public FuncObject {
   PathExtensionFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class PathAbsoluteFunc: public FuncObject {
@@ -223,7 +223,7 @@ class PathAbsoluteFunc: public FuncObject {
   PathAbsoluteFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 }

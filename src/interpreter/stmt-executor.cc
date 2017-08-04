@@ -74,7 +74,7 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
   auto vec = fdecl_node->children();
   size_t variadic_count = 0;
   std::vector<std::string> param_names;
-  std::vector<ObjectPtr> default_values;
+  std::unordered_map<std::string, ObjectPtr> default_values;
 
   // if the method is declared inside of a class
   // insert the parameter this
@@ -91,30 +91,49 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
       variadic_count++;
     }
 
-    param_names.push_back(param->id()->name());
+    if (!((variadic_count != 0) && param->has_value())) {
+      param_names.push_back(param->id()->name());
+    }
 
     // check if the param has default value
     if (param->has_value()) {
       default_value = true;
       ObjectPtr obj_value(assign_value_exec.ExecAssignable(param->value()));
-      default_values.push_back(obj_value);
+      default_values.insert(std::pair<std::string, ObjectPtr>(
+          param->id()->name(), obj_value));
     } else {
       if (default_value) {
         // error, only the param in the end can have default values
         throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                           boost::format("no default value can't appear"
+                           boost::format("no default value can't appear "
                                          "after a default value parameter"),
-                           param->value()->pos());
+                           param->pos());
       }
     }
   }
 
   // only the last parameter can be variadic
-  if ((variadic_count > 1) ||
-      ((variadic_count == 1) && (!fdecl_node->variadic()))) {
+  if (variadic_count > 1) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("only last parameter can be variadic"),
+                       boost::format("not allowed more than 1 variadic parameter"),
                        fdecl_node->pos());
+  }
+
+  // if has variadic argument the last parameters has to have default values
+  if (variadic_count == 1) {
+    size_t i = vec.size() - 1;
+
+    // iterate over all parameter after variadic and verify if all of them
+    // has default value
+    while (!vec[i]->variadic()) {
+      if (!vec[i]->has_value()) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("all parameters must have default values "
+                          "after variadic parameter"), fdecl_node->pos());
+      }
+
+      i--;
+    }
   }
 
   SymbolTableStack st_stack(symbol_table_stack());
@@ -133,12 +152,8 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
 
   try {
     ObjectPtr fobj(obj_factory_.NewFuncDeclObject(func_name,
-                                                  fdecl_node->block(),
-                                                  std::move(st_stack),
-                                                  std::move(param_names),
-                                                  std::move(default_values),
-                                                  fdecl_node->variadic(),
-                                                  lambda_));
+        fdecl_node->block(), std::move(st_stack), std::move(param_names),
+        std::move(default_values), variadic_count == 1?true:false, lambda_));
 
     return fobj;
   } catch (RunTimeError& e) {

@@ -70,6 +70,10 @@ class Function {
     return vec;
   }
 
+  const std::vector<std::unique_ptr<FunctionParam>>& params() const noexcept {
+    return params_;
+  }
+
   // shared is passed because the pointer of body function
   // is used by others objects, this object can exists
   // even when the ast doesn't exists anymore, it happens

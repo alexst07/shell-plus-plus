@@ -72,7 +72,7 @@ RegexType::RegexType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<RegexSearchFunc>("search", symbol_table_stack(), *this);
 }
 
-ObjectPtr RegexType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr RegexType::Constructor(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, regex)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], regex, STRING)
 
@@ -82,8 +82,7 @@ ObjectPtr RegexType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory.NewRegex(str);
 }
 
-ObjectPtr RegexMatchFunc::Call(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr RegexMatchFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, match)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], match, STRING)
 
@@ -94,8 +93,7 @@ ObjectPtr RegexMatchFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(regex_obj.Match(str));
 }
 
-ObjectPtr RegexSearchFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr RegexSearchFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, search)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], search, REGEX)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], search, STRING)

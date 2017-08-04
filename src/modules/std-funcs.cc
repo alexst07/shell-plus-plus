@@ -25,7 +25,7 @@ namespace internal {
 namespace module {
 namespace stdf {
 
-ObjectPtr PrintFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr PrintFunc::Call(Executor*, Args&& params, KWArgs&&) {
   for (auto& e: params) {
     std::cout << e->Print();
   }
@@ -35,7 +35,7 @@ ObjectPtr PrintFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewNull();
 }
 
-ObjectPtr PrintErrFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr PrintErrFunc::Call(Executor*, Args&& params, KWArgs&&) {
   for (auto& e: params) {
     std::cerr << e->Print();
   }
@@ -45,7 +45,7 @@ ObjectPtr PrintErrFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewNull();
 }
 
-ObjectPtr ReadFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr ReadFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 1, read)
 
   if (params.size()  == 1) {
@@ -62,7 +62,7 @@ ObjectPtr ReadFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewString(str);
 }
 
-ObjectPtr LenFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr LenFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, len)
 
   long int size = params[0]->Len();
@@ -70,7 +70,7 @@ ObjectPtr LenFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewInt(static_cast<int>(size));
 }
 
-ObjectPtr CompFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr CompFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, comp)
 
   ObjectPtr obj_resp = params[0]->Lesser(params[1]);
@@ -83,13 +83,13 @@ ObjectPtr CompFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_resp;
 }
 
-ObjectPtr RangeFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr RangeFunc::Call(Executor*, Args&& params, KWArgs&&) {
   ObjectPtr obj = obj_factory_.NewRangeIterType();
   RangeIterType& range_it_type = static_cast<RangeIterType&>(*obj);
   return range_it_type.Constructor(nullptr, std::move(params));
 }
 
-ObjectPtr AssertFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr AssertFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, assert)
   SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, assert)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], test, BOOL)
@@ -110,7 +110,7 @@ ObjectPtr AssertFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewNull();
 }
 
-ObjectPtr IsInteractiveFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr IsInteractiveFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 0, params)
 
   int shell_terminal;
@@ -125,25 +125,25 @@ ObjectPtr IsInteractiveFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewBool(v);
 }
 
-ObjectPtr GlobFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr GlobFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, params)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], msg, STRING)
 
   ObjectFactory obj_factory(symbol_table_stack());
   const std::string& glob_str = static_cast<StringObject&>(*params[0]).value();
 
-  std::vector<ObjectPtr> glob_obj = ExecGlob(glob_str, symbol_table_stack());
+  Args glob_obj = ExecGlob(glob_str, symbol_table_stack());
   return obj_factory.NewArray(std::move(glob_obj));
 }
 
-ObjectPtr GlobRFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr GlobRFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, params)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], msg, STRING)
 
   ObjectFactory obj_factory(symbol_table_stack());
   const std::string& glob_str = static_cast<StringObject&>(*params[0]).value();
 
-  std::vector<ObjectPtr> glob_obj =
+  Args glob_obj =
       ListTree(boost::filesystem::current_path(), glob_str,
       symbol_table_stack());
 
@@ -151,13 +151,13 @@ ObjectPtr GlobRFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
 }
 
 ObjectPtr DumpSymbolTableFunc::SpecialCall(Executor* parent,
-    std::vector<ObjectPtr>&& params, SymbolTableStack& curret_sym_tab) {
+    Args&& params, KWArgs&&, SymbolTableStack& curret_sym_tab) {
   curret_sym_tab.Dump();
   return obj_factory_.NewNull();
 }
 
 ObjectPtr EvalFunc::SpecialCall(Executor* parent,
-    std::vector<ObjectPtr>&& params, SymbolTableStack& curret_sym_tab) {
+    Args&& params, KWArgs&&, SymbolTableStack& curret_sym_tab) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, params)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], code, STRING)
 

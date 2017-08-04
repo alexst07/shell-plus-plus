@@ -63,8 +63,7 @@ class DeclClassType: public TypeObject {
     return symbol_table_stack();
   }
 
-  ObjectPtr Constructor(Executor* parent,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor* parent, Args&& params, KWArgs&&) override;
 };
 
 class DeclClassObject: public Object {
@@ -154,7 +153,7 @@ class DeclClassObject: public Object {
 
   void DelItem(ObjectPtr obj) override;
 
-  ObjectPtr Call(Executor*, std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Call(Executor*, Args&& params, KWArgs&& kw_params) override;
 
   SymbolTableStack& SymTable() {
     return symbol_table_stack();
@@ -178,11 +177,17 @@ class DeclClassObject: public Object {
 
     std::vector<ObjectPtr> params = PackArgs(arg, std::forward<Objs>(args)...);
 
+    // empty kw_args, functions using this caller is operator overload
+    // functions that have the fix number of parameters and doesn't
+    // have keywords params
+    KWArgs kw_args;
+
     return static_cast<FuncObject&>(*func_obj).Call(nullptr,
-                                                    std::move(params));
+        std::move(params), std::move(kw_args));
   }
 
-  ObjectPtr Caller(const std::string& fname, std::vector<ObjectPtr>&& params);
+  ObjectPtr Caller(const std::string& fname, Args&& params,
+                   KWArgs&& kw_params);
 
   std::weak_ptr<Object> self_;
 };

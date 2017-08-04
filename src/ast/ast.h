@@ -77,7 +77,8 @@ namespace internal {
   V(Assignment)               \
   V(CountOperation)           \
   V(Property)                 \
-  V(KeyValue)
+  V(KeyValue)                 \
+  V(Argument)
 
 #define CALL_NODE_LIST(V) \
   V(Call)                 \
@@ -110,6 +111,7 @@ namespace internal {
   V(CompareOperation)           \
   V(AssignableValue)            \
   V(AssignableList)             \
+  V(ArgumentsList)              \
   V(ExpressionList)             \
   V(FunctionCall)               \
   V(LetExpression)              \
@@ -1764,6 +1766,72 @@ class Attribute: public Expression {
       , id_(std::move(id)) {}
 };
 
+class Argument: public Expression {
+ public:
+  virtual ~Argument() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitArgument(this);
+  }
+
+  AssignableValue* arg() {
+    return arg_.get();
+  }
+
+  const std::string& key() const noexcept {
+    return key_;
+  }
+
+  bool has_key() const noexcept {
+    return !key_.empty();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::string key_;
+  std::unique_ptr<AssignableValue> arg_;
+
+  Argument(const std::string& key, std::unique_ptr<AssignableValue> arg,
+           Position position)
+      : Expression(NodeType::kArgument, position)
+      , key_(key)
+      , arg_(std::move(arg)) {}
+};
+
+class ArgumentsList: public AstNode, public AssignableInterface {
+ public:
+  virtual ~ArgumentsList() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitArgumentsList(this);
+  }
+
+  std::vector<Argument*> children() noexcept {
+    std::vector<Argument*> vec;
+
+    for (auto&& node: nodes_) {
+      vec.push_back(node.get());
+    }
+
+    return vec;
+  }
+
+  bool IsEmpty() const noexcept {
+    return nodes_.empty();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<Argument>> nodes_;
+
+  ArgumentsList(std::vector<std::unique_ptr<Argument>>&& nodes,
+                Position position)
+      : AstNode(NodeType::kArgumentsList, position)
+      , nodes_(std::move(nodes)) {}
+};
+
 class FunctionCall: public Expression {
  public:
   virtual ~FunctionCall() {}
@@ -1777,24 +1845,24 @@ class FunctionCall: public Expression {
   }
 
   bool IsRvalueListEmpty() const noexcept {
-    return rvalue_list_->IsEmpty();
+    return args_list_->IsEmpty();
   }
 
-  AssignableList* rvalue_list() {
-    return rvalue_list_.get();
+  ArgumentsList* args_list() {
+    return args_list_.get();
   }
 
  private:
   friend class AstNodeFactory;
 
   std::unique_ptr<Expression> func_exp_;
-  std::unique_ptr<AssignableList> rvalue_list_;
+  std::unique_ptr<ArgumentsList> args_list_;
 
   FunctionCall(std::unique_ptr<Expression> func_exp,
-               std::unique_ptr<AssignableList> rvalue_list, Position position)
+               std::unique_ptr<ArgumentsList> args_list, Position position)
       : Expression(NodeType::kFunctionCall, position)
       , func_exp_(std::move(func_exp))
-      , rvalue_list_(std::move(rvalue_list)) {}
+      , args_list_(std::move(args_list)) {}
 };
 
 class NullExpression: public Expression {

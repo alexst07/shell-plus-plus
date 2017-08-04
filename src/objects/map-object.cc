@@ -315,8 +315,7 @@ MapType::MapType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<MapExistsFunc>("exists", symbol_table_stack(), *this);
 }
 
-ObjectPtr MapKeysFunc::Call(Executor* parent,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr MapKeysFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, keys)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
@@ -335,8 +334,7 @@ ObjectPtr MapKeysFunc::Call(Executor* parent,
   return obj_factory.NewArray(std::move(keys));
 }
 
-ObjectPtr MapValuesFunc::Call(Executor* parent,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr MapValuesFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, values)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
@@ -355,8 +353,7 @@ ObjectPtr MapValuesFunc::Call(Executor* parent,
   return obj_factory.NewArray(std::move(keys));
 }
 
-ObjectPtr MapClearFunc::Call(Executor* parent,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr MapClearFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, clear)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
@@ -367,8 +364,7 @@ ObjectPtr MapClearFunc::Call(Executor* parent,
   return params[0];
 }
 
-ObjectPtr MapUpdateFunc::Call(Executor* parent,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr MapUpdateFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, update)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
@@ -386,8 +382,7 @@ ObjectPtr MapUpdateFunc::Call(Executor* parent,
   return params[0];
 }
 
-ObjectPtr MapExistsFunc::Call(Executor* parent,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr MapExistsFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, exists)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);

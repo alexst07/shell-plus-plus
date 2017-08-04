@@ -115,8 +115,7 @@ class StringType: public TypeObject {
 
   virtual ~StringType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class StringGetterFunc: public FuncObject {
@@ -124,7 +123,7 @@ class StringGetterFunc: public FuncObject {
   StringGetterFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringToLowerFunc: public FuncObject {
@@ -132,7 +131,7 @@ class StringToLowerFunc: public FuncObject {
   StringToLowerFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringToUpperFunc: public FuncObject {
@@ -140,7 +139,7 @@ class StringToUpperFunc: public FuncObject {
   StringToUpperFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringTrimmFunc: public FuncObject {
@@ -148,7 +147,7 @@ class StringTrimmFunc: public FuncObject {
   StringTrimmFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringTrimmLeftFunc: public FuncObject {
@@ -156,7 +155,7 @@ class StringTrimmLeftFunc: public FuncObject {
   StringTrimmLeftFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringTrimmRightFunc: public FuncObject {
@@ -164,7 +163,7 @@ class StringTrimmRightFunc: public FuncObject {
   StringTrimmRightFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringFindFunc: public FuncObject {
@@ -172,7 +171,7 @@ class StringFindFunc: public FuncObject {
   StringFindFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringCountFunc: public FuncObject {
@@ -180,7 +179,7 @@ class StringCountFunc: public FuncObject {
   StringCountFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringEndsWithFunc: public FuncObject {
@@ -188,7 +187,7 @@ class StringEndsWithFunc: public FuncObject {
   StringEndsWithFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringSplitFunc: public FuncObject {
@@ -196,7 +195,7 @@ class StringSplitFunc: public FuncObject {
   StringSplitFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringReplaceFunc: public FuncObject {
@@ -204,7 +203,7 @@ class StringReplaceFunc: public FuncObject {
   StringReplaceFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringReplaceFirstFunc: public FuncObject {
@@ -212,7 +211,7 @@ class StringReplaceFirstFunc: public FuncObject {
   StringReplaceFirstFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringReplaceLastFunc: public FuncObject {
@@ -220,7 +219,7 @@ class StringReplaceLastFunc: public FuncObject {
   StringReplaceLastFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class StringEraseAllFunc: public FuncObject {
@@ -228,7 +227,7 @@ class StringEraseAllFunc: public FuncObject {
   StringEraseAllFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 }

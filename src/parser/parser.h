@@ -309,6 +309,8 @@ class Parser {
   ParserResult<Statement> ParserStmtDecl();
   bool IsStmtDecl();
 
+  ParserResult<Expression> ParserArgument();
+  ParserResult<ArgumentsList> ParserArgumentsList();
   ParserResult<AssignableValue> ParserAssignable();
   ParserResult<AssignableList> ParserAssignableList();
   ParserResult<Expression> ParserArrayInstantiation();

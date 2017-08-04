@@ -26,6 +26,7 @@
 #include "abstract-obj.h"
 #include "slice-object.h"
 #include "obj-type.h"
+#include "func-object.h"
 
 namespace shpp {
 namespace internal {
@@ -58,7 +59,7 @@ class FileIterType: public TypeObject {
   virtual ~FileIterType() {}
 
   ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+                        Args&& params, KWArgs&&) override;
 };
 
 class FileObject: public Object {
@@ -106,7 +107,7 @@ class FileType: public TypeObject {
 
   virtual ~FileType() {}
 
-  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&&) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class FileCloseFunc: public FuncObject {
@@ -114,7 +115,7 @@ class FileCloseFunc: public FuncObject {
   FileCloseFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class FileReadLineFunc: public FuncObject {
@@ -122,7 +123,7 @@ class FileReadLineFunc: public FuncObject {
   FileReadLineFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class FileReadFunc: public FuncObject {
@@ -130,7 +131,7 @@ class FileReadFunc: public FuncObject {
   FileReadFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class FileReadAllFunc: public FuncObject {
@@ -138,7 +139,7 @@ class FileReadAllFunc: public FuncObject {
   FileReadAllFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class FileSizeFunc: public FuncObject {
@@ -146,7 +147,7 @@ class FileSizeFunc: public FuncObject {
   FileSizeFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class FileWriteFunc: public FuncObject {
@@ -154,7 +155,7 @@ class FileWriteFunc: public FuncObject {
   FileWriteFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class FileTellgFunc: public FuncObject {
@@ -162,7 +163,7 @@ class FileTellgFunc: public FuncObject {
   FileTellgFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class FileSeekgFunc: public FuncObject {
@@ -170,7 +171,7 @@ class FileSeekgFunc: public FuncObject {
   FileSeekgFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 }

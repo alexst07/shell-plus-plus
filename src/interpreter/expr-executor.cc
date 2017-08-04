@@ -531,34 +531,79 @@ void ExprListExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 
+std::tuple<ArgumentsExecutor::Args, ArgumentsExecutor::KWArgs>
+ArgumentsExecutor::Exec(ArgumentsList* args_list) {
+  bool found_kwarg = false;
+  Args args;
+  KWArgs kw_args;
+
+  AssignableListExecutor assign_exec(this, symbol_table_stack());
+
+  for (Argument* arg: args_list->children()) {
+    if (arg->has_key()) {
+      found_kwarg = true;
+
+      std::string name = arg->key();
+
+      ObjectPtr value = assign_exec.ExecAssignable(arg->arg());
+
+      kw_args.insert(std::pair<std::string, ObjectPtr>(name, value));
+    } else {
+      if (found_kwarg) {
+        throw RunTimeError(RunTimeError::ErrorCode::INVALID_ARGS,
+            boost::format("positional argument follows keyword argument"));
+      }
+
+      EllipsisExprExecutor ellipsis_expr_executor(this, symbol_table_stack());
+
+      if (arg->arg()->type() == AstNode::NodeType::kEllipsisExpression) {
+        std::vector<ObjectPtr> elems = ellipsis_expr_executor.Exec(arg->arg());
+        args.insert(args.end(), elems.begin(), elems.end());
+      } else {
+        args.push_back(assign_exec.ExecAssignable(arg->arg()));
+      }
+    }
+  }
+
+  return std::tuple<Args, KWArgs>(std::move(args), std::move(kw_args));
+}
+
+void ArgumentsExecutor::set_stop(StopFlag flag) {
+  parent()->set_stop(flag);
+}
+
 ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr fobj = expr_exec.Exec(node->func_exp());
 
-  AssignableListExecutor assignable_list(this, symbol_table_stack());
-  auto vec = assignable_list.Exec(node->rvalue_list());
+  ArgumentsExecutor args_list(this, symbol_table_stack());
+
+  Args args;
+  KWArgs kw_args;
+  std::tie(args, kw_args) = args_list.Exec(node->args_list());
 
   try {
     switch (fobj->type()) {
       case Object::ObjectType::FUNC: {
-        return static_cast<FuncObject&>(*fobj).Call(this, std::move(vec));
+        return static_cast<FuncObject&>(*fobj).Call(this, std::move(args),
+            std::move(kw_args));
         break;
       }
 
       case Object::ObjectType::SPEC_FUNC: {
         return static_cast<SpecialFuncObject&>(*fobj).SpecialCall(this,
-            std::move(vec), symbol_table_stack());
+            std::move(args), std::move(kw_args), symbol_table_stack());
         break;
       }
 
       case Object::ObjectType::TYPE: {
         return static_cast<TypeObject&>(*fobj).Constructor(this,
-            std::move(vec));
+            std::move(args), std::move(kw_args));
         break;
       }
 
       default: {
-        return fobj->Call(this, std::move(vec));
+        return fobj->Call(this, std::move(args), std::move(kw_args));
       }
     }
   } catch (RunTimeError& e) {

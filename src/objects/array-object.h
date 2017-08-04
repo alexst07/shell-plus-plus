@@ -155,7 +155,7 @@ class ArrayType: public ContainerType {
   ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table);
 
   virtual ObjectPtr Constructor(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params);
+                                Args&& params, KWArgs&&);
 
   virtual ~ArrayType() {}
 };
@@ -165,7 +165,7 @@ class ArrayJoinFunc: public FuncObject {
   ArrayJoinFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class ArrayAppendFunc: public FuncObject {
@@ -173,7 +173,7 @@ class ArrayAppendFunc: public FuncObject {
   ArrayAppendFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class ArrayExtendFunc: public FuncObject {
@@ -181,7 +181,7 @@ class ArrayExtendFunc: public FuncObject {
   ArrayExtendFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class ArrayInsertFunc: public FuncObject {
@@ -189,7 +189,7 @@ class ArrayInsertFunc: public FuncObject {
   ArrayInsertFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class ArrayRemoveFunc: public FuncObject {
@@ -197,7 +197,7 @@ class ArrayRemoveFunc: public FuncObject {
   ArrayRemoveFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class ArrayPopFunc: public FuncObject {
@@ -205,7 +205,7 @@ class ArrayPopFunc: public FuncObject {
   ArrayPopFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class ArrayClearFunc: public FuncObject {
@@ -213,7 +213,7 @@ class ArrayClearFunc: public FuncObject {
   ArrayClearFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class ArrayIndexFunc: public FuncObject {
@@ -221,7 +221,7 @@ class ArrayIndexFunc: public FuncObject {
   ArrayIndexFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class ArrayCountFunc: public FuncObject {
@@ -229,7 +229,7 @@ class ArrayCountFunc: public FuncObject {
   ArrayCountFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class ArraySortFunc: public FuncObject {
@@ -237,7 +237,7 @@ class ArraySortFunc: public FuncObject {
   ArraySortFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* parent, Args&& params, KWArgs&&);
 
  private:
   bool Comp(ObjectPtr obj1, ObjectPtr obj2);
@@ -250,7 +250,7 @@ class ArrayReverseFunc: public FuncObject {
   ArrayReverseFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* parent, Args&& params, KWArgs&&);
 };
 
 class ArrayForEachFunc: public FuncObject {
@@ -258,7 +258,7 @@ class ArrayForEachFunc: public FuncObject {
   ArrayForEachFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* parent, Args&& params, KWArgs&&);
 };
 
 class ArrayMapFunc: public FuncObject {
@@ -266,7 +266,7 @@ class ArrayMapFunc: public FuncObject {
   ArrayMapFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* parent, Args&& params, KWArgs&&);
 };
 
 }

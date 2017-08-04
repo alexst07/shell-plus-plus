@@ -21,18 +21,45 @@
 #include <tuple>
 #include <list>
 
+#include "abstract-obj.h"
 #include "run_time_error.h"
 #include "obj-type.h"
 
 namespace shpp {
 namespace internal {
 
+class FuncType: public TypeObject {
+ public:
+  FuncType(ObjectPtr obj_type, SymbolTableStack&& sym_table);
+
+  virtual ~FuncType() {}
+
+  ObjectPtr Constructor(Executor*, Args&&, KWArgs&&) override {
+      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                         boost::format("func() not contructable"));
+
+    return ObjectPtr(nullptr);
+  }
+};
+
 class FuncObject: public Object {
  public:
-  FuncObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::FUNC, obj_type, std::move(sym_table)) {}
+  FuncObject(ObjectPtr obj_type, SymbolTableStack&& sym_table,
+      std::vector<std::string>&& params = std::vector<std::string>(),
+      std::vector<std::string>&& default_params = std::vector<std::string>(),
+      bool variadic = false)
+      : Object(ObjectType::FUNC, obj_type, std::move(sym_table))
+      , params_(std::move(params))
+      , default_params_(std::move(default_params))
+      , variadic_(variadic) {}
 
   virtual ~FuncObject() {}
+
+  virtual ObjectPtr Params();
+
+  virtual ObjectPtr DefaultParams();
+
+  virtual ObjectPtr Variadic();
 
   std::size_t Hash() override {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -42,6 +69,11 @@ class FuncObject: public Object {
   std::string Print() override {
     return std::string("[function]");
   }
+
+ private:
+  std::vector<std::string> params_;
+  std::vector<std::string> default_params_;
+  bool variadic_;
 };
 
 class SpecialFuncObject: public Object {
@@ -56,8 +88,9 @@ class SpecialFuncObject: public Object {
                        boost::format("func object has no hash method"));
   }
 
-  virtual ObjectPtr SpecialCall(Executor* parent,
-      std::vector<ObjectPtr>&& params, SymbolTableStack& curret_sym_tab) = 0;
+  virtual ObjectPtr SpecialCall(Executor* parent, Args&& params,
+                                KWArgs&& kw_params,
+                                SymbolTableStack& curret_sym_tab) = 0;
 
   std::string Print() override {
     return std::string("[function]");
@@ -74,7 +107,7 @@ class FuncWrapperObject: public FuncObject {
 
   virtual ~FuncWrapperObject() {}
 
-  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Call(Executor* parent, Args&& params, KWArgs&& kw_params) override;
 
  private:
   ObjectPtr func_;
@@ -84,33 +117,39 @@ class FuncWrapperObject: public FuncObject {
 class FuncDeclObject: public FuncObject {
  public:
   FuncDeclObject(const std::string& id, std::shared_ptr<Block> start_node,
-                 const SymbolTableStack& symbol_table,
-                 std::vector<std::string>&& params,
-                 std::vector<ObjectPtr>&& default_values,
-                 bool variadic, bool lambda, ObjectPtr obj_type,
-                 SymbolTableStack&& sym_table)
-      : FuncObject(obj_type, std::move(sym_table))
-      , id_(id)
-      , start_node_(start_node)
-      , symbol_table_{lambda?symbol_table:SymbolTableStack()}
-      , params_(std::move(params))
-      , default_values_(std::move(default_values))
-      , variadic_(variadic)
-      , lambda_(lambda) {
-    if (lambda) {
-      // if is lambda create a new symbol table on stack, it works like if stmt
-      symbol_table_.NewTable();
-    } else {
-      // if is function declaration get only the first symbol table
-      symbol_table_.Push(symbol_table.MainTable(), true);
-    }
-  }
+      const SymbolTableStack& symbol_table,
+      std::vector<std::string>&& params,
+      std::unordered_map<std::string, ObjectPtr>&& default_values,
+      bool variadic, bool lambda, ObjectPtr obj_type,
+      SymbolTableStack&& sym_table);
 
-  ObjectPtr Call(Executor* parent, std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Call(Executor* parent, Args&& params, KWArgs&& kw_params) override;
 
-  void HandleArguments(std::vector<ObjectPtr>&& params);
+  ObjectPtr Attr(ObjectPtr self, const std::string& name) override;
 
  private:
+  ObjectPtr Params() override;
+
+  ObjectPtr DefaultParams() override;
+
+  ObjectPtr Variadic() override;
+
+  void HandleArguments(Args&& params, KWArgs&& kw_params);
+
+  void HandleSimpleArguments(Args&& params, KWArgs&& kw_params);
+
+  void HandleVariadicArguments(Args&& params, KWArgs&& kw_params);
+
+  bool CheckParamsInInterval(const std::string& param, size_t begin, size_t end);
+
+  ObjectPtr GetDefaultParam(const std::string& param);
+
+  bool CheckInDefaultValues(const std::string& param);
+
+  void FillParam(std::vector<bool>& params_fill, const std::string& param);
+
+  bool CheckParamIsFill(std::vector<bool>& params_fill, const std::string& param);
+
   std::string id_;
 
   // the start_node_ is a pointer on ast, on interactive mode the
@@ -119,7 +158,7 @@ class FuncDeclObject: public FuncObject {
   std::shared_ptr<Block> start_node_;
   SymbolTableStack symbol_table_;
   std::vector<std::string> params_;
-  std::vector<ObjectPtr> default_values_;
+  std::unordered_map<std::string, ObjectPtr> default_values_;
   bool variadic_;
   bool lambda_;
 };

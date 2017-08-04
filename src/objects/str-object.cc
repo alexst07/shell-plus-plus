@@ -186,8 +186,7 @@ StringType::StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
                                   *this);
 }
 
-ObjectPtr StringType::Constructor(Executor* /*parent*/,
-                                  std::vector<ObjectPtr>&& params) {
+ObjectPtr StringType::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("real() takes exactly 1 argument"));
@@ -205,8 +204,7 @@ ObjectPtr StringType::Constructor(Executor* /*parent*/,
   return params[0]->ObjString();
 }
 
-ObjectPtr StringGetterFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr StringGetterFunc::Call(Executor*, Args&& params, KWArgs&&) {
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
   IntObject& int_obj = static_cast<IntObject&>(*params[1]);
 
@@ -216,8 +214,7 @@ ObjectPtr StringGetterFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(cstr);
 }
 
-ObjectPtr StringToLowerFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr StringToLowerFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, to_lower)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
@@ -227,8 +224,7 @@ ObjectPtr StringToLowerFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr StringToUpperFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr StringToUpperFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, to_upper)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
@@ -238,8 +234,7 @@ ObjectPtr StringToUpperFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr StringTrimmFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr StringTrimmFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, trim)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
@@ -249,8 +244,7 @@ ObjectPtr StringTrimmFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr StringTrimmLeftFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr StringTrimmLeftFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, trim_left)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
@@ -260,8 +254,7 @@ ObjectPtr StringTrimmLeftFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr StringTrimmRightFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr StringTrimmRightFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, trim_right)
 
   StringObject& str_obj = static_cast<StringObject&>(*params[0]);
@@ -271,8 +264,7 @@ ObjectPtr StringTrimmRightFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr StringFindFunc::Call(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr StringFindFunc::Call(Executor*, Args&& params, KWArgs&&) {
   int pos = 0;
 
   if (params.size() == 3) {
@@ -301,8 +293,7 @@ ObjectPtr StringFindFunc::Call(Executor* /*parent*/,
   return obj_factory.NewInt(f);
 }
 
-ObjectPtr StringCountFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr StringCountFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, find)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
 
@@ -321,8 +312,7 @@ ObjectPtr StringCountFunc::Call(Executor* /*parent*/,
   return obj_factory.NewInt(count);
 }
 
-ObjectPtr StringEndsWithFunc::Call(Executor* /*parent*/,
-                                   std::vector<ObjectPtr>&& params) {
+ObjectPtr StringEndsWithFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
 
@@ -344,8 +334,7 @@ ObjectPtr StringEndsWithFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(false);
 }
 
-ObjectPtr StringSplitFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr StringSplitFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, split)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], delim, STRING)
 
@@ -358,7 +347,7 @@ ObjectPtr StringSplitFunc::Call(Executor* /*parent*/,
                           boost::algorithm::token_compress_on);
 
   ObjectFactory obj_factory(symbol_table_stack());
-  std::vector<ObjectPtr> obj_split;
+  Args obj_split;
 
   for (auto& s: str_split) {
     obj_split.push_back(obj_factory.NewString(s));
@@ -367,8 +356,7 @@ ObjectPtr StringSplitFunc::Call(Executor* /*parent*/,
   return obj_factory.NewArray(std::move(obj_split));
 }
 
-ObjectPtr StringReplaceFunc::Call(Executor* /*parent*/,
-                                  std::vector<ObjectPtr>&& params) {
+ObjectPtr StringReplaceFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
@@ -386,8 +374,7 @@ ObjectPtr StringReplaceFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr StringReplaceFirstFunc::Call(Executor* /*parent*/,
-                                  std::vector<ObjectPtr>&& params) {
+ObjectPtr StringReplaceFirstFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
@@ -405,8 +392,7 @@ ObjectPtr StringReplaceFirstFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr StringReplaceLastFunc::Call(Executor* /*parent*/,
-                                  std::vector<ObjectPtr>&& params) {
+ObjectPtr StringReplaceLastFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 3, ends_with)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[2], str, STRING)
@@ -424,8 +410,7 @@ ObjectPtr StringReplaceLastFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr StringEraseAllFunc::Call(Executor* /*parent*/,
-                                  std::vector<ObjectPtr>&& params) {
+ObjectPtr StringEraseAllFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
 

@@ -40,7 +40,7 @@ ObjectPtr FileIterObject::HasNext() {
 }
 
 ObjectPtr FileIterType::Constructor(Executor* /*parent*/,
-                                     std::vector<ObjectPtr>&& params) {
+                                     Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("file_iter() takes exactly 1 argument"));
@@ -155,8 +155,7 @@ FileType::FileType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<FileSeekgFunc>("seekg", symbol_table_stack(), *this);
 }
 
-ObjectPtr FileType::Constructor(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr FileType::Constructor(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, file)
   SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, file)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
@@ -204,8 +203,7 @@ ObjectPtr FileType::Constructor(Executor* /*parent*/,
   return obj_factory.NewFile(path, mode);
 }
 
-ObjectPtr FileCloseFunc::Call(Executor* /*parent*/,
-    std::vector<ObjectPtr>&& params) {
+ObjectPtr FileCloseFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, close)
 
   FileObject& fs = static_cast<FileObject&>(*params[0]);
@@ -215,8 +213,7 @@ ObjectPtr FileCloseFunc::Call(Executor* /*parent*/,
   return obj_factory.NewNull();
 }
 
-ObjectPtr FileReadLineFunc::Call(Executor* /*parent*/,
-    std::vector<ObjectPtr>&& params) {
+ObjectPtr FileReadLineFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, read)
 
   FileObject& file = static_cast<FileObject&>(*params[0]);
@@ -230,8 +227,7 @@ ObjectPtr FileReadLineFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(false);
 }
 
-ObjectPtr FileReadFunc::Call(Executor* /*parent*/,
-    std::vector<ObjectPtr>&& params) {
+ObjectPtr FileReadFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, read)
   SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, read)
 
@@ -255,8 +251,7 @@ ObjectPtr FileReadFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(buffer);
 }
 
-ObjectPtr FileReadAllFunc::Call(Executor* /*parent*/,
-    std::vector<ObjectPtr>&& params) {
+ObjectPtr FileReadAllFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, readall)
 
   FileObject& fs = static_cast<FileObject&>(*params[0]);
@@ -265,8 +260,7 @@ ObjectPtr FileReadAllFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(fs.ReadAll());
 }
 
-ObjectPtr FileSizeFunc::Call(Executor* /*parent*/,
-    std::vector<ObjectPtr>&& params) {
+ObjectPtr FileSizeFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, size)
 
   FileObject& fs = static_cast<FileObject&>(*params[0]);
@@ -275,8 +269,7 @@ ObjectPtr FileSizeFunc::Call(Executor* /*parent*/,
   return obj_factory.NewInt(fs.Size());
 }
 
-ObjectPtr FileWriteFunc::Call(Executor* /*parent*/,
-    std::vector<ObjectPtr>&& params) {
+ObjectPtr FileWriteFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, write)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], write, STRING)
 
@@ -289,8 +282,7 @@ ObjectPtr FileWriteFunc::Call(Executor* /*parent*/,
   return obj_factory.NewNull();
 }
 
-ObjectPtr FileTellgFunc::Call(Executor* /*parent*/,
-    std::vector<ObjectPtr>&& params) {
+ObjectPtr FileTellgFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, tellg)
 
   FileObject& fs = static_cast<FileObject&>(*params[0]);
@@ -301,8 +293,7 @@ ObjectPtr FileTellgFunc::Call(Executor* /*parent*/,
   return obj_factory.NewInt(pos);
 }
 
-ObjectPtr FileSeekgFunc::Call(Executor* /*parent*/,
-    std::vector<ObjectPtr>&& params) {
+ObjectPtr FileSeekgFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, seekg)
   SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 3, seekg)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], seekg, INT)

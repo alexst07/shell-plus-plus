@@ -200,6 +200,36 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitArgumentsList(ArgumentsList *list) {
+    Level();
+    std::cout << "<arguments_list>\n";
+    level_++;
+    auto vec = list->children();
+    int i = 0;
+    for (const auto c: vec) {
+      Level();
+      std::cout << "<arg i: " << i << ">\n";
+      level_++;
+      c->Accept(this);
+      level_--;
+      i++;
+    }
+    level_--;
+  }
+
+  void virtual VisitArgument(Argument *arg) {
+    level_++;
+
+    if (arg->has_key()) {
+      Level();
+      std::cout << "<key>" << arg->key() << "</key>\n";
+    }
+
+    arg->arg()->Accept(this);
+
+    level_--;
+  }
+
   void virtual VisitFunctionCall(FunctionCall* fn) {
     Level();
     std::cout << "<function_call>\n";
@@ -212,9 +242,9 @@ class AstPrinter: public AstVisitor {
     level_--;
 
     Level();
-    std::cout << "<function_assignable_list>\n";
+    std::cout << "<function_argument_list>\n";
     level_++;
-    fn->rvalue_list()->Accept(this);
+    fn->args_list()->Accept(this);
     level_--;
     level_--;
   }

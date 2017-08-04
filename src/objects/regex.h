@@ -65,7 +65,7 @@ class RegexType: public TypeObject {
 
   virtual ~RegexType() {}
 
-  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class RegexMatchFunc: public FuncObject {
@@ -73,7 +73,7 @@ class RegexMatchFunc: public FuncObject {
   RegexMatchFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class RegexSearchFunc: public FuncObject {
@@ -81,7 +81,7 @@ class RegexSearchFunc: public FuncObject {
   RegexSearchFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 }

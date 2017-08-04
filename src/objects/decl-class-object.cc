@@ -8,8 +8,8 @@ namespace internal {
 // constructor for declared class call __init__ method from
 // symbol table, and create an DeclClassObject, this object
 // has a symbol table stack to store attributes
-ObjectPtr DeclClassType::Constructor(Executor* parent,
-                                     std::vector<ObjectPtr>&& params) {
+ObjectPtr DeclClassType::Constructor(Executor* parent, Args&& params,
+    KWArgs&& kw_params) {
   ObjectFactory obj_factory(symbol_table_stack());
   ObjectPtr obj_self(obj_factory.NewDeclObject(this->name()));
 
@@ -18,7 +18,8 @@ ObjectPtr DeclClassType::Constructor(Executor* parent,
 
   if (obj_init->type() == ObjectType::FUNC) {
     params.insert(params.begin(), obj_self);
-    static_cast<FuncObject&>(*obj_init).Call(parent, std::move(params));
+    static_cast<FuncObject&>(*obj_init).Call(parent, std::move(params),
+        std::move(kw_params));
   }
 
   return obj_self;
@@ -196,8 +197,8 @@ ObjectPtr DeclClassObject::HasNext() {
   return Caller("__has_next__", self_.lock());
 }
 
-ObjectPtr DeclClassObject::Call(Executor*, std::vector<ObjectPtr>&& params) {
-  return Caller("__call__", std::move(params));
+ObjectPtr DeclClassObject::Call(Executor*, Args&& params, KWArgs&& kw_params) {
+  return Caller("__call__", std::move(params), std::move(kw_params));
 }
 
 std::string DeclClassObject::Print() {
@@ -245,8 +246,8 @@ ObjectPtr DeclClassObject::ObjString() {
   return Caller("__str__", self_.lock());
 }
 
-ObjectPtr DeclClassObject::Caller(const std::string& fname,
-                                  std::vector<ObjectPtr>&& params) {
+ObjectPtr DeclClassObject::Caller(const std::string& fname, Args&& params,
+    KWArgs&& kw_params) {
   SymbolTableStack& st =
       static_cast<DeclClassType&>(*ObjType()).SymTableStack();
   ObjectPtr func_obj = st.Lookup(fname, false).SharedAccess();
@@ -258,7 +259,8 @@ ObjectPtr DeclClassObject::Caller(const std::string& fname,
 
   params.insert(params.begin(), self_.lock());
 
-  return static_cast<FuncObject&>(*func_obj).Call(nullptr, std::move(params));
+  return static_cast<FuncObject&>(*func_obj).Call(nullptr, std::move(params),
+      std::move(kw_params));
 }
 
 }

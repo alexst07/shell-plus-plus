@@ -97,7 +97,7 @@ ObjectPtr CmdObject::ObjArray() {
   std::string str_cmd = str_stdout_;
   boost::trim_if(str_cmd, boost::is_any_of(delim_));
 
-  std::vector<ObjectPtr> arr_obj;
+  Args arr_obj;
   std::vector<std::string> arr_str;
 
   if (str_cmd.empty()) {
@@ -132,7 +132,7 @@ bool CmdObject::Compare(ObjectPtr obj) {
 
   ObjectFactory obj_factory(symbol_table_stack());
 
-  std::vector<ObjectPtr> params_array = {obj_factory.NewString(str_stdout_)};
+  Args params_array = {obj_factory.NewString(str_stdout_)};
   ObjectPtr obj_comp = type.Constructor(nullptr, std::move(params_array));
   ObjectPtr obj_bool = obj_comp->Equal(obj);
 
@@ -167,7 +167,7 @@ ObjectPtr CmdObject::In(ObjectPtr obj) {
   std::string str_cmd = str_stdout_;
   boost::trim_if(str_cmd, boost::is_any_of(delim_));
 
-  std::vector<ObjectPtr> arr_obj;
+  Args arr_obj;
   std::vector<std::string> arr_str;
 
   if (str_cmd.empty()) {
@@ -178,7 +178,7 @@ ObjectPtr CmdObject::In(ObjectPtr obj) {
                           boost::algorithm::token_compress_on);
 
   for (auto& s: arr_str) {
-    std::vector<ObjectPtr> params_array = {obj_factory.NewString(s)};
+    Args params_array = {obj_factory.NewString(s)};
     ObjectPtr obj_comp = type.Constructor(nullptr, std::move(params_array));
     ObjectPtr obj_bool = obj_comp->Equal(obj);
 
@@ -202,14 +202,12 @@ CmdType::CmdType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<CmdDelimFunc>("delim", symbol_table_stack(), *this);
 }
 
-ObjectPtr CmdType::Constructor(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& /*params*/) {
+ObjectPtr CmdType::Constructor(Executor*, Args&&, KWArgs&&) {
   throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                      boost::format("cmdobj is not constructable"));
 }
 
-ObjectPtr CmdOutFunc::Call(Executor* /*parent*/,
-                           std::vector<ObjectPtr>&& params) {
+ObjectPtr CmdOutFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, out)
 
   CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
@@ -218,8 +216,7 @@ ObjectPtr CmdOutFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(cmd_obj.str_stdout());
 }
 
-ObjectPtr CmdErrFunc::Call(Executor* /*parent*/,
-                           std::vector<ObjectPtr>&& params) {
+ObjectPtr CmdErrFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, out)
 
   CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
@@ -228,8 +225,7 @@ ObjectPtr CmdErrFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(cmd_obj.str_stderr());
 }
 
-ObjectPtr CmdDelimFunc::Call(Executor* /*parent*/,
-                             std::vector<ObjectPtr>&& params) {
+ObjectPtr CmdDelimFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, delim)
 
   CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);
@@ -247,8 +243,7 @@ ObjectPtr CmdDelimFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(delim);
 }
 
-ObjectPtr CmdStatusFunc::Call(Executor* /*parent*/,
-                           std::vector<ObjectPtr>&& params) {
+ObjectPtr CmdStatusFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, out)
 
   CmdObject& cmd_obj = static_cast<CmdObject&>(*params[0]);

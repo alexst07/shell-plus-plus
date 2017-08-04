@@ -63,8 +63,7 @@ class TupleIterType: public TypeObject {
 
   virtual ~TupleIterType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class TupleObject: public Object {

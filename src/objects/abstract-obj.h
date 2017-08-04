@@ -31,6 +31,9 @@ class Executor;
 
 class Object {
  public:
+  using Args = std::vector<std::shared_ptr<Object>>;
+  using KWArgs = std::unordered_map<std::string, std::shared_ptr<Object>>;
+
   enum class ObjectType: uint8_t {
     NIL,
     INT,
@@ -126,8 +129,8 @@ class Object {
                        %ObjType()->ObjectName());
   }
 
-  virtual std::shared_ptr<Object> Call(
-      Executor*, std::vector<std::shared_ptr<Object>>&&) {
+  virtual std::shared_ptr<Object> Call(Executor*, Args&&,
+                                       KWArgs&& = KWArgs()) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("%1% has no call interface")
                        %ObjType()->ObjectName());

@@ -139,8 +139,35 @@ class EllipsisExprExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
+class ArgumentsExecutor: public Executor {
+ public:
+  using Args = std::vector<ObjectPtr>;
+  using KWArgs = std::unordered_map<std::string, ObjectPtr>;
+
+  ArgumentsExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  // Entry point to execute arguments
+  std::tuple<Args, KWArgs> Exec(ArgumentsList* args);
+
+  void set_stop(StopFlag flag) override;
+
+ protected:
+  bool inside_loop() override {
+    return false;
+  }
+
+  bool inside_switch() override {
+    return false;
+  }
+};
+
+
 class FuncCallExecutor: public Executor {
  public:
+  using Args = std::vector<ObjectPtr>;
+  using KWArgs = std::unordered_map<std::string, ObjectPtr>;
+
   FuncCallExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 

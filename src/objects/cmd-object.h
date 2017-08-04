@@ -130,7 +130,7 @@ class CmdType: public TypeObject {
 
   virtual ~CmdType() {}
 
-  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&&) override;
+  ObjectPtr Constructor(Executor*, Args&&, KWArgs&&) override;
 };
 
 class CmdOutFunc: public FuncObject {
@@ -138,7 +138,7 @@ class CmdOutFunc: public FuncObject {
   CmdOutFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class CmdErrFunc: public FuncObject {
@@ -146,7 +146,7 @@ class CmdErrFunc: public FuncObject {
   CmdErrFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class CmdDelimFunc: public FuncObject {
@@ -154,7 +154,7 @@ class CmdDelimFunc: public FuncObject {
   CmdDelimFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class CmdStatusFunc: public FuncObject {
@@ -162,7 +162,7 @@ class CmdStatusFunc: public FuncObject {
   CmdStatusFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 }

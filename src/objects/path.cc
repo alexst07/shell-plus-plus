@@ -96,7 +96,7 @@ PathType::PathType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<PathAbsoluteFunc>("absolute", symbol_table_stack(), *this);
 }
 
-ObjectPtr PathType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr PathType::Constructor(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, path)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], path, STRING)
 
@@ -112,8 +112,7 @@ ObjectPtr PathType::Attr(std::shared_ptr<Object> /*self*/,
   return this->CallStaticObject(name);
 }
 
-ObjectPtr PathPwdStaticFunc::Call(Executor* /*parent*/,
-                                  std::vector<ObjectPtr>&& params) {
+ObjectPtr PathPwdStaticFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NO_PARAMS(params, pwd)
 
   namespace fs = boost::filesystem;
@@ -124,8 +123,7 @@ ObjectPtr PathPwdStaticFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(path.string());
 }
 
-ObjectPtr PathExistsFunc::Call(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr PathExistsFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -135,8 +133,7 @@ ObjectPtr PathExistsFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(fs::exists(path));
 }
 
-ObjectPtr PathIsRegularFileFunc::Call(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr PathIsRegularFileFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -146,8 +143,7 @@ ObjectPtr PathIsRegularFileFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(fs::is_regular_file(path));
 }
 
-ObjectPtr PathIsDirFunc::Call(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr PathIsDirFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -157,8 +153,7 @@ ObjectPtr PathIsDirFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(fs::is_directory(path));
 }
 
-ObjectPtr PathIsSymLinkFunc::Call(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr PathIsSymLinkFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -168,8 +163,7 @@ ObjectPtr PathIsSymLinkFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(fs::is_symlink(path));
 }
 
-ObjectPtr PathIsReadableFunc::Call(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr PathIsReadableFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, is_readable)
@@ -185,8 +179,7 @@ ObjectPtr PathIsReadableFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(true);
 }
 
-ObjectPtr PathIsWritableFunc::Call(Executor* /*parent*/,
-                                   std::vector<ObjectPtr>&& params) {
+ObjectPtr PathIsWritableFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, is_readable)
@@ -202,8 +195,7 @@ ObjectPtr PathIsWritableFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(true);
 }
 
-ObjectPtr PathIsExecutableFunc::Call(Executor* /*parent*/,
-                                     std::vector<ObjectPtr>&& params) {
+ObjectPtr PathIsExecutableFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, is_exec)
@@ -219,8 +211,7 @@ ObjectPtr PathIsExecutableFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(true);
 }
 
-ObjectPtr PathOwnerUidFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr PathOwnerUidFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, is_executable)
 
   namespace fs = boost::filesystem;
@@ -239,8 +230,7 @@ ObjectPtr PathOwnerUidFunc::Call(Executor* /*parent*/,
   return obj_factory.NewInt(sb.st_uid);
 }
 
-ObjectPtr PathOwnerGidFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr PathOwnerGidFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, is_executable)
 
   namespace fs = boost::filesystem;
@@ -259,8 +249,7 @@ ObjectPtr PathOwnerGidFunc::Call(Executor* /*parent*/,
   return obj_factory.NewInt(sb.st_gid);
 }
 
-ObjectPtr PathRootNameFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr PathRootNameFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -270,8 +259,7 @@ ObjectPtr PathRootNameFunc::Call(Executor* /*parent*/,
   return obj_factory.NewPath(path.root_name());
 }
 
-ObjectPtr PathRootDirectoryFunc::Call(Executor* /*parent*/,
-                                      std::vector<ObjectPtr>&& params) {
+ObjectPtr PathRootDirectoryFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -281,8 +269,7 @@ ObjectPtr PathRootDirectoryFunc::Call(Executor* /*parent*/,
   return obj_factory.NewPath(path.root_directory());
 }
 
-ObjectPtr PathRootPathFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr PathRootPathFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -292,8 +279,7 @@ ObjectPtr PathRootPathFunc::Call(Executor* /*parent*/,
   return obj_factory.NewPath(path.root_path());
 }
 
-ObjectPtr PathRelativePathFunc::Call(Executor* /*parent*/,
-                                     std::vector<ObjectPtr>&& params) {
+ObjectPtr PathRelativePathFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -303,8 +289,7 @@ ObjectPtr PathRelativePathFunc::Call(Executor* /*parent*/,
   return obj_factory.NewPath(path.relative_path());
 }
 
-ObjectPtr PathParentPathFunc::Call(Executor* /*parent*/,
-                                   std::vector<ObjectPtr>&& params) {
+ObjectPtr PathParentPathFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -314,8 +299,7 @@ ObjectPtr PathParentPathFunc::Call(Executor* /*parent*/,
   return obj_factory.NewPath(path.parent_path());
 }
 
-ObjectPtr PathFilenameFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr PathFilenameFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -325,8 +309,7 @@ ObjectPtr PathFilenameFunc::Call(Executor* /*parent*/,
   return obj_factory.NewPath(path.filename());
 }
 
-ObjectPtr PathStemFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr PathStemFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -336,8 +319,7 @@ ObjectPtr PathStemFunc::Call(Executor* /*parent*/,
   return obj_factory.NewPath(path.stem());
 }
 
-ObjectPtr PathExtensionFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr PathExtensionFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
@@ -347,8 +329,7 @@ ObjectPtr PathExtensionFunc::Call(Executor* /*parent*/,
   return obj_factory.NewPath(path.extension());
 }
 
-ObjectPtr PathAbsoluteFunc::Call(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr PathAbsoluteFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)

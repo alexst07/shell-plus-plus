@@ -34,7 +34,7 @@ class PrintFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -46,7 +46,7 @@ class PrintErrFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -58,7 +58,7 @@ class ReadFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -70,7 +70,7 @@ class LenFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -82,7 +82,7 @@ class CompFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*pare'nt*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*pare'nt*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -94,7 +94,7 @@ class RangeFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -106,7 +106,7 @@ class AssertFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -118,7 +118,7 @@ class IsInteractiveFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -130,7 +130,7 @@ class GlobFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -142,7 +142,7 @@ class GlobRFunc: public FuncObject {
       : FuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 
  private:
   ObjectFactory obj_factory_;
@@ -154,7 +154,7 @@ class EvalFunc: public SpecialFuncObject {
       : SpecialFuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr SpecialCall(Executor* parent, std::vector<ObjectPtr>&& params,
+  ObjectPtr SpecialCall(Executor* parent, Args&& params, KWArgs&&,
       SymbolTableStack& curret_sym_tab) override;
 
  private:
@@ -167,7 +167,7 @@ class DumpSymbolTableFunc: public SpecialFuncObject {
       : SpecialFuncObject(obj_type, std::move(sym_table))
       , obj_factory_(symbol_table_stack()) {}
 
-  ObjectPtr SpecialCall(Executor* parent, std::vector<ObjectPtr>&& params,
+  ObjectPtr SpecialCall(Executor* parent, Args&& params, KWArgs&&,
       SymbolTableStack& curret_sym_tab) override;
 
  private:

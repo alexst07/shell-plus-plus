@@ -103,8 +103,7 @@ ObjectPtr TypeObject::Equal(ObjectPtr obj) {
   return obj_factory.NewBool(v);
 }
 
-ObjectPtr Type::Constructor(Executor* /*parent*/,
-                            std::vector<ObjectPtr>&& params) {
+ObjectPtr Type::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("type() takes exactly 1 argument"));
@@ -138,8 +137,7 @@ std::shared_ptr<Object> ModuleCustonObject::Attr(std::shared_ptr<Object>/*self*/
   return PassVar(obj, symbol_table_stack());
 }
 
-ObjectPtr NullType::Constructor(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr NullType::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() > 0) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("null_t() takes no arguments"));
@@ -149,8 +147,7 @@ ObjectPtr NullType::Constructor(Executor* /*parent*/,
   return ObjectPtr(obj_factory.NewNull());
 }
 
-ObjectPtr BoolType::Constructor(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr BoolType::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("bool() takes exactly 1 argument"));
@@ -159,8 +156,7 @@ ObjectPtr BoolType::Constructor(Executor* /*parent*/,
   return params[0]->ObjBool();
 }
 
-ObjectPtr IntType::Constructor(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr IntType::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("int() takes exactly 1 argument"));
@@ -177,15 +173,14 @@ ObjectPtr IntType::Constructor(Executor* /*parent*/,
   return params[0]->ObjInt();
 }
 
-ObjectPtr SliceType::Constructor(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr SliceType::Constructor(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 3, slice)
 
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewSlice(params[0], params[1], params[2]);
 }
 
-ObjectPtr RealType::Constructor(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr RealType::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("real() takes exactly 1 argument"));
@@ -203,8 +198,7 @@ ObjectPtr RealType::Constructor(Executor* /*parent*/,
   return params[0]->ObjReal();
 }
 
-ObjectPtr RangeIterType::Constructor(Executor* /*parent*/,
-                                     std::vector<ObjectPtr>&& params) {
+ObjectPtr RangeIterType::Constructor(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, range_iter)
   SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 3, range_iter)
 
@@ -231,8 +225,7 @@ ObjectPtr RangeIterType::Constructor(Executor* /*parent*/,
   return obj;
 }
 
-ObjectPtr ArrayIterType::Constructor(Executor* /*parent*/,
-                                     std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayIterType::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("array_iter() takes exactly 1 argument"));
@@ -248,8 +241,7 @@ ObjectPtr ArrayIterType::Constructor(Executor* /*parent*/,
   return obj;
 }
 
-ObjectPtr MapIterType::Constructor(Executor* /*parent*/,
-                                   std::vector<ObjectPtr>&& params) {
+ObjectPtr MapIterType::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("array_iter() takes exactly 1 argument"));
@@ -265,20 +257,17 @@ ObjectPtr MapIterType::Constructor(Executor* /*parent*/,
   return obj;
 }
 
-ObjectPtr CmdIterType::Constructor(Executor* /*parent*/,
-                                   std::vector<ObjectPtr>&& /*params*/) {
+ObjectPtr CmdIterType::Constructor(Executor*, Args&&, KWArgs&&) {
   throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                      boost::format("cmd_iter is not constructable"));
 }
 
-ObjectPtr ModuleType::Constructor(Executor* /*parent*/,
-                                  std::vector<ObjectPtr>&& params) {
+ObjectPtr ModuleType::Constructor(Executor*, Args&& params, KWArgs&&) {
   throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                      boost::format("module is not constructable"));
 }
 
-ObjectPtr TupleType::Constructor(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr TupleType::Constructor(Executor*, Args&& params, KWArgs&&) {
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewTuple(std::move(params));
 }

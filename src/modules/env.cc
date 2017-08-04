@@ -23,7 +23,7 @@ namespace internal {
 namespace module {
 namespace env {
 
-ObjectPtr SetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr SetFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, set)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], value, STRING)
@@ -37,7 +37,7 @@ ObjectPtr SetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewBool(r == 0? true: false);
 }
 
-ObjectPtr GetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr GetFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, get)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
 
@@ -54,7 +54,7 @@ ObjectPtr GetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewString(str_var);
 }
 
-ObjectPtr ExistsFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr ExistsFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, get)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
 
@@ -72,7 +72,7 @@ ObjectPtr ExistsFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewBool(v);
 }
 
-ObjectPtr AppendFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr AppendFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, append)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], value, STRING)
@@ -96,7 +96,7 @@ ObjectPtr AppendFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
   return obj_factory_.NewBool(r == 0? true: false);
 }
 
-ObjectPtr UnsetFunc::Call(Executor*, std::vector<ObjectPtr>&& params) {
+ObjectPtr UnsetFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, get)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], var, STRING)
 

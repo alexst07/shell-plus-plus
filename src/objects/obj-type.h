@@ -27,7 +27,6 @@
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
 #include "simple-object.h"
-#include "func-object.h"
 #include "interpreter/interpreter.h"
 
 namespace shpp {
@@ -181,8 +180,8 @@ class TypeObject: public Object {
 
   ObjectPtr Equal(ObjectPtr obj) override;
 
-  virtual ObjectPtr Constructor(Executor* parent,
-                                std::vector<ObjectPtr>&& params) = 0;
+  virtual ObjectPtr Constructor(Executor* parent, Args&& params,
+                                KWArgs&& = KWArgs()) = 0;
 
   // call a calleble object passing the self object
   // this method is useful to execute member method from objects
@@ -220,8 +219,7 @@ class Type: public TypeObject {
 
   virtual ~Type() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class NullType: public TypeObject {
@@ -231,8 +229,7 @@ class NullType: public TypeObject {
 
   virtual ~NullType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class BoolType: public TypeObject {
@@ -241,8 +238,7 @@ class BoolType: public TypeObject {
       : TypeObject("bool", obj_type, std::move(sym_table)) {}
   virtual ~BoolType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class IntType: public TypeObject {
@@ -252,8 +248,7 @@ class IntType: public TypeObject {
 
   virtual ~IntType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class RealType: public TypeObject {
@@ -263,8 +258,7 @@ class RealType: public TypeObject {
 
   virtual ~RealType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class SliceType: public TypeObject {
@@ -274,7 +268,7 @@ class SliceType: public TypeObject {
 
   virtual ~SliceType() {}
 
-  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class CmdIterType: public TypeObject {
@@ -284,7 +278,7 @@ class CmdIterType: public TypeObject {
 
   virtual ~CmdIterType() {}
 
-  ObjectPtr Constructor(Executor*, std::vector<ObjectPtr>&&) override;
+  ObjectPtr Constructor(Executor*, Args&&, KWArgs&&) override;
 };
 
 class RangeIterType: public TypeObject {
@@ -294,8 +288,8 @@ class RangeIterType: public TypeObject {
 
   virtual ~RangeIterType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params,
+                        KWArgs&& = KWArgs()) override;
 };
 
 class ArrayIterType: public TypeObject {
@@ -305,8 +299,7 @@ class ArrayIterType: public TypeObject {
 
   virtual ~ArrayIterType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 class MapIterType: public TypeObject {
@@ -316,8 +309,7 @@ class MapIterType: public TypeObject {
 
   virtual ~MapIterType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 
@@ -329,8 +321,7 @@ class ContainerType: public TypeObject {
 
   virtual ~ContainerType() {}
 
-  virtual ObjectPtr Constructor(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+  virtual ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) {
     if (params.size() != 1) {
       throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                          boost::format("%1%() takes exactly 1 argument")
@@ -346,26 +337,9 @@ class TupleType: public ContainerType {
   TupleType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : ContainerType("tuple", obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 
   virtual ~TupleType() {}
-};
-
-class FuncType: public TypeObject {
- public:
-  FuncType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : TypeObject("function", obj_type, std::move(sym_table)) {}
-
-  virtual ~FuncType() {}
-
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& /*params*/) override {
-      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
-                         boost::format("func() not contructable"));
-
-    return ObjectPtr(nullptr);
-  }
 };
 
 class ModuleType: public TypeObject {
@@ -375,8 +349,7 @@ class ModuleType: public TypeObject {
 
   virtual ~ModuleType() {}
 
-  ObjectPtr Constructor(Executor* /*parent*/,
-                        std::vector<ObjectPtr>&& params) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 }

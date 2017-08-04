@@ -106,7 +106,7 @@ std::size_t ArrayObject::Hash() {
 }
 
 ObjectPtr ArrayObject::ObjArray() {
-  std::vector<ObjectPtr> to_vector;
+  Args to_vector;
   std::copy(value_.begin(), value_.end(),
       std::back_inserter(to_vector));
 
@@ -293,7 +293,7 @@ try {
 ObjectPtr ArrayObject::Add(ObjectPtr obj) {
   SHPP_FUNC_CHECK_PARAM_TYPE(obj, array, ARRAY)
 
-  std::vector<ObjectPtr> vec_obj;
+  Args vec_obj;
   ArrayObject& array_ext = static_cast<ArrayObject&>(*obj);
 
   for (const auto& item: value_) {
@@ -347,7 +347,7 @@ ArrayType::ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
 }
 
 ObjectPtr ArrayType::Constructor(Executor* /*parent*/,
-                                 std::vector<ObjectPtr>&& params) {
+                                 Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("%1%() takes exactly 1 argument")
@@ -358,7 +358,7 @@ ObjectPtr ArrayType::Constructor(Executor* /*parent*/,
 }
 
 ObjectPtr ArrayJoinFunc::Call(Executor* /*parent*/,
-                              std::vector<ObjectPtr>&& params) {
+                              Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, join)
 
   std::string delim = "";
@@ -387,8 +387,7 @@ ObjectPtr ArrayJoinFunc::Call(Executor* /*parent*/,
   return obj_factory.NewString(result);
 }
 
-ObjectPtr ArrayAppendFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayAppendFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, append)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
@@ -400,8 +399,7 @@ ObjectPtr ArrayAppendFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr ArrayExtendFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayExtendFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, extend)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], array, ARRAY)
 
@@ -415,8 +413,7 @@ ObjectPtr ArrayExtendFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr ArrayInsertFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayInsertFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 3, insert)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], index, INT)
 
@@ -433,12 +430,11 @@ ObjectPtr ArrayInsertFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr ArrayRemoveFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayRemoveFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, remove)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
-  std::vector<ObjectPtr>& vec = array_obj.value();
+  Args& vec = array_obj.value();
 
   vec.erase(std::remove_if(vec.begin(), vec.end(),
                            [&params](ObjectPtr& obj) {
@@ -450,8 +446,7 @@ ObjectPtr ArrayRemoveFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr ArrayPopFunc::Call(Executor* /*parent*/,
-                             std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayPopFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, pop)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], index, INT)
 
@@ -470,8 +465,7 @@ ObjectPtr ArrayPopFunc::Call(Executor* /*parent*/,
   return obj;
 }
 
-ObjectPtr ArrayClearFunc::Call(Executor* /*parent*/,
-                              std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayClearFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, clear)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
@@ -481,8 +475,7 @@ ObjectPtr ArrayClearFunc::Call(Executor* /*parent*/,
   return params[0];
 }
 
-ObjectPtr ArrayIndexFunc::Call(Executor* /*parent*/,
-                                std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayIndexFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, index)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
@@ -502,8 +495,7 @@ ObjectPtr ArrayIndexFunc::Call(Executor* /*parent*/,
   return obj_factory.NewBool(false);
 }
 
-ObjectPtr ArrayCountFunc::Call(Executor* /*parent*/,
-                               std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayCountFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, count)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
@@ -534,7 +526,7 @@ bool ArraySortFunc::Comp(ObjectPtr obj1, ObjectPtr obj2) {
 
 bool ArraySortFunc::CompWithFunc(Executor* parent, ObjectPtr func,
                                  ObjectPtr obj1, ObjectPtr obj2) {
-  std::vector<ObjectPtr> fparams = {obj1, obj2};
+  Args fparams = {obj1, obj2};
 
   ObjectPtr obj_resp = func->Call(parent, std::move(fparams));
 
@@ -546,10 +538,9 @@ bool ArraySortFunc::CompWithFunc(Executor* parent, ObjectPtr func,
   return static_cast<BoolObject&>(*obj_resp).value();
 }
 
-ObjectPtr ArraySortFunc::Call(Executor* parent,
-                              std::vector<ObjectPtr>&& params) {
+ObjectPtr ArraySortFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
-  std::vector<ObjectPtr>& vec = array_obj.value();
+  Args& vec = array_obj.value();
 
   if (params.size() == 1) {
     using namespace std::placeholders;
@@ -574,40 +565,37 @@ ObjectPtr ArraySortFunc::Call(Executor* parent,
                      boost::format("num args incompatible"));
 }
 
-ObjectPtr ArrayReverseFunc::Call(Executor* parent,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayReverseFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, reverse)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
-  std::vector<ObjectPtr>& vec = array_obj.value();
+  Args& vec = array_obj.value();
 
   std::reverse(vec.begin(), vec.end());
 
   return params[0];
 }
 
-ObjectPtr ArrayForEachFunc::Call(Executor* parent,
-                                 std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayForEachFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, for_each)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
   for (int i = 0; i < array_obj.Len(); i++) {
-    std::vector<ObjectPtr> fparams(1, array_obj.Element(i));
+    Args fparams(1, array_obj.Element(i));
     params[1]->Call(parent, std::move(fparams));
   }
 
   return params[0];
 }
 
-ObjectPtr ArrayMapFunc::Call(Executor* parent,
-                             std::vector<ObjectPtr>&& params) {
+ObjectPtr ArrayMapFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, map)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
 
   for (int i = 0; i < array_obj.Len(); i++) {
-    std::vector<ObjectPtr> fparams(1, array_obj.Element(i));
+    Args fparams(1, array_obj.Element(i));
     array_obj.set(i, params[1]->Call(parent, std::move(fparams)));
   }
 

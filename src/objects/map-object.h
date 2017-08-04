@@ -24,6 +24,7 @@
 #include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
 #include "obj-type.h"
+#include "func-object.h"
 
 namespace shpp {
 namespace internal {
@@ -161,7 +162,7 @@ class MapKeysFunc: public FuncObject {
   MapKeysFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class MapValuesFunc: public FuncObject {
@@ -169,7 +170,7 @@ class MapValuesFunc: public FuncObject {
   MapValuesFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class MapClearFunc: public FuncObject {
@@ -177,7 +178,7 @@ class MapClearFunc: public FuncObject {
   MapClearFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class MapUpdateFunc: public FuncObject {
@@ -185,7 +186,7 @@ class MapUpdateFunc: public FuncObject {
   MapUpdateFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 class MapExistsFunc: public FuncObject {
@@ -193,7 +194,7 @@ class MapExistsFunc: public FuncObject {
   MapExistsFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
-  ObjectPtr Call(Executor* /*parent*/, std::vector<ObjectPtr>&& params);
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
 }

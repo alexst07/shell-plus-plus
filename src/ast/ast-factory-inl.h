@@ -114,11 +114,23 @@ class AstNodeFactory {
         std::move(stmt_list), fn_pos_()));
   }
 
+  inline std::unique_ptr<Argument> NewArgument(const std::string& key,
+      std::unique_ptr<AssignableValue> arg) {
+    return std::unique_ptr<Argument>(new Argument(key, std::move(arg),
+        fn_pos_()));
+  }
+
+  inline std::unique_ptr<ArgumentsList> NewArgumentsList(
+      std::vector<std::unique_ptr<Argument>>&& nodes) {
+    return std::unique_ptr<ArgumentsList>(new ArgumentsList(std::move(nodes),
+        fn_pos_()));
+  }
+
   inline std::unique_ptr<FunctionCall> NewFunctionCall(
       std::unique_ptr<Expression> func_exp,
-      std::unique_ptr<AssignableList> rvalue_list) {
+      std::unique_ptr<ArgumentsList> args_list) {
     return std::unique_ptr<FunctionCall>(new FunctionCall(
-        std::move(func_exp), std::move(rvalue_list), fn_pos_()));
+        std::move(func_exp), std::move(args_list), fn_pos_()));
   }
 
   inline std::unique_ptr<ExpressionStatement> NewExpressionStatement(

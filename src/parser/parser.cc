@@ -1031,6 +1031,56 @@ ParserResult<Expression> Parser::ParserLambda() {
       std::move(func_params), block.MoveAstNode<Block>(), pos));
 }
 
+ParserResult<Expression> Parser::ParserArgument() {
+  if (PeekAhead().Is(TokenKind::ASSIGN)) {
+    // if is named parameter extract the key name and the argument
+    if (!token_.Is(TokenKind::IDENTIFIER)) {
+      // expect id before token '='
+      ErrorMsg(boost::format("Expected identifier on keyword argument"));
+      return ParserResult<Expression>();
+    }
+
+    std::string name = boost::get<std::string>(token_.GetValue());
+
+    // Advance id
+    Advance();
+
+    // Advance '=' token
+    Advance();
+    ValidToken();
+
+    // on this case ellipsis expression isn't valid
+    ParserResult<AssignableValue> value(ParserAssignable());
+    return ParserResult<Expression>(factory_.NewArgument(name,
+        value.MoveAstNode()));
+
+  } else {
+    // name is empty if user didnp't defined it
+    if (token_.Is(TokenKind::ELLIPSIS)) {
+      ParserResult<Expression> ellipsis_exp = ParserEllipsisExp();
+      return ParserResult<Expression>(factory_.NewArgument("",
+          ellipsis_exp.MoveAstNode<AssignableValue>()));
+    } else {
+      ParserResult<AssignableValue> value(ParserAssignable());
+      return ParserResult<Expression>(factory_.NewArgument("",
+          value.MoveAstNode()));
+    }
+  }
+}
+
+ParserResult<ArgumentsList> Parser::ParserArgumentsList() {
+  std::vector<std::unique_ptr<Argument>> args_list;
+
+  do {
+    ParserResult<Expression> arg = ParserArgument();
+    args_list.push_back(arg.MoveAstNode<Argument>());
+    ValidToken();
+  } while (CheckComma());
+
+  return ParserResult<ArgumentsList>(factory_.NewArgumentsList(
+      std::move(args_list)));
+}
+
 ParserResult<AssignableList> Parser::ParserAssignableList() {
   std::vector<std::unique_ptr<AssignableValue>> vec_values;
 
@@ -1374,18 +1424,17 @@ ParserResult<Expression> Parser::ParserPostExp() {
       // parser function call
       Advance();
 
-      std::vector<std::unique_ptr<AssignableValue>> rlist;
-
       if (ValidToken().Is(TokenKind::RPAREN)) {
         // empty expression list
+        std::vector<std::unique_ptr<Argument>> args;
         exp = factory_.NewFunctionCall(
-            exp.MoveAstNode(), factory_.NewAssignableList(
-                std::move(rlist)));
+            exp.MoveAstNode(), factory_.NewArgumentsList(
+                std::move(args)));
       } else {
         // Parser expression list separted by (,) comma
-        auto rvalue_list = ParserAssignableList();
+        auto args_list = ParserArgumentsList();
         exp = factory_.NewFunctionCall(exp.MoveAstNode(),
-                                       rvalue_list.MoveAstNode());
+            args_list.MoveAstNode());
 
         if (ValidToken().IsNot(TokenKind::RPAREN)) {
           ErrorMsg(boost::format("Expected close right paren"));

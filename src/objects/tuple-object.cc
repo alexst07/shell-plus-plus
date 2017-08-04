@@ -65,8 +65,7 @@ ObjectPtr TupleIterObject::HasNext() {
   return obj_factory.NewBool(!v);
 }
 
-ObjectPtr TupleIterType::Constructor(Executor* /*parent*/,
-                                     std::vector<ObjectPtr>&& params) {
+ObjectPtr TupleIterType::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                        boost::format("tuple_iter() takes exactly 1 argument"));
