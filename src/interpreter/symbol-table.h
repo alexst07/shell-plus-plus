@@ -292,7 +292,6 @@ class SymbolTableStack: public SymbolTableStackBase {
   SymbolTableStack(SymbolTablePtr symbol_table = SymbolTablePtr(nullptr)) {
     if (symbol_table) {
       main_table_ = symbol_table;
-      stack_.push_back(symbol_table);
     }
   }
 
