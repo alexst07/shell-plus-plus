@@ -25,22 +25,50 @@ namespace internal {
 namespace module {
 namespace stdf {
 
-ObjectPtr PrintFunc::Call(Executor*, Args&& params, KWArgs&&) {
-  for (auto& e: params) {
-    std::cout << e->Print();
+static void PrintHelper(Object::Args&& args, Object::KWArgs&& kw_args, bool err) {
+  auto it = kw_args.find("end");
+  std::string str_end = "\n";
+  bool flush = true;
+
+  if (it != kw_args.end()) {
+    SHPP_FUNC_CHECK_PARAM_TYPE(it->second, print, STRING)
+    str_end = static_cast<StringObject&>(*kw_args["end"]).value();
   }
 
-  std::cout << std::endl;
+  it = kw_args.find("flush");
+
+  if (it != kw_args.end()) {
+    SHPP_FUNC_CHECK_PARAM_TYPE(it->second, print, BOOL)
+    flush = static_cast<BoolObject&>(*kw_args["flush"]).value();
+  }
+
+  if (err) {
+    for (auto& e: args) {
+      std::cerr << e->Print();
+    }
+
+    std::cerr  << str_end;
+  } else {
+    for (auto& e: args) {
+      std::cout << e->Print();
+    }
+
+    std::cout  << str_end;
+  }
+
+  if (flush) {
+    std::cout.flush();
+  }
+}
+
+ObjectPtr PrintFunc::Call(Executor*, Args&& args, KWArgs&& kw_args) {
+  PrintHelper(std::move(args), std::move(kw_args), false);
 
   return obj_factory_.NewNull();
 }
 
-ObjectPtr PrintErrFunc::Call(Executor*, Args&& params, KWArgs&&) {
-  for (auto& e: params) {
-    std::cerr << e->Print();
-  }
-
-  std::cerr << std::endl;
+ObjectPtr PrintErrFunc::Call(Executor*, Args&& args, KWArgs&& kw_args) {
+  PrintHelper(std::move(args), std::move(kw_args), true);
 
   return obj_factory_.NewNull();
 }
