@@ -155,6 +155,8 @@ class IntObject: public Object {
     return value_ == value;
   }
 
+  ObjectPtr ObjBool() override;
+
   ObjectPtr Add(ObjectPtr obj) override;
 
   ObjectPtr Sub(ObjectPtr obj) override;
@@ -358,6 +360,8 @@ class RealObject: public Object {
   }
 
   ObjectPtr ObjCmd() override;
+
+  ObjectPtr ObjBool() override;
 
   ObjectPtr OperationObj(ObjectPtr obj, int op);
 

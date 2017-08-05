@@ -233,6 +233,11 @@ ObjectPtr IntObject::Copy() {
   return obj_factory.NewInt(value_);
 }
 
+ObjectPtr IntObject::ObjBool() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(true);
+}
+
 ObjectPtr IntObject::Add(ObjectPtr obj) {
   return OperationObj(obj, 0);
 }
@@ -318,6 +323,11 @@ ObjectPtr IntObject::Equal(ObjectPtr obj) {
 }
 
 ObjectPtr IntObject::NotEqual(ObjectPtr obj) {
+  if (obj->type() != ObjectType::INT && obj->type() != ObjectType::REAL) {
+    ObjectFactory obj_factory(symbol_table_stack());
+      return obj_factory.NewReal(true);
+  }
+
   return OperationObjComp(obj, 5);
 }
 
@@ -425,6 +435,11 @@ ObjectPtr RealObject::Copy() {
   return obj_factory.NewReal(value_);
 }
 
+ObjectPtr RealObject::ObjBool() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(true);
+}
+
 ObjectPtr RealObject::Add(ObjectPtr obj) {
   return OperationObj(obj, 0);
 }
@@ -462,6 +477,11 @@ ObjectPtr RealObject::Equal(ObjectPtr obj) {
 }
 
 ObjectPtr RealObject::NotEqual(ObjectPtr obj) {
+  if (obj->type() != ObjectType::INT && obj->type() != ObjectType::REAL) {
+    ObjectFactory obj_factory(symbol_table_stack());
+      return obj_factory.NewReal(true);
+  }
+
   return OperationObjComp(obj, 5);
 }
 
