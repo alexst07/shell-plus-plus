@@ -180,6 +180,11 @@ ObjectPtr GlobRFunc::Call(Executor*, Args&& params, KWArgs&&) {
 
 ObjectPtr DumpSymbolTableFunc::SpecialCall(Executor* parent,
     Args&& params, KWArgs&&, SymbolTableStack& curret_sym_tab) {
+  if (params.size() > 0) {
+    params[0]->symbol_table_stack().Dump();
+    return obj_factory_.NewNull();
+  }
+
   curret_sym_tab.Dump();
   return obj_factory_.NewNull();
 }

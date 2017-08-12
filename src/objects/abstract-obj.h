@@ -359,6 +359,10 @@ class Object {
     return obj_type_.lock();
   }
 
+  SymbolTableStack& symbol_table_stack() {
+    return sym_table_;
+  }
+
  private:
   // enum type
   ObjectType type_;
@@ -374,10 +378,6 @@ class Object {
       : type_(type)
       , obj_type_(obj_type)
       , sym_table_(std::move(sym_table)){}
-
-  SymbolTableStack& symbol_table_stack() {
-    return sym_table_;
-  }
 };
 
 typedef std::shared_ptr<Object> ObjectPtr;
