@@ -217,7 +217,7 @@ int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool background) {
 
   std::vector<std::string> cmd_args = simple_cmd.Exec(node);
 
-  Job job(symbol_table_stack());
+  Job job(symbol_table_stack(), this);
   std::unique_ptr<Process> p(new Process(symbol_table_stack(),
       std::move(cmd_args), this));
 
@@ -256,7 +256,7 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
   std::unique_ptr<Process> p(new Process(symbol_table_stack(),
       std::move(cmd_args), this));
 
-  Job job(symbol_table_stack());
+  Job job(symbol_table_stack(), this);
   job.Stdout(pipettes[WRITE])
       .Stdin(STDIN_FILENO)
       .Stderr(pipe_err[WRITE])
@@ -352,7 +352,7 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
 
 ////////////////////////////////////////////////////////////////////////////////
 int SubShellExecutor::Exec(SubShell *node, bool background) {
-  Job job(symbol_table_stack());
+  Job job(symbol_table_stack(), this);
   std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
       node, this));
 
@@ -386,7 +386,7 @@ CmdExprData SubShellExecutor::Exec(SubShell *node) {
   std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
       node, this));
 
-  Job job(symbol_table_stack());
+  Job job(symbol_table_stack(), this);
   job.Stdout(pipettes[WRITE])
       .Stdin(STDIN_FILENO)
       .Stderr(pipe_err[WRITE])
@@ -566,7 +566,7 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
 
 int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
   // starts job struct
-  Job job(symbol_table_stack());
+  Job job(symbol_table_stack(), this);
   job.Stderr(STDERR_FILENO)
       .Stdout(STDOUT_FILENO)
       .Stdin(STDIN_FILENO);
@@ -591,7 +591,7 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
   SetFdAsync(pipettes[WRITE]);
   SetFdAsync(pipe_err[WRITE]);
 
-  Job job(symbol_table_stack());
+  Job job(symbol_table_stack(), this);
   job.Stderr(pipe_err[WRITE])
       .Stdout(pipettes[WRITE])
       .Stdin(STDIN_FILENO);
@@ -653,7 +653,7 @@ void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
 }
 
 int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
-  Job job(symbol_table_stack());
+  Job job(symbol_table_stack(), this);
   job.Stderr(STDERR_FILENO)
       .Stdout(STDOUT_FILENO)
       .Stdin(STDIN_FILENO);
@@ -678,7 +678,7 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
   SetFdAsync(pipettes[WRITE]);
   SetFdAsync(pipe_err[WRITE]);
 
-  Job job(symbol_table_stack());
+  Job job(symbol_table_stack(), this);
   job.Stdin(STDIN_FILENO);
 
   PopulateCmd(job, node);

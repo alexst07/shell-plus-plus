@@ -82,6 +82,8 @@ void Runner::ExecInterative() {
     exit(-1);
   }
 
+  internal::EnvShell::instance()->interective_exec(true);
+
   fs::path path_rc = fs::path(internal::GetHome() + "/.shpprc");
 
   if (fs::exists(path_rc)) {

@@ -88,10 +88,18 @@ class EnvShell {
     return fd_map_;
   }
 
+  void interective_exec(bool v) {
+    interective_exec_ = v;
+  }
+
+  bool interective_exec() {
+    return interective_exec_;
+  }
+
   ~EnvShell();
 
  private:
-  EnvShell() = default;
+  EnvShell(): interective_exec_(false) {}
 
   static EnvShell *instance_;
 
@@ -102,6 +110,7 @@ class EnvShell {
   int shell_terminal_;
   int shell_is_interactive_;
   int shmid_;
+  bool interective_exec_;
 };
 
 }

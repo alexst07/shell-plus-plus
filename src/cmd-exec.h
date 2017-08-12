@@ -139,10 +139,11 @@ class ProcessSubShell: public ProcessBase {
 
 class Job {
  public:
-  Job(SymbolTableStack& sym_tab, bool var_out_mode = false)
+  Job(SymbolTableStack& sym_tab, Executor* parent, bool var_out_mode = false)
       : status_(0)
       , var_out_mode_(var_out_mode)
       , pgid_(0)
+      , parent_(parent)
       , sym_tab_(sym_tab.MainTable()) {}
 
   int Status();

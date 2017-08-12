@@ -411,6 +411,30 @@ void Job::WaitForJob() {
 
   do {
     pid = waitpid (WAIT_ANY, &status, WUNTRACED);
+
+    if (EnvShell::instance()->interective_exec()) {
+      // if it is interactive execution, when receive a SIGINT, stop to
+      // execute the blok, the action is like break statement
+      if (WIFSIGNALED(status) && (WTERMSIG(status) == SIGINT ||
+          WTERMSIG(status) == SIGQUIT)) {
+        parent_->set_stop(Executor::StopFlag::kBreak);
+        return;
+      }
+    } else {
+      // if execution isn't interective, and the last command was terminated
+      // with SIGINT, so, stop the execution of program
+      if (WIFSIGNALED(status) && (WTERMSIG(status) == SIGINT ||
+          WTERMSIG(status) == SIGQUIT)) {
+        // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
+        struct sigaction act;
+        sigemptyset(&act.sa_mask);
+        act.sa_flags = 0;
+        act.sa_handler = SIG_DFL;
+        sigaction(SIGINT, &act, 0);
+        sigaction(SIGQUIT, &act, 0);
+        kill(getpid(), WTERMSIG(status));
+      }
+    }
   } while (!MarkProcessStatus(pid, status)
            && !JobIsStopped() && !JobIsCompleted());
 
