@@ -31,7 +31,7 @@
 # --output:end
 
 str_arr = ["test1", "test2", "test3"]
-echo ${str_arr}
+echo $@{str_arr}
 
 arr = [1]
 arr.append(3, 4, 2)

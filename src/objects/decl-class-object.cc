@@ -43,14 +43,13 @@ ObjectPtr DeclClassType::CallObject(const std::string& name,
 std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
   ObjectPtr att_obj = symbol_table_stack().Lookup(name, false).SharedAccess();
-
   return att_obj;
 }
 
 std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
-  if (symbol_table_stack().ExistsSymbolInClass(name)) {
-    ObjectPtr att_obj = symbol_table_stack().LookupClass(name).SharedAccess();
+  if (symbol_table_stack().Exists(name)) {
+    ObjectPtr att_obj = symbol_table_stack().Lookup(name, false).SharedAccess();
 
     if (att_obj->type() == ObjectType::FUNC) {
       return static_cast<DeclClassType&>(*ObjType()).CallObject(name, self);
@@ -72,7 +71,7 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
 
 std::shared_ptr<Object>& DeclClassObject::AttrAssign(
     std::shared_ptr<Object> /*self*/, const std::string& name) {
-  ObjectPtr& att_obj = symbol_table_stack().LookupClass(name).Ref();
+  ObjectPtr& att_obj = symbol_table_stack().Lookup(name, true).Ref();
 
   return att_obj;
 }

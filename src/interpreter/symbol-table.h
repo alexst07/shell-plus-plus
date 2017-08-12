@@ -380,6 +380,25 @@ class SymbolTableStack: public SymbolTableStackBase {
                        boost::format("symbol %1% not found")% name);
   }
 
+  bool Exists(const std::string& name) {
+    for (int i = (stack_.size() - 1); i >= 0 ; i--) {
+      auto it_obj = stack_.at(i)->Lookup(name);
+
+      if (it_obj != stack_.at(i)->end()) {
+        return true;
+      }
+    }
+
+    // search on main table if no symbol was found
+    auto it_obj = main_table_.lock()->Lookup(name);
+
+    if (it_obj != main_table_.lock()->end()) {
+      return true;
+    }
+
+    return false;
+  }
+
   std::tuple<std::shared_ptr<Object>,bool>
   LookupObj(const std::string& name) override {
     for (int i = (stack_.size() - 1); i >= 0 ; i--) {
@@ -575,12 +594,16 @@ class SymbolTableStack: public SymbolTableStackBase {
   }
 
   void Dump() override {
+    std::cout << "*************\n";
+    std::cout << "Table: " << this << " Num: " << stack_.size() << " this: " << this << "\n";
     std::cout << "main table copy: " << main_table_.use_count() << "\n";
+
     main_table_.lock()->Dump();
-    std::cout << "Table: " << this << " Num: " << stack_.size() << "\n";
+
     for (auto& e: stack_) {
-      std::cout << "------\n";
+      std::cout << "-- start table: " << e.get() << "\n";
       e->Dump();
+      std::cout << "-- end table: " << e.get() << "\n";
     }
     std::cout << "*************\n";
   }

@@ -364,11 +364,11 @@ class ObjectFactory {
     return std::make_shared<FuncType>(obj_type, std::move(SymTableStack()));
   }
 
-  ObjectPtr NewDeclType(const std::string& name_type) {
+  ObjectPtr NewDeclType(const std::string& name_type, bool inner = false) {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
-    SymbolTableStack table_stack(symbol_table_.MainTable());
+    SymbolTableStack table_stack(symbol_table_);
     return ObjectPtr(new DeclClassType(name_type, obj_type,
-                                       std::move(table_stack)));
+        std::move(table_stack), inner));
   }
 
   ObjectPtr NewType() {

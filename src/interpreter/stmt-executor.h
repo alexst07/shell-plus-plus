@@ -81,7 +81,8 @@ class ClassDeclExecutor: public Executor {
       : Executor(parent, symbol_table_stack)
       , obj_factory_(symbol_table_stack) {}
 
-  void Exec(AstNode* node);
+  void Exec(AstNode* node, bool inner = false,
+      ObjectPtr inner_type_obj = ObjectPtr(nullptr));
 
   void set_stop(StopFlag flag) override;
 

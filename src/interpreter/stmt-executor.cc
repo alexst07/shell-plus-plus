@@ -186,7 +186,8 @@ void FuncDeclExecutor::set_stop(StopFlag flag) {
 }
 
 // TODO: Analize errors exception
-void ClassDeclExecutor::Exec(AstNode* node) {
+void ClassDeclExecutor::Exec(AstNode* node, bool inner,
+    ObjectPtr inner_type_obj) {
   ClassDeclaration* class_decl_node = static_cast<ClassDeclaration*>(node);
 
   // handle class block
@@ -194,7 +195,7 @@ void ClassDeclExecutor::Exec(AstNode* node) {
   ClassDeclList* decl_list = block->decl_list();
 
   ObjectPtr type_obj = obj_factory_.NewDeclType(
-        class_decl_node->name()->name());
+        class_decl_node->name()->name(), inner);
 
   // insert all declared methods on symbol table
   std::vector<Declaration*> decl_vec = decl_list->children();
@@ -217,9 +218,16 @@ void ClassDeclExecutor::Exec(AstNode* node) {
 
       // insert inner class on type_obj symbol table, insted of its own
       ClassDeclExecutor class_exec(this, static_cast<DeclClassType&>(
-          *type_obj).SymTableStack());
-      class_exec.Exec(class_decl);
+          *type_obj).GlobalSymTableStack());
+      class_exec.Exec(class_decl, true, type_obj);
     }
+  }
+
+  if (inner) {
+    SymbolAttr symbol_obj(type_obj, true);
+    static_cast<DeclClassType&>(*inner_type_obj).SymTableStack().InsertEntry(
+        class_decl_node->name()->name(), std::move(symbol_obj));
+    return;
   }
 
   SymbolAttr symbol_obj(type_obj, true);
