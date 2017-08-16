@@ -358,11 +358,11 @@ class AstNodeFactory {
 
   inline std::unique_ptr<ClassDeclaration> NewClassDeclaration(
       std::unique_ptr<Identifier> name,
-      std::unique_ptr<Identifier> id_parent,
-      std::vector<std::unique_ptr<Identifier>> interfaces,
+      std::unique_ptr<Expression> parent,
+      std::unique_ptr<ExpressionList> interfaces,
       std::unique_ptr<ClassBlock> block, bool is_final) {
     return std::unique_ptr<ClassDeclaration>(new ClassDeclaration(
-      std::move(name), std::move(id_parent), std::move(interfaces),
+      std::move(name), std::move(parent), std::move(interfaces),
       std::move(block), is_final, fn_pos_()));
   }
 

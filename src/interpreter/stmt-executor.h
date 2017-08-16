@@ -84,6 +84,8 @@ class ClassDeclExecutor: public Executor {
   void Exec(AstNode* node, bool inner = false,
       ObjectPtr inner_type_obj = ObjectPtr(nullptr));
 
+  ObjectPtr SuperClass(Expression* super);
+
   void set_stop(StopFlag flag) override;
 
  private:

@@ -58,12 +58,14 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
     return att_obj;
   }
 
-  SymbolTableStack& st =
-      static_cast<DeclClassType&>(*ObjType()).SymTableStack();
-  ObjectPtr att_obj = st.Lookup(name, false).SharedAccess();
+  ObjectPtr att_obj = static_cast<TypeObject&>(*ObjType()).SearchAttr(name);
 
   if (att_obj->type() == ObjectType::FUNC) {
-    return static_cast<DeclClassType&>(*ObjType()).CallObject(name, self);
+    ObjectFactory obj_factory(symbol_table_stack());
+
+    // the function wrapper insert the object self_param as the first param
+    // it works like self argument
+    return ObjectPtr(obj_factory.NewWrapperFunc(att_obj, self));
   }
 
   return att_obj;

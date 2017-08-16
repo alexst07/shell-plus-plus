@@ -185,6 +185,19 @@ void FuncDeclExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 
+ObjectPtr ClassDeclExecutor::SuperClass(Expression* super) {
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr base_obj = expr_exec.Exec(super);
+
+  if (base_obj->type() != Object::ObjectType::TYPE) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("'%1%' is not a valid type for super"
+                       " class")%base_obj->ObjectName(), super->pos());
+  }
+
+  return base_obj;
+}
+
 // TODO: Analize errors exception
 void ClassDeclExecutor::Exec(AstNode* node, bool inner,
     ObjectPtr inner_type_obj) {
@@ -194,8 +207,14 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
   ClassBlock* block = class_decl_node->block();
   ClassDeclList* decl_list = block->decl_list();
 
+  // handle super class
+  ObjectPtr base;
+  if (class_decl_node->has_parent()) {
+    base = SuperClass(class_decl_node->parent());
+  }
+
   ObjectPtr type_obj = obj_factory_.NewDeclType(
-        class_decl_node->name()->name(), inner);
+        class_decl_node->name()->name(), base);
 
   // insert all declared methods on symbol table
   std::vector<Declaration*> decl_vec = decl_list->children();

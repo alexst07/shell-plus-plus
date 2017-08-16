@@ -363,6 +363,10 @@ class Object {
     return sym_table_;
   }
 
+  std::shared_ptr<Object> BaseType() const noexcept {
+    return base_;
+  }
+
  private:
   // enum type
   ObjectType type_;
@@ -372,12 +376,16 @@ class Object {
 
   SymbolTableStack sym_table_;
 
+  std::shared_ptr<Object> base_;
+
  protected:
   Object(ObjectType type, std::shared_ptr<Object> obj_type,
-         SymbolTableStack&& sym_table)
+         SymbolTableStack&& sym_table,
+         std::shared_ptr<Object> base = std::shared_ptr<Object>(nullptr))
       : type_(type)
       , obj_type_(obj_type)
-      , sym_table_(std::move(sym_table)){}
+      , sym_table_(std::move(sym_table))
+      , base_(base) {}
 };
 
 typedef std::shared_ptr<Object> ObjectPtr;

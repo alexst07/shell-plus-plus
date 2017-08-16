@@ -151,8 +151,9 @@ class ModuleCustonObject: public Object {
 class TypeObject: public Object {
  public:
   TypeObject(const std::string& name, ObjectPtr obj_type,
-             SymbolTableStack&& sym_table)
-      : Object(ObjectType::TYPE, obj_type, std::move(sym_table))
+             SymbolTableStack&& sym_table,
+             ObjectPtr base = ObjectPtr(nullptr))
+      : Object(ObjectType::TYPE, obj_type, std::move(sym_table), base)
       , name_(name) {
     symbol_table_stack().NewTable();
   }
@@ -201,6 +202,8 @@ class TypeObject: public Object {
     SymbolAttr sym_entry(obj, true);
     return symbol_table_stack().InsertEntry(name, std::move(sym_entry));
   }
+
+  ObjectPtr SearchAttr(const std::string& name);
 
   std::string Print() override {
     return std::string("<type: ") + name_ + ">";

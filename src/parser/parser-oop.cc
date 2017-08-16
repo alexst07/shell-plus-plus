@@ -127,41 +127,13 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
   return class_block;
 }
 
-std::vector<std::unique_ptr<Identifier>> Parser::ParserInterfaceList() {
-  // advance colon
-  Advance();
-  ValidToken();
-
-  if (token_ != TokenKind::IDENTIFIER) {
-    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
-  }
-
-  std::vector<std::unique_ptr<Identifier>> id_list;
-
-  for (;;) {
-    ParserResult<Expression> ns_id(ParserScopeIdentifier());
-    id_list.push_back(ns_id.MoveAstNode<Identifier>());
-    ValidToken();
-
-    // stay on loop while there is comma token beetwen the ids
-    TokenKind kind = token_.GetKind();
-    if (kind == TokenKind::COMMA) {
-      Advance();
-    } else {
-      break;
-    }
-  }
-
-  return id_list;
-}
-
 ParserResult<Declaration> Parser::ParserClassDecl() {
   // advance class keyword
   Advance();
   ValidToken();
 
   std::unique_ptr<Identifier> class_name;
-  std::unique_ptr<Identifier> parent;
+  std::unique_ptr<Expression> parent;
 
   if (token_ != TokenKind::IDENTIFIER) {
     ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
@@ -180,16 +152,8 @@ ParserResult<Declaration> Parser::ParserClassDecl() {
     Advance();
     ValidToken();
 
-    if (token_ != TokenKind::IDENTIFIER) {
-      ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
-      return ParserResult<Declaration>(); // Error
-    }
-
-    parent = std::move(factory_.NewIdentifier(boost::get<std::string>(
-        token_.GetValue()), std::move(nullptr)));
-
-    Advance();
-    ValidToken();
+    ParserResult<Expression> super(ParserPostExp());
+    parent = super.MoveAstNode();
 
     if (token_ != TokenKind::RPAREN) {
       ErrorMsg(boost::format("expected token ) got %1%")% TokenValueStr());
@@ -200,10 +164,13 @@ ParserResult<Declaration> Parser::ParserClassDecl() {
     ValidToken();
   }
 
-  std::vector<std::unique_ptr<Identifier>> interfaces;
+  std::unique_ptr<ExpressionList> interfaces;
 
   if (token_ == TokenKind::COLON) {
-    interfaces = std::move(ParserInterfaceList());
+    Advance();
+    ValidToken();
+
+    interfaces = ParserPostExpList().MoveAstNode();
   }
 
   ValidToken();

@@ -44,9 +44,8 @@ std::vector<Obj> PackArgs(Obj arg, Objs... args) {
 class DeclClassType: public TypeObject {
  public:
   DeclClassType(const std::string& name, ObjectPtr obj_type,
-      SymbolTableStack&& sym_table, bool inner = false)
-      : TypeObject(name, obj_type, std::move(sym_table))
-      , inner_(inner) {
+      SymbolTableStack&& sym_table, ObjectPtr base = ObjectPtr(nullptr))
+      : TypeObject(name, obj_type, std::move(sym_table), base) {
     symbol_table_stack().Push(SymbolTablePtr(new SymbolTable(
         SymbolTable::TableType::CLASS_TABLE)));
   }
@@ -72,9 +71,6 @@ class DeclClassType: public TypeObject {
   }
 
   ObjectPtr Constructor(Executor* parent, Args&& params, KWArgs&&) override;
-
- private:
-  bool inner_;
 };
 
 class DeclClassObject: public Object {

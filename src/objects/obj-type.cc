@@ -103,6 +103,28 @@ ObjectPtr TypeObject::Equal(ObjectPtr obj) {
   return obj_factory.NewBool(v);
 }
 
+ObjectPtr TypeObject::SearchAttr(const std::string& name) {
+  if (symbol_table_stack().Exists(name)) {
+    return symbol_table_stack().Lookup(name, false).SharedAccess();
+  }
+
+  ObjectPtr base = BaseType();
+
+  if (!base) {
+    // if there are no base super class, so the attribute was not found
+    throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
+                       boost::format("symbol %1% not found")% name);
+  }
+
+  if (base->type() != Object::ObjectType::TYPE) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("'%1%' is not a valid type for super"
+                       " class")%base->ObjectName());
+  }
+
+  return static_cast<TypeObject&>(*base).SearchAttr(name);
+}
+
 ObjectPtr Type::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,

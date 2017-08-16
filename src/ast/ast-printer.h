@@ -739,21 +739,30 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitClassDeclaration(ClassDeclaration* class_decl) {
     Level();
-    std::string parent = class_decl->has_parent()?
-          class_decl->id_parent()->name(): "null";
 
-    std::cout << "<class name: " << class_decl->name()->name() << " parent: "
-              << parent << ">\n";
-    level_++;
-    auto vec = class_decl->interfaces();
-    level_++;
-    Level();
-    std::cout << "<interfaces>\n";
-    for (const auto c: vec) {
-      c->Accept(this);
+    std::cout << "<class name: " << class_decl->name()->name() << ">\n";
+
+    if (class_decl->has_parent()) {
+      Level();
+      std::cout << "<parent>\n";
+      level_++;
+      class_decl->parent()->Accept(this);
+      level_--;
+      Level();
+      std::cout << "</parent>\n";
     }
-    level_--;
 
+    if (class_decl->has_interfaces()) {
+      Level();
+      std::cout << "<interfaces>\n";
+      level_++;
+      class_decl->interfaces()->Accept(this);
+      level_--;
+      Level();
+      std::cout << "</interfaces>\n";
+    }
+
+    level_++;
     class_decl->block()->Accept(this);
     level_--;
   }

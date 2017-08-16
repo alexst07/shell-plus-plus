@@ -220,12 +220,12 @@ class ClassDeclaration: public Declaration {
     visitor->VisitClassDeclaration(this);
   }
 
-  Identifier* id_parent() const noexcept {
-    return id_parent_.get();
+  Expression* parent() const noexcept {
+    return parent_.get();
   }
 
   bool has_parent() const noexcept {
-    if (id_parent_) {
+    if (parent_) {
       return true;
     }
 
@@ -244,33 +244,35 @@ class ClassDeclaration: public Declaration {
     return is_final_;
   }
 
-  std::vector<Identifier*> interfaces() noexcept {
-    std::vector<Identifier*> vec;
-
-    for (auto&& p_id: interfaces_) {
-      vec.push_back(p_id.get());
+  bool has_interfaces() const noexcept {
+    if (interfaces_) {
+      return true;
     }
 
-    return vec;
+    return false;
+  }
+
+  ExpressionList* interfaces() noexcept {
+    return interfaces_.get();
   }
 
  private:
   friend class AstNodeFactory;
 
   std::unique_ptr<Identifier> name_;
-  std::unique_ptr<Identifier> id_parent_;
-  std::vector<std::unique_ptr<Identifier>> interfaces_;
+  std::unique_ptr<Expression> parent_;
+  std::unique_ptr<ExpressionList> interfaces_;
   std::unique_ptr<ClassBlock> block_;
   bool is_final_;
 
   ClassDeclaration(std::unique_ptr<Identifier> name,
-                   std::unique_ptr<Identifier> id_parent,
-                   std::vector<std::unique_ptr<Identifier>> interfaces,
+                   std::unique_ptr<Expression> parent,
+                   std::unique_ptr<ExpressionList> interfaces,
                    std::unique_ptr<ClassBlock> block, bool is_final,
                    Position position)
       : Declaration(NodeType::kClassDeclaration, position)
       , name_(std::move(name))
-      , id_parent_(std::move(id_parent))
+      , parent_(std::move(parent))
       , interfaces_(std::move(interfaces))
       , block_(std::move(block))
       , is_final_(is_final) {}
