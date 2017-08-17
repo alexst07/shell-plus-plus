@@ -95,10 +95,9 @@ for folder in folders {
             echo test ${file} correct
         } else {
             echo test ${file} error
+            expected = fres.join("\n")
             print("output: ", string(fout))
-            print("expected: ", fres.join("\n"))
+            print("expected: ", expected)
         }
     }
 }
-
-

@@ -4,7 +4,7 @@
 # alex
 # --output:end
 
-import "import.shpp" as imp
+import "import.sh" as imp
 
 imp.test()
 
