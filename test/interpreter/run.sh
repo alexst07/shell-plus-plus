@@ -89,7 +89,7 @@ for folder in folders {
     for f in $(ls ${folder}) {
         file = folder +"/"+ f
         fres = get_file_output(file)
-        fout = $(./${shpp_path} ${file})
+        fout = $(./${shpp_path} ${file} 2>&1)
 
         if compare_lines(fout, fres) {
             echo test ${file} correct

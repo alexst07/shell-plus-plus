@@ -61,6 +61,26 @@ class FuncObject: public Object {
 
   virtual ObjectPtr Variadic();
 
+  virtual size_t NumParams() const noexcept {
+    return params_.size();
+  }
+
+  virtual size_t NumDefaultParams() const noexcept {
+    return default_params_.size();
+  }
+
+  const std::vector<std::string>& CParams() const noexcept {
+    return params_;
+  }
+
+  const std::vector<std::string>& CDefaultParams() const noexcept {
+    return default_params_;
+  }
+
+  virtual bool CVariadic() const noexcept {
+    return variadic_;
+  }
+
   std::size_t Hash() override {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("func object has no hash method"));
@@ -126,6 +146,18 @@ class FuncDeclObject: public FuncObject {
   ObjectPtr Call(Executor* parent, Args&& params, KWArgs&& kw_params) override;
 
   ObjectPtr Attr(ObjectPtr self, const std::string& name) override;
+
+  size_t NumParams() const noexcept override {
+    return params_.size();
+  }
+
+  size_t NumDefaultParams() const noexcept override {
+    return default_values_.size();
+  }
+
+  bool CVariadic() const noexcept override {
+    return variadic_;
+  }
 
  private:
   ObjectPtr Params() override;

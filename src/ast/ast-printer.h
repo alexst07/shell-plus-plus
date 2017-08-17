@@ -766,6 +766,46 @@ class AstPrinter: public AstVisitor {
     class_decl->block()->Accept(this);
     level_--;
   }
+
+  void virtual VisitInterfaceDeclList(InterfaceDeclList* iface_decl_list) {
+    if (!iface_decl_list->IsEmpty()) {
+      auto vec = iface_decl_list->children();
+
+      for (const auto c: vec) {
+        c->Accept(this);
+      }
+    }
+  }
+
+  void virtual VisitInterfaceBlock(InterfaceBlock* iface_block) {
+    Level();
+    std::cout << "<begin>\n";
+    level_++;
+    iface_block->decl_list()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "<end>\n";
+  }
+
+  void virtual VisitInterfaceDeclaration(InterfaceDeclaration* iface_decl) {
+    Level();
+
+    std::cout << "<interface name: " << iface_decl->name()->name() << ">\n";
+
+    if (iface_decl->has_interfaces()) {
+      Level();
+      std::cout << "<interfaces>\n";
+      level_++;
+      iface_decl->interfaces()->Accept(this);
+      level_--;
+      Level();
+      std::cout << "</interfaces>\n";
+    }
+
+    level_++;
+    iface_decl->block()->Accept(this);
+    level_--;
+  }
 };
 
 }

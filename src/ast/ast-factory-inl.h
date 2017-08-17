@@ -345,7 +345,7 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<ClassDeclList> NewClassDeclList(
-      std::vector<std::unique_ptr<Declaration>> decl_list) {
+      std::vector<std::unique_ptr<AstNode>> decl_list) {
     return std::unique_ptr<ClassDeclList>(new ClassDeclList(
       std::move(decl_list), fn_pos_()));
   }
@@ -364,6 +364,26 @@ class AstNodeFactory {
     return std::unique_ptr<ClassDeclaration>(new ClassDeclaration(
       std::move(name), std::move(parent), std::move(interfaces),
       std::move(block), is_final, fn_pos_()));
+  }
+
+  inline std::unique_ptr<InterfaceDeclaration> NewInterfaceDeclaration(
+      std::unique_ptr<Identifier> name,
+      std::unique_ptr<ExpressionList> interfaces,
+      std::unique_ptr<InterfaceBlock> block) {
+    return std::unique_ptr<InterfaceDeclaration>(new InterfaceDeclaration(
+        std::move(name), std::move(interfaces), std::move(block), fn_pos_()));
+  }
+
+  inline std::unique_ptr<InterfaceBlock> NewInterfaceBlock(
+      std::unique_ptr<InterfaceDeclList> decl_list) {
+    return std::unique_ptr<InterfaceBlock>(new InterfaceBlock(
+        std::move(decl_list), fn_pos_()));
+  }
+
+  inline std::unique_ptr<InterfaceDeclList> NewInterfaceDeclList(
+      std::vector<std::unique_ptr<AstNode>> decl_list) {
+    return std::unique_ptr<InterfaceDeclList>(new InterfaceDeclList(
+        std::move(decl_list), fn_pos_()));
   }
 
   inline std::unique_ptr<DeferStatement> NewDeferStatement(

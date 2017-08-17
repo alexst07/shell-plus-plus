@@ -70,7 +70,7 @@ ObjectPtr PathObject::Equal(ObjectPtr obj) {
 PathType::PathType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
     : TypeObject("path", obj_type, std::move(sym_table)) {
   RegisterStaticMethod<PathPwdStaticFunc>("pwd",  symbol_table_stack(), *this);
-  RegisterMethod<PathExistsFunc>("exits", symbol_table_stack(), *this);
+  RegisterMethod<PathExistsFunc>("exists", symbol_table_stack(), *this);
   RegisterMethod<PathIsRegularFileFunc>("is_regular_file",
                                         symbol_table_stack(), *this);
   RegisterMethod<PathIsDirFunc>("is_dir", symbol_table_stack(), *this);

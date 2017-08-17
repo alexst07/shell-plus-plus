@@ -84,18 +84,99 @@ ParserResult<Declaration> Parser::ParserMethodDeclaration() {
       std::move(func_params), std::move(id), std::move(block), pos));
 }
 
-ParserResult<ClassBlock> Parser::ParserClassBlock() {
+ParserResult<Declaration> Parser::ParserInterfaceDecl() {
+  // advance interface keyword
+  Advance();
+  ValidToken();
+
+  std::unique_ptr<Identifier> iface_name;
+
+  if (token_ != TokenKind::IDENTIFIER) {
+    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
+    return ParserResult<Declaration>(); // Error
+  }
+
+  iface_name = std::move(factory_.NewIdentifier(boost::get<std::string>(
+      token_.GetValue()), std::move(nullptr)));
+
+  Advance();
+  ValidToken();
+
+  std::unique_ptr<ExpressionList> interfaces;
+
+  if (token_ == TokenKind::COLON) {
+    Advance();
+    ValidToken();
+
+    interfaces = ParserPostExpList().MoveAstNode();
+  }
+
+  ValidToken();
+  if (token_ != TokenKind::LBRACE) {
+    ErrorMsg(boost::format("expected token { got %1%")% TokenValueStr());
+    return ParserResult<Declaration>(); // Error
+  }
+
+  ParserResult<InterfaceBlock> iface_block(ParserInterfaceBlock());
+
+  ParserResult<Declaration> iface_decl(factory_.NewInterfaceDeclaration(
+      std::move(iface_name), std::move(interfaces),
+      std::move(iface_block.MoveAstNode())));
+
+  return iface_decl;
+}
+
+ParserResult<InterfaceBlock> Parser::ParserInterfaceBlock() {
   // advance lbrace
   Advance();
 
-  std::vector<std::unique_ptr<Declaration>> decl_list;
+  std::vector<std::unique_ptr<AstNode>> decl_list;
 
   while (ValidToken().IsNot(TokenKind::EOS, TokenKind::RBRACE)) {
     ValidToken();
 
     switch (token_.GetKind()) {
       case TokenKind::KW_FUNC: {
-        ParserResult<Declaration> func(ParserMethodDeclaration());
+        ParserResult<AstNode> func(ParserFunctionDeclaration(false, true));
+        decl_list.push_back(func.MoveAstNode());
+      } break;
+
+      default:
+        ErrorMsg(boost::format("declaration expected, got %1%")
+            %TokenValueStr());
+        return ParserResult<InterfaceBlock>(); // Error
+    }
+  }
+
+  if (ValidToken() != TokenKind::RBRACE) {
+    ErrorMsg(boost::format("expected } token, got %1%")% TokenValueStr());
+      return ParserResult<InterfaceBlock>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  std::unique_ptr<InterfaceDeclList> iface_list(factory_.NewInterfaceDeclList(
+      std::move(decl_list)));
+
+  ParserResult<InterfaceBlock> iface_block(factory_.NewInterfaceBlock(
+      std::move(iface_list)));
+
+  return iface_block;
+}
+
+ParserResult<ClassBlock> Parser::ParserClassBlock() {
+  // advance lbrace
+  Advance();
+
+  std::vector<std::unique_ptr<AstNode>> decl_list;
+
+  while (ValidToken().IsNot(TokenKind::EOS, TokenKind::RBRACE)) {
+    ValidToken();
+
+    switch (token_.GetKind()) {
+      case TokenKind::KW_FUNC: {
+        ParserResult<AstNode> func(ParserFunctionDeclaration(false, false));
         decl_list.push_back(func.MoveAstNode());
       } break;
 
@@ -105,7 +186,8 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
       } break;
 
       default:
-        ErrorMsg(boost::format("declaration expected"));
+        ErrorMsg(boost::format("declaration expected, got %1%")
+            %TokenValueStr());
         return ParserResult<ClassBlock>(); // Error
     }
   }

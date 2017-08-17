@@ -5,6 +5,80 @@
 namespace shpp {
 namespace internal {
 
+AbstractMethod::AbstractMethod(const AbstractMethod& method)
+  : num_params_(method.num_params_)
+  , num_default_params_(method.num_default_params_)
+  , variadic_(method.variadic_) {}
+
+AbstractMethod& AbstractMethod::operator=(const AbstractMethod& method) {
+  num_params_ = method.num_params_;
+  num_default_params_ = method.num_default_params_;
+  variadic_ = method.variadic_;
+
+  return *this;
+}
+
+AbstractMethod::AbstractMethod(AbstractMethod&& method)
+  : num_params_(method.num_params_)
+  , num_default_params_(method.num_default_params_)
+  , variadic_(method.variadic_) {}
+
+AbstractMethod& AbstractMethod::operator=(AbstractMethod&& method) {
+  num_params_ = method.num_params_;
+  num_default_params_ = method.num_default_params_;
+  variadic_ = method.variadic_;
+
+  return *this;
+}
+
+bool AbstractMethod::operator==(const FuncObject& func) const {
+  if (variadic_) {
+    return (func.NumParams() == num_params_) &&
+         (func.NumDefaultParams() == num_default_params_) &&
+         func.CVariadic() == variadic_;
+  }
+
+  // the number of params include the number of default_params
+  return (func.NumParams() == num_params_) &&
+         (func.CVariadic() == variadic_);
+}
+
+bool AbstractMethod::operator!=(const FuncObject& func) const {
+  return !this->operator==(func);
+}
+
+void DeclClassType::CheckInterfaceCompatibility() {
+  SymbolTablePtr& class_table = symbol_table_stack().GetClassTable();
+
+  // verify if all methods from interfaces are implemented
+  for (auto& iface: Interfaces()) {
+    if (iface->type() != ObjectType::DECL_IFACE) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("only interface supported"));
+    }
+
+    for (auto& method: static_cast<DeclInterface&>(*iface).Methods()) {
+      auto it = class_table->Lookup(method.first);
+
+      if (it == class_table->end()) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+            boost::format("method '%1%' not implemented")%method.first);
+      }
+
+      if (it->second.Ref()->type() != ObjectType::FUNC) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+            boost::format("attribute '%1%' is not a method")%method.first);
+      }
+
+      // check if the method in interface is equal the implemented
+      if (method.second != static_cast<FuncObject&>(*it->second.Ref())) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+            boost::format("method '%1%' has wrong number of parameters")%method.first);
+      }
+    }
+  }
+}
+
 // constructor for declared class call __init__ method from
 // symbol table, and create an DeclClassObject, this object
 // has a symbol table stack to store attributes
@@ -13,13 +87,15 @@ ObjectPtr DeclClassType::Constructor(Executor* parent, Args&& params,
   ObjectFactory obj_factory(symbol_table_stack());
   ObjectPtr obj_self(obj_factory.NewDeclObject(this->name()));
 
-  ObjectPtr obj_init = symbol_table_stack().Lookup("__init__", false)
+  if (symbol_table_stack().Exists("__init__")) {
+    ObjectPtr obj_init = symbol_table_stack().Lookup("__init__", false)
       .SharedAccess();
 
-  if (obj_init->type() == ObjectType::FUNC) {
-    params.insert(params.begin(), obj_self);
-    static_cast<FuncObject&>(*obj_init).Call(parent, std::move(params),
-        std::move(kw_params));
+    if (obj_init->type() == ObjectType::FUNC) {
+      params.insert(params.begin(), obj_self);
+      static_cast<FuncObject&>(*obj_init).Call(parent, std::move(params),
+          std::move(kw_params));
+    }
   }
 
   return obj_self;
@@ -262,6 +338,53 @@ ObjectPtr DeclClassObject::Caller(const std::string& fname, Args&& params,
 
   return static_cast<FuncObject&>(*func_obj).Call(nullptr, std::move(params),
       std::move(kw_params));
+}
+
+DeclInterface::DeclInterface(const std::string& name, ObjectPtr obj_type,
+    SymbolTableStack&& sym_table,
+    std::vector<std::shared_ptr<Object>>&& ifaces)
+    : TypeObject(name, obj_type, std::move(sym_table), ObjectPtr(nullptr),
+          std::move(ifaces), ObjectType::DECL_IFACE) {
+  // insert the methods from the bases interfaces
+  // those methods have to be unique
+  for (auto& ifc: Interfaces()) {
+    for (auto& method: static_cast<DeclInterface&>(*ifc).Methods()) {
+      auto it = methods_.find(method.first);
+      if (it != methods_.end()) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+            boost::format("not allowed same name '%1%' method on interface")
+            %method.first);
+      }
+
+      methods_.insert(std::pair<std::string, AbstractMethod>(method.first,
+          method.second));
+    }
+  }
+}
+
+ObjectPtr DeclInterface::Constructor(Executor* parent, Args&&, KWArgs&&) {
+  throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                      boost::format("Interface can not be instantiated"));
+}
+
+void DeclInterface::AddMethod(const std::string& name,
+    AbstractMethod&& method) {
+  // not allowed insert methods with same names
+  auto it = methods_.find(name);
+  if (it != methods_.end()) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("not allowed same name '%1%' method on interface")
+        %name);
+  }
+
+  methods_.insert(std::pair<std::string, AbstractMethod>(name,
+      std::move(method)));
+}
+
+std::shared_ptr<Object> DeclInterface::Attr(std::shared_ptr<Object> self,
+    const std::string& name) {
+  throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+      boost::format("Methods from interface can't be called"));
 }
 
 }

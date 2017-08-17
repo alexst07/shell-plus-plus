@@ -8,6 +8,11 @@
 # --output:end
 
 path_test = "test__2"
+
+if path(path_test).exists() {
+  rm -r ${path_test}
+}
+
 mkdir ${path_test}
 
 touch ${path_test}/t1
@@ -23,6 +28,6 @@ for f in $(ls ${path_test}) {
 }
 
 ls ${path_test}
-rm ${path_test}
+rm -r ${path_test}
 
 ls | grep ${path_test}

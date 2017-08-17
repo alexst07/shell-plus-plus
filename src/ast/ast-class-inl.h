@@ -157,8 +157,8 @@ class ClassDeclList: public AstNode {
     return decl_list_.empty();
   }
 
-  std::vector<Declaration*> children() noexcept {
-    std::vector<Declaration*> vec;
+  std::vector<AstNode*> children() noexcept {
+    std::vector<AstNode*> vec;
 
     for (auto&& p_decl: decl_list_) {
       vec.push_back(p_decl.get());
@@ -174,9 +174,9 @@ class ClassDeclList: public AstNode {
  private:
   friend class AstNodeFactory;
 
-  std::vector<std::unique_ptr<Declaration>> decl_list_;
+  std::vector<std::unique_ptr<AstNode>> decl_list_;
 
-  ClassDeclList(std::vector<std::unique_ptr<Declaration>> decl_list,
+  ClassDeclList(std::vector<std::unique_ptr<AstNode>> decl_list,
                 Position position)
       : AstNode(NodeType::kClassDeclList, position)
       , decl_list_(std::move(decl_list)) {}
@@ -236,6 +236,14 @@ class ClassDeclaration: public Declaration {
     return block_.get();
   }
 
+  bool has_block() const noexcept {
+    if (block_) {
+      return true;
+    }
+
+    return false;
+  }
+
   Identifier* name() const noexcept {
     return name_.get();
   }
@@ -276,6 +284,120 @@ class ClassDeclaration: public Declaration {
       , interfaces_(std::move(interfaces))
       , block_(std::move(block))
       , is_final_(is_final) {}
+};
+
+class InterfaceDeclList: public AstNode {
+ public:
+  virtual ~InterfaceDeclList() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitInterfaceDeclList(this);
+  }
+
+  bool IsEmpty() const noexcept {
+    return decl_list_.empty();
+  }
+
+  std::vector<AstNode*> children() noexcept {
+    std::vector<AstNode*> vec;
+
+    for (auto&& p_decl: decl_list_) {
+      vec.push_back(p_decl.get());
+    }
+
+    return vec;
+  }
+
+  size_t num_children() const noexcept {
+    return decl_list_.size();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<AstNode>> decl_list_;
+
+  InterfaceDeclList(
+      std::vector<std::unique_ptr<AstNode>> decl_list,
+      Position position)
+      : AstNode(NodeType::kInterfaceDeclList, position)
+      , decl_list_(std::move(decl_list)) {}
+};
+
+class InterfaceBlock: public AstNode {
+ public:
+  virtual ~InterfaceBlock() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitInterfaceBlock(this);
+  }
+
+  InterfaceDeclList* decl_list() const noexcept {
+    return decl_list_.get();
+  }
+
+  bool is_empty() const noexcept {
+    if (decl_list_->num_children() == 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<InterfaceDeclList> decl_list_;
+
+  InterfaceBlock(std::unique_ptr<InterfaceDeclList> decl_list,
+      Position position)
+      : AstNode(NodeType::kInterfaceBlock, position)
+      , decl_list_(std::move(decl_list)) {}
+};
+
+class InterfaceDeclaration: public Declaration {
+ public:
+  virtual ~InterfaceDeclaration() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitInterfaceDeclaration(this);
+  }
+
+  InterfaceBlock* block() const noexcept {
+    return block_.get();
+  }
+
+  Identifier* name() const noexcept {
+    return name_.get();
+  }
+
+  bool has_interfaces() const noexcept {
+    if (interfaces_) {
+      return true;
+    }
+
+    return false;
+  }
+
+  ExpressionList* interfaces() noexcept {
+    return interfaces_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Identifier> name_;
+  std::unique_ptr<ExpressionList> interfaces_;
+  std::unique_ptr<InterfaceBlock> block_;
+
+  InterfaceDeclaration(std::unique_ptr<Identifier> name,
+      std::unique_ptr<ExpressionList> interfaces,
+      std::unique_ptr<InterfaceBlock> block,
+      Position position)
+      : Declaration(NodeType::kInterfaceDeclaration, position)
+      , name_(std::move(name))
+      , interfaces_(std::move(interfaces))
+      , block_(std::move(block)) {}
 };
 
 }

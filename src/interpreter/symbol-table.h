@@ -582,6 +582,17 @@ class SymbolTableStack: public SymbolTableStackBase {
                        boost::format("symbol '%1%' not found")% name);
   }
 
+  SymbolTablePtr& GetClassTable() {
+    for (auto& table: stack_) {
+      if (table->Type() == SymbolTable::TableType::CLASS_TABLE) {
+        return table;
+      }
+    }
+
+    throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
+                       boost::format("can't find class symbol table"));
+  }
+
   bool ExistsSymbolInClass(const std::string& name) {
     // search on main table if no symbol was found
     auto it_obj = class_table_->Lookup(name);

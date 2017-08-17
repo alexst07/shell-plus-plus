@@ -98,6 +98,9 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
   } else if (token_ == TokenKind::KW_CLASS) {
     ParserResult<Declaration> class_decl(ParserClassDecl());
     return ParserResult<Statement>(class_decl.MoveAstNode<Statement>());
+  } else if (token_ == TokenKind::KW_INTERFACE) {
+    ParserResult<Declaration> iface_decl(ParserInterfaceDecl());
+    return ParserResult<Statement>(iface_decl.MoveAstNode<Statement>());
   } else if (token_ == TokenKind::KW_ALIAS) {
     ParserResult<Declaration> alias(ParserAliasDeclaration());
     return ParserResult<Statement>(alias.MoveAstNode<Statement>());
@@ -108,7 +111,8 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
 
 bool Parser::IsStmtDecl() {
   return token_.IsAny(TokenKind::KW_FUNC, TokenKind::KW_CMD,
-                      TokenKind::KW_CLASS, TokenKind::KW_ALIAS);
+                      TokenKind::KW_CLASS, TokenKind::KW_ALIAS,
+                      TokenKind::KW_INTERFACE);
 }
 
 ParserResult<Declaration> Parser::ParserCmdDeclaration() {
@@ -223,7 +227,7 @@ std::unique_ptr<Statement> Parser::ParserDeferableStmt() {
 }
 
 ParserResult<AstNode> Parser::ParserFunctionDeclaration(
-    bool lambda) {
+    bool lambda, bool abstract) {
   if (token_ != TokenKind::KW_FUNC) {
     ErrorMsg(boost::format("expected function"));
     return ParserResult<AstNode>(); // Error
@@ -279,7 +283,10 @@ ParserResult<AstNode> Parser::ParserFunctionDeclaration(
     ValidToken();
   }
 
-  std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
+  std::unique_ptr<Block> block;
+  if (!abstract) {
+    block = ParserBlock().MoveAstNode<Block>();
+  }
 
   if (id) {
     return ParserResult<AstNode>(factory_.NewFunctionDeclaration(

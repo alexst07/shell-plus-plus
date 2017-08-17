@@ -365,11 +365,22 @@ class ObjectFactory {
   }
 
   ObjectPtr NewDeclType(const std::string& name_type,
-      ObjectPtr base = ObjectPtr(nullptr)) {
+      ObjectPtr base = ObjectPtr(nullptr),
+      std::vector<std::shared_ptr<Object>>&& ifaces =
+          std::vector<std::shared_ptr<Object>>()) {
     auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
     SymbolTableStack table_stack(symbol_table_);
     return ObjectPtr(new DeclClassType(name_type, obj_type,
-        std::move(table_stack), base));
+        std::move(table_stack), base, std::move(ifaces)));
+  }
+
+  ObjectPtr NewDeclIFace(const std::string& name_type,
+      std::vector<std::shared_ptr<Object>>&& ifaces =
+          std::vector<std::shared_ptr<Object>>()) {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    SymbolTableStack table_stack(symbol_table_);
+    return ObjectPtr(new DeclInterface(name_type, obj_type,
+        std::move(table_stack), std::move(ifaces)));
   }
 
   ObjectPtr NewType() {

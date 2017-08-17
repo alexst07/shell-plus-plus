@@ -115,8 +115,8 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
   // only the last parameter can be variadic
   if (variadic_count > 1) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("not allowed more than 1 variadic parameter"),
-                       fdecl_node->pos());
+        boost::format("not allowed more than 1 variadic parameter"),
+        fdecl_node->pos());
   }
 
   // if has variadic argument the last parameters has to have default values
@@ -198,7 +198,6 @@ ObjectPtr ClassDeclExecutor::SuperClass(Expression* super) {
   return base_obj;
 }
 
-// TODO: Analize errors exception
 void ClassDeclExecutor::Exec(AstNode* node, bool inner,
     ObjectPtr inner_type_obj) {
   ClassDeclaration* class_decl_node = static_cast<ClassDeclaration*>(node);
@@ -213,33 +212,59 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
     base = SuperClass(class_decl_node->parent());
   }
 
-  ObjectPtr type_obj = obj_factory_.NewDeclType(
-        class_decl_node->name()->name(), base);
+  ObjectPtr type_obj;
+
+  try {
+    // if the class implements some interfaces, verify if it is a valid one
+    std::vector<ObjectPtr> ifaces;
+    if (class_decl_node->has_interfaces()) {
+      ifaces = InterfaceDeclExecutor::HandleInterfaces(this,
+          class_decl_node->interfaces(), symbol_table_stack());
+    }
+
+    type_obj = obj_factory_.NewDeclType(class_decl_node->name()->name(), base,
+        std::move(ifaces));
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(),
+        class_decl_node->interfaces()->pos(), e.messages());
+  }
 
   // insert all declared methods on symbol table
-  std::vector<Declaration*> decl_vec = decl_list->children();
+  std::vector<AstNode*> decl_vec = decl_list->children();
 
   // the last argument specify that is a method inside the class
   FuncDeclExecutor fexec(this, symbol_table_stack(), true);
 
+  DeclClassType& decl_class = static_cast<DeclClassType&>(*type_obj);
+
   for (auto decl: decl_vec) {
-    if (decl->type() == AstNode::NodeType::kFunctionDeclaration) {
-      // insert method on symbol table of class
-      FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(decl);
+    try {
+      if (decl->type() == AstNode::NodeType::kFunctionDeclaration) {
+        // insert method on symbol table of class
+        FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(decl);
 
-      // handle no abstract method
-      if (fdecl->has_block()) {
-        static_cast<TypeObject&>(*type_obj).RegiterMethod(fdecl->name()->name(),
-                                                          fexec.FuncObj(decl));
+        // handle no abstract method
+        if (fdecl->has_block()) {
+          decl_class.RegiterMethod(fdecl->name()->name(), fexec.FuncObj(decl));
+        }
+      } else if (decl->type() == AstNode::NodeType::kClassDeclaration) {
+        ClassDeclaration* class_decl = static_cast<ClassDeclaration*>(decl);
+
+        // insert inner class on type_obj symbol table, insted of its own
+        ClassDeclExecutor class_exec(this, decl_class.GlobalSymTableStack());
+        class_exec.Exec(class_decl, true, type_obj);
       }
-    } else if (decl->type() == AstNode::NodeType::kClassDeclaration) {
-      ClassDeclaration* class_decl = static_cast<ClassDeclaration*>(decl);
-
-      // insert inner class on type_obj symbol table, insted of its own
-      ClassDeclExecutor class_exec(this, static_cast<DeclClassType&>(
-          *type_obj).GlobalSymTableStack());
-      class_exec.Exec(class_decl, true, type_obj);
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), decl->pos(), e.messages());
     }
+  }
+
+  try {
+    // check if declared class implemented all abstract methods
+    decl_class.CheckInterfaceCompatibility();
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(),
+        class_decl_node->interfaces()->pos(), e.messages());
   }
 
   if (inner) {
@@ -260,6 +285,71 @@ void ClassDeclExecutor::set_stop(StopFlag flag) {
   }
 
   parent()->set_stop(flag);
+}
+
+std::vector<ObjectPtr> InterfaceDeclExecutor::HandleInterfaces(
+    Executor* parent, ExpressionList* ifaces_node,
+    SymbolTableStack& symbol_table_stack) {
+  ExprListExecutor expr_list(parent, symbol_table_stack);
+  std::vector<ObjectPtr> ifaces_obj = expr_list.Exec(ifaces_node);
+
+  // check if all objects are intefaces
+  for (auto& iface: ifaces_obj) {
+    if (iface->type() != Object::ObjectType::DECL_IFACE) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("'%1%' is not an interface")
+                       %iface->ObjectName(), ifaces_node->pos());
+    }
+  }
+
+  return ifaces_obj;
+}
+
+void InterfaceDeclExecutor::Exec(AstNode* node) {
+  InterfaceDeclaration* iface_node = static_cast<InterfaceDeclaration*>(node);
+  InterfaceBlock* block = iface_node->block();
+  InterfaceDeclList* decl_list = block->decl_list();
+
+  std::vector<AstNode*> decl_vec = decl_list->children();
+
+  // if the class implements some interfaces, verify if it is a valid one
+  std::vector<ObjectPtr> ifaces;
+
+  try {
+    if (iface_node->has_interfaces()) {
+    ifaces = std::move(InterfaceDeclExecutor::HandleInterfaces(this,
+        iface_node->interfaces(), symbol_table_stack()));
+    }
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), iface_node->pos(), e.messages());
+  }
+
+  const std::string& iface_name = iface_node->name()->name();
+
+  ObjectPtr iface_obj = obj_factory_.NewDeclIFace(iface_name,
+      std::move(ifaces));
+
+  for (auto decl: decl_vec) {
+    try {
+      if (decl->type() == AstNode::NodeType::kFunctionDeclaration) {
+        FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(decl);
+
+        FuncDeclExecutor fexec(this, symbol_table_stack(), true);
+        AbstractMethod abstract_method(static_cast<FuncObject&>(
+            *fexec.FuncObj(decl)));
+
+        DeclInterface& decl_iface = static_cast<DeclInterface&>(*iface_obj);
+        const std::string& fname =
+            static_cast<FunctionDeclaration*>(decl)->name()->name();
+        decl_iface.AddMethod(fname, std::move(abstract_method));
+      }
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), decl->pos(), e.messages());
+    }
+  }
+
+  SymbolAttr symbol_obj(iface_obj, true);
+  symbol_table_stack().InsertEntry(iface_name, std::move(symbol_obj));
 }
 
 void StmtExecutor::Exec(AstNode* node) {
@@ -303,6 +393,11 @@ void StmtExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kClassDeclaration: {
       ClassDeclExecutor class_decl_executor(this, symbol_table_stack());
       class_decl_executor.Exec(static_cast<ClassDeclaration*>(node));
+    } break;
+
+    case AstNode::NodeType::kInterfaceDeclaration: {
+      InterfaceDeclExecutor iface_decl_executor(this, symbol_table_stack());
+      iface_decl_executor.Exec(static_cast<InterfaceDeclaration*>(node));
     } break;
 
     case AstNode::NodeType::kBreakStatement: {

@@ -150,10 +150,15 @@ class ModuleCustonObject: public Object {
 
 class TypeObject: public Object {
  public:
+  using InterfacesList = std::vector<std::shared_ptr<Object>>;
+
   TypeObject(const std::string& name, ObjectPtr obj_type,
              SymbolTableStack&& sym_table,
-             ObjectPtr base = ObjectPtr(nullptr))
-      : Object(ObjectType::TYPE, obj_type, std::move(sym_table), base)
+             ObjectPtr base = ObjectPtr(nullptr),
+             InterfacesList&& ifaces = InterfacesList(),
+             ObjectType type = ObjectType::TYPE)
+      : Object(type, obj_type, std::move(sym_table), base,
+               std::move(ifaces))
       , name_(name) {
     symbol_table_stack().NewTable();
   }

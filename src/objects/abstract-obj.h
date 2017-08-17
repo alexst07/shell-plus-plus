@@ -57,6 +57,7 @@ class Object {
     TUPLE_ITER,
     CMD_ITER,
     FILE_ITER,
+    DECL_IFACE,
     DECL_TYPE,
     DECL_OBJ,
     MODULE,
@@ -367,6 +368,10 @@ class Object {
     return base_;
   }
 
+  const std::vector<std::shared_ptr<Object>>& Interfaces() const noexcept {
+    return ifaces_;
+  }
+
  private:
   // enum type
   ObjectType type_;
@@ -378,14 +383,19 @@ class Object {
 
   std::shared_ptr<Object> base_;
 
+  std::vector<std::shared_ptr<Object>> ifaces_;
+
  protected:
   Object(ObjectType type, std::shared_ptr<Object> obj_type,
          SymbolTableStack&& sym_table,
-         std::shared_ptr<Object> base = std::shared_ptr<Object>(nullptr))
+         std::shared_ptr<Object> base = std::shared_ptr<Object>(nullptr),
+         std::vector<std::shared_ptr<Object>>&& ifaces =
+            std::vector<std::shared_ptr<Object>>())
       : type_(type)
       , obj_type_(obj_type)
       , sym_table_(std::move(sym_table))
-      , base_(base) {}
+      , base_(base)
+      , ifaces_(std::move(ifaces)) {}
 };
 
 typedef std::shared_ptr<Object> ObjectPtr;

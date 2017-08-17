@@ -37,7 +37,9 @@ namespace internal {
   V(CmdDeclaration)              \
   V(AliasDeclaration)            \
   V(ClassDeclList)               \
-  V(ClassBlock)
+  V(InterfaceDeclList)           \
+  V(ClassBlock)                  \
+  V(InterfaceBlock)              \
 
 #define ITERATION_NODE_LIST(V) \
   V(DoWhileStatement)          \

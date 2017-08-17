@@ -92,6 +92,21 @@ class ClassDeclExecutor: public Executor {
   ObjectFactory obj_factory_;
 };
 
+class InterfaceDeclExecutor: public Executor {
+ public:
+  InterfaceDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack)
+      , obj_factory_(symbol_table_stack) {}
+
+  void Exec(AstNode* node);
+
+  static std::vector<ObjectPtr> HandleInterfaces(Executor* parent,
+      ExpressionList* ifaces_node, SymbolTableStack& symbol_table_stack);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
 class StmtExecutor: public Executor {
  public:
   StmtExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
