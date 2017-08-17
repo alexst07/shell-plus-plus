@@ -13,7 +13,7 @@ func exist_cmd(name) {
 lint_path = __path__ + "/../build/"
 
 if !path.exists(lint_path + "/" + "cpplint.py") {
-  if exist_cmd("wget") {[
+  if exist_cmd("wget") {
     echo output path: ${lint_path}
     wget -P ${lint_path} https://raw.githubusercontent.com/google/styleguide/gh-pages/cpplint/cpplint.py
   }
