@@ -240,12 +240,12 @@ class ObjectFactory {
       const SymbolTableStack& symbol_table,
       std::vector<std::string>&& params,
       std::unordered_map<std::string, ObjectPtr>&& default_values,
-      bool variadic, bool lambda) {
+      bool variadic, bool lambda, bool fstatic) {
     auto obj_type = symbol_table_.Lookup("function", false).SharedAccess();
     return ObjectPtr(new FuncDeclObject(id, start_node, symbol_table,
                                         std::move(params),
                                         std::move(default_values),
-                                        variadic, lambda, obj_type,
+                                        variadic, lambda, fstatic, obj_type,
                                         std::move(SymTableStack())));
   }
 

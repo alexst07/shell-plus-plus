@@ -45,11 +45,13 @@ class StmtListExecutor: public Executor {
 class FuncDeclExecutor: public Executor {
  public:
   FuncDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack,
-                   bool method = false, bool lambda = false)
+                   bool method = false, bool lambda = false,
+                   bool fstatic = false)
       : Executor(parent, symbol_table_stack)
       , obj_factory_(symbol_table_stack)
       , method_(method)
-      , lambda_(lambda) {}
+      , lambda_(lambda)
+      , fstatic_(fstatic) {}
 
   void Exec(AstNode* node);
 
@@ -73,6 +75,7 @@ class FuncDeclExecutor: public Executor {
   ObjectFactory obj_factory_;
   bool method_;
   bool lambda_;
+  bool fstatic_;
 };
 
 class ClassDeclExecutor: public Executor {

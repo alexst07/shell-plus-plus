@@ -47,11 +47,12 @@ class FuncObject: public Object {
   FuncObject(ObjectPtr obj_type, SymbolTableStack&& sym_table,
       std::vector<std::string>&& params = std::vector<std::string>(),
       std::vector<std::string>&& default_params = std::vector<std::string>(),
-      bool variadic = false)
+      bool variadic = false, bool declared = false)
       : Object(ObjectType::FUNC, obj_type, std::move(sym_table))
       , params_(std::move(params))
       , default_params_(std::move(default_params))
-      , variadic_(variadic) {}
+      , variadic_(variadic)
+      , declared_(declared) {}
 
   virtual ~FuncObject() {}
 
@@ -90,10 +91,15 @@ class FuncObject: public Object {
     return std::string("[function]");
   }
 
+  bool Declared() const noexcept {
+    return declared_;
+  }
+
  private:
   std::vector<std::string> params_;
   std::vector<std::string> default_params_;
   bool variadic_;
+  bool declared_;
 };
 
 class SpecialFuncObject: public Object {
@@ -140,7 +146,7 @@ class FuncDeclObject: public FuncObject {
       const SymbolTableStack& symbol_table,
       std::vector<std::string>&& params,
       std::unordered_map<std::string, ObjectPtr>&& default_values,
-      bool variadic, bool lambda, ObjectPtr obj_type,
+      bool variadic, bool lambda, bool fstatic, ObjectPtr obj_type,
       SymbolTableStack&& sym_table);
 
   ObjectPtr Call(Executor* parent, Args&& params, KWArgs&& kw_params) override;
@@ -157,6 +163,10 @@ class FuncDeclObject: public FuncObject {
 
   bool CVariadic() const noexcept override {
     return variadic_;
+  }
+
+  bool Static() const noexcept {
+    return fstatic_;
   }
 
  private:
@@ -193,6 +203,7 @@ class FuncDeclObject: public FuncObject {
   std::unordered_map<std::string, ObjectPtr> default_values_;
   bool variadic_;
   bool lambda_;
+  bool fstatic_;
 };
 
 }

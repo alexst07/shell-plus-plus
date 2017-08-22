@@ -286,11 +286,7 @@ class Parser {
   ParserResult<Statement> ParserCmdAndOr();
   ParserResult<Statement> ParserCmdFull();
   ParserResult<AstNode> ParserFunctionDeclaration(bool lambda,
-      bool abstract = false);
-
-  // parser methods from class or interface
-  // the method can be abastract or not
-  ParserResult<Declaration> ParserMethodDeclaration();
+      bool abstract = false, bool fstatic = false);
 
   // parser every declartion accpted by class
   ParserResult<ClassBlock> ParserClassBlock();

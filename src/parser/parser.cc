@@ -227,7 +227,7 @@ std::unique_ptr<Statement> Parser::ParserDeferableStmt() {
 }
 
 ParserResult<AstNode> Parser::ParserFunctionDeclaration(
-    bool lambda, bool abstract) {
+    bool lambda, bool abstract, bool fstatic) {
   if (token_ != TokenKind::KW_FUNC) {
     ErrorMsg(boost::format("expected function"));
     return ParserResult<AstNode>(); // Error
@@ -290,7 +290,7 @@ ParserResult<AstNode> Parser::ParserFunctionDeclaration(
 
   if (id) {
     return ParserResult<AstNode>(factory_.NewFunctionDeclaration(
-      std::move(func_params), std::move(id), std::move(block), pos));
+      std::move(func_params), std::move(id), std::move(block), fstatic, pos));
   }
 
   return ParserResult<AstNode>(factory_.NewFunctionExpression(

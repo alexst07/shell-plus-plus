@@ -78,7 +78,7 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
 
   // if the method is declared inside of a class
   // insert the parameter this
-  if (method_) {
+  if (method_ && !fstatic_) {
     param_names.push_back(std::string("this"));
   }
 
@@ -139,6 +139,7 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
   SymbolTableStack st_stack(symbol_table_stack());
 
   std::string func_name = "";
+  bool fstatic = false;
 
   // now we need to know if the function is lambda or declaration
   // TODO: on c++17 change this shit piece of code to if constexpr () {}
@@ -146,14 +147,17 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
     // convert to AstNode and after convert to the correct type to avoid error
     // because FunctionExpression and FunctionDeclaration has no relationship
     // between one and anoter
-    func_name = static_cast<FunctionDeclaration*>(
-        static_cast<AstNode*>(fdecl_node))->name()->name();
+    FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(
+        static_cast<AstNode*>(fdecl_node));
+    func_name = fdecl->name()->name();
+    fstatic = fdecl->fstatic();
   }
 
   try {
     ObjectPtr fobj(obj_factory_.NewFuncDeclObject(func_name,
         fdecl_node->block(), std::move(st_stack), std::move(param_names),
-        std::move(default_values), variadic_count == 1?true:false, lambda_));
+        std::move(default_values), variadic_count == 1?true:false, lambda_,
+        fstatic));
 
     return fobj;
   } catch (RunTimeError& e) {
@@ -232,9 +236,6 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
   // insert all declared methods on symbol table
   std::vector<AstNode*> decl_vec = decl_list->children();
 
-  // the last argument specify that is a method inside the class
-  FuncDeclExecutor fexec(this, symbol_table_stack(), true);
-
   DeclClassType& decl_class = static_cast<DeclClassType&>(*type_obj);
 
   for (auto decl: decl_vec) {
@@ -242,6 +243,10 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
       if (decl->type() == AstNode::NodeType::kFunctionDeclaration) {
         // insert method on symbol table of class
         FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(decl);
+
+        // the last argument specify that is a static method inside the class
+        FuncDeclExecutor fexec(this, symbol_table_stack(), true, false,
+            fdecl->fstatic());
 
         // handle no abstract method
         if (fdecl->has_block()) {

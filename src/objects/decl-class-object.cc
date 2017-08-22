@@ -1,3 +1,17 @@
+// Copyright 2016 Alex Silva Torres
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "decl-class-object.h"
 
 #include "object-factory.h"
@@ -137,6 +151,18 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
   ObjectPtr att_obj = static_cast<TypeObject&>(*ObjType()).SearchAttr(name);
 
   if (att_obj->type() == ObjectType::FUNC) {
+    // if the function is not declared, just return it
+    if (!static_cast<FuncObject&>(*att_obj).Declared()) {
+      return att_obj;
+    }
+
+    // if the function is static don't wrapper the function to pass the
+    // parameter this
+    if (static_cast<FuncDeclObject&>(*att_obj).Static()) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+            boost::format("static method '%1%' must not be called by object")%name);
+    }
+
     ObjectFactory obj_factory(symbol_table_stack());
 
     // the function wrapper insert the object self_param as the first param

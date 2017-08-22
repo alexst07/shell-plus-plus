@@ -19,71 +19,6 @@
 namespace shpp {
 namespace internal {
 
-ParserResult<Declaration> Parser::ParserMethodDeclaration() {
-  // get the method position
-  Position pos = {token_.Line(), token_.Col()};
-
-  // Advance func keyword
-  Advance();
-  ValidToken();
-
-  std::unique_ptr<Identifier> id;
-
-  if (token_ != TokenKind::IDENTIFIER) {
-    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
-    return ParserResult<Declaration>(); // Error
-  }
-
-  id = std::move(factory_.NewIdentifier(boost::get<std::string>(
-      token_.GetValue()), std::move(nullptr)));
-
-  Advance();
-  ValidToken();
-
-  if (token_ != TokenKind::LPAREN) {
-    ErrorMsg(boost::format("expected token '(' got %1%")% TokenValueStr());
-    return ParserResult<Declaration>(); // Error
-  }
-
-  Advance();
-  ValidToken();
-
-  std::vector<std::unique_ptr<FunctionParam>> func_params;
-
-  // parser the parameters list
-  if (token_ == TokenKind::RPAREN) {
-    Advance();
-    ValidToken();
-  } else {
-    bool ok = true;
-    std::tie(func_params, ok) = ParserParamsList();
-    if (token_ != TokenKind::RPAREN) {
-      ErrorMsg(boost::format("expected token ')'"));
-      return ParserResult<Declaration>(); // Error
-    }
-
-    // check params lists
-    if (!ok) {
-      return ParserResult<Declaration>(); // Error
-    }
-
-    Advance();
-    ValidToken();
-  }
-
-  // abastract method
-  if (token_ != TokenKind::LBRACE) {
-    return ParserResult<Declaration>(factory_.NewFunctionDeclaration(
-        std::move(func_params), std::move(id),
-        std::unique_ptr<Block>(nullptr), pos));
-  }
-
-  std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
-
-  return ParserResult<Declaration>(factory_.NewFunctionDeclaration(
-      std::move(func_params), std::move(id), std::move(block), pos));
-}
-
 ParserResult<Declaration> Parser::ParserInterfaceDecl() {
   // advance interface keyword
   Advance();
@@ -183,6 +118,14 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
       case TokenKind::KW_CLASS: {
         ParserResult<Declaration> class_decl(ParserClassDecl());
         decl_list.push_back(class_decl.MoveAstNode());
+      } break;
+
+      case TokenKind::KW_STATIC: {
+        // advance static keyword
+        Advance();
+
+        ParserResult<AstNode> func(ParserFunctionDeclaration(false, false, true));
+        decl_list.push_back(func.MoveAstNode());
       } break;
 
       default:

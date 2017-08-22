@@ -68,16 +68,20 @@ FuncDeclObject::FuncDeclObject(const std::string& id,
     const SymbolTableStack& symbol_table,
     std::vector<std::string>&& params,
     std::unordered_map<std::string, ObjectPtr>&& default_values,
-    bool variadic, bool lambda, ObjectPtr obj_type,
+    bool variadic, bool lambda, bool fstatic, ObjectPtr obj_type,
     SymbolTableStack&& sym_table)
-    : FuncObject(obj_type, std::move(sym_table))
+    : FuncObject(obj_type, std::move(sym_table),
+          std::move(std::vector<std::string>()),
+          std::move(std::vector<std::string>()),
+          false, true)
     , id_(id)
     , start_node_(start_node)
     , symbol_table_{lambda?symbol_table:SymbolTableStack()}
     , params_(std::move(params))
     , default_values_(std::move(default_values))
     , variadic_(variadic)
-    , lambda_(lambda) {
+    , lambda_(lambda)
+    , fstatic_(fstatic){
   if (lambda) {
     // if is lambda create a new symbol table on stack, it works like if stmt
     symbol_table_.NewTable();

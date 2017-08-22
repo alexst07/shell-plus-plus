@@ -115,17 +115,25 @@ class FunctionDeclaration: public Function, public Declaration {
     return name_.get();
   }
 
+  bool fstatic() const noexcept {
+    return fstatic_;
+  }
+
  private:
   friend class AstNodeFactory;
 
   std::unique_ptr<Identifier> name_;
+  bool fstatic_;
 
   FunctionDeclaration(std::vector<std::unique_ptr<FunctionParam>>&& params,
                       std::unique_ptr<Identifier> name,
-                      std::shared_ptr<Block> block, Position position)
+                      std::shared_ptr<Block> block,
+                      bool fstatic,
+                      Position position)
     : Declaration(NodeType::kFunctionDeclaration, position)
     , Function(std::move(params), block)
-    , name_(std::move(name)) {}
+    , name_(std::move(name))
+    , fstatic_(fstatic) {}
 };
 
 class FunctionExpression: public Function, public Expression {
