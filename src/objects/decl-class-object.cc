@@ -61,9 +61,120 @@ bool AbstractMethod::operator!=(const FuncObject& func) const {
   return !this->operator==(func);
 }
 
-void DeclClassType::CheckInterfaceCompatibility() {
-  SymbolTablePtr& class_table = symbol_table_stack().GetClassTable();
+bool AbstractMethod::operator==(const AbstractMethod& func) const {
+  if (variadic_) {
+    return (func.num_params_ == num_params_) &&
+         (func.num_default_params_ == num_default_params_) &&
+         func.variadic_ == variadic_;
+  }
 
+  // the number of params include the number of default_params
+  return (func.num_params_ == num_params_) &&
+         (func.variadic_ == variadic_);
+}
+
+bool AbstractMethod::operator!=(const AbstractMethod& func) const {
+  return !this->operator==(func);
+}
+
+DeclClassType::DeclClassType(const std::string& name, ObjectPtr obj_type,
+    SymbolTableStack&& sym_table, ObjectPtr base,
+    InterfacesList&& ifaces, bool abstract)
+    : TypeObject(name, obj_type, std::move(sym_table), base, std::move(ifaces))
+    , abstract_(abstract) {
+  symbol_table_stack().Push(SymbolTablePtr(new SymbolTable(
+      SymbolTable::TableType::CLASS_TABLE)));
+
+  // if there is no base type, so we don't need verify abstract methods
+  // from base class
+  if (!base) {
+    return;
+  }
+
+  // the class TypeObject already check if the base is a type, so we can
+  // cast this object to TypeObject without any problem with segfault
+  TypeObject& type_base = static_cast<TypeObject&>(*base);
+
+  // only user declared class has abstract methods
+  if (!type_base.Declared()) {
+    return;
+  }
+
+  // here we are surely that the object is a declared class
+  DeclClassType& decl_base = static_cast<DeclClassType&>(*base);
+
+  // insert the abstract methods from the base class
+  for (auto& method: decl_base.AbstractMethods()) {
+    auto it = abstract_methods_.find(method.first);
+
+    // abstract method must be have unique name
+    if (it != abstract_methods_.end()) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("not allowed same name '%1%' method on class")
+          %method.first);
+    }
+
+    abstract_methods_.insert(std::pair<std::string, AbstractMethod>(method.first,
+        method.second));
+  }
+}
+
+void DeclClassType::AddAbstractMethod(const std::string& name,
+    AbstractMethod&& method) {
+  // abstract class can not be instantiated
+  if (!abstract_) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("not allowed abstract '%1%' method on no abstract class")
+        %name);
+  }
+
+  // not allowed insert methods with same names
+  auto it = abstract_methods_.find(name);
+  if (it != abstract_methods_.end()) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("not allowed same name '%1%' method on class")
+        %name);
+  }
+
+  // verify is exists some impelemented method with same name
+  if (ExistsAttr(name)) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("not allowed same name '%1%' attribute on class")
+        %name);
+  }
+
+  abstract_methods_.insert(std::pair<std::string, AbstractMethod>(name,
+      std::move(method)));
+}
+
+void DeclClassType::CheckAbstractMethodsCompatibility() {
+  // if it is an abstract class, the class doesn't need
+  // implement abstract methods from this or from
+  // the base class
+  if (abstract_) {
+    return;
+  }
+
+  // verify if all abstract methods are implemented
+  for (auto& method: AbstractMethods()) {
+    ObjectPtr fobj = SearchAttr(method.first);
+
+    // check if the attribute is really a method
+    if (fobj->type() != ObjectType::FUNC) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("attribute '%1%' is not a method")%method.first);
+    }
+
+    // check if the abstract method is equal the implemented
+    if (method.second != static_cast<FuncObject&>(*fobj)) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("method '%1%' has wrong number of parameters")
+          %method.first);
+    }
+  }
+}
+
+void DeclClassType::CheckInterfaceCompatibility() {
   // verify if all methods from interfaces are implemented
   for (auto& iface: Interfaces()) {
     if (iface->type() != ObjectType::DECL_IFACE) {
@@ -72,20 +183,28 @@ void DeclClassType::CheckInterfaceCompatibility() {
     }
 
     for (auto& method: static_cast<DeclInterface&>(*iface).Methods()) {
-      auto it = class_table->Lookup(method.first);
-
-      if (it == class_table->end()) {
-        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-            boost::format("method '%1%' not implemented")%method.first);
+      // if the method in the interface was declared as abstract
+      // we don't need to check if the method was implemented
+      // in this class, because some derived class has to
+      // implement it
+      auto it = abstract_methods_.find(method.first);
+      if (it != abstract_methods_.end()) {
+        if (it->second == method.second) {
+          continue;
+        }
       }
 
-      if (it->second.Ref()->type() != ObjectType::FUNC) {
+      // search if the abstract method from interface was implemented
+      // on this class or in any class which this class is derived
+      ObjectPtr fobj = SearchAttr(method.first);
+
+      if (fobj->type() != ObjectType::FUNC) {
         throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
             boost::format("attribute '%1%' is not a method")%method.first);
       }
 
       // check if the method in interface is equal the implemented
-      if (method.second != static_cast<FuncObject&>(*it->second.Ref())) {
+      if (method.second != static_cast<FuncObject&>(*fobj)) {
         throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
             boost::format("method '%1%' has wrong number of parameters")%method.first);
       }
@@ -98,6 +217,12 @@ void DeclClassType::CheckInterfaceCompatibility() {
 // has a symbol table stack to store attributes
 ObjectPtr DeclClassType::Constructor(Executor* parent, Args&& params,
     KWArgs&& kw_params) {
+  if (abstract_) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("abstract class '%1%' can not be instantiated")
+        %ObjectName());
+  }
+
   ObjectFactory obj_factory(symbol_table_stack());
   ObjectPtr obj_self(obj_factory.NewDeclObject(this->name()));
 
@@ -117,7 +242,8 @@ ObjectPtr DeclClassType::Constructor(Executor* parent, Args&& params,
 
 ObjectPtr DeclClassType::CallObject(const std::string& name,
                                  ObjectPtr self_param) {
-  ObjectPtr obj = symbol_table_stack().Lookup(name, false).SharedAccess();
+  // search on this class and all base classes
+  ObjectPtr obj = SearchAttr(name);
 
   if (obj->type() == ObjectType::FUNC) {
     ObjectFactory obj_factory(symbol_table_stack());
@@ -132,15 +258,17 @@ ObjectPtr DeclClassType::CallObject(const std::string& name,
 
 std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
-  ObjectPtr att_obj = symbol_table_stack().Lookup(name, false).SharedAccess();
+  ObjectPtr att_obj = SearchAttr(name);
   return att_obj;
 }
 
 std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
+  // first check it the attribute exists on object symbol table
   if (symbol_table_stack().Exists(name)) {
     ObjectPtr att_obj = symbol_table_stack().Lookup(name, false).SharedAccess();
 
+    // functions on object are handle to insert this parameter
     if (att_obj->type() == ObjectType::FUNC) {
       return static_cast<DeclClassType&>(*ObjType()).CallObject(name, self);
     }
@@ -148,6 +276,8 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
     return att_obj;
   }
 
+  // if the attribute is not on object symbol table search it on type class
+  // and all base class
   ObjectPtr att_obj = static_cast<TypeObject&>(*ObjType()).SearchAttr(name);
 
   if (att_obj->type() == ObjectType::FUNC) {

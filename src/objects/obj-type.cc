@@ -125,6 +125,26 @@ ObjectPtr TypeObject::SearchAttr(const std::string& name) {
   return static_cast<TypeObject&>(*base).SearchAttr(name);
 }
 
+bool TypeObject::ExistsAttr(const std::string& name) {
+  if (symbol_table_stack().Exists(name)) {
+    return true;
+  }
+
+  ObjectPtr base = BaseType();
+
+  if (!base) {
+    return false;
+  }
+
+  if (base->type() != Object::ObjectType::TYPE) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("'%1%' is not a valid type for super"
+                       " class")%base->ObjectName());
+  }
+
+  return static_cast<TypeObject&>(*base).ExistsAttr(name);
+}
+
 ObjectPtr Type::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params.size() != 1) {
     throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,

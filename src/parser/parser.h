@@ -296,7 +296,7 @@ class Parser {
   ParserResult<Declaration> ParserInterfaceDecl();
 
   // parser class declaration
-  ParserResult<Declaration> ParserClassDecl();
+  ParserResult<Declaration> ParserClassDecl(bool is_final, bool abstract);
 
   std::vector<std::unique_ptr<Identifier>> ParserInterfaceList();
 

@@ -96,7 +96,15 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
     ParserResult<Declaration> cmd(ParserCmdDeclaration());
     return ParserResult<Statement>(cmd.MoveAstNode<Statement>());
   } else if (token_ == TokenKind::KW_CLASS) {
-    ParserResult<Declaration> class_decl(ParserClassDecl());
+    ParserResult<Declaration> class_decl(ParserClassDecl(false, false));
+    return ParserResult<Statement>(class_decl.MoveAstNode<Statement>());
+  } else if (token_ == TokenKind::KW_FINAL) {
+    Advance();
+    ParserResult<Declaration> class_decl(ParserClassDecl(true, false));
+    return ParserResult<Statement>(class_decl.MoveAstNode<Statement>());
+  } else if (token_ == TokenKind::KW_ABSTRACT) {
+    Advance();
+    ParserResult<Declaration> class_decl(ParserClassDecl(false, true));
     return ParserResult<Statement>(class_decl.MoveAstNode<Statement>());
   } else if (token_ == TokenKind::KW_INTERFACE) {
     ParserResult<Declaration> iface_decl(ParserInterfaceDecl());
@@ -111,8 +119,8 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
 
 bool Parser::IsStmtDecl() {
   return token_.IsAny(TokenKind::KW_FUNC, TokenKind::KW_CMD,
-                      TokenKind::KW_CLASS, TokenKind::KW_ALIAS,
-                      TokenKind::KW_INTERFACE);
+      TokenKind::KW_CLASS, TokenKind::KW_ALIAS, TokenKind::KW_ABSTRACT,
+      TokenKind::KW_INTERFACE, TokenKind::KW_FINAL);
 }
 
 ParserResult<Declaration> Parser::ParserCmdDeclaration() {

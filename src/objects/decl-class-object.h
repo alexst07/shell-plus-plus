@@ -64,6 +64,9 @@ class AbstractMethod {
   bool operator==(const FuncObject& func) const;
   bool operator!=(const FuncObject& func) const;
 
+  bool operator==(const AbstractMethod& func) const;
+  bool operator!=(const AbstractMethod& func) const;
+
  private:
   size_t num_params_;
   size_t num_default_params_;
@@ -72,14 +75,12 @@ class AbstractMethod {
 
 class DeclClassType: public TypeObject {
  public:
-  DeclClassType(const std::string& name, ObjectPtr obj_type,
-      SymbolTableStack&& sym_table, ObjectPtr base = ObjectPtr(nullptr),
-      InterfacesList&& ifaces = InterfacesList())
-      : TypeObject(name, obj_type, std::move(sym_table), base,
-                   std::move(ifaces)) {
-    symbol_table_stack().Push(SymbolTablePtr(new SymbolTable(
-        SymbolTable::TableType::CLASS_TABLE)));
-  }
+  DeclClassType(const std::string& name,
+      ObjectPtr obj_type,
+      SymbolTableStack&& sym_table,
+      ObjectPtr base = ObjectPtr(nullptr),
+      InterfacesList&& ifaces = InterfacesList(),
+      bool abstract = false);
 
   virtual ~DeclClassType() {}
 
@@ -101,9 +102,25 @@ class DeclClassType: public TypeObject {
     return symbol_table_stack();
   }
 
+  bool Declared() const override {
+    return true;
+  }
+
   ObjectPtr Constructor(Executor* parent, Args&& params, KWArgs&&) override;
 
   void CheckInterfaceCompatibility();
+
+  void CheckAbstractMethodsCompatibility();
+
+  void AddAbstractMethod(const std::string& name, AbstractMethod&& method);
+
+  const std::map<std::string, AbstractMethod>& AbstractMethods() const {
+    return abstract_methods_;
+  }
+
+ private:
+  std::map<std::string, AbstractMethod> abstract_methods_;
+  bool abstract_;
 };
 
 class DeclClassObject: public Object {

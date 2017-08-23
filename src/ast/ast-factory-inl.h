@@ -360,10 +360,12 @@ class AstNodeFactory {
       std::unique_ptr<Identifier> name,
       std::unique_ptr<Expression> parent,
       std::unique_ptr<ExpressionList> interfaces,
-      std::unique_ptr<ClassBlock> block, bool is_final) {
+      std::unique_ptr<ClassBlock> block,
+      bool is_final,
+      bool abstract) {
     return std::unique_ptr<ClassDeclaration>(new ClassDeclaration(
       std::move(name), std::move(parent), std::move(interfaces),
-      std::move(block), is_final, fn_pos_()));
+      std::move(block), is_final, abstract, fn_pos_()));
   }
 
   inline std::unique_ptr<InterfaceDeclaration> NewInterfaceDeclaration(

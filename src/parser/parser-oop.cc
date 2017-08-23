@@ -116,8 +116,29 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
       } break;
 
       case TokenKind::KW_CLASS: {
-        ParserResult<Declaration> class_decl(ParserClassDecl());
+        ParserResult<Declaration> class_decl(ParserClassDecl(false, false));
         decl_list.push_back(class_decl.MoveAstNode());
+      } break;
+
+      case TokenKind::KW_FINAL: {
+        Advance();
+        ParserResult<Declaration> class_decl(ParserClassDecl(true, false));
+        decl_list.push_back(class_decl.MoveAstNode());
+      } break;
+
+      case TokenKind::KW_ABSTRACT: {
+        Advance();
+
+        if (token_ == TokenKind::KW_FUNC) {
+          ParserResult<AstNode> func(ParserFunctionDeclaration(false, true));
+          decl_list.push_back(func.MoveAstNode());
+        } else if (token_ == TokenKind::KW_CLASS) {
+          ParserResult<Declaration> class_decl(ParserClassDecl(false, true));
+          decl_list.push_back(class_decl.MoveAstNode());
+        } else {
+          ErrorMsg(boost::format("not a valid token after abstract '%1%'")
+            %TokenValueStr());
+        }
       } break;
 
       case TokenKind::KW_STATIC: {
@@ -152,7 +173,8 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
   return class_block;
 }
 
-ParserResult<Declaration> Parser::ParserClassDecl() {
+ParserResult<Declaration> Parser::ParserClassDecl(bool is_final,
+    bool abstract) {
   // advance class keyword
   Advance();
   ValidToken();
@@ -209,7 +231,7 @@ ParserResult<Declaration> Parser::ParserClassDecl() {
   // TODO: implement final keyword for class
   ParserResult<Declaration> class_decl(factory_.NewClassDeclaration(
       std::move(class_name), std::move(parent), std::move(interfaces),
-      std::move(class_block.MoveAstNode()), false));
+      std::move(class_block.MoveAstNode()), is_final, abstract));
 
   return class_decl;
 }

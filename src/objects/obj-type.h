@@ -160,6 +160,14 @@ class TypeObject: public Object {
       : Object(type, obj_type, std::move(sym_table), base,
                std::move(ifaces))
       , name_(name) {
+    // if some base class was defined, this class must be a type
+    if (base) {
+      if (base->type() != ObjectType::TYPE) {
+        throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+            boost::format("base type '%1%' is not a type")%base->ObjectName());
+      }
+    }
+
     symbol_table_stack().NewTable();
   }
 
@@ -208,7 +216,13 @@ class TypeObject: public Object {
     return symbol_table_stack().InsertEntry(name, std::move(sym_entry));
   }
 
+  virtual bool Declared() const {
+    return false;
+  }
+
   ObjectPtr SearchAttr(const std::string& name);
+
+  bool ExistsAttr(const std::string& name);
 
   std::string Print() override {
     return std::string("<type: ") + name_ + ">";

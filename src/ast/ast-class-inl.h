@@ -272,6 +272,10 @@ class ClassDeclaration: public Declaration {
     return interfaces_.get();
   }
 
+  bool abstract() const noexcept {
+    return abstract_;
+  }
+
  private:
   friend class AstNodeFactory;
 
@@ -280,18 +284,22 @@ class ClassDeclaration: public Declaration {
   std::unique_ptr<ExpressionList> interfaces_;
   std::unique_ptr<ClassBlock> block_;
   bool is_final_;
+  bool abstract_;
 
   ClassDeclaration(std::unique_ptr<Identifier> name,
                    std::unique_ptr<Expression> parent,
                    std::unique_ptr<ExpressionList> interfaces,
-                   std::unique_ptr<ClassBlock> block, bool is_final,
+                   std::unique_ptr<ClassBlock> block,
+                   bool is_final,
+                   bool abstract,
                    Position position)
       : Declaration(NodeType::kClassDeclaration, position)
       , name_(std::move(name))
       , parent_(std::move(parent))
       , interfaces_(std::move(interfaces))
       , block_(std::move(block))
-      , is_final_(is_final) {}
+      , is_final_(is_final)
+      , abstract_(abstract) {}
 };
 
 class InterfaceDeclList: public AstNode {

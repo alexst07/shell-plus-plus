@@ -227,7 +227,7 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
     }
 
     type_obj = obj_factory_.NewDeclType(class_decl_node->name()->name(), base,
-        std::move(ifaces));
+        std::move(ifaces), class_decl_node->abstract());
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(),
         class_decl_node->interfaces()->pos(), e.messages());
@@ -251,6 +251,13 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
         // handle no abstract method
         if (fdecl->has_block()) {
           decl_class.RegiterMethod(fdecl->name()->name(), fexec.FuncObj(decl));
+        } else {
+          AbstractMethod abstract_method(static_cast<FuncObject&>(
+              *fexec.FuncObj(decl)));
+
+          const std::string& fname = fdecl->name()->name();
+
+          decl_class.AddAbstractMethod(fname, std::move(abstract_method));
         }
       } else if (decl->type() == AstNode::NodeType::kClassDeclaration) {
         ClassDeclaration* class_decl = static_cast<ClassDeclaration*>(decl);
@@ -266,10 +273,11 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
 
   try {
     // check if declared class implemented all abstract methods
+    decl_class.CheckAbstractMethodsCompatibility();
     decl_class.CheckInterfaceCompatibility();
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(),
-        class_decl_node->interfaces()->pos(), e.messages());
+        class_decl_node->pos(), e.messages());
   }
 
   if (inner) {
