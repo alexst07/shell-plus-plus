@@ -227,7 +227,7 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
     }
 
     type_obj = obj_factory_.NewDeclType(class_decl_node->name()->name(), base,
-        std::move(ifaces), class_decl_node->abstract());
+        std::move(ifaces));
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(),
         class_decl_node->interfaces()->pos(), e.messages());
@@ -251,13 +251,6 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
         // handle no abstract method
         if (fdecl->has_block()) {
           decl_class.RegiterMethod(fdecl->name()->name(), fexec.FuncObj(decl));
-        } else {
-          AbstractMethod abstract_method(static_cast<FuncObject&>(
-              *fexec.FuncObj(decl)));
-
-          const std::string& fname = fdecl->name()->name();
-
-          decl_class.AddAbstractMethod(fname, std::move(abstract_method));
         }
       } else if (decl->type() == AstNode::NodeType::kClassDeclaration) {
         ClassDeclaration* class_decl = static_cast<ClassDeclaration*>(decl);
@@ -265,6 +258,8 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
         // insert inner class on type_obj symbol table, insted of its own
         ClassDeclExecutor class_exec(this, decl_class.GlobalSymTableStack());
         class_exec.Exec(class_decl, true, type_obj);
+      } else if (decl->type() == AstNode::NodeType::kVariableDeclaration) {
+        ExecVarDecl(decl, decl_class);
       }
     } catch (RunTimeError& e) {
       throw RunTimeError(e.err_code(), e.msg(), decl->pos(), e.messages());
@@ -273,11 +268,10 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
 
   try {
     // check if declared class implemented all abstract methods
-    decl_class.CheckAbstractMethodsCompatibility();
     decl_class.CheckInterfaceCompatibility();
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(),
-        class_decl_node->pos(), e.messages());
+        class_decl_node->interfaces()->pos(), e.messages());
   }
 
   if (inner) {
@@ -290,6 +284,17 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
   SymbolAttr symbol_obj(type_obj, true);
   symbol_table_stack().InsertEntry(class_decl_node->name()->name(),
                                    std::move(symbol_obj));
+}
+
+void ClassDeclExecutor::ExecVarDecl(AstNode* node, DeclClassType& decl_class) {
+  VariableDeclaration* var_decl = static_cast<VariableDeclaration*>(node);
+
+  std::string name = var_decl->name()->name();
+
+  AssignableListExecutor assign_exec(this, symbol_table_stack());
+  ObjectPtr obj_value = assign_exec.ExecAssignable(var_decl->value());
+
+  decl_class.RegisterAttr(name, obj_value);
 }
 
 void ClassDeclExecutor::set_stop(StopFlag flag) {

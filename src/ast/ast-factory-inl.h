@@ -413,6 +413,13 @@ class AstNodeFactory {
        std::move(import), std::move(as), fn_pos_()));
   }
 
+  inline std::unique_ptr<VariableDeclaration> NewVariableDeclaration(
+      std::unique_ptr<Identifier> name,
+      std::unique_ptr<AssignableValue> value) {
+    return std::unique_ptr<VariableDeclaration>(new VariableDeclaration(
+       std::move(name), std::move(value), fn_pos_()));
+  }
+
  private:
   std::function<Position()> fn_pos_;
 };

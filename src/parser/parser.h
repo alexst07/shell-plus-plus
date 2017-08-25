@@ -295,6 +295,8 @@ class Parser {
 
   ParserResult<Declaration> ParserInterfaceDecl();
 
+  ParserResult<Declaration> ParserVariableDecl();
+
   // parser class declaration
   ParserResult<Declaration> ParserClassDecl(bool is_final, bool abstract);
 

@@ -348,7 +348,7 @@ class Object {
   virtual std::shared_ptr<Object>& AttrAssign(std::shared_ptr<Object>,
                                         const std::string&) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("%1% has no attr method")
+                       boost::format("%1% has no attr assign method")
                        %ObjType()->ObjectName());
   }
 

@@ -149,6 +149,11 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
         decl_list.push_back(func.MoveAstNode());
       } break;
 
+      case TokenKind::KW_VAR: {
+        ParserResult<Declaration> var(ParserVariableDecl());
+        decl_list.push_back(var.MoveAstNode());
+      } break;
+
       default:
         ErrorMsg(boost::format("declaration expected, got %1%")
             %TokenValueStr());
@@ -228,12 +233,43 @@ ParserResult<Declaration> Parser::ParserClassDecl(bool is_final,
 
   ParserResult<ClassBlock> class_block(ParserClassBlock());
 
-  // TODO: implement final keyword for class
   ParserResult<Declaration> class_decl(factory_.NewClassDeclaration(
       std::move(class_name), std::move(parent), std::move(interfaces),
       std::move(class_block.MoveAstNode()), is_final, abstract));
 
   return class_decl;
+}
+
+ParserResult<Declaration> Parser::ParserVariableDecl() {
+  // advance var keyword
+  Advance();
+
+  std::unique_ptr<Identifier> var_name;
+
+  if (token_ != TokenKind::IDENTIFIER) {
+    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
+    return ParserResult<Declaration>(); // Error
+  }
+
+  var_name = std::move(factory_.NewIdentifier(boost::get<std::string>(
+      token_.GetValue()), std::move(nullptr)));
+
+  Advance();
+
+  if (token_ != TokenKind::ASSIGN) {
+    ErrorMsg(boost::format("expected assignment operator, got %1%")
+        %TokenValueStr());
+    return ParserResult<Declaration>(); // Error
+  }
+
+  Advance();
+
+  ParserResult<AssignableValue> value = ParserAssignable();
+
+  ParserResult<Declaration> var_decl(factory_.NewVariableDeclaration(
+      std::move(var_name), value.MoveAstNode()));
+
+  return var_decl;
 }
 
 }

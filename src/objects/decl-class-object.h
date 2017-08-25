@@ -84,12 +84,19 @@ class DeclClassType: public TypeObject {
 
   virtual ~DeclClassType() {}
 
-  bool RegiterMethod(const std::string& name, ObjectPtr obj) override {
+  inline bool RegisterAttr(const std::string& name, ObjectPtr obj) {
     SymbolAttr sym_entry(obj, true);
     return symbol_table_stack().InsertEntry(name, std::move(sym_entry));
   }
 
+  bool RegiterMethod(const std::string& name, ObjectPtr obj) override {
+    RegisterAttr(name, obj);
+  }
+
   ObjectPtr CallObject(const std::string& name, ObjectPtr self_param) override;
+
+  std::shared_ptr<Object>& AttrAssign(std::shared_ptr<Object>,
+      const std::string& name) override;
 
   std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
                                const std::string& name) override;
@@ -137,7 +144,7 @@ class DeclClassObject: public Object {
                                 const std::string& name) override;
 
   std::shared_ptr<Object>& AttrAssign(std::shared_ptr<Object>,
-                                        const std::string& name) override;
+      const std::string& name) override;
 
   ObjectPtr Add(ObjectPtr obj) override;
 

@@ -256,6 +256,13 @@ ObjectPtr DeclClassType::CallObject(const std::string& name,
   return obj;
 }
 
+std::shared_ptr<Object>& DeclClassType::AttrAssign(
+    std::shared_ptr<Object> /*self*/, const std::string& name) {
+  ObjectPtr& att_obj = symbol_table_stack().Lookup(name, true).Ref();
+
+  return att_obj;
+}
+
 std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
   ObjectPtr att_obj = SearchAttr(name);

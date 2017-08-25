@@ -416,5 +416,35 @@ class InterfaceDeclaration: public Declaration {
       , block_(std::move(block)) {}
 };
 
+class VariableDeclaration: public Declaration {
+ public:
+  virtual ~VariableDeclaration() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitVariableDeclaration(this);
+  }
+
+  Identifier* name() const noexcept {
+    return name_.get();
+  }
+
+  AssignableValue* value() const noexcept {
+    return value_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Identifier> name_;
+  std::unique_ptr<AssignableValue> value_;
+
+  VariableDeclaration(std::unique_ptr<Identifier> name,
+      std::unique_ptr<AssignableValue> value,
+      Position position)
+      : Declaration(NodeType::kVariableDeclaration, position)
+      , name_(std::move(name))
+      , value_(std::move(value)) {}
+};
+
 }
 }
