@@ -25,8 +25,6 @@ void Lexer::SkipSingleLineComment() {
   while (c_ != kEndOfInput && c_ != '\n'){
     Advance();
   }
-
-  Advance();
 }
 
 void Lexer::ErrorMsg(const boost::format& fmt_msg) {
