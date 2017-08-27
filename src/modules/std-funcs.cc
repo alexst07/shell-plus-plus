@@ -224,6 +224,15 @@ ObjectPtr EvalFunc::SpecialCall(Executor* parent,
   return obj_factory_.NewNull();
 }
 
+ObjectPtr InstanceOfFunc::Call(Executor*, Args&& params, KWArgs&&) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, params)
+
+  bool r = InstanceOf(params[0], params[1]);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(r);
+}
+
 }
 }
 }

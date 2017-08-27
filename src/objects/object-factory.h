@@ -51,6 +51,11 @@ class ObjectFactory {
     return table_stack;
   }
 
+  ObjectPtr NewRootObject() {
+    auto obj_type = symbol_table_.Lookup("object", false).SharedAccess();
+    return ObjectPtr(new RootObject(obj_type, std::move(SymTableStack())));
+  }
+
   ObjectPtr NewNull() {
     auto obj_type = symbol_table_.Lookup("null_t", false).SharedAccess();
     return ObjectPtr(new NullObject(obj_type, std::move(SymTableStack())));
@@ -253,6 +258,11 @@ class ObjectFactory {
     auto obj_type = symbol_table_.Lookup("function", false).SharedAccess();
     return ObjectPtr(new FuncWrapperObject(obj_type, func, self,
                                            std::move(SymTableStack())));
+  }
+
+  ObjectPtr NewRootObjectType() {
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();
+    return std::make_shared<RootObjectType>(obj_type, std::move(SymTableStack()));
   }
 
   ObjectPtr NewNullType() {

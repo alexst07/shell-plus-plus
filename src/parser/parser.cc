@@ -1230,7 +1230,8 @@ ParserResult<Expression> Parser::ParserComparisonExp() {
   }
 
   while (Token::IsComparisonToken(token_.GetKind()) ||
-         token_ == TokenKind::KW_IN) {
+         token_.IsAny(TokenKind::KW_IN, TokenKind::KW_INSTANCEOF,
+                      TokenKind::KW_IS)) {
     TokenKind token_kind = token_.GetKind();
     Advance();
     ValidToken();

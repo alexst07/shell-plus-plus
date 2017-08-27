@@ -26,6 +26,19 @@
 namespace shpp {
 namespace internal {
 
+class RootObject: public Object {
+ public:
+  RootObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::ROOT, obj_type, std::move(sym_table)) {}
+
+  virtual ~RootObject() {}
+
+
+  std::string Print() override {
+    return std::string("[object]");
+  }
+};
+
 class NullObject: public Object {
  public:
   NullObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)

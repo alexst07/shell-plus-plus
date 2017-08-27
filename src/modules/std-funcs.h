@@ -174,6 +174,18 @@ class DumpSymbolTableFunc: public SpecialFuncObject {
   ObjectFactory obj_factory_;
 };
 
+class InstanceOfFunc: public FuncObject {
+ public:
+  InstanceOfFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* parent, Args&& params, KWArgs&&) override;
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
 inline void RegisterModule(SymbolTableStack& sym_table) {
   ModuleCustonObject::MemberTable table = {
     {"print",                 ObjectMethod<PrintFunc>(sym_table)},
@@ -186,6 +198,7 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
     {"is_interactive",        ObjectMethod<IsInteractiveFunc>(sym_table)},
     {"glob",                  ObjectMethod<GlobFunc>(sym_table)},
     {"globr",                 ObjectMethod<GlobRFunc>(sym_table)},
+    {"instance_of",            ObjectMethod<InstanceOfFunc>(sym_table)},
     {"dump_symbol_table",     ObjectMethod<DumpSymbolTableFunc>(sym_table)},
     {"eval",                  ObjectMethod<EvalFunc>(sym_table)}
   };

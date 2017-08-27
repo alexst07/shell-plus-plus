@@ -437,6 +437,10 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
         res = right->In(left);
         break;
 
+      case TokenKind::KW_INSTANCEOF: {
+        res = ExecInstanceOf(left, right);
+      } break;
+
       default:
         throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                            boost::format("invalid bin operation opcode"));
@@ -446,6 +450,11 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
   }
 
   return res;
+}
+
+ObjectPtr ExpressionExecutor::ExecInstanceOf(ObjectPtr obj, ObjectPtr base) {
+  bool res = InstanceOf(obj, base);
+  return obj_factory_.NewBool(res);
 }
 
 ObjectPtr ExpressionExecutor::ExecAttribute(Attribute* node) {

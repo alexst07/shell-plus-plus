@@ -374,6 +374,22 @@ class ModuleType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
+class RootObjectType: public TypeObject {
+ public:
+  RootObjectType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("object", obj_type, std::move(sym_table)) {}
+
+  virtual ~RootObjectType() {}
+
+  ObjectPtr BaseType() noexcept override {
+    return ObjectPtr(nullptr);
+  }
+
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
+};
+
+bool InstanceOf(ObjectPtr obj, ObjectPtr base);
+
 }
 }
 

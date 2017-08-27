@@ -104,6 +104,8 @@ class ExpressionExecutor: public Executor {
 
   ObjectPtr ExecGlob(Glob* glob);
 
+  ObjectPtr ExecInstanceOf(ObjectPtr obj, ObjectPtr base);
+
   void set_stop(StopFlag flag) override;
 
  private:

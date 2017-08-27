@@ -314,5 +314,59 @@ ObjectPtr TupleType::Constructor(Executor*, Args&& params, KWArgs&&) {
   return obj_factory.NewTuple(std::move(params));
 }
 
+ObjectPtr RootObjectType::Constructor(Executor*, Args&& params, KWArgs&&) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewRootObject();
+}
+
+static bool InstanceOfIface(ObjectPtr obj, ObjectPtr base) {
+  auto ifaces = obj->Interfaces();
+
+  for (auto& iface: ifaces) {
+    if (iface.get() == base.get()) {
+      return true;
+    } else {
+      return InstanceOfIface(iface, base);
+    }
+  }
+
+  return false;
+}
+
+static bool InstanceOfBase(ObjectPtr obj, ObjectPtr base) {
+  // check base classes
+  if (obj.get() == base.get()) {
+    return true;
+  }
+
+  if (obj->BaseType().get() == base.get()) {
+    return true;
+  } else {
+    if (obj->BaseType()) {
+      if (InstanceOfBase(obj->BaseType(), base)) {
+        return true;
+      }
+    }
+  }
+
+  if (InstanceOfIface(obj, base)) {
+    return true;
+  }
+
+  return false;
+}
+
+bool InstanceOf(ObjectPtr obj, ObjectPtr base) {
+  if (InstanceOfBase(obj->ObjType(), base)) {
+    return true;
+  }
+
+  if (InstanceOfIface(obj->ObjType(), base)) {
+    return true;
+  }
+
+  return false;
+}
+
 }
 }

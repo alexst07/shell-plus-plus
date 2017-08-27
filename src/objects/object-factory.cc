@@ -29,6 +29,11 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertEntry(static_cast<const Type&>(*obj_type).name(),
                            std::move(symbol_type));
 
+  ObjectPtr type_obj_root = obj_factory.NewRootObjectType();
+  SymbolAttr symbol_root(type_obj_root, true);
+  symbol_table.InsertEntry(static_cast<const RootObjectType&>(*type_obj_root)
+                           .name(), std::move(symbol_root));
+
   ObjectPtr type_func = obj_factory.NewFuncType();
   SymbolAttr symbol_func(type_func, true);
   symbol_table.InsertEntry(static_cast<const FuncType&>(*type_func).name(),

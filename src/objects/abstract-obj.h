@@ -35,6 +35,7 @@ class Object {
   using KWArgs = std::unordered_map<std::string, std::shared_ptr<Object>>;
 
   enum class ObjectType: uint8_t {
+    ROOT,
     NIL,
     INT,
     BOOL,
@@ -356,7 +357,7 @@ class Object {
     return std::string("type");
   }
 
-  std::shared_ptr<Object> ObjType() const noexcept {
+  virtual std::shared_ptr<Object> ObjType() const noexcept {
     return obj_type_.lock();
   }
 
@@ -364,7 +365,11 @@ class Object {
     return sym_table_;
   }
 
-  std::shared_ptr<Object> BaseType() const noexcept {
+  virtual std::shared_ptr<Object> BaseType() noexcept {
+    if (!base_) {
+      return symbol_table_stack().Lookup("object", false).SharedAccess();
+    }
+
     return base_;
   }
 
