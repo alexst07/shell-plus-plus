@@ -437,9 +437,13 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
         res = right->In(left);
         break;
 
-      case TokenKind::KW_INSTANCEOF: {
+      case TokenKind::KW_INSTANCEOF:
         res = ExecInstanceOf(left, right);
-      } break;
+        break;
+
+      case TokenKind::KW_IS:
+        res = ExecIs(left, right);
+        break;
 
       default:
         throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
@@ -450,6 +454,11 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
   }
 
   return res;
+}
+
+ObjectPtr ExpressionExecutor::ExecIs(ObjectPtr obj, ObjectPtr type) {
+  bool res = obj->ObjType().get() == type.get();
+  return obj_factory_.NewBool(res);
 }
 
 ObjectPtr ExpressionExecutor::ExecInstanceOf(ObjectPtr obj, ObjectPtr base) {

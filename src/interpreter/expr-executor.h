@@ -106,6 +106,8 @@ class ExpressionExecutor: public Executor {
 
   ObjectPtr ExecInstanceOf(ObjectPtr obj, ObjectPtr base);
 
+  ObjectPtr ExecIs(ObjectPtr obj, ObjectPtr type);
+
   void set_stop(StopFlag flag) override;
 
  private:
