@@ -62,6 +62,7 @@ class Object {
     DECL_TYPE,
     DECL_OBJ,
     MODULE,
+    EXCEPT,
     CUSTON
   };
 

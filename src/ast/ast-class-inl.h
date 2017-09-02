@@ -446,5 +446,151 @@ class VariableDeclaration: public Declaration {
       , value_(std::move(value)) {}
 };
 
+class CatchStatement: public Statement {
+ public:
+  virtual ~CatchStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitCatchStatement(this);
+  }
+
+  Identifier* var() const noexcept {
+    return var_.get();
+  }
+
+  bool has_var() const noexcept {
+    if (var_)  {
+      return true;
+    }
+
+    return false;
+  }
+
+  ExpressionList* exp_list() const noexcept {
+    return exp_list_.get();
+  }
+
+  Block* block() const noexcept {
+    return block_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<ExpressionList> exp_list_;
+  std::unique_ptr<Block> block_;
+  std::unique_ptr<Identifier> var_;
+
+  CatchStatement(std::unique_ptr<ExpressionList> exp_list,
+      std::unique_ptr<Block> block, std::unique_ptr<Identifier> var,
+      Position position)
+      : Statement(NodeType::kCatchStatement, position)
+      , exp_list_(std::move(exp_list))
+      , block_(std::move(block))
+      , var_(std::move(var)) {}
+};
+
+class FinallyStatement: public Statement {
+ public:
+  virtual ~FinallyStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitFinallyStatement(this);
+  }
+
+  Block* block() const noexcept {
+    return block_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Block> block_;
+
+  FinallyStatement(std::unique_ptr<Block> block, Position position)
+      : Statement(NodeType::kFinallyStatement, position)
+      , block_(std::move(block)) {}
+};
+
+class TryCatchStatement: public Statement {
+ public:
+  virtual ~TryCatchStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitTryCatchStatement(this);
+  }
+
+  Block* try_block() const noexcept {
+    return try_block_.get();
+  }
+
+  std::vector<CatchStatement*> catch_list() const noexcept {
+    std::vector<CatchStatement*> vec;
+
+    for (auto& piece: catch_list_) {
+      vec.push_back(piece.get());
+    }
+
+    return vec;
+  }
+
+  bool has_catch() const noexcept {
+    if (catch_list_.size() > 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  FinallyStatement* finally() const noexcept {
+    return finally_.get();
+  }
+
+  bool has_finally() const noexcept {
+    if (finally_) {
+      return true;
+    }
+
+    return false;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Block> try_block_;
+  std::vector<std::unique_ptr<CatchStatement>> catch_list_;
+  std::unique_ptr<FinallyStatement> finally_;
+
+  TryCatchStatement(std::unique_ptr<Block> try_block,
+      std::vector<std::unique_ptr<CatchStatement>> catch_list,
+      std::unique_ptr<FinallyStatement> finally, Position position)
+      : Statement(NodeType::kTryCatchStatement, position)
+      , try_block_(std::move(try_block))
+      , catch_list_(std::move(catch_list))
+      , finally_(std::move(finally)) {}
+};
+
+class ThrowStatement: public Statement {
+ public:
+  virtual ~ThrowStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+   visitor->VisitThrowStatement(this);
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> exp_;
+
+  ThrowStatement(std::unique_ptr<Expression> exp, Position position)
+      : Statement(NodeType::kThrowStatement, position)
+      , exp_(std::move(exp)) {}
+};
+
 }
 }

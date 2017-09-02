@@ -65,7 +65,9 @@ namespace internal {
   V(CaseStatement)                \
   V(DefaultStatement)             \
   V(TryCatchStatement)            \
-  V(TryFinallyStatement)          \
+  V(FinallyStatement)             \
+  V(CatchStatement)               \
+  V(ThrowStatement)               \
   V(DeferStatement)               \
   V(DelStatement)                 \
   V(ImportStatement)              \
@@ -105,7 +107,6 @@ namespace internal {
   V(DictionaryInstantiation)    \
   V(Identifier)                 \
   V(Yield)                      \
-  V(Throw)                      \
   V(CallRuntime)                \
   V(UnaryOperation)             \
   V(BinaryOperation)            \

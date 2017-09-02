@@ -552,6 +552,11 @@ ParserResult<Statement> Parser::ParserStmt() {
   } else if (token_ == TokenKind::KW_IMPORT) {
     check_end_stmt = true;
     res = std::move(ParserImportStmt());
+  } else if (token_ == TokenKind::KW_TRY) {
+    res = std::move(ParserTryCatch());
+  } else if (token_ == TokenKind::KW_THROW) {
+    check_end_stmt = true;
+    res = std::move(ParserThrow());
   } else if (token_ == TokenKind::LBRACE) {
     res = std::move(ParserBlock());
   } else if (IsStmtDecl()) {
@@ -559,6 +564,12 @@ ParserResult<Statement> Parser::ParserStmt() {
   } else if (MatchLangStmt()) {
     check_end_stmt = true;
     res = std::move(ParserSimpleStmt());
+  } else if (token_ == TokenKind::KW_CATCH) {
+    ErrorMsg(boost::format("catch must be after try block"));
+    return ParserResult<Statement>(); // Error
+  } else if (token_ == TokenKind::KW_FINALLY) {
+    ErrorMsg(boost::format("finally must be after try catch block"));
+    return ParserResult<Statement>(); // Error
   } else {
     check_end_stmt = true;
     res = std::move(ParserCmdFull());

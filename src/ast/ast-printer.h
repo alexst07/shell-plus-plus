@@ -806,6 +806,83 @@ class AstPrinter: public AstVisitor {
     iface_decl->block()->Accept(this);
     level_--;
   }
+
+  void virtual VisitCatchStatement(CatchStatement* catch_stmt) {
+    Level();
+    std::cout << "<catch>\n";
+    level_++;
+    Level();
+    std::cout << "<expr_list>\n";
+    level_++;
+    catch_stmt->exp_list()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "</expr_list>\n";
+
+    if (catch_stmt->has_var()) {
+      Level();
+      std::cout << "<var: " << catch_stmt->var()->name() << ">\n";
+    }
+
+    Level();
+    std::cout << "<block>\n";
+    level_++;
+    catch_stmt->block()->Accept(this);
+    level_--;
+
+    level_--;
+    Level();
+    std::cout << "</catch>\n";
+  }
+
+  void virtual VisitFinallyStatement(FinallyStatement* finally) {
+    Level();
+    std::cout << "<finally>\n";
+    level_++;
+
+    finally->block()->Accept(this);
+
+    level_--;
+    Level();
+    std::cout << "</finally>\n";
+  }
+
+  void virtual VisitTryCatchStatement(TryCatchStatement* try_catch) {
+    Level();
+    std::cout << "<try>\n";
+    level_++;
+
+    Level();
+    std::cout << "<block>\n";
+    try_catch->try_block()->Accept(this);
+    Level();
+    std::cout << "</block>\n";
+
+    if (try_catch->has_catch()) {
+      for (auto& catch_stmt: try_catch->catch_list()) {
+        catch_stmt->Accept(this);
+      }
+    }
+
+    if (try_catch->has_finally()) {
+      try_catch->finally()->Accept(this);
+    }
+
+    Level();
+    std::cout << "</try>\n";
+  }
+
+  void virtual VisitThrowStatement(ThrowStatement* throw_stmt) {
+    Level();
+    std::cout << "<throw>\n";
+    level_++;
+
+    throw_stmt->exp()->Accept(this);
+
+    level_--;
+    Level();
+    std::cout << "</throw>\n";
+  }
 };
 
 }

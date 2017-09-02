@@ -17,12 +17,16 @@
 
 #include <exception>
 #include <string>
+#include <memory>
 #include <boost/format.hpp>
 
 #include "ast/ast.h"
 #include "msg.h"
 
 namespace shpp {
+namespace internal {
+  class Object;
+}
 
 /**
  * @brief Class to represent an run time error
@@ -36,7 +40,6 @@ class RunTimeError : public std::exception {
   enum class ErrorCode: uint8_t{
     NULL_ACCESS,
     SYMBOL_NOT_FOUND,
-    CMD_NOT_FOUND,
     BAD_ALLOC,
     OUT_OF_RANGE,
     KEY_NOT_FOUND,
@@ -52,7 +55,6 @@ class RunTimeError : public std::exception {
     IMPORT,
     ASSERT,
     PARSER,
-    INTERPRETER_FILE,
     REGEX,
     GLOB,
     EVAL,
@@ -82,6 +84,17 @@ class RunTimeError : public std::exception {
       , pos_{pos}
       , stack_msg_{msgs} {}
 
+  RunTimeError(std::shared_ptr<internal::Object> except_obj)
+      : code_(ErrorCode::CUSTON)
+      , pos_{0, 0}
+      , except_obj_(except_obj) {}
+
+  RunTimeError(std::shared_ptr<internal::Object> except_obj,
+      internal::Position pos)
+      : code_(ErrorCode::CUSTON)
+      , pos_{pos}
+      , except_obj_(except_obj) {}
+
   virtual ~RunTimeError() noexcept  = default;
 
   RunTimeError(const RunTimeError& rt_err)
@@ -90,7 +103,8 @@ class RunTimeError : public std::exception {
       , pos_(rt_err.pos_)
       , stack_msg_(rt_err.stack_msg_)
       , str_line_error_(rt_err.str_line_error_)
-      , file_(rt_err.file_) {}
+      , file_(rt_err.file_)
+      , except_obj_(rt_err.except_obj_) {}
 
   RunTimeError& operator=(const RunTimeError& rt_err) {
     code_ = rt_err.code_;
@@ -99,6 +113,7 @@ class RunTimeError : public std::exception {
     stack_msg_ = rt_err.stack_msg_;
     str_line_error_ = rt_err.str_line_error_;
     file_ = rt_err.file_;
+    except_obj_ = rt_err.except_obj_;
 
     return *this;
   }
@@ -147,12 +162,25 @@ class RunTimeError : public std::exception {
     return str_line_error_;
   }
 
+  bool is_object_expection() const noexcept {
+    if (except_obj_) {
+      return true;
+    }
+
+    return false;
+  }
+
+  std::shared_ptr<internal::Object> except_obj() {
+    return except_obj_;
+  }
+
   ErrorCode code_;
   std::string msg_;
   internal::Position pos_;
   internal::Messages stack_msg_;
   std::string str_line_error_;
   std::string file_;
+  std::shared_ptr<internal::Object> except_obj_;
 };
 
 }

@@ -297,6 +297,12 @@ class Parser {
 
   ParserResult<Declaration> ParserVariableDecl();
 
+  std::unique_ptr<FinallyStatement> ParserFinally();
+  std::vector<std::unique_ptr<CatchStatement>> ParserCatchList();
+  ParserResult<Statement> ParserTryCatch();
+
+  ParserResult<Statement> ParserThrow();
+
   // parser class declaration
   ParserResult<Declaration> ParserClassDecl(bool is_final, bool abstract);
 

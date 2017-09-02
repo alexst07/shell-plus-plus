@@ -420,6 +420,34 @@ class AstNodeFactory {
        std::move(name), std::move(value), fn_pos_()));
   }
 
+  inline std::unique_ptr<CatchStatement> NewCatchStatement(
+      std::unique_ptr<ExpressionList> exp_list, std::unique_ptr<Block> block,
+      std::unique_ptr<Identifier> var) {
+    return std::unique_ptr<CatchStatement>(new CatchStatement(
+       std::move(exp_list), std::move(block), std::move(var), fn_pos_()));
+  }
+
+  inline std::unique_ptr<FinallyStatement> NewFinallyStatement(
+      std::unique_ptr<Block> block) {
+    return std::unique_ptr<FinallyStatement>(new FinallyStatement(
+       std::move(block), fn_pos_()));
+  }
+
+  inline std::unique_ptr<TryCatchStatement> NewTryCatchStatement(
+      std::unique_ptr<Block> try_block,
+      std::vector<std::unique_ptr<CatchStatement>> catch_list,
+      std::unique_ptr<FinallyStatement> finally) {
+  return std::unique_ptr<TryCatchStatement>(new TryCatchStatement(
+      std::move(try_block), std::move(catch_list), std::move(finally),
+      fn_pos_()));
+  }
+
+  inline std::unique_ptr<ThrowStatement> NewThrowStatement(
+      std::unique_ptr<Expression> exp) {
+    return std::unique_ptr<ThrowStatement>(new ThrowStatement(
+       std::move(exp), fn_pos_()));
+  }
+
  private:
   std::function<Position()> fn_pos_;
 };

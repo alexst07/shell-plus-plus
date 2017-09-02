@@ -21,6 +21,12 @@
 namespace shpp {
 namespace internal {
 
+#define ALOC_TYPE(NAME, FNAME)                                                \
+  ObjectPtr type_ ## NAME = obj_factory.New ## FNAME ## Type();               \
+  SymbolAttr symbol_ ## NAME(type_ ## NAME, true);                            \
+  symbol_table.InsertEntry(static_cast<const FNAME ## Type&>(                 \
+      *type_ ## NAME).name(), std::move(symbol_ ## NAME));
+
 void AlocTypes(SymbolTableStack& symbol_table) {
   ObjectFactory obj_factory(symbol_table);
 
@@ -138,6 +144,28 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   SymbolAttr symbol_str(type_str, true);
   symbol_table.InsertEntry(static_cast<const StringType&>(*type_str).name(),
                            std::move(symbol_str));
+
+  ALOC_TYPE(except, Exception)
+  ALOC_TYPE(null_acces_except, NullAccessException)
+  ALOC_TYPE(lookup_except, LookupException)
+  ALOC_TYPE(invalid_cmd_except, InvalidCmdException)
+  ALOC_TYPE(bad_alloc_except, BadAllocException)
+  ALOC_TYPE(index_except, IndexException)
+  ALOC_TYPE(key_except, KeyException)
+  ALOC_TYPE(inv_args_except, InvalidArgsException)
+  ALOC_TYPE(type_except, TypeException)
+  ALOC_TYPE(func_params_except, FuncParamsException)
+  ALOC_TYPE(zero_div_except, ZeroDivException)
+  ALOC_TYPE(fd_except, FdNotFoundException)
+  ALOC_TYPE(io_except, IOException)
+  ALOC_TYPE(import_except, ImportException)
+  ALOC_TYPE(assert_except, AssertException)
+  ALOC_TYPE(parser_except, ParserException)
+  ALOC_TYPE(regex_except, RegexException)
+  ALOC_TYPE(glob_except, GlobException)
+  ALOC_TYPE(eval_except, EvalException)
+  ALOC_TYPE(error_except, ErrorException)
+
 }
 
 }

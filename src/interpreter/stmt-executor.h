@@ -138,6 +138,32 @@ class ReturnExecutor: public Executor {
   ObjectFactory obj_factory_;
 };
 
+class TryCatchExecutor: public Executor {
+ public:
+  TryCatchExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  // Entry point to execute expression
+  void Exec(TryCatchStatement* node);
+
+  bool IsInstanceOfCaseObject(std::vector<ObjectPtr>& obj_res_list,
+      ObjectPtr& ojb_excpt);
+
+  void InsertCatchVar(const std::string& name, ObjectPtr& ojb_excpt,
+      Position pos);
+
+  void set_stop(StopFlag flag) override;
+};
+
+class ThrowExecutor: public Executor {
+ public:
+  ThrowExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  // Entry point to execute expression
+  void Exec(ThrowStatement* node);
+};
+
 class IfElseExecutor: public Executor {
  public:
   IfElseExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)

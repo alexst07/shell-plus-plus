@@ -33,9 +33,31 @@
 #include "path.h"
 #include "file-object.h"
 #include "decl-class-object.h"
+#include "exceptions-object.h"
 
 namespace shpp {
 namespace internal {
+
+// compare string in compile time
+constexpr int c_strcmp( char const* lhs, char const* rhs) {
+  return (('\0' == lhs[0]) && ('\0' == rhs[0])) ? 0
+      :  (lhs[0] != rhs[0]) ? (lhs[0] - rhs[0])
+      : c_strcmp( lhs+1, rhs+1 );
+}
+
+#define TYPE_OBJECT_EXCPET_FACTORY(NAME, FNAME, OBJ_CLASS, TYPE_CLASS, BASE)   \
+  ObjectPtr New ## FNAME(const std::string& msg) {                             \
+    auto obj_type = symbol_table_.Lookup(#NAME, false).SharedAccess();         \
+    return ObjectPtr(new OBJ_CLASS(msg, obj_type, std::move(SymTableStack())));\
+  }                                                                            \
+                                                                               \
+  ObjectPtr New ## FNAME ## Type() {                                           \
+    auto obj_type = symbol_table_.Lookup("type", false).SharedAccess();        \
+    auto base = 0 == c_strcmp(#BASE, "object")?                                \
+        ObjectPtr(nullptr):symbol_table_.Lookup(#BASE, false).SharedAccess();  \
+    return std::make_shared<TYPE_CLASS>(obj_type, std::move(SymTableStack()),  \
+        base);                                                                 \
+  }
 
 class ObjectFactory {
  public:
@@ -50,6 +72,66 @@ class ObjectFactory {
 
     return table_stack;
   }
+
+  TYPE_OBJECT_EXCPET_FACTORY(Exception, Exception, ExceptionObject,
+      ExceptionType, object)
+
+  TYPE_OBJECT_EXCPET_FACTORY(NullAccessException, NullAccessException,
+      NullAccessExceptionObject, NullAccessExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(LookupException, LookupException,
+      LookupExceptionObject, LookupExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(InvalidCmdException, InvalidCmdException,
+      InvalidCmdExceptionObject, InvalidCmdExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(BadAllocException, BadAllocException,
+      BadAllocExceptionObject, BadAllocExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(IndexException, IndexException,
+      IndexExceptionObject, IndexExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(KeyException, KeyException,
+      KeyExceptionObject, KeyExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(InvalidArgsException, InvalidArgsException,
+      InvalidArgsExceptionObject, InvalidArgsExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(TypeException, TypeException,
+      TypeExceptionObject, TypeExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(FuncParamsException, FuncParamsException,
+      FuncParamsExceptionObject, FuncParamsExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(ZeroDivException, ZeroDivException,
+      ZeroDivExceptionObject, ZeroDivExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(FdNotFoundException, FdNotFoundException,
+      FdNotFoundExceptionObject, FdNotFoundExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(IOException, IOException,
+      IOExceptionObject, IOExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(ImportException, ImportException,
+      ImportExceptionObject, ImportExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(AssertException, AssertException,
+      AssertExceptionObject, AssertExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(ParserException, ParserException,
+      ParserExceptionObject,ParserExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(RegexException, RegexException,
+      RegexExceptionObject, RegexExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(GlobException, GlobException,
+      GlobExceptionObject, GlobExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(EvalException, EvalException,
+      EvalExceptionObject, EvalExceptionType, Exception)
+
+  TYPE_OBJECT_EXCPET_FACTORY(ErrorException, ErrorException,
+      ErrorExceptionObject, ErrorExceptionType, Exception)
 
   ObjectPtr NewRootObject() {
     auto obj_type = symbol_table_.Lookup("object", false).SharedAccess();

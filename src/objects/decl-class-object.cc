@@ -271,13 +271,15 @@ std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object> self,
 
 std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
   // first check it the attribute exists on object symbol table
   if (symbol_table_stack().Exists(name)) {
     ObjectPtr att_obj = symbol_table_stack().Lookup(name, false).SharedAccess();
 
     // functions on object are handle to insert this parameter
     if (att_obj->type() == ObjectType::FUNC) {
-      return static_cast<DeclClassType&>(*ObjType()).CallObject(name, self);
+      return ObjectPtr(obj_factory.NewWrapperFunc(att_obj, self));
     }
 
     return att_obj;
@@ -290,7 +292,7 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
   if (att_obj->type() == ObjectType::FUNC) {
     // if the function is not declared, just return it
     if (!static_cast<FuncObject&>(*att_obj).Declared()) {
-      return att_obj;
+      return ObjectPtr(obj_factory.NewWrapperFunc(att_obj, self));
     }
 
     // if the function is static don't wrapper the function to pass the
@@ -299,8 +301,6 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
             boost::format("static method '%1%' must not be called by object")%name);
     }
-
-    ObjectFactory obj_factory(symbol_table_stack());
 
     // the function wrapper insert the object self_param as the first param
     // it works like self argument
@@ -318,131 +318,225 @@ std::shared_ptr<Object>& DeclClassObject::AttrAssign(
 }
 
 ObjectPtr DeclClassObject::Add(ObjectPtr obj) {
-  return Caller("__add__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__add__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Sub(ObjectPtr obj) {
-  return Caller("__sub__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__sub__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Mult(ObjectPtr obj) {
-  return Caller("__mul__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__mul__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Div(ObjectPtr obj) {
-  return Caller("__div__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__div__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::DivMod(ObjectPtr obj) {
-  return Caller("__mod__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__mod__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::RightShift(ObjectPtr obj) {
-  return Caller("__rshift__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__rshift__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::LeftShift(ObjectPtr obj) {
-  return Caller("__lshift__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__lshift__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Lesser(ObjectPtr obj) {
-  return Caller("__lt__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__lt__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Greater(ObjectPtr obj) {
-  return Caller("__gt__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__gt__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::LessEqual(ObjectPtr obj) {
-  return Caller("__le__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__le__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::GreatEqual(ObjectPtr obj) {
-  return Caller("__ge__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__ge__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Equal(ObjectPtr obj) {
-  return Caller("__eq__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__eq__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::In(ObjectPtr obj) {
-  return Caller("__contains__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__contains__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::NotEqual(ObjectPtr obj) {
-  return Caller("__ne__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__ne__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::BitAnd(ObjectPtr obj) {
-  return Caller("__rand__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__rand__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::BitOr(ObjectPtr obj) {
-  return Caller("__ror__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__ror__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::BitXor(ObjectPtr obj) {
-  return Caller("__rxor__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__rxor__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::BitNot() {
-  return Caller("__rinvert__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__rinvert__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::And(ObjectPtr obj) {
-  return Caller("__and__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__and__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Or(ObjectPtr obj) {
-  return Caller("__or__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__or__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::GetItem(ObjectPtr obj) {
-  return Caller("__getitem__", self_.lock(), obj);
+  Args args = {obj};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__getitem__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::ObjIter(ObjectPtr /*obj*/) {
-  return Caller("__iter__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__iter__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 void DeclClassObject::DelItem(ObjectPtr /*obj*/) {
-  Caller("__del__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  Attr(self_.lock(), "__del__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::UnaryAdd() {
-  return Caller("__pos__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__pos__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::UnarySub() {
-  return Caller("__neg__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__neg__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Not() {
-  return Caller("__invert__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__invert__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Begin() {
-  return Caller("__begin__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__begin__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::End() {
-  return Caller("__end__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__end__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Next() {
-  return Caller("__next__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__next__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::HasNext() {
-  return Caller("__has_next__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__has_next__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Call(Executor*, Args&& params, KWArgs&& kw_params) {
-  return Caller("__call__", std::move(params), std::move(kw_params));
+  return Attr(self_.lock(), "__call__")->Call(nullptr, std::move(params),
+      std::move(kw_params));
 }
 
 std::string DeclClassObject::Print() {
-  ObjectPtr obj = Caller("__print__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  ObjectPtr obj = Attr(self_.lock(), "__print__")->Call(nullptr,
+      std::move(args), std::move(kw_args));
 
   if (obj->type() != ObjectType::STRING) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -453,7 +547,10 @@ std::string DeclClassObject::Print() {
 }
 
 long int DeclClassObject::Len() {
-  ObjectPtr obj = Caller("__len__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  ObjectPtr obj = Attr(self_.lock(), "__len__")->Call(nullptr,
+      std::move(args), std::move(kw_args));
 
   if (obj->type() != ObjectType::INT) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -464,7 +561,10 @@ long int DeclClassObject::Len() {
 }
 
 std::size_t DeclClassObject::Hash() {
-  ObjectPtr obj = Caller("__hash__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  ObjectPtr obj = Attr(self_.lock(), "__hash__")->Call(nullptr,
+      std::move(args), std::move(kw_args));
 
   if (obj->type() != ObjectType::INT) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -475,15 +575,24 @@ std::size_t DeclClassObject::Hash() {
 }
 
 ObjectPtr DeclClassObject::ObjBool() {
-  return Caller("__bool__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__bool__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::ObjCmd() {
-  return Caller("__cmd__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__cmd__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::ObjString() {
-  return Caller("__str__", self_.lock());
+  Args args = {};
+  KWArgs kw_args = {};
+  return Attr(self_.lock(), "__str__")->Call(nullptr, std::move(args),
+      std::move(kw_args));
 }
 
 ObjectPtr DeclClassObject::Caller(const std::string& fname, Args&& params,

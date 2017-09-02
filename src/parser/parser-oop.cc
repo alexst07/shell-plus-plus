@@ -272,5 +272,105 @@ ParserResult<Declaration> Parser::ParserVariableDecl() {
   return var_decl;
 }
 
+std::unique_ptr<FinallyStatement> Parser::ParserFinally() {
+  // Advance finally keyword
+  Advance();
+  ValidToken();
+
+  ParserResult<Statement> finally_block(ParserBlock());
+  return factory_.NewFinallyStatement(finally_block.MoveAstNode<Block>());
+}
+
+std::vector<std::unique_ptr<CatchStatement>> Parser::ParserCatchList() {
+  std::vector<std::unique_ptr<CatchStatement>> catch_list;
+
+  while (ValidToken() == TokenKind::KW_CATCH) {
+    // Advance catch
+    Advance();
+
+    ParserResult<ExpressionList> exp_list = ParserExpList();
+
+    std::unique_ptr<Identifier> var_name;
+
+    if (token_ == TokenKind::KW_AS) {
+      Advance();
+
+      if (token_ != TokenKind::IDENTIFIER) {
+        ErrorMsg(boost::format("expected identifier got %1%")%TokenValueStr());
+        throw std::invalid_argument("expected identifier");
+      }
+
+      var_name = std::move(factory_.NewIdentifier(boost::get<std::string>(
+      token_.GetValue()), std::move(nullptr)));
+
+      Advance();
+    }
+
+    ParserResult<Statement> catch_block(ParserBlock());
+
+    std::unique_ptr<CatchStatement> catch_stmt = factory_.NewCatchStatement(
+        exp_list.MoveAstNode(), catch_block.MoveAstNode<Block>(),
+        std::move(var_name));
+
+    catch_list.push_back(std::move(catch_stmt));
+  }
+
+  return catch_list;
+}
+
+ParserResult<Statement> Parser::ParserTryCatch() {
+  // advance try keyword
+  Advance();
+  ValidToken();
+
+  ParserResult<Statement> try_block(ParserBlock());
+
+  std::vector<std::unique_ptr<CatchStatement>> catch_list;
+
+  // check the next token, it must be catch or finally, if the next
+  // token in finally, so it is the end of try catch finally block
+  ValidToken();
+  if (token_ == TokenKind::KW_FINALLY) {
+    std::unique_ptr<FinallyStatement> finally = ParserFinally();
+    return ParserResult<Statement>(factory_.NewTryCatchStatement(
+        try_block.MoveAstNode<Block>(), std::move(catch_list),
+        std::move(finally)));
+  }
+
+  if (token_ != TokenKind::KW_CATCH) {
+    ErrorMsg(boost::format("expected catch keyword, got '%1%'")
+        %TokenValueStr());
+    return ParserResult<Statement>(); // Error
+  }
+
+  try {
+    catch_list = std::move(ParserCatchList());
+  } catch (std::invalid_argument& e) {
+    return ParserResult<Statement>();
+  }
+
+  if (token_ == TokenKind::KW_FINALLY) {
+    std::unique_ptr<FinallyStatement> finally = ParserFinally();
+    return ParserResult<Statement>(factory_.NewTryCatchStatement(
+        try_block.MoveAstNode<Block>(), std::move(catch_list),
+        std::move(finally)));
+  }
+
+  std::unique_ptr<FinallyStatement> finally;
+  return ParserResult<Statement>(factory_.NewTryCatchStatement(
+        try_block.MoveAstNode<Block>(), std::move(catch_list),
+        std::move(finally)));
+}
+
+ParserResult<Statement> Parser::ParserThrow() {
+  // advance throw keyword
+  Advance();
+
+  ParserResult<Expression> exp = ParserLetExp();
+
+  return ParserResult<Statement>(factory_.NewThrowStatement(
+      exp.MoveAstNode()));
+}
+
 }
 }

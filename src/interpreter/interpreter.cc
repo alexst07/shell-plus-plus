@@ -128,7 +128,6 @@ void Interpreter::ShowErrors(RunTimeError& e, const std::string& code,
       // subtract 1 because vector starts on 0 and line on 1
       msg.line_error(file_lines[msg.line()-1]);
     }
-
   }
 
   e.file(filename);

@@ -25,6 +25,7 @@
 #include "cmd-executor.h"
 #include "utils/scope-exit.h"
 #include "utils/check.h"
+#include "objects/obj-type.h"
 
 namespace shpp {
 namespace internal {
@@ -370,6 +371,122 @@ void InterfaceDeclExecutor::Exec(AstNode* node) {
   symbol_table_stack().InsertEntry(iface_name, std::move(symbol_obj));
 }
 
+void TryCatchExecutor::Exec(TryCatchStatement* node) {
+  bool catch_executed = false;
+  bool finally_executed = false;
+
+  // create a new table for while scope
+  symbol_table_stack().NewTable();
+
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    // remove the scope
+    symbol_table_stack().Pop();
+  });
+  IgnoreUnused(cleanup);
+
+  BlockExecutor block_exec(this, symbol_table_stack());
+
+  try {
+    // execute try block
+    block_exec.Exec(node->try_block());
+  } catch (RunTimeError& e) {
+    ObjectPtr ojb_excpt;
+
+    // check if the exception is an object throw by the user
+    // or a intern error
+    if (e.is_object_expection()) {
+      ojb_excpt = e.except_obj();
+    } else {
+      ojb_excpt = MapExceptionError(e, symbol_table_stack());
+    }
+
+    // iterate over catch statement
+    for (auto& catch_block: node->catch_list()) {
+      ExprListExecutor expr_list_exec(this, symbol_table_stack());
+      std::vector<ObjectPtr> obj_res_list = expr_list_exec.Exec(
+          catch_block->exp_list());
+
+      // verify if the exception object is intance of any object from
+      // catch list
+      if (IsInstanceOfCaseObject(obj_res_list, ojb_excpt)) {
+        if (catch_block->has_var()) {
+          // if the var was set by catch XXX as my_var, insert this var
+          // on symbol table
+          InsertCatchVar(catch_block->var()->name(), ojb_excpt,
+              catch_block->pos());
+        }
+
+        // mark that one catch block was executed and execute the catch block
+        catch_executed = true;
+        block_exec.Exec(catch_block->block());
+
+        // only one catch must be executed, so out of the loop
+        break;
+      }
+    }
+
+    // verify if try catch has finally block, and execute, becuase finally
+    // must be executed always, even if no catch match the exception
+    // and this exception was not captured
+    if (node->has_finally()) {
+      finally_executed = true;
+      block_exec.Exec(node->finally()->block());
+    }
+
+    // if the exception was not captured, throw the exception
+    if (!catch_executed) {
+      throw e;
+    }
+  }
+
+  // if there is no exception, finally block must be executed anyway
+  if (node->has_finally() && !finally_executed) {
+    block_exec.Exec(node->finally()->block());
+  }
+}
+
+bool TryCatchExecutor::IsInstanceOfCaseObject(
+    std::vector<ObjectPtr>& obj_res_list, ObjectPtr& ojb_except) {
+  for (auto& exp_obj: obj_res_list) {
+    if (InstanceOf(ojb_except, exp_obj)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void TryCatchExecutor::InsertCatchVar(const std::string& name,
+    ObjectPtr& ojb_excpt, Position pos) {
+  SymbolAttr entry(ojb_excpt, true);
+
+  try {
+    symbol_table_stack().InsertEntry(name, std::move(entry));
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), pos, e.messages());
+  }
+}
+
+void TryCatchExecutor::set_stop(StopFlag flag) {
+  if (parent() == nullptr) {
+    return;
+  }
+
+  if (flag == StopFlag::kThrow) {
+    parent()->set_stop(StopFlag::kGo);
+  } else {
+    parent()->set_stop(flag);
+  }
+}
+
+void ThrowExecutor::Exec(ThrowStatement* node) {
+  ExpressionExecutor expr_executor(this, symbol_table_stack());
+  ObjectPtr obj_throw = expr_executor.Exec(node->exp());
+
+  throw RunTimeError(obj_throw, node->pos());
+}
+
 void StmtExecutor::Exec(AstNode* node) {
   switch (node->type()) {
     case AstNode::NodeType::kAssignmentStatement: {
@@ -461,6 +578,16 @@ void StmtExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kDelStatement: {
       DelStmtExecutor del(this, symbol_table_stack());
       del.Exec(static_cast<DelStatement*>(node));
+    } break;
+
+    case AstNode::NodeType::kTryCatchStatement: {
+      TryCatchExecutor try_catch(this, symbol_table_stack());
+      try_catch.Exec(static_cast<TryCatchStatement*>(node));
+    } break;
+
+    case AstNode::NodeType::kThrowStatement: {
+      ThrowExecutor throw_exec(this, symbol_table_stack());
+      throw_exec.Exec(static_cast<ThrowStatement*>(node));
     } break;
 
     case AstNode::NodeType::kStatementList: {
