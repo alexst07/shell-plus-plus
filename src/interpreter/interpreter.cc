@@ -29,6 +29,7 @@
 #include "objects/object-factory.h"
 #include "modules/std-cmds.h"
 #include "modules/env.h"
+#include "env-shell.h"
 
 namespace shpp {
 namespace internal {
@@ -98,6 +99,10 @@ void Interpreter::Exec(ScriptStream& file, std::vector<std::string>&& args) {
       RegisterFileVars(file.filename());
       RegisterArgs(std::move(args));
 
+      if (main_) {
+        RegisterMainModule(file.filename());
+      }
+
       RootExecutor executor(symbol_table_stack_);
       executor.Exec(stmt_list_.get());
     } else {
@@ -117,7 +122,9 @@ void Interpreter::ShowErrors(RunTimeError& e, const std::string& code,
 
   // set filename and the line of the erro on each message
   for (auto& msg: e.messages()) {
-    msg.file(filename);
+    if (msg.file().empty()) {
+      msg.file(filename);
+    }
 
     // if the type of error is EVAL, the line of file doesn't match with the
     // line of real code, so at this time, the line won't be show
@@ -125,8 +132,19 @@ void Interpreter::ShowErrors(RunTimeError& e, const std::string& code,
       // insert empty line for EVAL error
       msg.line_error("");
     } else {
-      // subtract 1 because vector starts on 0 and line on 1
-      msg.line_error(file_lines[msg.line()-1]);
+      std::string msg_code;
+      std::ifstream fs(msg.file());
+
+      if (fs.is_open()) {
+        std::stringstream buffer;
+        buffer << fs.rdbuf();
+        msg_code = buffer.str();
+
+        // subtract 1 because vector starts on 0 and line on 1
+        msg.line_error(SplitFileLines(msg_code)[msg.line()-1]);
+      } else {
+        msg.line_error("");
+      }
     }
   }
 
@@ -176,6 +194,22 @@ void Interpreter::ExecInterative(
       }
     }
   }
+}
+
+void Interpreter::RegisterMainModule(const std::string& full_path) {
+  // create a symbol table on the start
+  SymbolTableStack table_stack;
+  auto main_tab = symbol_table_stack_.MainTable();
+  table_stack.Push(main_tab, true);
+
+  auto obj_type = symbol_table_stack_.Lookup("module", false).SharedAccess();
+  ObjectPtr module_obj = ObjectPtr(new ModuleMainObject(obj_type,
+      std::move(table_stack)));
+
+  namespace fs = boost::filesystem;
+  fs::path path = fs::system_complete(full_path);
+
+  EnvShell::instance()->GetImportTable().AddModule(path.string(), module_obj);
 }
 
 std::shared_ptr<Object> Interpreter::LookupSymbol(const std::string& name) {

@@ -311,6 +311,8 @@ class ImportExecutor: public Executor {
 
   void Exec(ImportStatement *node);
 
+  ObjectPtr ProcessModule(const std::string& module, const std::string& path);
+
   void set_stop(StopFlag flag) override;
 };
 

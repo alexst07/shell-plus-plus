@@ -1016,7 +1016,6 @@ void ImportExecutor::Exec(ImportStatement *node) {
     auto value = node->import<Literal>()->value();
     std::string module_path = boost::get<std::string>(value);
 
-    ObjectFactory obj_factory(symbol_table_stack());
     ObjectPtr obj_module;
 
     try {
@@ -1024,7 +1023,7 @@ void ImportExecutor::Exec(ImportStatement *node) {
           .SharedAccess();
       SHPP_FUNC_CHECK_PARAM_TYPE(path_obj, import, STRING)
       std::string path_str = static_cast<StringObject&>(*path_obj).value();
-      obj_module = obj_factory.NewModule(module_path, path_str, true);
+      obj_module = ProcessModule(module_path, path_str);
     } catch (RunTimeError& e) {
       throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
     }
@@ -1038,6 +1037,28 @@ void ImportExecutor::Exec(ImportStatement *node) {
       throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
     }
   }
+}
+
+ObjectPtr ImportExecutor::ProcessModule(const std::string& module,
+    const std::string& path) {
+  std::string full_path = path + std::string("/") + module;
+
+  ObjectPtr module_obj = EnvShell::instance()->GetImportTable()
+      .GetModule(full_path);
+
+  // check if module was already processed
+  if (module_obj) {
+    return module_obj;
+  }
+
+  // process the module and store it on import table
+  ObjectFactory obj_factory(symbol_table_stack());
+  module_obj = obj_factory.NewModule(full_path, true);
+
+  EnvShell::instance()->GetImportTable().AddModule(full_path, module_obj);
+  static_cast<ModuleImportObject&>(*module_obj).Execute();
+
+  return module_obj;
 }
 
 void ImportExecutor::set_stop(StopFlag flag) {

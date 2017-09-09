@@ -50,6 +50,20 @@ int FileDescriptorMap::operator[](const std::string& name) const {
   }
 }
 
+void ImportTable::AddModule(const std::string& name, ObjectPtr module) {
+  module_table_.insert(std::pair<std::string, ObjectPtr>(name, module));
+}
+
+ObjectPtr ImportTable::GetModule(const std::string& name) {
+  auto it = module_table_.find(name);
+
+  if (it != module_table_.end()) {
+    return it->second;
+  }
+
+  return ObjectPtr(nullptr);
+}
+
 EnvShell *EnvShell::instance_ = 0;
 
 void EnvShell::InitShell() {

@@ -297,10 +297,9 @@ class ObjectFactory {
                                     std::move(SymTableStack())));
   }
 
-  ObjectPtr NewModule(const std::string& module, const std::string& path,
-      bool is_file_path) {
+  ObjectPtr NewModule(const std::string& module_path, bool is_file_path) {
     auto obj_type = symbol_table_.Lookup("module", false).SharedAccess();
-    return ObjectPtr(new ModuleImportObject(module, path, is_file_path, obj_type,
+    return ObjectPtr(new ModuleImportObject(module_path, is_file_path, obj_type,
                                    std::move(SymTableStack())));
   }
 

@@ -105,7 +105,8 @@ ObjectPtr TypeObject::Equal(ObjectPtr obj) {
 
 ObjectPtr TypeObject::SearchAttr(const std::string& name) {
   if (symbol_table_stack().Exists(name)) {
-    return symbol_table_stack().Lookup(name, false).SharedAccess();
+    auto obj_ref = symbol_table_stack().Lookup(name, false).Ref();
+    return PassVar(obj_ref, symbol_table_stack());
   }
 
   ObjectPtr base = BaseType();
@@ -122,7 +123,8 @@ ObjectPtr TypeObject::SearchAttr(const std::string& name) {
                        " class")%base->ObjectName());
   }
 
-  return static_cast<TypeObject&>(*base).SearchAttr(name);
+  auto obj_ref = static_cast<TypeObject&>(*base).SearchAttr(name);
+  return PassVar(obj_ref, symbol_table_stack());
 }
 
 bool TypeObject::ExistsAttr(const std::string& name) {
@@ -165,7 +167,13 @@ ObjectPtr Type::Constructor(Executor*, Args&& params, KWArgs&&) {
 }
 
 std::shared_ptr<Object> ModuleImportObject::Attr(std::shared_ptr<Object>/*self*/,
-                                           const std::string& name) {
+    const std::string& name) {
+  auto obj = SymTableStack().Lookup(name, false).Ref();
+  return PassVar(obj, symbol_table_stack());
+}
+
+std::shared_ptr<Object> ModuleMainObject::Attr(std::shared_ptr<Object>/*self*/,
+    const std::string& name) {
   auto obj = SymTableStack().Lookup(name, false).Ref();
   return PassVar(obj, symbol_table_stack());
 }

@@ -70,24 +70,12 @@ class RangeIterObject: public BaseIter {
 
 class ModuleImportObject: public Object {
  public:
-  ModuleImportObject(const std::string& module_name, const std::string& path,
-      bool is_file_path, ObjectPtr obj_type, SymbolTableStack&& sym_table)
+  ModuleImportObject(const std::string& module_path, bool is_file_path,
+      ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
       , interpreter_(false)
-      , module_name_(module_name)
-      , is_file_path_(is_file_path) {
-    try {
-      ScriptStream file(path + std::string("/") + module_name_);
-      interpreter_.Exec(file);
-    } catch (RunTimeError& e) {
-      Message msg(Message::Severity::ERR, boost::format(e.msg()), e.pos().line,
-                  e.pos().col);
-
-      throw RunTimeError (RunTimeError::ErrorCode::IMPORT,
-                          boost::format("import: %1% error")%module_name_)
-          .AppendMsg(std::move(msg));
-    }
-  }
+      , module_path_(module_path)
+      , is_file_path_(is_file_path) {}
 
   virtual ~ModuleImportObject() {}
 
@@ -99,13 +87,45 @@ class ModuleImportObject: public Object {
   }
 
   std::string Print() override {
-    return std::string("[moule: ") + module_name_ + "]\n";
+    return std::string("[moule: ") + module_path_ + "]\n";
+  }
+
+  void Execute() try {
+    ScriptStream file(module_path_);
+    interpreter_.Exec(file);
+  } catch (RunTimeError& e) {
+    Message msg(Message::Severity::ERR, boost::format(e.msg()), e.pos().line,
+                e.pos().col);
+    msg.file(module_path_);
+
+    throw RunTimeError (RunTimeError::ErrorCode::IMPORT,
+                        boost::format("import: %1% error")%module_path_)
+        .AppendMsg(std::move(msg));
   }
 
  private:
   Interpreter interpreter_;
-  std::string module_name_;
+  std::string module_path_;
   bool is_file_path_;
+};
+
+class ModuleMainObject: public Object {
+ public:
+  ModuleMainObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::MODULE, obj_type, std::move(sym_table)) {}
+
+  virtual ~ModuleMainObject() {}
+
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object>/*self*/,
+                               const std::string& name) override;
+
+  SymbolTableStack& SymTableStack() {
+    return symbol_table_stack();
+  }
+
+  std::string Print() override {
+    return std::string("[moule: MAIN]\n");
+  }
 };
 
 class ModuleCustonObject: public Object {

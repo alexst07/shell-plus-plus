@@ -20,6 +20,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "objects/abstract-obj.h"
 #include "interpreter/symbol-table.h"
 #include "ast/ast.h"
 #include "interpreter/interpreter.h"
@@ -46,6 +47,20 @@ class FileDescriptorMap {
 
  private:
   std::unordered_map<std::string, int> map_;
+};
+
+class ImportTable {
+ public:
+  ImportTable() = default;
+  ~ImportTable() = default;
+
+  void AddModule(const std::string& name, ObjectPtr module);
+
+  // if the module doesn't exists return ObjectPtr(nullptr)
+  ObjectPtr GetModule(const std::string& name);
+
+ private:
+  std::unordered_map<std::string, ObjectPtr> module_table_;
 };
 
 class EnvShell {
@@ -96,6 +111,10 @@ class EnvShell {
     return interective_exec_;
   }
 
+  ImportTable& GetImportTable() {
+    return import_table_;
+  }
+
   ~EnvShell();
 
  private:
@@ -111,6 +130,7 @@ class EnvShell {
   int shell_is_interactive_;
   int shmid_;
   bool interective_exec_;
+  ImportTable import_table_;
 };
 
 }

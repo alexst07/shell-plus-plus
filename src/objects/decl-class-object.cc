@@ -265,8 +265,8 @@ std::shared_ptr<Object>& DeclClassType::AttrAssign(
 
 std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object> self,
                               const std::string& name) {
-  ObjectPtr att_obj = SearchAttr(name);
-  return att_obj;
+  auto att_obj = SearchAttr(name);
+  return PassVar(att_obj, symbol_table_stack());
 }
 
 std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
@@ -275,14 +275,14 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
 
   // first check it the attribute exists on object symbol table
   if (symbol_table_stack().Exists(name)) {
-    ObjectPtr att_obj = symbol_table_stack().Lookup(name, false).SharedAccess();
+    auto att_obj = symbol_table_stack().Lookup(name, false).Ref();
 
     // functions on object are handle to insert this parameter
     if (att_obj->type() == ObjectType::FUNC) {
       return ObjectPtr(obj_factory.NewWrapperFunc(att_obj, self));
     }
 
-    return att_obj;
+    return PassVar(att_obj, symbol_table_stack());
   }
 
   // if the attribute is not on object symbol table search it on type class

@@ -56,6 +56,8 @@ class Interpreter {
 
   std::shared_ptr<Object> LookupSymbol(const std::string& name);
 
+  void RegisterMainModule(const std::string& full_path);
+
   Executor* ExecutorPtr();
 
  private:
@@ -70,6 +72,7 @@ class Interpreter {
   SymbolTableStack symbol_table_stack_;
   std::unique_ptr<StatementList> stmt_list_;
   bool main_;
+  std::string full_path_;
 };
 
 std::vector<std::string> SplitFileLines(const std::string str_file);
