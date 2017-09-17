@@ -554,7 +554,7 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
-    void virtual VisitFunctionExpression(FunctionExpression* func_decl) {
+  void virtual VisitFunctionExpression(FunctionExpression* func_decl) {
     Level();
     std::cout << "<function variadic:"
               << (func_decl->variadic()? "true": "false") << ">\n";
@@ -882,6 +882,68 @@ class AstPrinter: public AstVisitor {
     level_--;
     Level();
     std::cout << "</throw>\n";
+  }
+
+  void virtual VisitListComprehension(ListComprehension* list_comp) {
+    Level();
+    std::cout << "<list_comprehension>\n";
+    level_++;
+
+    Level();
+    std::cout << "<ret_exp>\n";
+    list_comp->res_exp()->Accept(this);
+    Level();
+    std::cout << "</ret_exp>\n";
+
+    Level();
+    std::cout << "<for_if_list>\n";
+
+    auto vec = list_comp->comp_list();
+
+    for (const auto c: vec) {
+      c->Accept(this);
+    }
+
+    Level();
+    std::cout << "</for_if_list>\n";
+
+    level_--;
+    Level();
+    std::cout << "</list_comprehension>\n";
+  }
+
+  void virtual VisitCompFor(CompFor* comp_for) {
+    Level();
+    std::cout << "<comp_for>\n";
+    level_++;
+
+    Level();
+    std::cout << "<exp_list>\n";
+    comp_for->exp_list()->Accept(this);
+    Level();
+    std::cout << "<test_list>\n";
+
+    Level();
+    std::cout << "<exp_list>\n";
+    comp_for->test_list()->Accept(this);
+    Level();
+    std::cout << "<test_list>\n";
+
+    level_--;
+    Level();
+    std::cout << "</comp_for>\n";
+  }
+
+  void virtual VisitCompIf(CompIf* comp_if) {
+    Level();
+    std::cout << "<comp_if>\n";
+    level_++;
+
+    comp_if->comp_exp()->Accept(this);
+
+    level_--;
+    Level();
+    std::cout << "</comp_if>\n";
   }
 };
 

@@ -500,6 +500,12 @@ void StmtExecutor::Exec(AstNode* node) {
       return;
     } break;
 
+    case AstNode::NodeType::kFunctionCall: {
+      ExpressionExecutor exec(this, symbol_table_stack());
+      exec.Exec(static_cast<FunctionCall*>(node));
+      return;
+    } break;
+
     case AstNode::NodeType::kFunctionDeclaration: {
       FuncDeclExecutor fdecl_executor(this, symbol_table_stack());
       fdecl_executor.Exec(node);

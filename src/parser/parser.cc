@@ -1107,8 +1107,22 @@ ParserResult<ArgumentsList> Parser::ParserArgumentsList() {
       std::move(args_list)));
 }
 
-ParserResult<AssignableList> Parser::ParserAssignableList() {
+ParserResult<AssignableList> Parser::ParserAssignableList(
+    std::unique_ptr<AssignableValue> first_value) {
   std::vector<std::unique_ptr<AssignableValue>> vec_values;
+
+  // insert a initial value if it is valid
+  if (first_value) {
+    vec_values.push_back(std::move(first_value));
+
+    if (token_.Is(TokenKind::COMMA)) {
+      Advance();
+      ValidToken();
+    } else {
+      return ParserResult<AssignableList>(factory_.NewAssignableList(
+      std::move(vec_values)));
+    }
+  }
 
   do {
     ValidToken();
@@ -1563,6 +1577,51 @@ ParserResult<Expression> Parser::ParserScopeIdentifier() {
   return res;
 }
 
+ParserResult<Expression> Parser::ParserCompIf() {
+  // advance if keyword
+  Advance();
+  ValidToken();
+
+  ParserResult<Expression> exp(ParserLetExp());
+
+  return ParserResult<Expression>(factory_.NewCompIf(exp.MoveAstNode()));
+}
+
+ParserResult<Expression> Parser::ParserCompFor() {
+  // advance for keyword
+  Advance();
+  ValidToken();
+  ParserResult<ExpressionList> exp_list(ParserPostExpList());
+
+  if (token_ != TokenKind::KW_IN) {
+    ErrorMsg(boost::format("expected in operator"));
+    return ParserResult<Expression>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+  ParserResult<ExpressionList> test_list(ParserExpList());
+
+  return ParserResult<Expression>(factory_.NewCompFor(exp_list.MoveAstNode(),
+      test_list.MoveAstNode()));
+}
+
+std::vector<std::unique_ptr<Expression>> Parser::ParserListComprehension() {
+  std::vector<std::unique_ptr<Expression>> comp_list;
+
+  while (token_.IsAny(TokenKind::KW_FOR, TokenKind::KW_IF)) {
+    if (token_ == TokenKind::KW_FOR) {
+      ParserResult<Expression> comp = ParserCompFor();
+      comp_list.push_back(comp.MoveAstNode());
+    } else if (token_ == TokenKind::KW_IF) {
+      ParserResult<Expression> comp = ParserCompIf();
+      comp_list.push_back(comp.MoveAstNode());
+    }
+  }
+
+  return comp_list;
+}
+
 ParserResult<Expression> Parser::ParserArrayInstantiation() {
   // Advance token '[' and goes until a token different from new line
   Advance();
@@ -1577,7 +1636,37 @@ ParserResult<Expression> Parser::ParserArrayInstantiation() {
     return arr;
   }
 
-  auto rvalue_list = ParserAssignableList();
+  std::unique_ptr<AssignableList> rvalue_list;
+
+  if (token_.Is(TokenKind::ELLIPSIS)) {
+    // if the first element is ELLIPSIS token, it must be a simple array
+    rvalue_list = ParserAssignableList().MoveAstNode();
+  } else {
+    // on this case we have to check, if it is a simple array or a
+    // list comprehension
+    std::vector<std::unique_ptr<AssignableValue>> vec_values;
+    ParserResult<AssignableValue> value(ParserAssignable());
+
+    if (token_.Is(TokenKind::KW_FOR)) {
+      // it is list comprehension
+      auto comp_vec = ParserListComprehension();
+
+      ValidToken();
+      if (token_ != TokenKind::RBRACKET) {
+        ErrorMsg(boost::format("Expected token ]"));
+        return ParserResult<Expression>(); // Error
+      }
+
+      Advance();
+
+      // return the list comprehension
+      return ParserResult<Expression>(factory_.NewListComprehension(
+          value.MoveAstNode(), std::move(comp_vec)));
+    } else {
+      // it is an array
+      rvalue_list = ParserAssignableList(value.MoveAstNode()).MoveAstNode();
+    }
+  }
 
   ValidToken();
   if (token_ != TokenKind::RBRACKET) {
@@ -1588,7 +1677,7 @@ ParserResult<Expression> Parser::ParserArrayInstantiation() {
   Advance();
 
   ParserResult<Expression> arr(factory_.NewArrayInstantiation(
-      rvalue_list.MoveAstNode()));
+      std::move(rvalue_list)));
 
   return arr;
 }

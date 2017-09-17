@@ -108,6 +108,8 @@ class ExpressionExecutor: public Executor {
 
   ObjectPtr ExecIs(ObjectPtr obj, ObjectPtr type);
 
+  ObjectPtr ExecListComprehension(AstNode* node);
+
   void set_stop(StopFlag flag) override;
 
  private:
@@ -188,6 +190,27 @@ class FuncCallExecutor: public Executor {
   bool inside_switch() override {
     return false;
   }
+};
+
+class ListComprehensionExecutor: public Executor {
+ public:
+  ListComprehensionExecutor(Executor* parent,
+      SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  ObjectPtr Exec(AstNode* node);
+
+  std::unique_ptr<Statement> MountBlock(ListComprehension* list_comp_node);
+
+  std::unique_ptr<Statement> MountIfBlock(CompIf* comp_if,
+      ListComprehension* list_comp_node);
+
+  std::unique_ptr<Statement> ExecForIfList(
+      std::vector<Expression*>& for_if_list,
+      std::unique_ptr<Statement>&& stmt_l, AstNodeFactory& ast_node_factory);
+
+  std::unique_ptr<Statement> MountForBlock(CompFor* comp_for,
+      ListComprehension* list_comp_node);
 };
 
 }

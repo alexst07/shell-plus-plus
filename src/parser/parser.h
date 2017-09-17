@@ -321,8 +321,16 @@ class Parser {
   ParserResult<Expression> ParserArgument();
   ParserResult<ArgumentsList> ParserArgumentsList();
   ParserResult<AssignableValue> ParserAssignable();
-  ParserResult<AssignableList> ParserAssignableList();
+
+  ParserResult<AssignableList> ParserAssignableList(
+      std::unique_ptr<AssignableValue> first_value =
+          std::unique_ptr<AssignableValue>(nullptr));
+
   ParserResult<Expression> ParserArrayInstantiation();
+
+  std::vector<std::unique_ptr<Expression>> ParserListComprehension();
+  ParserResult<Expression> ParserCompIf();
+  ParserResult<Expression> ParserCompFor();
 
   std::tuple<std::unique_ptr<KeyValue>, bool> ParserKeyValue();
   ParserResult<Expression> ParserDictionary();

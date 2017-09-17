@@ -448,6 +448,25 @@ class AstNodeFactory {
        std::move(exp), fn_pos_()));
   }
 
+  inline std::unique_ptr<CompIf> NewCompIf(
+      std::unique_ptr<Expression> comp_exp) {
+    return std::unique_ptr<CompIf>(new CompIf(std::move(comp_exp), fn_pos_()));
+  }
+
+  inline std::unique_ptr<CompFor> NewCompFor(
+      std::unique_ptr<ExpressionList> exp_list,
+      std::unique_ptr<ExpressionList> test_list) {
+    return std::unique_ptr<CompFor>(new CompFor(std::move(exp_list),
+        std::move(test_list), fn_pos_()));
+  }
+
+  inline std::unique_ptr<ListComprehension> NewListComprehension(
+      std::unique_ptr<AssignableValue> res_exp,
+      std::vector<std::unique_ptr<Expression>> comp_list) {
+    return std::unique_ptr<ListComprehension>(new ListComprehension(
+       std::move(res_exp), std::move(comp_list), fn_pos_()));
+  }
+
  private:
   std::function<Position()> fn_pos_;
 };

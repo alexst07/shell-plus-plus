@@ -104,6 +104,9 @@ namespace internal {
   V(NullExpression)             \
   V(Array)                      \
   V(ArrayInstantiation)         \
+  V(CompIf)                     \
+  V(CompFor)                    \
+  V(ListComprehension)          \
   V(DictionaryInstantiation)    \
   V(Identifier)                 \
   V(Yield)                      \
@@ -1709,6 +1712,108 @@ class Slice: public Expression {
      : Expression(NodeType::kSlice, position)
      , start_exp_(std::move(start_exp))
      , end_exp_(std::move(end_exp)) {}
+};
+
+class CompIf: public Expression{
+ public:
+  virtual ~CompIf() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitCompIf(this);
+  }
+
+  Expression* comp_exp() const noexcept {
+    return comp_exp_.get();
+  }
+
+  std::unique_ptr<Expression> MoveCompExp() {
+    return std::move(comp_exp_);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> comp_exp_;
+
+  CompIf(std::unique_ptr<Expression> comp_exp, Position position)
+      : Expression(NodeType::kCompIf, position)
+      , comp_exp_(std::move(comp_exp)) {}
+};
+
+class CompFor: public Expression {
+ public:
+  virtual ~CompFor() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitCompFor(this);
+  }
+
+  ExpressionList* exp_list() const noexcept {
+    return exp_list_.get();
+  }
+
+  ExpressionList* test_list() const noexcept {
+    return test_list_.get();
+  }
+
+  std::unique_ptr<ExpressionList> MoveExpList() {
+    return std::move(exp_list_);
+  }
+
+  std::unique_ptr<ExpressionList> MoveTestList() {
+    return std::move(test_list_);
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<ExpressionList> exp_list_;
+  std::unique_ptr<ExpressionList> test_list_;
+
+  CompFor(std::unique_ptr<ExpressionList> exp_list,
+          std::unique_ptr<ExpressionList> test_list, Position position)
+      : Expression(NodeType::kCompFor, position)
+      , exp_list_(std::move(exp_list))
+      , test_list_(std::move(test_list)) {}
+};
+
+class ListComprehension: public Expression {
+ public:
+  virtual ~ListComprehension() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitListComprehension(this);
+  }
+
+  Expression* res_exp() const noexcept {
+    return res_exp_.get();
+  }
+
+  std::unique_ptr<AssignableValue> MoveResExp() {
+    return std::move(res_exp_);
+  }
+
+  std::vector<Expression*> comp_list() noexcept {
+    std::vector<Expression*> vec;
+
+    for (auto&& e: comp_list_) {
+      vec.push_back(e.get());
+    }
+
+    return vec;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<AssignableValue> res_exp_;
+  std::vector<std::unique_ptr<Expression>> comp_list_;
+
+  ListComprehension(std::unique_ptr<AssignableValue> res_exp,
+      std::vector<std::unique_ptr<Expression>> comp_list, Position position)
+      : Expression(NodeType::kListComprehension, position)
+      , res_exp_(std::move(res_exp))
+      , comp_list_(std::move(comp_list)) {}
 };
 
 class Array: public Expression {

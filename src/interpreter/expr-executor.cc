@@ -21,6 +21,7 @@
 #include "cmd-executor.h"
 #include "stmt-executor.h"
 #include "utils/glob.h"
+#include "utils/scope-exit.h"
 
 namespace shpp {
 namespace internal {
@@ -128,6 +129,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
 
     case AstNode::NodeType::kLetExpression:
       return ExecLetExpression(static_cast<LetExpression*>(node));
+      break;
+
+    case AstNode::NodeType::kListComprehension:
+      return ExecListComprehension(node);
       break;
 
     default:
@@ -519,6 +524,11 @@ ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
   }
 }
 
+ObjectPtr ExpressionExecutor::ExecListComprehension(AstNode* node) {
+  ListComprehensionExecutor list_comp(this, symbol_table_stack());
+  return list_comp.Exec(node);
+}
+
 void ExpressionExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
@@ -698,6 +708,160 @@ ObjectPtr GlobExecutor::Exec(Glob* glob_node) {
 
   std::vector<ObjectPtr> glob_obj = ExecGlob(glob_str, symbol_table_stack());
   return obj_factory.NewArray(std::move(glob_obj));
+}
+
+ObjectPtr ListComprehensionExecutor::Exec(AstNode* node) {
+  ListComprehension* list_comp_node = static_cast<ListComprehension*>(node);
+  std::vector<Expression*> for_if_list = list_comp_node->comp_list();
+
+  // create a new table for while scope
+  symbol_table_stack().NewTable();
+  ObjectPtr& ref = symbol_table_stack().Lookup("%list_comp_val", true).Ref();
+
+  // scope exit case an excpetion thrown
+  auto cleanup = MakeScopeExit([&]() {
+    // remove the scope
+    symbol_table_stack().Pop();
+  });
+  IgnoreUnused(cleanup);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ref = obj_factory.NewArray(std::vector<std::unique_ptr<Object>>());
+
+  // process the last operation
+  Expression* last_item = for_if_list[for_if_list.size() - 1];
+
+  std::unique_ptr<Statement> stmt;
+
+  if (last_item->type() == AstNode::NodeType::kCompIf) {
+    CompIf* comp_if = static_cast<CompIf*>(last_item);
+    stmt = std::move(MountIfBlock(comp_if, list_comp_node));
+  } else {
+    CompFor* comp_for = static_cast<CompFor*>(last_item);
+    stmt = std::move(MountForBlock(comp_for, list_comp_node));
+  }
+
+  AstNodeFactory ast_node_factory([&]() {
+    return list_comp_node->pos();
+  });
+
+  if (for_if_list.size() > 1) {
+    stmt = std::move(ExecForIfList(for_if_list, std::move(stmt),
+        ast_node_factory));
+  }
+
+  StmtExecutor stmt_exec(this, symbol_table_stack());
+  stmt_exec.Exec(stmt.get());
+
+  return symbol_table_stack().Lookup("%list_comp_val", false).SharedAccess();
+}
+
+std::unique_ptr<Statement> ListComprehensionExecutor::ExecForIfList(
+    std::vector<Expression*>& for_if_list, std::unique_ptr<Statement>&& stmt_l,
+    AstNodeFactory& ast_node_factory) {
+  std::unique_ptr<Statement> stmt = std::move(stmt_l);
+  for (int i = for_if_list.size() - 2; i >= 0; i--) {
+    Expression* item = for_if_list[i];
+
+    std::vector<std::unique_ptr<Statement>> stmt_vec;
+    stmt_vec.push_back(std::move(stmt));
+
+    std::unique_ptr<StatementList> stmt_list(ast_node_factory.NewStatementList(
+        std::move(stmt_vec)));
+
+    auto block = ast_node_factory.NewBlock(std::move(stmt_list));
+
+    if (item->type() == AstNode::NodeType::kCompIf) {
+      CompIf* comp_if = static_cast<CompIf*>(item);
+
+      std::unique_ptr<Statement> if_stmt(ast_node_factory.NewIfStatement(
+          std::move(comp_if->MoveCompExp()), std::move(block),
+          std::unique_ptr<Statement>(nullptr)));
+
+      stmt = std::move(if_stmt);
+    } else {
+      CompFor* comp_for = static_cast<CompFor*>(item);
+
+      std::unique_ptr<Statement> for_stmt(ast_node_factory.NewForInStatement(
+          std::move(comp_for->MoveExpList()),
+          std::move(comp_for->MoveTestList()), std::move(block)));
+
+      stmt = std::move(for_stmt);
+    }
+  }
+
+  return stmt;
+}
+
+std::unique_ptr<Statement> ListComprehensionExecutor::MountBlock(
+    ListComprehension* list_comp_node) {
+  AstNodeFactory ast_node_factory([&]() {
+    return list_comp_node->pos();
+  });
+
+  std::unique_ptr<Identifier> id(ast_node_factory.NewIdentifier(
+      "%list_comp_val", std::move(std::unique_ptr<PackageScope>(nullptr))));
+
+  std::unique_ptr<Identifier> id_func_name(ast_node_factory.NewIdentifier(
+      "append", std::move(std::unique_ptr<PackageScope>(nullptr))));
+
+  std::unique_ptr<Attribute> attribute(ast_node_factory.NewAttribute(
+      std::move(id), std::move(id_func_name)));
+
+  std::unique_ptr<Argument> arg(ast_node_factory.NewArgument(
+      std::string(""), std::move(list_comp_node->MoveResExp())));
+
+  std::vector<std::unique_ptr<Argument>> arg_vec;
+  arg_vec.push_back(std::move(arg));
+
+  std::unique_ptr<ArgumentsList> arg_list(ast_node_factory.NewArgumentsList(
+      std::move(arg_vec)));
+
+  // mount function call
+  std::unique_ptr<FunctionCall> func_call(ast_node_factory.NewFunctionCall(
+      std::move(attribute), std::move(arg_list)));
+
+  std::vector<std::unique_ptr<Statement>> stmt_vec;
+  stmt_vec.push_back(std::move(func_call));
+
+  std::unique_ptr<StatementList> stmt_list(ast_node_factory.NewStatementList(
+      std::move(stmt_vec)));
+
+  auto block = ast_node_factory.NewBlock(std::move(stmt_list));
+
+  return block;
+}
+
+std::unique_ptr<Statement> ListComprehensionExecutor::MountIfBlock(
+    CompIf* comp_if, ListComprehension* list_comp_node) {
+  AstNodeFactory ast_node_factory([&]() {
+    return list_comp_node->pos();
+  });
+
+  auto block = MountBlock(list_comp_node);
+
+  // mount if statement
+  std::unique_ptr<Statement> if_stmt(ast_node_factory.NewIfStatement(
+      std::move(comp_if->MoveCompExp()), std::move(block),
+      std::unique_ptr<Statement>(nullptr)));
+
+  return if_stmt;
+}
+
+std::unique_ptr<Statement> ListComprehensionExecutor::MountForBlock(
+    CompFor* comp_for, ListComprehension* list_comp_node) {
+  AstNodeFactory ast_node_factory([&]() {
+    return list_comp_node->pos();
+  });
+
+  auto block = MountBlock(list_comp_node);
+
+  // mount if statement
+  std::unique_ptr<Statement> for_stmt(ast_node_factory.NewForInStatement(
+      std::move(comp_for->MoveExpList()), std::move(comp_for->MoveTestList()),
+      std::move(block)));
+
+  return for_stmt;
 }
 
 }
