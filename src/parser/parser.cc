@@ -225,6 +225,8 @@ std::unique_ptr<Statement> Parser::ParserDeferableStmt() {
     stmt = ParserForInStmt().MoveAstNode();
   } else if (token_ == TokenKind::LBRACE) {
     stmt = ParserBlock().MoveAstNode();
+  } else if (token_ == TokenKind::KW_VARENV) {
+    stmt = ParserVarEnvStmt().MoveAstNode();
   } else if (MatchLangStmt()) {
     stmt = ParserSimpleStmt().MoveAstNode();
   } else {
@@ -437,6 +439,34 @@ std::unique_ptr<CaseStatement> Parser::ParserCaseStmt() {
       exp_list.MoveAstNode(), std::move(block)));
 }
 
+ParserResult<Statement> Parser::ParserVarEnvStmt() {
+  // advance varenv key word
+  Advance();
+  ValidToken();
+
+  if (token_ != TokenKind::IDENTIFIER) {
+    ErrorMsg(boost::format("expected identifier"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
+      boost::get<std::string>(token_.GetValue())));
+
+  Advance();
+  if (ValidToken() != TokenKind::ASSIGN) {
+    ErrorMsg(boost::format("expected '=' token, got %1%")% TokenValueStr());
+      return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  ParserResult<Expression> exp(ParserLetExp());
+
+  return ParserResult<Statement>(factory_.NewVarEnvStatement(
+      std::move(id), exp.MoveAstNode()));
+}
+
 ParserResult<Statement> Parser::ParserBlock() {
   if (token_ != TokenKind::LBRACE) {
     ErrorMsg(boost::format("expected { token, got %1%")% TokenValueStr());
@@ -554,6 +584,8 @@ ParserResult<Statement> Parser::ParserStmt() {
     res = std::move(ParserImportStmt());
   } else if (token_ == TokenKind::KW_TRY) {
     res = std::move(ParserTryCatch());
+  } else if (token_ == TokenKind::KW_VARENV) {
+    res = std::move(ParserVarEnvStmt());
   } else if (token_ == TokenKind::KW_THROW) {
     check_end_stmt = true;
     res = std::move(ParserThrow());

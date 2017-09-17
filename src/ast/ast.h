@@ -71,6 +71,7 @@ namespace internal {
   V(DeferStatement)               \
   V(DelStatement)                 \
   V(ImportStatement)              \
+  V(VarEnvStatement)              \
   V(DebuggerStatement)
 
 #define LITERAL_NODE_LIST(V) \
@@ -1445,6 +1446,36 @@ class ExpressionStatement: public Statement {
       : Statement(NodeType::kExpressionStatement, position)
       , exp_(std::move(exp)) {}
 };
+
+class VarEnvStatement: public Statement {
+ public:
+  virtual ~VarEnvStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitVarEnvStatement(this);
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+  Identifier* var() const noexcept {
+    return var_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Identifier> var_;
+  std::unique_ptr<Expression> exp_;
+
+  VarEnvStatement(std::unique_ptr<Identifier> var,
+      std::unique_ptr<Expression> exp, Position position)
+      : Statement(NodeType::kVarEnvStatement, position)
+      , var_(std::move(var))
+      , exp_(std::move(exp)) {}
+};
+
 
 class BreakStatement: public Statement {
  public:

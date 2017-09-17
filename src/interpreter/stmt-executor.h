@@ -338,6 +338,14 @@ class DelStmtExecutor: public Executor {
   void DelArray(Array* node);
 };
 
+class VarEnvExecutor: public Executor {
+ public:
+  VarEnvExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(VarEnvStatement *node);
+};
+
 }
 }
 

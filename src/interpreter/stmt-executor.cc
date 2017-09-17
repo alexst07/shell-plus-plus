@@ -606,6 +606,11 @@ void StmtExecutor::Exec(AstNode* node) {
       stmt_list.Exec(static_cast<Block*>(node)->stmt_list());
     } break;
 
+    case AstNode::NodeType::kVarEnvStatement: {
+      VarEnvExecutor varenv_exec(this, symbol_table_stack());
+      varenv_exec.Exec(static_cast<VarEnvStatement*>(node));
+    } break;
+
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid opcode of statement"),
@@ -1133,6 +1138,44 @@ void DelStmtExecutor::DelArray(Array* array_node) {
   ObjectPtr index = expr.Exec(array_node->index_exp());
 
   array_obj->DelItem(index);
+}
+
+void VarEnvExecutor::Exec(VarEnvStatement *node) {
+  const std::string& var = node->var()->name();
+
+  ExpressionExecutor expr(this, symbol_table_stack());
+
+  try {
+    ObjectPtr obj_exp = expr.Exec(node->exp());
+
+    std::string value;
+
+    // check if the object is string or has string object interface
+    if (obj_exp->type() == Object::ObjectType::STRING) {
+      value = static_cast<StringObject&>(*obj_exp).value();
+    } else {
+      ObjectPtr str_obj = obj_exp->ObjString();
+
+      if (str_obj->type() != Object::ObjectType::STRING) {
+        throw RunTimeError(RunTimeError::ErrorCode::ID_NOT_FOUND,
+            boost::format("cast for string not valid"), node->exp()->pos());
+      }
+
+      value = static_cast<StringObject&>(*str_obj).value();
+    }
+
+    int r = setenv(var.c_str(), value.c_str(), 1);
+
+    // if there is an error, throw an error exception
+    if (r != 0) {
+      throw RunTimeError(RunTimeError::ErrorCode::ID_NOT_FOUND,
+          boost::format("fail on set varenv: '%1%'")%var,
+          node->exp()->pos());
+    }
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->exp()->pos(),
+        e.messages());
+  }
 }
 
 }

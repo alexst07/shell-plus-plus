@@ -985,6 +985,25 @@ class AstPrinter: public AstVisitor {
     Level();
     std::cout << "</if_else_exp>\n";
   }
+
+  void virtual VisitVarEnvStatement(VarEnvStatement* varenv) {
+    Level();
+    std::cout << "<var_env>\n";
+    level_++;
+
+    Level();
+    std::cout << "<var>\n";
+    level_++;
+    varenv->var()->Accept(this);
+    level_--;
+
+    Level();
+    std::cout << "<exp>\n";
+    level_++;
+    varenv->exp()->Accept(this);
+    level_--;
+    level_--;
+  }
 };
 
 }

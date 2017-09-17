@@ -266,6 +266,7 @@ class Parser {
   ParserResult<Statement> ParserSimpleStmt(bool force_assignment = false);
   ParserResult<StatementList> ParserStmtList();
   ParserResult<Statement> ParserBlock();
+  ParserResult<Statement> ParserVarEnvStmt();
   std::unique_ptr<Statement> ParserDeferableStmt();
   ParserResult<Statement> ParserDeferStmt();
   ParserResult<Statement> ParserBreakStmt();
