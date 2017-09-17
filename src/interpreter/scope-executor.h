@@ -62,7 +62,7 @@ class RootExecutor: public ScopeExecutor {
 
   void Exec(AstNode* node);
 
-  void set_stop(StopFlag flag) override {}
+  void set_stop(StopFlag /*flag*/) override {}
 
  protected:
   Executor* GetMainExecutor() override {

@@ -315,7 +315,7 @@ MapType::MapType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<MapExistsFunc>("exists", symbol_table_stack(), *this);
 }
 
-ObjectPtr MapKeysFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
+ObjectPtr MapKeysFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, keys)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
@@ -334,7 +334,7 @@ ObjectPtr MapKeysFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   return obj_factory.NewArray(std::move(keys));
 }
 
-ObjectPtr MapValuesFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
+ObjectPtr MapValuesFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, values)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
@@ -353,7 +353,7 @@ ObjectPtr MapValuesFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   return obj_factory.NewArray(std::move(keys));
 }
 
-ObjectPtr MapClearFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
+ObjectPtr MapClearFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, clear)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
@@ -364,7 +364,7 @@ ObjectPtr MapClearFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   return params[0];
 }
 
-ObjectPtr MapUpdateFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
+ObjectPtr MapUpdateFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, update)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);
@@ -382,7 +382,7 @@ ObjectPtr MapUpdateFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
   return params[0];
 }
 
-ObjectPtr MapExistsFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
+ObjectPtr MapExistsFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, exists)
 
   MapObject& map_obj = static_cast<MapObject&>(*params[0]);

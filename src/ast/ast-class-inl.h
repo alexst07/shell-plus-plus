@@ -103,7 +103,7 @@ class Function {
     , block_(std::move(block)) {}
 };
 
-class FunctionDeclaration: public Function, public Declaration {
+class FunctionDeclaration: public Declaration, public Function {
  public:
   virtual ~FunctionDeclaration() {}
 
@@ -136,7 +136,7 @@ class FunctionDeclaration: public Function, public Declaration {
     , fstatic_(fstatic) {}
 };
 
-class FunctionExpression: public Function, public Expression {
+class FunctionExpression: public Expression, public Function {
  public:
   virtual ~FunctionExpression() {}
 

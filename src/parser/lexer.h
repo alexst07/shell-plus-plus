@@ -73,7 +73,8 @@ private:
   }
 
   inline bool IsHexChar(char c) {
-    return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+        (c >= 'A' && c <= 'F');
   }
 
   inline bool IsDigit(char c) {
@@ -85,16 +86,16 @@ private:
   }
 
   inline bool IsSpecialChar(char c) {
-    bool b = c_ != ' ' &&
-             c_ != '\t' &&
-             c_ != '\n' &&
-             c_ != ')' &&
-             c_ != ';' &&
-             c_ != '}' &&
-             c_ != '|' &&
-             c_ != '&' &&
-             c_ != '%' &&
-             c_ != kEndOfInput;
+    bool b = c != ' ' &&
+             c != '\t' &&
+             c != '\n' &&
+             c != ')' &&
+             c != ';' &&
+             c != '}' &&
+             c != '|' &&
+             c != '&' &&
+             c != '%' &&
+             c != kEndOfInput;
     return b;
   }
 

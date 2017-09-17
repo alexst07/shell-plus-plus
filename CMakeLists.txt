@@ -28,6 +28,10 @@ else()
   message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
 endif()
 
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
@@ -58,7 +62,7 @@ endif()
 #
 find_package(Boost COMPONENTS system filesystem locale REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
-find_package (Threads REQUIRED)
+find_package(Threads REQUIRED)
 
 if (BUILD_UNIT_TESTS)
   enable_testing()

@@ -168,9 +168,9 @@ class Job {
   std::vector<std::unique_ptr<ProcessBase>> process_;
   int stdin_, stdout_, stderr_;
   std::string strout_, strerr_;
+  int status_;
   bool var_out_mode_;
   bool wait_;
-  int status_;
   int shell_terminal_;
   pid_t pgid_;
   int shell_pgid_;

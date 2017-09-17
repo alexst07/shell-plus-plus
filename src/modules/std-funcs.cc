@@ -19,6 +19,7 @@
 #include "parser/parser.h"
 #include "interpreter/scope-executor.h"
 #include "run_time_error.h"
+#include "env-shell.h"
 
 namespace shpp {
 namespace internal {
@@ -138,6 +139,19 @@ ObjectPtr AssertFunc::Call(Executor*, Args&& params, KWArgs&&) {
   return obj_factory_.NewNull();
 }
 
+ObjectPtr ArgvFunc::Call(Executor*, Args&&, KWArgs&&) {
+  const std::vector<std::string>& vec = EnvShell::instance()->Argv();
+  std::vector<ObjectPtr> vec_objs;
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  for (const auto& arg: vec) {
+    vec_objs.push_back(obj_factory.NewString(arg));
+  }
+
+  ObjectPtr obj_args = obj_factory.NewArray(std::move(vec_objs));
+  return obj_args;
+}
+
 ObjectPtr IsInteractiveFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 0, params)
 
@@ -178,7 +192,7 @@ ObjectPtr GlobRFunc::Call(Executor*, Args&& params, KWArgs&&) {
   return obj_factory.NewArray(std::move(glob_obj));
 }
 
-ObjectPtr DumpSymbolTableFunc::SpecialCall(Executor* parent,
+ObjectPtr DumpSymbolTableFunc::SpecialCall(Executor*,
     Args&& params, KWArgs&&, SymbolTableStack& curret_sym_tab) {
   if (params.size() > 0) {
     params[0]->symbol_table_stack().Dump();
@@ -189,7 +203,7 @@ ObjectPtr DumpSymbolTableFunc::SpecialCall(Executor* parent,
   return obj_factory_.NewNull();
 }
 
-ObjectPtr EvalFunc::SpecialCall(Executor* parent,
+ObjectPtr EvalFunc::SpecialCall(Executor*,
     Args&& params, KWArgs&&, SymbolTableStack& curret_sym_tab) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, params)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], code, STRING)

@@ -47,8 +47,8 @@ class SymbolAttr {
   }
 
   SymbolAttr(SymbolAttr&& other)
-      : global_(other.global_)
-      , value_(other.value_) {}
+      : value_(other.value_)
+      , global_(other.global_) {}
 
   SymbolAttr& operator=(SymbolAttr&& other) noexcept {
     if (&other == this) {
@@ -91,8 +91,8 @@ class SymbolAttr {
   }
 
  private:
-  bool global_;
   std::shared_ptr<Object> value_;
+  bool global_;
 };
 
 class SymbolTable;

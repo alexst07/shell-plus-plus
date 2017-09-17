@@ -47,7 +47,7 @@ namespace internal {
     RegisterMethod<NAME ## StrFunc>("__str__", symbol_table_stack(), *this);  \
   }                                                                           \
                                                                               \
-  std::shared_ptr<Object> NAME ## Type::Attr(std::shared_ptr<Object> self,    \
+  std::shared_ptr<Object> NAME ## Type::Attr(std::shared_ptr<Object>,         \
       const std::string& name) {                                              \
     ObjectPtr att_obj = SearchAttr(name);                                     \
     return att_obj;                                                           \

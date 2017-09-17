@@ -170,12 +170,7 @@ struct Position {
   uint col;
 };
 
-static const char* ast_node_str[] = {
-  #define DECLARE_TYPE_CLASS(type) #type,
-    AST_NODE_LIST(DECLARE_TYPE_CLASS)
-  #undef DECLARE_TYPE_CLASS
-  ""
-};
+const char* AstNodeStr(size_t i);
 
 class AstNode {
  public:
@@ -240,7 +235,7 @@ class AstVisitor {
  public:
 
 #define DECLARE_VIRTUAL_FUNC(type) \
-  virtual void Visit##type(type *node) {}
+  virtual void Visit##type(type* /*node*/) {}
   AST_NODE_LIST(DECLARE_VIRTUAL_FUNC)
 #undef DECLARE_VIRTUAL_FUNC
 };
@@ -344,8 +339,8 @@ class KeyValue: public AstNode {
  private:
   friend class AstNodeFactory;
 
-  std::unique_ptr<AssignableValue> value_;
   std::unique_ptr<Expression> key_;
+  std::unique_ptr<AssignableValue> value_;
 
   KeyValue(std::unique_ptr<Expression> key,
            std::unique_ptr<AssignableValue> value,
@@ -808,8 +803,8 @@ class CmdFull: public Cmd {
  private:
   friend class AstNodeFactory;
 
-  bool background_;
   std::unique_ptr<Cmd> cmd_;
+  bool background_;
 
   CmdFull(std::unique_ptr<Cmd> cmd, bool background,
           Position position)
@@ -976,8 +971,8 @@ public:
  private:
   friend class AstNodeFactory;
 
-  std::vector<std::unique_ptr<CmdIoRedirect>> io_list_;
   std::unique_ptr<Cmd> cmd_;
+  std::vector<std::unique_ptr<CmdIoRedirect>> io_list_;
 
   CmdIoRedirectList(std::unique_ptr<Cmd> cmd,
                     std::vector<std::unique_ptr<CmdIoRedirect>> io_list,
@@ -1618,9 +1613,9 @@ class Identifier: public Expression {
 
   Identifier(const std::string& name, std::unique_ptr<PackageScope> scope,
              Position position)
-    : name_(name)
-    , scope_(std::move(scope))
-    , Expression(NodeType::kIdentifier, position) {}
+    : Expression(NodeType::kIdentifier, position)
+    , name_(name)
+    , scope_(std::move(scope)) {}
 };
 
 class VarEnvId: public Expression {
@@ -1641,8 +1636,8 @@ class VarEnvId: public Expression {
   std::string name_;
 
   VarEnvId(const std::string& name, Position position)
-    : name_(name)
-    , Expression(NodeType::kVarEnvId, position) {}
+    : Expression(NodeType::kVarEnvId, position)
+    , name_(name) {}
 };
 
 class PackageScope: public AstNode {
@@ -1662,8 +1657,9 @@ class PackageScope: public AstNode {
 
   std::unique_ptr<Identifier> id_;
 
-  PackageScope(std::unique_ptr<Identifier> id, Position position):
-   id_(std::move(id)), AstNode(NodeType::kPackageScope, position) {}
+  PackageScope(std::unique_ptr<Identifier> id, Position position)
+    : AstNode(NodeType::kPackageScope, position)
+    , id_(std::move(id)) {}
 };
 
 class NotExpression: public Expression {
@@ -2147,8 +2143,10 @@ class Literal: public Expression {
   Token::Value value_;
   Type lit_type_;
 
-  Literal(const Token::Value& value, Type type, Position position):
-    value_(value), lit_type_(type), Expression(NodeType::kLiteral, position) {}
+  Literal(const Token::Value& value, Type type, Position position)
+    : Expression(NodeType::kLiteral, position)
+    , value_(value)
+    , lit_type_(type) {}
 };
 
 }

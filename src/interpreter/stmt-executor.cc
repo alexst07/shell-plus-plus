@@ -351,8 +351,6 @@ void InterfaceDeclExecutor::Exec(AstNode* node) {
   for (auto decl: decl_vec) {
     try {
       if (decl->type() == AstNode::NodeType::kFunctionDeclaration) {
-        FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(decl);
-
         FuncDeclExecutor fexec(this, symbol_table_stack(), true);
         AbstractMethod abstract_method(static_cast<FuncObject&>(
             *fexec.FuncObj(decl)));
@@ -613,8 +611,8 @@ void StmtExecutor::Exec(AstNode* node) {
 
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-                         boost::format("invalid opcode of statement"),
-                         node->pos());
+          boost::format("invalid opcode of statement: %1%")%
+          AstNodeStr(static_cast<size_t>(node->type())), node->pos());
     }
   }
 }

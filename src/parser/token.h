@@ -263,8 +263,8 @@ class Token {
   };
 
   TokenKind kind_;
-  bool blank_after_;
   Value value_;
+  bool blank_after_;
   uint line_;
   uint col_;
 };
@@ -361,8 +361,8 @@ class TokenStream {
   }
 
  private:
-  size_t pos_;
   std::vector<Token> tok_vec_;
+  size_t pos_;
 };
 
 }

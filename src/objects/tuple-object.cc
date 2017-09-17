@@ -169,7 +169,7 @@ void TupleObject::SetItem(std::shared_ptr<Object> index,
 
   int num_index = static_cast<IntObject&>(*index).value();
 
-  if (num_index >= value_.size() ||  num_index < 0) {
+  if (num_index >= static_cast<int>(value_.size()) ||  num_index < 0) {
     throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
                        boost::format("value: %1% out of range of tuple")
                        %num_index);

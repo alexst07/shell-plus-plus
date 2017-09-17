@@ -134,12 +134,11 @@ void ArrayObject::DelItem(ObjectPtr index) {
     SliceObject& slice = static_cast<SliceObject&>(*index);
 
     int start = 0;
-    int end = value_.size();
-    int step = 1;
+    int end = static_cast<int>(value_.size());
 
     std::tie(start, end, std::ignore) = SliceLogic(slice, value_.size());
 
-    if (end > value_.size()) {
+    if (end > static_cast<int>(value_.size())) {
       throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
                          boost::format("value of end of slice: %1% larger than "
                                        "the array size: %2%")
@@ -226,7 +225,7 @@ ObjectPtr ArrayObject::Element(const SliceObject& slice) {
 
   std::tie(start, end, step) = SliceLogic(slice, value_.size());
 
-  if (end > value_.size()) {
+  if (end > static_cast<int>(value_.size())) {
     throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
                        boost::format("value of end of slice: %1% larger than "
                                      "the array size: %2%")%end%value_.size());
@@ -250,7 +249,7 @@ void ArrayObject::SetItem(std::shared_ptr<Object> index,
 
   int num_index = static_cast<IntObject&>(*index).value();
 
-  if (num_index >= value_.size() ||  num_index < 0) {
+  if (num_index >= static_cast<int>(value_.size()) ||  num_index < 0) {
     throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
                        boost::format("value: %1% out of range of array")
                        %num_index);
@@ -420,7 +419,7 @@ ObjectPtr ArrayInsertFunc::Call(Executor*, Args&& params, KWArgs&&) {
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   int index = static_cast<IntObject&>(*params[1]).value();
 
-  if (index < 0 || index > array_obj.value().size()) {
+  if (index < 0 || index > static_cast<int>(array_obj.value().size())) {
     throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
                        boost::format("index out of range"));
   }
@@ -453,7 +452,7 @@ ObjectPtr ArrayPopFunc::Call(Executor*, Args&& params, KWArgs&&) {
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
   int index = static_cast<IntObject&>(*params[1]).value();
 
-  if (index < 0 || index >= array_obj.value().size()) {
+  if (index < 0 || index >= static_cast<int>(array_obj.value().size())) {
     throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
                        boost::format("index out of range"));
   }
@@ -565,7 +564,7 @@ ObjectPtr ArraySortFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
                      boost::format("num args incompatible"));
 }
 
-ObjectPtr ArrayReverseFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
+ObjectPtr ArrayReverseFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, reverse)
 
   ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);

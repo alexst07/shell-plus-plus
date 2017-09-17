@@ -73,7 +73,7 @@ ObjectPtr RangeIterObject::Equal(ObjectPtr obj) {
   bool v = start_ == range_it.start_ && step_ == range_it.step_ &&
       end_ == range_it.end_ && value_ == range_it.value_;
 
-  return obj_factory.NewBool(true);
+  return obj_factory.NewBool(v);
 }
 
 ObjectPtr TypeObject::CallObject(const std::string& name,
@@ -312,7 +312,7 @@ ObjectPtr CmdIterType::Constructor(Executor*, Args&&, KWArgs&&) {
                      boost::format("cmd_iter is not constructable"));
 }
 
-ObjectPtr ModuleType::Constructor(Executor*, Args&& params, KWArgs&&) {
+ObjectPtr ModuleType::Constructor(Executor*, Args&&, KWArgs&&) {
   throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                      boost::format("module is not constructable"));
 }
@@ -322,7 +322,7 @@ ObjectPtr TupleType::Constructor(Executor*, Args&& params, KWArgs&&) {
   return obj_factory.NewTuple(std::move(params));
 }
 
-ObjectPtr RootObjectType::Constructor(Executor*, Args&& params, KWArgs&&) {
+ObjectPtr RootObjectType::Constructor(Executor*, Args&&, KWArgs&&) {
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewRootObject();
 }

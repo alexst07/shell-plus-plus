@@ -182,6 +182,11 @@ ObjectPtr IntObject::OperationObjInt(ObjectPtr obj, int op) {
   }
 }
 
+ObjectPtr IntObject::Not() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(false);
+}
+
 ObjectPtr IntObject::ObjReal() {
   float v = static_cast<float>(value_);
 
@@ -325,7 +330,7 @@ ObjectPtr IntObject::Equal(ObjectPtr obj) {
 ObjectPtr IntObject::NotEqual(ObjectPtr obj) {
   if (obj->type() != ObjectType::INT && obj->type() != ObjectType::REAL) {
     ObjectFactory obj_factory(symbol_table_stack());
-      return obj_factory.NewReal(true);
+      return obj_factory.NewBool(true);
   }
 
   return OperationObjComp(obj, 5);
@@ -384,6 +389,11 @@ ObjectPtr RealObject::OperationObj(ObjectPtr obj, int op) {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                          boost::format("type not supported"));
   }
+}
+
+ObjectPtr RealObject::Not() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(false);
 }
 
 ObjectPtr RealObject::ObjInt() {

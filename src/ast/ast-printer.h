@@ -342,7 +342,7 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
-  void virtual VisitBreakStatement(BreakStatement* pbreak) {
+  void virtual VisitBreakStatement(BreakStatement*) {
     Level();
     std::cout << "<break>\n";
   }

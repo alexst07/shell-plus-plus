@@ -90,7 +90,7 @@ class DeclClassType: public TypeObject {
   }
 
   bool RegiterMethod(const std::string& name, ObjectPtr obj) override {
-    RegisterAttr(name, obj);
+    return RegisterAttr(name, obj);
   }
 
   ObjectPtr CallObject(const std::string& name, ObjectPtr self_param) override;

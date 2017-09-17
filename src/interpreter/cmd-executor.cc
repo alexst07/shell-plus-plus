@@ -797,7 +797,7 @@ std::string ExtractCmdExprFromString(Executor* parent, const std::string& str) {
       result += ResolveCmdExpr(parent, static_cast<CmdValueExpr*>(
           expr_cmd.MoveAstNode().get()));
 
-      if (end >= (src.length() - 2)) {
+      if (end >= (static_cast<int>(src.length()) - 2)) {
         has_expr = false;
         result += src.substr(end + 1);
       } else {

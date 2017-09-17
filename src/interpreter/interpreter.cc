@@ -72,16 +72,7 @@ void Interpreter::RegisterFileVars(const std::string& file) {
 }
 
 void Interpreter::RegisterArgs(std::vector<std::string>&& args) {
-  std::vector<ObjectPtr> vec;
-  ObjectFactory obj_factory(symbol_table_stack_);
-
-  for (const auto& arg: args) {
-    ObjectPtr obj = obj_factory.NewString(arg);
-    vec.push_back(obj);
-  }
-
-  ObjectPtr obj_args = obj_factory.NewArray(std::move(vec));
-  InsertVar("args", obj_args);
+  EnvShell::instance()->SetArgv(std::move(args));
 }
 
 void Interpreter::Exec(ScriptStream& file, std::vector<std::string>&& args) {
@@ -223,10 +214,6 @@ std::shared_ptr<Object> Interpreter::LookupSymbol(const std::string& name) {
   }
 
   return obj = std::shared_ptr<Object>(nullptr);
-}
-
-Executor* Interpreter::ExecutorPtr() {
-
 }
 
 std::vector<std::string> SplitFileLines(const std::string str_file) {

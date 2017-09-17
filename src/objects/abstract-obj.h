@@ -90,7 +90,7 @@ class Object {
                        %ObjType()->ObjectName());
   }
 
-  virtual bool operator==(const Object& obj) {
+  virtual bool operator==(const Object& /*obj*/) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("%1% has no equal method")
                        %ObjType()->ObjectName());

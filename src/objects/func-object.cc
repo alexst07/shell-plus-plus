@@ -56,8 +56,7 @@ ObjectPtr FuncObject::Variadic() {
   return obj_factory.NewBool(variadic_);
 }
 
-ObjectPtr FuncWrapperObject::Call(Executor* parent, Args&& params,
-    KWArgs&& kw_params) {
+ObjectPtr FuncWrapperObject::Call(Executor* parent, Args&& params, KWArgs&&) {
   FuncObject& func_obj = static_cast<FuncObject&>(*func_);
   params.insert(params.begin(), self_);
   return func_obj.Call(parent, std::move(params));

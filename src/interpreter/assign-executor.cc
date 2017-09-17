@@ -40,7 +40,6 @@ ObjectPtr AssignExecutor::ExecWithReturn(AstNode* node) {
   auto values = assignables.Exec(assign_node->rvalue_list());
 
   ExpressionList* left_exp_list = assign_node->lexp_list();
-  size_t num_left_exp = left_exp_list->num_children();
   std::vector<Expression*> left_exp_vec = left_exp_list->children();
 
   Assign(left_exp_vec, values, assign_kind);
@@ -73,7 +72,6 @@ void AssignExecutor::Exec(AstNode* node) {
   auto values = assignables.Exec(assign_node->rvalue_list());
 
   ExpressionList* left_exp_list = assign_node->lexp_list();
-  size_t num_left_exp = left_exp_list->num_children();
   std::vector<Expression*> left_exp_vec = left_exp_list->children();
 
   Assign(left_exp_vec, values, assign_kind);

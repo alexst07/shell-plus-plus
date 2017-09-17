@@ -263,8 +263,8 @@ std::shared_ptr<Object>& DeclClassType::AttrAssign(
   return att_obj;
 }
 
-std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object> self,
-                              const std::string& name) {
+std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object>,
+    const std::string& name) {
   auto att_obj = SearchAttr(name);
   return PassVar(att_obj, symbol_table_stack());
 }
@@ -634,7 +634,7 @@ DeclInterface::DeclInterface(const std::string& name, ObjectPtr obj_type,
   }
 }
 
-ObjectPtr DeclInterface::Constructor(Executor* parent, Args&&, KWArgs&&) {
+ObjectPtr DeclInterface::Constructor(Executor*, Args&&, KWArgs&&) {
   throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                       boost::format("Interface can not be instantiated"));
 }
@@ -653,8 +653,8 @@ void DeclInterface::AddMethod(const std::string& name,
       std::move(method)));
 }
 
-std::shared_ptr<Object> DeclInterface::Attr(std::shared_ptr<Object> self,
-    const std::string& name) {
+std::shared_ptr<Object> DeclInterface::Attr(std::shared_ptr<Object>,
+    const std::string&) {
   throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
       boost::format("Methods from interface can't be called"));
 }

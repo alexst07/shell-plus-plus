@@ -313,10 +313,14 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) try {
     } break;
 
     case Literal::Type::kString: {
-    std::string str = boost::get<std::string>(literal->value());
+      std::string str = boost::get<std::string>(literal->value());
       ObjectPtr obj(obj_factory_.NewString(std::move(str)));
       return obj;
     } break;
+
+    default:
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
+          boost::format("literal opcode not valid"));
   }
 } catch (RunTimeError& e) {
   throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());

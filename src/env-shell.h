@@ -115,6 +115,14 @@ class EnvShell {
     return import_table_;
   }
 
+  void SetArgv(std::vector<std::string>&& argv) {
+    argv_ = std::move(argv);
+  }
+
+  const std::vector<std::string>& Argv() const {
+    return argv_;
+  }
+
   ~EnvShell();
 
  private:
@@ -131,6 +139,7 @@ class EnvShell {
   int shmid_;
   bool interective_exec_;
   ImportTable import_table_;
+  std::vector<std::string> argv_;
 };
 
 }

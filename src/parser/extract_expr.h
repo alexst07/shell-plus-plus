@@ -56,7 +56,7 @@ class ExtractExpr {
     return cursor_ < (src_.length() - 1);
   }
 
-  int cursor_;
+  size_t cursor_;
   char c_;
   const std::string& src_;
   int start_pos_;

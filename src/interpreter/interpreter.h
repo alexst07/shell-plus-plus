@@ -58,8 +58,6 @@ class Interpreter {
 
   void RegisterMainModule(const std::string& full_path);
 
-  Executor* ExecutorPtr();
-
  private:
   void RegisterVars();
   void RegisterArgs(std::vector<std::string>&& args);

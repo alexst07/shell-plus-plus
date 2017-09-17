@@ -91,7 +91,7 @@ std::vector<ObjectPtr> ExecGlob(const std::string& glob_str,
 
   glob(glob_str.c_str(), flag, NULL, &globbuf);
 
-  for (int i = 0; i < globbuf.gl_pathc; i++) {
+  for (int i = 0; i < static_cast<int>(globbuf.gl_pathc); i++) {
     // calculates the relative directory, the easy way is to execute substr
     // since all others directories a sub directory it doesn't need to
     // calculate complex relative path

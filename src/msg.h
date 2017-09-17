@@ -90,10 +90,10 @@ class Message {
   friend std::ostream& operator<<(std::ostream& stream, Message& msg);
 
  private:
+  Severity severity_;
+  boost::format msg_;
   uint line_;
   uint pos_;
-  boost::format msg_;
-  Severity severity_;
   std::string str_line_error_;
   std::string file_;
 };
@@ -183,7 +183,7 @@ class Messages {
     return msg_vec_.end();
   }
 
-  const size_t size() const {
+  size_t size() const {
     return msg_vec_.size();
   }
 

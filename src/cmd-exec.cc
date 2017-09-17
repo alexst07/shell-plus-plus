@@ -35,7 +35,7 @@ Arguments::Arguments(std::vector<std::string>&& args)
     globbuf_.gl_offs = 1;
     int flag = GLOB_NOMAGIC | GLOB_BRACE | GLOB_TILDE | GLOB_DOOFFS;
 
-    for (int i = 1; i < args.size(); i++) {
+    for (size_t i = 1; i < args.size(); i++) {
       if (i > 1) {
         flag |= GLOB_APPEND;
       }
@@ -50,7 +50,7 @@ Arguments::Arguments(std::vector<std::string>&& args)
     // on the memory allocation, on the loop and in the nullptr assignment
     argv_ = new char*[globbuf_.gl_pathc + 2];
 
-    for (int i = 0; i <= globbuf_.gl_pathc; i++) {
+    for (size_t i = 0; i <= globbuf_.gl_pathc; i++) {
       argv_[i] = const_cast<char*>(globbuf_.gl_pathv[i]);
     }
 
@@ -272,8 +272,6 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
     }
   }
 
-  int p = 0;
-
   // Exec the new process
   execvp(glob_args.argsv()[0], glob_args.argsv());
 
@@ -300,7 +298,7 @@ char** Process::FillArgv(const std::vector<std::string>& args) {
   char **argv;
   argv = new char*[args.size() + 1];
 
-  for (int i = 0; i < args.size(); i++) {
+  for (size_t i = 0; i < args.size(); i++) {
     argv[i] = const_cast<char*>(args[i].data());
   }
 

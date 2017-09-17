@@ -170,6 +170,8 @@ class IntObject: public Object {
 
   ObjectPtr ObjBool() override;
 
+  ObjectPtr Not() override;
+
   ObjectPtr Add(ObjectPtr obj) override;
 
   ObjectPtr Sub(ObjectPtr obj) override;
@@ -373,6 +375,8 @@ class RealObject: public Object {
   }
 
   ObjectPtr ObjCmd() override;
+
+  ObjectPtr Not() override;
 
   ObjectPtr ObjBool() override;
 
