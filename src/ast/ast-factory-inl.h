@@ -467,6 +467,15 @@ class AstNodeFactory {
        std::move(res_exp), std::move(comp_list), fn_pos_()));
   }
 
+  inline std::unique_ptr<IfElseExpression> NewIfElseExpression(
+      std::unique_ptr<Expression> exp,
+      std::unique_ptr<Expression> then_exp,
+      std::unique_ptr<Expression> else_exp) {
+    return std::unique_ptr<IfElseExpression>(new IfElseExpression(
+        std::move(exp), std::move(then_exp), std::move(else_exp),
+        fn_pos_()));
+  }
+
  private:
   std::function<Position()> fn_pos_;
 };

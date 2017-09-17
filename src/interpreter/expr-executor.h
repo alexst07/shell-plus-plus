@@ -110,6 +110,8 @@ class ExpressionExecutor: public Executor {
 
   ObjectPtr ExecListComprehension(AstNode* node);
 
+  ObjectPtr ExecIfElseExpr(AstNode* node);
+
   void set_stop(StopFlag flag) override;
 
  private:

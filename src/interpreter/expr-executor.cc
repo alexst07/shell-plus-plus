@@ -135,6 +135,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecListComprehension(node);
       break;
 
+    case AstNode::NodeType::kIfElseExpression:
+      return ExecIfElseExpr(node);
+      break;
+
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid expression opcode"),
@@ -527,6 +531,29 @@ ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
 ObjectPtr ExpressionExecutor::ExecListComprehension(AstNode* node) {
   ListComprehensionExecutor list_comp(this, symbol_table_stack());
   return list_comp.Exec(node);
+}
+
+ObjectPtr ExpressionExecutor::ExecIfElseExpr(AstNode* node) {
+  IfElseExpression* if_else_expr = static_cast<IfElseExpression*>(node);
+
+  // Executes if expresion
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr obj_exp = expr_exec.Exec(if_else_expr->exp());
+
+  bool cond;
+
+  try {
+    cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), if_else_expr->exp()->pos(),
+        e.messages());
+  }
+
+  if (cond) {
+    return expr_exec.Exec(if_else_expr->then_exp());
+  } else {
+    return expr_exec.Exec(if_else_expr->else_exp());
+  }
 }
 
 void ExpressionExecutor::set_stop(StopFlag flag) {

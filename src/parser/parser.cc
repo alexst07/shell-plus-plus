@@ -1181,7 +1181,37 @@ ParserResult<Expression> Parser::ParserLetExp() {
   }
 
   // if it is not let expression, so execute the or expression
-  return ParserOrExp();
+  return ParserIfElseExp();
+}
+
+ParserResult<Expression> Parser::ParserIfElseExp() {
+  ParserResult<Expression> then_exp = ParserOrExp();
+
+  // if the keyword "if" was found on the same line, so it is
+  // an if else expression
+  if (token_.Is(TokenKind::KW_IF)) {
+    Advance();
+    ValidToken();
+
+    ParserResult<Expression> comp_exp = ParserOrExp();
+
+    ValidToken();
+    if (!token_.Is(TokenKind::KW_ELSE)) {
+      ErrorMsg(boost::format("Expected else keyword"));
+      return ParserResult<Expression>();
+    }
+
+    Advance();
+    ValidToken();
+
+    ParserResult<Expression> else_exp = ParserOrExp();
+
+    return ParserResult<Expression>(factory_.NewIfElseExpression(
+        comp_exp.MoveAstNode(), then_exp.MoveAstNode(),
+        else_exp.MoveAstNode()));
+  }
+
+  return then_exp;
 }
 
 ParserResult<Expression> Parser::ParserOrExp() {
@@ -1577,12 +1607,31 @@ ParserResult<Expression> Parser::ParserScopeIdentifier() {
   return res;
 }
 
+ParserResult<ExpressionList> Parser::ParserExpNoTestList() {
+  std::vector<std::unique_ptr<Expression>> vec_exp;
+
+  do {
+    ValidToken();
+
+    if (token_.Is(TokenKind::ELLIPSIS)) {
+      ParserResult<Expression> ellipsis_exp = ParserEllipsisExp();
+      vec_exp.push_back(ellipsis_exp.MoveAstNode());
+    } else {
+      ParserResult<Expression> exp = ParserOrExp();
+      vec_exp.push_back(exp.MoveAstNode());
+    }
+  } while (CheckComma());
+
+  return ParserResult<ExpressionList>(factory_.NewExpressionList(
+      std::move(vec_exp)));
+}
+
 ParserResult<Expression> Parser::ParserCompIf() {
   // advance if keyword
   Advance();
   ValidToken();
 
-  ParserResult<Expression> exp(ParserLetExp());
+  ParserResult<Expression> exp(ParserOrExp());
 
   return ParserResult<Expression>(factory_.NewCompIf(exp.MoveAstNode()));
 }
@@ -1600,7 +1649,7 @@ ParserResult<Expression> Parser::ParserCompFor() {
 
   Advance();
   ValidToken();
-  ParserResult<ExpressionList> test_list(ParserExpList());
+  ParserResult<ExpressionList> test_list(ParserExpNoTestList());
 
   return ParserResult<Expression>(factory_.NewCompFor(exp_list.MoveAstNode(),
       test_list.MoveAstNode()));

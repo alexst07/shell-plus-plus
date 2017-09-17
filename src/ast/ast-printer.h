@@ -945,6 +945,40 @@ class AstPrinter: public AstVisitor {
     Level();
     std::cout << "</comp_if>\n";
   }
+
+  void virtual VisitIfElseExpression(IfElseExpression* if_else_exp) {
+    Level();
+    std::cout << "<if_else_exp>\n";
+    level_++;
+
+    Level();
+    std::cout << "<cond>\n";
+    level_++;
+    if_else_exp->exp()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "</cond>\n";
+
+    Level();
+    std::cout << "<then>\n";
+    level_++;
+    if_else_exp->then_exp()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "</then>\n";
+
+    Level();
+    std::cout << "<else>\n";
+    level_++;
+    if_else_exp->else_exp()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "</else>\n";
+
+    level_--;
+    Level();
+    std::cout << "</if_else_exp>\n";
+  }
 };
 
 }

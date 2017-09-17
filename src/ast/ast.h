@@ -108,6 +108,7 @@ namespace internal {
   V(CompFor)                    \
   V(ListComprehension)          \
   V(DictionaryInstantiation)    \
+  V(IfElseExpression)           \
   V(Identifier)                 \
   V(Yield)                      \
   V(CallRuntime)                \
@@ -1843,6 +1844,42 @@ class Array: public Expression {
       : Expression(NodeType::kArray, position)
       , index_exp_(std::move(index_exp))
       , arr_exp_(std::move(arr_exp)) {}
+};
+
+class IfElseExpression: public Expression {
+ public:
+  virtual ~IfElseExpression() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitIfElseExpression(this);
+  }
+
+  Expression* exp() const noexcept {
+    return exp_.get();
+  }
+
+  Expression* then_exp() const noexcept {
+    return then_exp_.get();
+  }
+
+  Expression* else_exp() const noexcept {
+    return else_exp_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<Expression> exp_;
+  std::unique_ptr<Expression> then_exp_;
+  std::unique_ptr<Expression> else_exp_;
+
+  IfElseExpression(std::unique_ptr<Expression> exp,
+                   std::unique_ptr<Expression> then_exp,
+                   std::unique_ptr<Expression> else_exp, Position position)
+      : Expression(NodeType::kIfElseExpression, position)
+      , exp_(std::move(exp))
+      , then_exp_(std::move(then_exp))
+      , else_exp_(std::move(else_exp)) {}
 };
 
 class Attribute: public Expression {
