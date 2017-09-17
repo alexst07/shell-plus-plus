@@ -1,0 +1,54 @@
+func PS1() {
+  CL1 = "\033[1;32m"
+  CL2 = "\033[1;34m"
+  NC = "\033[0m"
+
+  p = $(git branch)
+  branch = ""
+
+  if p.err() == "" {
+    for line in p {
+      if line[0] == "*" {
+        branch = line[2:]
+      }
+    }
+  }
+
+  path_ = path.pwd().replace(env.get("HOME"), "~/").split("/")
+
+  search = path.pwd().find(env.get("HOME"))
+  search = not search == false
+
+  if search {
+    # compare with 3 because when split vector the first element is empty
+    # becuase the first bar /
+    if len(path_) > 3 {
+      path_ = "~/…/" + path_[-2:].join("/")
+    } else {
+      path_ = path_[-3:].join("/")
+    }
+  } else {
+    if len(path_) > 3 {
+      path_ = "/…/" + path_[-2:].join("/")
+    } else {
+      path_ = path_[-2:].join("/")
+    }
+  }
+
+  if branch != "" {
+    return CL1 + path_ + CL2 + "(" + branch + ")" + CL1  +"$ " + NC
+  }
+
+  return CL1 + path_ + "$ " + NC
+}
+
+alias ls = ls --color=auto
+alias grep = grep --color=auto
+
+func on_path(dir, f, args...) {
+  p = $(pwd)
+  cd ${dir}
+  f(...args)
+  cd ${p}
+}
+
