@@ -139,6 +139,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecIfElseExpr(node);
       break;
 
+    case AstNode::NodeType::kVarEnvId:
+      return ExecVarEnvId(node);
+      break;
+
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("invalid expression opcode"),
@@ -227,6 +231,20 @@ ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) try {
   }
 } catch (RunTimeError& e) {
   throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+}
+
+ObjectPtr ExpressionExecutor::ExecVarEnvId(AstNode* node) {
+  VarEnvId* varenv_id = static_cast<VarEnvId*>(node);
+  const std::string& name = varenv_id->name();
+
+  char *r = getenv(name.c_str());
+  std::string str_var;
+
+  if (r != nullptr) {
+    str_var = r;
+  }
+
+  return obj_factory_.NewString(str_var);
 }
 
 ObjectPtr ExpressionExecutor::ExecGlob(Glob* glob) {

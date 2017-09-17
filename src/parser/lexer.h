@@ -168,7 +168,7 @@ private:
     return t;
   }
 
-  Token ScanIdentifier();
+  Token ScanIdentifier(bool varenv = false);
 
   void ErrorMsg(const boost::format& fmt_msg);
 

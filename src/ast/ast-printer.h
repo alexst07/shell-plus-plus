@@ -89,6 +89,12 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
+  void virtual VisitVarEnvId(VarEnvId* var_env_id) {
+    Level();
+    std::cout << "<var_env_id: "
+              << var_env_id->name() << ">\n";
+  }
+
   void virtual VisitIdentifier(Identifier* id) {
     if (inside_scope_) {
       std::cout << id->name();

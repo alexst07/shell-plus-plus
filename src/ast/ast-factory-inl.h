@@ -77,6 +77,10 @@ class AstNodeFactory {
         name, std::move(scope), fn_pos_()));
   }
 
+  inline std::unique_ptr<VarEnvId> NewVarEnvId(const std::string& name) {
+    return std::unique_ptr<VarEnvId>(new VarEnvId(name, fn_pos_()));
+  }
+
   inline std::unique_ptr<PackageScope> NewPackageScope(
       std::unique_ptr<Identifier> id) {
     return std::unique_ptr<PackageScope>(new PackageScope(

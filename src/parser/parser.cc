@@ -1783,6 +1783,11 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
   if (token_ == TokenKind::IDENTIFIER) {
     // parser scope id: scope1::scope2::id
     return ParserScopeIdentifier();
+  } else if (token_ == TokenKind::VARENVID) {
+    ParserResult<Expression> varenvid(factory_.NewVarEnvId(
+        boost::get<std::string>(token_.GetValue())));
+    Advance();
+    return varenvid;
   } else if (token_ == TokenKind::DOLLAR_LPAREN) {
     // parser expression command: $(ls)
     Advance(); // consume the token '$('

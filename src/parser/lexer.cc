@@ -157,7 +157,7 @@ Token Lexer::ScanString() {
   return GetToken(TokenKind::STRING_LITERAL, str, check_blank);
 }
 
-Token Lexer::ScanIdentifier() {
+Token Lexer::ScanIdentifier(bool varenv) {
   std::string id = "";
   start_pos_ = line_pos_;
 
@@ -170,12 +170,19 @@ Token Lexer::ScanIdentifier() {
       Advance();
     }
 
+    // Check blank char after identifier
+    char check_blank = c_;
+
+    // varenv is like $PATH, on this case it dosn't look if it is a keyord
+    if (varenv) {
+      return GetToken(TokenKind::VARENVID, id, check_blank);
+    }
+
     TokenKind token_kind;
     bool res;
     std::tie(token_kind, res) = Token::IsKeyWord(id);
 
-    // Check blank char after identifier
-    char check_blank = c_;
+
 
     if (res) {
       return GetToken(token_kind, check_blank);
@@ -463,6 +470,8 @@ TokenStream Lexer::Scanner() {
           } else {
             token = ScanWord(pre_word);
           }
+        } else if (IsIdentifierStart(c_)) {
+          token = ScanIdentifier(true);
         } else {
           token = GetToken(TokenKind::DOLLAR);
         }

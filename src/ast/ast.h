@@ -110,6 +110,7 @@ namespace internal {
   V(DictionaryInstantiation)    \
   V(IfElseExpression)           \
   V(Identifier)                 \
+  V(VarEnvId)                   \
   V(Yield)                      \
   V(CallRuntime)                \
   V(UnaryOperation)             \
@@ -1589,6 +1590,28 @@ class Identifier: public Expression {
     : name_(name)
     , scope_(std::move(scope))
     , Expression(NodeType::kIdentifier, position) {}
+};
+
+class VarEnvId: public Expression {
+ public:
+  virtual ~VarEnvId() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitVarEnvId(this);
+  }
+
+  const std::string& name() const noexcept {
+    return name_;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::string name_;
+
+  VarEnvId(const std::string& name, Position position)
+    : name_(name)
+    , Expression(NodeType::kVarEnvId, position) {}
 };
 
 class PackageScope: public AstNode {

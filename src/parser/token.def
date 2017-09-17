@@ -53,6 +53,7 @@ TOKEN(EOS,        "end of source")
 TOKEN(NWL,        "new line")
 TOKEN(COMMENT,    "comment")
 TOKEN(IDENTIFIER, "")
+TOKEN(VARENVID,   "")
 TOKEN(WORD,       "")
 
 LITERAL(INT_LITERAL,   "")

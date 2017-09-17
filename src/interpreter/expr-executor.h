@@ -62,6 +62,8 @@ class ExpressionExecutor: public Executor {
   // return only the reference of the object on symbol table
   ObjectPtr ExecIdentifier(AstNode* node);
 
+  ObjectPtr ExecVarEnvId(AstNode* node);
+
   // Executes array access, it could be a language array, map, tuple or
   // custon object
   ObjectPtr ExecArrayAccess(AstNode* node);
