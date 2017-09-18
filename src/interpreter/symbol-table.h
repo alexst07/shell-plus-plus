@@ -103,6 +103,7 @@ class SymbolTable {
   enum class TableType {
     SCOPE_TABLE,
     FUNC_TABLE,
+    LAMBDA_TABLE,
     CLASS_TABLE
   };
 
@@ -202,7 +203,7 @@ class SymbolTable {
     }
   }
 
-  TableType Type() const noexcept {
+  inline TableType Type() const noexcept {
     return type_;
   }
 
@@ -252,7 +253,10 @@ class SymbolTableStackBase {
 
 class SymbolTableStack: public SymbolTableStackBase {
  public:
-  SymbolTableStack(SymbolTablePtr symbol_table = SymbolTablePtr(nullptr)) {
+  SymbolTableStack(SymbolTablePtr symbol_table = SymbolTablePtr(nullptr))
+      : pos_func_table_(-1)
+      , pos_class_table_(-1)
+      , pos_lambda_table_(-1) {
     if (symbol_table) {
       main_table_ = symbol_table;
     }
@@ -262,12 +266,18 @@ class SymbolTableStack: public SymbolTableStackBase {
     stack_ = st.stack_;
     main_table_ = st.main_table_;
     class_table_ = st.class_table_;
+    pos_func_table_ = st.pos_func_table_;
+    pos_class_table_ = st.pos_class_table_;
+    pos_lambda_table_ = st.pos_lambda_table_;
   }
 
   SymbolTableStack& operator=(const SymbolTableStack& st) {
     stack_ = st.stack_;
     main_table_ = st.main_table_;
     class_table_ = st.class_table_;
+    pos_func_table_ = st.pos_func_table_;
+    pos_class_table_ = st.pos_class_table_;
+    pos_lambda_table_ = st.pos_lambda_table_;
 
     return *this;
   }
@@ -276,12 +286,18 @@ class SymbolTableStack: public SymbolTableStackBase {
     stack_ = std::move(st.stack_);
     main_table_ = st.main_table_;
     class_table_ = st.class_table_;
+    pos_func_table_ = st.pos_func_table_;
+    pos_class_table_ = st.pos_class_table_;
+    pos_lambda_table_ = st.pos_lambda_table_;
   }
 
   SymbolTableStack& operator=(SymbolTableStack&& st) {
     stack_ = std::move(st.stack_);
     main_table_ = st.main_table_;
     class_table_ = st.class_table_;
+    pos_func_table_ = st.pos_func_table_;
+    pos_class_table_ = st.pos_class_table_;
+    pos_lambda_table_ = st.pos_lambda_table_;
 
     return *this;
   }
@@ -291,6 +307,18 @@ class SymbolTableStack: public SymbolTableStackBase {
     if (is_main) {
       main_table_ = table;
       return;
+    }
+
+    if (table->Type() == SymbolTable::TableType::FUNC_TABLE) {
+      pos_func_table_ = stack_.size();
+    }
+
+    if (table->Type() == SymbolTable::TableType::CLASS_TABLE) {
+      pos_class_table_ = stack_.size();
+    }
+
+    if (table->Type() == SymbolTable::TableType::LAMBDA_TABLE) {
+      pos_lambda_table_ = stack_.size();
     }
 
     stack_.push_back(table);
@@ -314,6 +342,8 @@ class SymbolTableStack: public SymbolTableStackBase {
   // it exists, or if create = true, create a new symbol if it
   // doesn't exists and return its reference
   SymbolAttr& Lookup(const std::string& name, bool create) override;
+
+  std::shared_ptr<Object>& LookupFuncRef(const std::string& name, bool create);
 
   bool Exists(const std::string& name);
 
@@ -367,7 +397,8 @@ class SymbolTableStack: public SymbolTableStackBase {
                       std::shared_ptr<Object> value) override {
     // search the last function table inserted
     for (int i = stack_.size() - 1; i >= 0; i--) {
-      if (stack_.at(i)->Type() == SymbolTable::TableType::FUNC_TABLE) {
+      if (stack_.at(i)->Type() == SymbolTable::TableType::FUNC_TABLE ||
+          stack_.at(i)->Type() == SymbolTable::TableType::LAMBDA_TABLE) {
         stack_.at(i)->SetValue(name, value);
       }
     }
@@ -395,11 +426,9 @@ class SymbolTableStack: public SymbolTableStackBase {
     main_table_ = *stack_.begin();
   }
 
-  bool HasFuncTable() const noexcept {
-    for (auto& table: stack_) {
-      if (table->Type() == SymbolTable::TableType::FUNC_TABLE) {
-        return true;
-      }
+  inline bool HasFuncTable() const noexcept {
+    if (pos_func_table_ >= 0) {
+      return true;
     }
 
     return false;
@@ -448,6 +477,9 @@ class SymbolTableStack: public SymbolTableStackBase {
   std::vector<SymbolTablePtr> stack_;
   std::weak_ptr<SymbolTable> main_table_;
   std::shared_ptr<SymbolTable> class_table_;
+  int pos_func_table_;
+  int pos_class_table_;
+  int pos_lambda_table_;
 };
 
 }

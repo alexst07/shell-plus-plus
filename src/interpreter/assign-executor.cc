@@ -132,8 +132,14 @@ void AssignExecutor::AssignIdentifier(AstNode* node, ObjectPtr value,
                                       TokenKind token, bool create) {
   Identifier* id_node = static_cast<Identifier*>(node);
   const std::string& name = id_node->name();
-  ObjectPtr& ref = symbol_table_stack().Lookup(name, create).Ref();
-  AssignToRef(ref, value, token);
+
+  if (symbol_table_stack().HasFuncTable()) {
+    ObjectPtr& ref = symbol_table_stack().LookupFuncRef(name, create);
+    AssignToRef(ref, value, token);
+  } else {
+    ObjectPtr& ref = symbol_table_stack().Lookup(name, create).Ref();
+    AssignToRef(ref, value, token);
+  }
 }
 
 void AssignExecutor::AssignAtrribute(AstNode* node, ObjectPtr value,

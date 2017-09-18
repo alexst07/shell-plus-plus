@@ -64,6 +64,18 @@ class RootExecutor: public ScopeExecutor {
 
   void set_stop(StopFlag /*flag*/) override {}
 
+  bool inside_loop() override {
+    return false;
+  }
+
+  bool inside_switch() override {
+    return false;
+  }
+
+  bool inside_func() override {
+    return false;
+  }
+
  protected:
   Executor* GetMainExecutor() override {
     return this;

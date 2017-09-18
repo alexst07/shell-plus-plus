@@ -93,6 +93,40 @@ SymbolAttr& SymbolTableStack::Lookup(const std::string& name, bool create) {
                       boost::format("symbol %1% not found")% name);
 }
 
+std::shared_ptr<Object>& SymbolTableStack::LookupFuncRef(
+    const std::string& name, bool create) {
+  // only modify a variable is it is defined inside function or
+  // or if was defined inside class or if this variable was
+  // defined as global on root scope
+
+  int stop_point = pos_class_table_ > 1? pos_class_table_:pos_func_table_;
+  for (int i = (stack_.size() - 1); i >= stop_point ; i--) {
+    auto it_obj = stack_.at(i)->Lookup(name);
+
+    if (it_obj != stack_.at(i)->end()) {
+      // return if the symbol was defined inside function
+      return it_obj->second.Ref();
+    }
+  }
+
+  auto it_obj = main_table_.lock()->Lookup(name);
+
+  if (it_obj != main_table_.lock()->end()) {
+    if (it_obj->second.global()) {
+      // modify a variable on root scope only if it was defined as global
+      return it_obj->second.Ref();;
+    }
+  }
+
+  if (create) {
+    SymbolAttr& ref = stack_.back()->SetValue(name);
+    return ref.Ref();
+  }
+
+  throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
+                      boost::format("symbol %1% not found")% name);
+}
+
 bool SymbolTableStack::Exists(const std::string& name) {
   for (int i = (stack_.size() - 1); i >= 0 ; i--) {
     auto it_obj = stack_.at(i)->Lookup(name);

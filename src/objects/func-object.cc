@@ -265,9 +265,11 @@ bool FuncDeclObject::CheckInDefaultValues(const std::string& param) {
 
 ObjectPtr FuncDeclObject::Call(Executor* parent, Args&& params,
                                KWArgs&& kw_params) {
+  SymbolTable::TableType table_type = lambda_?
+      SymbolTable::TableType::LAMBDA_TABLE: SymbolTable::TableType::FUNC_TABLE;
+
   // it is the table function
-  SymbolTablePtr table =
-      SymbolTable::Create(SymbolTable::TableType::FUNC_TABLE);
+  SymbolTablePtr table = SymbolTable::Create(table_type);
 
   // main symbol of function
   symbol_table_.Push(table, false);

@@ -97,6 +97,14 @@ class Executor {
     return false;
   }
 
+  virtual bool inside_func() {
+    if (parent_ != nullptr) {
+      return parent_->inside_func();
+    }
+
+    return false;
+  }
+
   virtual Executor* GetBlockParent() {
     if (parent_ != nullptr) {
       return parent_->GetBlockParent();

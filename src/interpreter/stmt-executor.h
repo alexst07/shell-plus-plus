@@ -71,6 +71,16 @@ class FuncDeclExecutor: public Executor {
     return false;
   }
 
+  bool inside_func() override {
+    // lambda functions can change variables, even if the variables
+    // is not global
+    if (lambda_) {
+      return false;
+    }
+
+    return true;
+  }
+
  private:
   ObjectFactory obj_factory_;
   bool method_;
