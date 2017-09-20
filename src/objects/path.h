@@ -226,6 +226,16 @@ class PathAbsoluteFunc: public FuncObject {
   ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
+class PathSizeFunc: public FuncObject {
+ public:
+  PathSizeFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
+
+  size_t Size(const boost::filesystem::path& path, bool rec);
+};
+
 }
 }
 

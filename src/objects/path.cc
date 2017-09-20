@@ -94,6 +94,7 @@ PathType::PathType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<PathStemFunc>("stem", symbol_table_stack(), *this);
   RegisterMethod<PathExtensionFunc>("extension", symbol_table_stack(), *this);
   RegisterMethod<PathAbsoluteFunc>("absolute", symbol_table_stack(), *this);
+  RegisterMethod<PathSizeFunc>("size", symbol_table_stack(), *this);
 }
 
 ObjectPtr PathType::Constructor(Executor*, Args&& params, KWArgs&&) {
@@ -212,7 +213,7 @@ ObjectPtr PathIsExecutableFunc::Call(Executor*, Args&& params, KWArgs&&) {
 }
 
 ObjectPtr PathOwnerUidFunc::Call(Executor*, Args&& params, KWArgs&&) {
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, is_executable)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, owner_uid)
 
   namespace fs = boost::filesystem;
 
@@ -222,8 +223,8 @@ ObjectPtr PathOwnerUidFunc::Call(Executor*, Args&& params, KWArgs&&) {
   std::string str_path = path.string();
 
   if (stat(str_path.c_str(), &sb) == -1) {
-  throw RunTimeError(RunTimeError::ErrorCode::FILE,
-                     boost::format("%1%")%strerror(errno));
+    throw RunTimeError(RunTimeError::ErrorCode::FILE,
+                      boost::format("%1%")%strerror(errno));
   }
 
   ObjectFactory obj_factory(symbol_table_stack());
@@ -231,7 +232,7 @@ ObjectPtr PathOwnerUidFunc::Call(Executor*, Args&& params, KWArgs&&) {
 }
 
 ObjectPtr PathOwnerGidFunc::Call(Executor*, Args&& params, KWArgs&&) {
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, is_executable)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, owner_gid)
 
   namespace fs = boost::filesystem;
 
@@ -252,7 +253,7 @@ ObjectPtr PathOwnerGidFunc::Call(Executor*, Args&& params, KWArgs&&) {
 ObjectPtr PathRootNameFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, root_name)
   fs::path& path = static_cast<PathObject&>(*params[0]).value();
 
   ObjectFactory obj_factory(symbol_table_stack());
@@ -262,7 +263,7 @@ ObjectPtr PathRootNameFunc::Call(Executor*, Args&& params, KWArgs&&) {
 ObjectPtr PathRootDirectoryFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, root_dir)
   fs::path& path = static_cast<PathObject&>(*params[0]).value();
 
   ObjectFactory obj_factory(symbol_table_stack());
@@ -272,7 +273,7 @@ ObjectPtr PathRootDirectoryFunc::Call(Executor*, Args&& params, KWArgs&&) {
 ObjectPtr PathRootPathFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, root_path)
   fs::path& path = static_cast<PathObject&>(*params[0]).value();
 
   ObjectFactory obj_factory(symbol_table_stack());
@@ -282,7 +283,7 @@ ObjectPtr PathRootPathFunc::Call(Executor*, Args&& params, KWArgs&&) {
 ObjectPtr PathRelativePathFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, relative)
   fs::path& path = static_cast<PathObject&>(*params[0]).value();
 
   ObjectFactory obj_factory(symbol_table_stack());
@@ -292,7 +293,7 @@ ObjectPtr PathRelativePathFunc::Call(Executor*, Args&& params, KWArgs&&) {
 ObjectPtr PathParentPathFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, parent_path)
   fs::path& path = static_cast<PathObject&>(*params[0]).value();
 
   ObjectFactory obj_factory(symbol_table_stack());
@@ -302,7 +303,7 @@ ObjectPtr PathParentPathFunc::Call(Executor*, Args&& params, KWArgs&&) {
 ObjectPtr PathFilenameFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, filename)
   fs::path& path = static_cast<PathObject&>(*params[0]).value();
 
   ObjectFactory obj_factory(symbol_table_stack());
@@ -312,7 +313,7 @@ ObjectPtr PathFilenameFunc::Call(Executor*, Args&& params, KWArgs&&) {
 ObjectPtr PathStemFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, stem)
   fs::path& path = static_cast<PathObject&>(*params[0]).value();
 
   ObjectFactory obj_factory(symbol_table_stack());
@@ -322,7 +323,7 @@ ObjectPtr PathStemFunc::Call(Executor*, Args&& params, KWArgs&&) {
 ObjectPtr PathExtensionFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, extensio)
   fs::path& path = static_cast<PathObject&>(*params[0]).value();
 
   ObjectFactory obj_factory(symbol_table_stack());
@@ -332,11 +333,71 @@ ObjectPtr PathExtensionFunc::Call(Executor*, Args&& params, KWArgs&&) {
 ObjectPtr PathAbsoluteFunc::Call(Executor*, Args&& params, KWArgs&&) {
   namespace fs = boost::filesystem;
 
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, exists)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, absolute)
   fs::path& path = static_cast<PathObject&>(*params[0]).value();
 
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewPath(canonical(path));
+}
+
+ObjectPtr PathSizeFunc::Call(Executor*, Args&& params, KWArgs&&) {
+  namespace fs = boost::filesystem;
+
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, size)
+  SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 2, size)
+
+  fs::path& path = static_cast<PathObject&>(*params[0]).value();
+
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (params.size() == 1) {
+    int size = Size(path, false);
+    return obj_factory.NewInt(size);
+  }
+
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], type, STRING)
+
+  // so params must have two elements
+  size_t size = Size(path, false);
+  std::string t = static_cast<StringObject&>(*params[1]).value();
+
+  if (t == "k") {
+    return obj_factory.NewReal(static_cast<float>(size/1024));
+  } else if (t == "M") {
+    return obj_factory.NewReal(static_cast<float>(size/(1024*1024)));
+  } else if (t == "G") {
+    return obj_factory.NewReal(static_cast<float>(size/(1024*1024*1024)));
+  } else {
+    return obj_factory.NewInt(size);
+  }
+}
+
+
+size_t PathSizeFunc::Size(const boost::filesystem::path& path, bool rec) {
+  namespace fs = boost::filesystem;
+
+  try {
+    if (fs::is_directory(path)) {
+      size_t size = 0;
+
+      for(auto& entry : boost::make_iterator_range(
+          fs::directory_iterator(path), {})) {
+        size += Size(entry, true);
+      }
+
+      return size;
+    } else if (fs::is_regular(path)) {
+      return fs::file_size(path);
+    } else if (!fs::exists(path) && !rec) {
+      throw RunTimeError(RunTimeError::ErrorCode::FILE,
+          boost::format("file: '%1%' not exists")%path);
+    } else {
+      return 0;
+    }
+  } catch (const fs::filesystem_error& ex) {
+      throw RunTimeError(RunTimeError::ErrorCode::FILE,
+          boost::format("%1%")%ex.what());
+  }
 }
 
 }
