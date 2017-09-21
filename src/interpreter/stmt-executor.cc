@@ -609,6 +609,11 @@ void StmtExecutor::Exec(AstNode* node) {
       varenv_exec.Exec(static_cast<VarEnvStatement*>(node));
     } break;
 
+    case AstNode::NodeType::kGlobalAssignmentStatement: {
+      GlobalAssignmentExecutor global_exec(this, symbol_table_stack());
+      global_exec.Exec(static_cast<GlobalAssignmentStatement*>(node));
+    } break;
+
     default: {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
           boost::format("invalid opcode of statement: %1%")%
@@ -1173,6 +1178,19 @@ void VarEnvExecutor::Exec(VarEnvStatement *node) {
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(), node->exp()->pos(),
         e.messages());
+  }
+}
+
+void GlobalAssignmentExecutor::Exec(GlobalAssignmentStatement *node) {
+  // check if we are on the main scope
+  if (parent()->inside_root_scope()) {
+    // assign as global variables
+    AssignExecutor exec(true, this, symbol_table_stack());
+    exec.Exec(node->assign());
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_DEF,
+          boost::format("global must be defined only on main scope"),
+          node->assign()->pos());
   }
 }
 

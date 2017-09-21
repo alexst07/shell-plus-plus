@@ -32,14 +32,27 @@ namespace internal {
 class StmtListExecutor: public Executor {
  public:
   StmtListExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack), stop_flag_(StopFlag::kGo) {}
+      : Executor(parent, symbol_table_stack)
+      , stop_flag_(StopFlag::kGo)
+      , exec_from_root_scope_(false) {}
+
+  StmtListExecutor(bool exec_from_root_scope, Executor* parent,
+      SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack)
+      , stop_flag_(StopFlag::kGo)
+      , exec_from_root_scope_(exec_from_root_scope) {}
 
   void Exec(AstNode* node);
 
   void set_stop(StopFlag flag) override;
 
+  bool inside_root_scope() override {
+    return exec_from_root_scope_;
+  }
+
  private:
   StopFlag stop_flag_;
+  bool exec_from_root_scope_;
 };
 
 class FuncDeclExecutor: public Executor {
@@ -131,6 +144,14 @@ class StmtExecutor: public Executor {
   void Exec(AstNode* node);
 
   void set_stop(StopFlag flag) override;
+
+  bool inside_root_scope() override {
+    if (parent() != nullptr) {
+      return parent()->inside_root_scope();
+    }
+
+    return false;
+  }
 };
 
 class ReturnExecutor: public Executor {
@@ -354,6 +375,15 @@ class VarEnvExecutor: public Executor {
       : Executor(parent, symbol_table_stack) {}
 
   void Exec(VarEnvStatement *node);
+};
+
+class GlobalAssignmentExecutor: public Executor {
+ public:
+  GlobalAssignmentExecutor(Executor* parent,
+      SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(GlobalAssignmentStatement *node);
 };
 
 }

@@ -54,12 +54,14 @@ void RootExecutor::Exec(AstNode* node) {
   });
   IgnoreUnused(cleanup);
 
-  StmtListExecutor executor(this, symbol_table_stack());
+  // say to StmtListExecutor execute the list of stmt from root scope
+  StmtListExecutor executor(true, this, symbol_table_stack());
   executor.Exec(node);
 }
 
 void BlockExecutor::Exec(AstNode* node) {
   Block* block_node = static_cast<Block*>(node);
+
   StmtListExecutor executor(this, symbol_table_stack());
   executor.Exec(block_node->stmt_list());
 }

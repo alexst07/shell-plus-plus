@@ -76,6 +76,10 @@ class RootExecutor: public ScopeExecutor {
     return false;
   }
 
+  bool inside_root_scope() override {
+    return true;
+  }
+
  protected:
   Executor* GetMainExecutor() override {
     return this;

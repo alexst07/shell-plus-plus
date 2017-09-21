@@ -1004,6 +1004,19 @@ class AstPrinter: public AstVisitor {
     level_--;
     level_--;
   }
+
+  void virtual VisitGlobalAssignmentStatement(
+      GlobalAssignmentStatement* assign) {
+    Level();
+    std::cout << "<global_assign>\n";
+    level_++;
+
+    assign->assign()->Accept(this);
+
+    level_--;
+    Level();
+    std::cout << "</global_assign>\n";
+  }
 };
 
 }

@@ -36,9 +36,9 @@ class SymbolAttr {
       : value_(value)
       , global_(global) {}
 
-  SymbolAttr()
+  SymbolAttr(bool global = false)
       : value_(std::shared_ptr<Object>(nullptr))
-      , global_(false) {}
+      , global_(global) {}
 
   ~SymbolAttr() {}
 
@@ -128,9 +128,10 @@ class SymbolTable {
 
   // Return a reference for symbol if it exists or create a new
   // and return the reference
-  SymbolAttr& SetValue(const std::string& name);
+  SymbolAttr& SetValue(const std::string& name, bool global = false);
 
-  void SetValue(const std::string& name, std::shared_ptr<Object> value);
+  void SetValue(const std::string& name, std::shared_ptr<Object> value,
+      bool global = false);
 
   bool SetValue(const std::string& name, SymbolAttr&& symbol);
 
@@ -218,40 +219,7 @@ class SymbolTable {
   CmdAliasMap cmd_alias_;
 };
 
-class SymbolTableStackBase {
- public:
-  // Insert a table on the stack
-  virtual void Push(SymbolTablePtr table, bool is_main = false) = 0;
-
-  // Create a new table on the stack
-  virtual void NewTable(bool is_main = false) = 0;
-
-  virtual void Pop() = 0;
-
-  // Search in all stack an return the refence for the symbol if
-  // it exists, or if create = true, create a new symbol if it
-  // doesn't exists and return its reference
-  virtual SymbolAttr& Lookup(const std::string& name, bool create) = 0;
-
-  virtual std::tuple<std::shared_ptr<Object>,bool> LookupObj(
-      const std::string& name) = 0;
-
-  virtual bool InsertEntry(const std::string& name, SymbolAttr&& symbol) = 0;
-
-  virtual void SetEntry(const std::string& name,
-                        std::shared_ptr<Object> value) = 0;
-
-  virtual void SetEntryOnFunc(const std::string& name,
-                              std::shared_ptr<Object> value) = 0;
-
-  virtual SymbolTablePtr MainTable() const noexcept = 0;
-
-  virtual void SetFirstAsMain() = 0;
-
-  virtual void Dump() = 0;
-};
-
-class SymbolTableStack: public SymbolTableStackBase {
+class SymbolTableStack {
  public:
   SymbolTableStack(SymbolTablePtr symbol_table = SymbolTablePtr(nullptr))
       : pos_func_table_(-1)
@@ -303,7 +271,7 @@ class SymbolTableStack: public SymbolTableStackBase {
   }
 
   // Insert a table on the stack
-  void Push(SymbolTablePtr table, bool is_main = false) override {
+  void Push(SymbolTablePtr table, bool is_main = false) {
     if (is_main) {
       main_table_ = table;
       return;
@@ -325,7 +293,7 @@ class SymbolTableStack: public SymbolTableStackBase {
   }
 
   // Create a new table on the stack
-  void NewTable(bool is_main = false) override {
+  void NewTable(bool is_main = false) {
     SymbolTablePtr table(new SymbolTable);
     if (is_main) {
       main_table_ = table;
@@ -334,25 +302,26 @@ class SymbolTableStack: public SymbolTableStackBase {
     stack_.push_back(std::move(table));
   }
 
-  void Pop() override {
+  void Pop() {
     stack_.pop_back();
   }
 
   // Search in all stack an return the refence for the symbol if
   // it exists, or if create = true, create a new symbol if it
   // doesn't exists and return its reference
-  SymbolAttr& Lookup(const std::string& name, bool create) override;
+  SymbolAttr& Lookup(const std::string& name, bool create,
+      bool global = false);
 
   std::shared_ptr<Object>& LookupFuncRef(const std::string& name, bool create);
 
   bool Exists(const std::string& name);
 
   std::tuple<std::shared_ptr<Object>,bool>
-  LookupObj(const std::string& name) override;
+  LookupObj(const std::string& name);
 
   bool Remove(const std::string& name);
 
-  bool InsertEntry(const std::string& name, SymbolAttr&& symbol) override {
+  bool InsertEntry(const std::string& name, SymbolAttr&& symbol) {
     if (stack_.size() > 0) {
       return stack_.back()->SetValue(name, std::move(symbol));
     }
@@ -361,7 +330,7 @@ class SymbolTableStack: public SymbolTableStackBase {
   }
 
   void SetEntry(const std::string& name,
-                std::shared_ptr<Object> value) override {
+                std::shared_ptr<Object> value) {
     if (stack_.size() > 0) {
       stack_.back()->SetValue(name, value);
       return;
@@ -394,7 +363,7 @@ class SymbolTableStack: public SymbolTableStackBase {
 
   // insert the object on the table stack of the function
   void SetEntryOnFunc(const std::string& name,
-                      std::shared_ptr<Object> value) override {
+                      std::shared_ptr<Object> value) {
     // search the last function table inserted
     for (int i = stack_.size() - 1; i >= 0; i--) {
       if (stack_.at(i)->Type() == SymbolTable::TableType::FUNC_TABLE ||
@@ -404,7 +373,7 @@ class SymbolTableStack: public SymbolTableStackBase {
     }
   }
 
-  SymbolTablePtr MainTable() const noexcept override {
+  SymbolTablePtr MainTable() const noexcept {
     return main_table_.lock();
   }
 
@@ -422,7 +391,7 @@ class SymbolTableStack: public SymbolTableStackBase {
     }
   }
 
-  void SetFirstAsMain() override {
+  void SetFirstAsMain() {
     main_table_ = *stack_.begin();
   }
 
@@ -458,7 +427,7 @@ class SymbolTableStack: public SymbolTableStackBase {
 
   bool ExistsSymbolInClass(const std::string& name);
 
-  void Dump() override {
+  void Dump() {
     std::cout << "*************\n";
     std::cout << "Table: " << this << " Num: " << stack_.size() << " this: " << this << "\n";
     std::cout << "main table copy: " << main_table_.use_count() << "\n";

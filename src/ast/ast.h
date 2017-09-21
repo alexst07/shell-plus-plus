@@ -56,6 +56,7 @@ namespace internal {
   BREAKABLE_NODE_LIST(V)          \
   V(StatementList)                \
   V(AssignmentStatement)          \
+  V(GlobalAssignmentStatement)    \
   V(ExpressionStatement)          \
   V(EmptyStatement)               \
   V(IfStatement)                  \
@@ -1351,6 +1352,30 @@ class WhileStatement: public Statement {
       : Statement(NodeType::kWhileStatement, position)
       , exp_(std::move(exp))
       , block_(std::move(block)) {}
+};
+
+
+class GlobalAssignmentStatement: public Statement {
+ public:
+  virtual ~GlobalAssignmentStatement() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitGlobalAssignmentStatement(this);
+  }
+
+  AssignmentStatement* assign() const noexcept {
+    return assign_.get();
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<AssignmentStatement> assign_;
+
+  GlobalAssignmentStatement(std::unique_ptr<AssignmentStatement> assign,
+      Position position)
+      : Statement(NodeType::kGlobalAssignmentStatement, position)
+      , assign_(std::move(assign)) {}
 };
 
 class AssignmentStatement: public Statement {

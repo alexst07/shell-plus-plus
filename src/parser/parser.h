@@ -264,6 +264,7 @@ class Parser {
   ParserResult<ExpressionList> ParserExpNoTestList();
   ParserResult<Statement> ParserStmt();
   ParserResult<Statement> ParserSimpleStmt(bool force_assignment = false);
+  ParserResult<Statement> ParserGlobalAssignment();
   ParserResult<StatementList> ParserStmtList();
   ParserResult<Statement> ParserBlock();
   ParserResult<Statement> ParserVarEnvStmt();

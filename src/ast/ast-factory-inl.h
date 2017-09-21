@@ -94,6 +94,13 @@ class AstNodeFactory {
         assign_kind, std::move(lexp_list), std::move(rvalue_list), fn_pos_()));
   }
 
+  inline std::unique_ptr<GlobalAssignmentStatement>
+      NewGlobalAssignmentStatement(
+      std::unique_ptr<AssignmentStatement> assign) {
+    return std::unique_ptr<GlobalAssignmentStatement>(
+        new GlobalAssignmentStatement(std::move(assign), fn_pos_()));
+  }
+
   inline std::unique_ptr<VarEnvStatement> NewVarEnvStatement(
       std::unique_ptr<Identifier> var, std::unique_ptr<Expression> exp) {
     return std::unique_ptr<VarEnvStatement>(new VarEnvStatement(

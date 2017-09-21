@@ -137,7 +137,7 @@ void AssignExecutor::AssignIdentifier(AstNode* node, ObjectPtr value,
     ObjectPtr& ref = symbol_table_stack().LookupFuncRef(name, create);
     AssignToRef(ref, value, token);
   } else {
-    ObjectPtr& ref = symbol_table_stack().Lookup(name, create).Ref();
+    ObjectPtr& ref = symbol_table_stack().Lookup(name, create, global_).Ref();
     AssignToRef(ref, value, token);
   }
 }

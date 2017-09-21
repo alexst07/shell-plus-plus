@@ -223,7 +223,9 @@ std::unique_ptr<Statement> Parser::ParserDeferableStmt() {
     stmt = ParserDelStmt().MoveAstNode();
   } else if (token_ == TokenKind::KW_FOR) {
     stmt = ParserForInStmt().MoveAstNode();
-  } else if (token_ == TokenKind::LBRACE) {
+  } else if (token_ == TokenKind::KW_TRY) {
+    stmt = ParserTryCatch().MoveAstNode();
+  }  else if (token_ == TokenKind::LBRACE) {
     stmt = ParserBlock().MoveAstNode();
   } else if (token_ == TokenKind::KW_VARENV) {
     stmt = ParserVarEnvStmt().MoveAstNode();
@@ -554,6 +556,10 @@ ParserResult<Statement> Parser::ParserWhileStmt() {
 
 ParserResult<Statement> Parser::ParserStmt() {
   ParserResult<Statement> res;
+
+  // if the statement has block, check_end_stmt must be false
+  // but if it hasn't block, so we have to check any token
+  // that is allowed after a statement
   bool check_end_stmt = false;
 
   if (token_ == TokenKind::KW_IF) {
@@ -576,6 +582,9 @@ ParserResult<Statement> Parser::ParserStmt() {
   } else if (token_ == TokenKind::KW_DEFER) {
     check_end_stmt = true;
     res = std::move(ParserDeferStmt());
+  } else if (token_ == TokenKind::KW_GLOBAL) {
+    check_end_stmt = true;
+    res = std::move(ParserGlobalAssignment());
   } else if (token_ == TokenKind::KW_DEL) {
     check_end_stmt = true;
     res = std::move(ParserDelStmt());
@@ -1000,6 +1009,45 @@ ParserResult<Statement> Parser::ParserSimpleStmt(bool force_assignment) {
       ErrorMsg(boost::format("not a statement"));
       return ParserResult<Statement>(); // Error
   }
+}
+
+ParserResult<Statement> Parser::ParserGlobalAssignment() {
+  // advance global token
+  Advance();
+
+  std::vector<std::unique_ptr<Expression>> vec_list;
+
+  do {
+    ValidToken();
+
+    if (token_ != TokenKind::IDENTIFIER) {
+      ErrorMsg(boost::format("expected identifier token"));
+      return ParserResult<Statement>(); // Error
+    }
+
+    std::unique_ptr<Expression> id(
+        factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
+
+    vec_list.push_back(std::move(id));
+    Advance();
+  } while (CheckComma());
+
+  if (token_.IsNot(TokenKind::ASSIGN)) {
+    ErrorMsg(boost::format("assign operator expected"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  Advance();
+  ValidToken();
+
+  ParserResult<AssignableList> rvalue_list = ParserAssignableList();
+
+  std::unique_ptr<AssignmentStatement> assign(factory_.NewAssignmentStatement(
+      TokenKind::ASSIGN, factory_.NewExpressionList(std::move(vec_list)),
+      rvalue_list.MoveAstNode()));
+
+  return ParserResult<Statement>(factory_.NewGlobalAssignmentStatement(
+      std::move(assign)));
 }
 
 ParserResult<Statement> Parser::ParserDelStmt() {

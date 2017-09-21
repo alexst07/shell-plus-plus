@@ -58,6 +58,7 @@ class RunTimeError : public std::exception {
     REGEX,
     GLOB,
     EVAL,
+    SYMBOL_DEF,
     CUSTON
   };
 

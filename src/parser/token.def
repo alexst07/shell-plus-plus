@@ -107,6 +107,7 @@ STMT_KEYWORD(CATCH,         "catch")
 STMT_KEYWORD(FINALLY,       "finally")
 STMT_KEYWORD(FROM,          "from")
 STMT_KEYWORD(SHELL,         "shell")
+STMT_KEYWORD(GLOBAL,        "global")
 
 // Expression keywords.
 KEYWORD(AS,                 "as")

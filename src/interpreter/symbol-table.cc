@@ -17,7 +17,7 @@
 namespace shpp {
 namespace internal {
 
-SymbolAttr& SymbolTable::SetValue(const std::string& name) {
+SymbolAttr& SymbolTable::SetValue(const std::string& name, bool global) {
   auto it = map_.find(name);
   if (it != map_.end()) {
     return it->second;
@@ -25,7 +25,7 @@ SymbolAttr& SymbolTable::SetValue(const std::string& name) {
     it = map_.begin();
 
     // declare a variable as local
-    SymbolAttr symbol;
+    SymbolAttr symbol(global);
     SymbolIterator it_symbol = map_.insert (it, std::move(
         std::pair<std::string, SymbolAttr>(name, std::move(symbol))));
     return it_symbol->second;
@@ -33,7 +33,7 @@ SymbolAttr& SymbolTable::SetValue(const std::string& name) {
 }
 
 void SymbolTable::SetValue(const std::string& name,
-    std::shared_ptr<Object> value) {
+    std::shared_ptr<Object> value, bool global) {
   auto it = map_.find(name);
   if (it != map_.end()) {
     it->second.set_value(value);
@@ -41,7 +41,7 @@ void SymbolTable::SetValue(const std::string& name,
   }
 
   // declare variable always as local
-  SymbolAttr symbol(value, false);
+  SymbolAttr symbol(value, global);
   it = map_.begin();
   map_.insert (it, std::move(std::pair<std::string, SymbolAttr>(
       name, std::move(symbol))));
@@ -63,7 +63,8 @@ bool SymbolTable::SetValue(const std::string& name, SymbolAttr&& symbol) {
   return true;
 }
 
-SymbolAttr& SymbolTableStack::Lookup(const std::string& name, bool create) {
+SymbolAttr& SymbolTableStack::Lookup(const std::string& name, bool create,
+    bool global) {
   for (int i = (stack_.size() - 1); i >= 0 ; i--) {
     auto it_obj = stack_.at(i)->Lookup(name);
 
@@ -81,10 +82,12 @@ SymbolAttr& SymbolTableStack::Lookup(const std::string& name, bool create) {
 
   if (create) {
     if (stack_.size() > 0) {
+      // if the symbol is not on main table, it can't be global
       SymbolAttr& ref = stack_.back()->SetValue(name);
       return ref;
     } else {
-      SymbolAttr& ref = main_table_.lock()->SetValue(name);
+      // only symbol on main table can be global
+      SymbolAttr& ref = main_table_.lock()->SetValue(name, global);
       return ref;
     }
   }

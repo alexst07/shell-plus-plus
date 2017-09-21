@@ -69,6 +69,10 @@ class Executor {
     return symbol_table_stack_;
   }
 
+  virtual bool inside_root_scope() {
+    return false;
+  }
+
  protected:
   inline bool is_root() const{
     return is_root_;

@@ -38,7 +38,14 @@ class AssignExecutor: public Executor {
  public:
   AssignExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack)
-      , obj_factory_(symbol_table_stack) {}
+      , obj_factory_(symbol_table_stack)
+      , global_(false) {}
+
+  AssignExecutor(bool global, Executor* parent,
+      SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack)
+      , obj_factory_(symbol_table_stack)
+      , global_(global) {}
 
   // Entry point to execute assign operations
   void Exec(AstNode* node);
@@ -70,6 +77,7 @@ class AssignExecutor: public Executor {
 
  private:
   ObjectFactory obj_factory_;
+  bool global_;
 };
 
 }
