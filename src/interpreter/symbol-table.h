@@ -29,6 +29,7 @@ namespace internal {
 
 class Object;
 class CmdEntry;
+class SymbolTableStack;
 
 class SymbolAttr {
  public:
@@ -101,6 +102,7 @@ typedef std::shared_ptr<SymbolTable> SymbolTablePtr;
 class SymbolTable {
  public:
   enum class TableType {
+    SYS_TABLE,
     SCOPE_TABLE,
     FUNC_TABLE,
     LAMBDA_TABLE,
@@ -108,12 +110,8 @@ class SymbolTable {
   };
 
   using SymbolMap = std::unordered_map<std::string, SymbolAttr>;
-  using CmdMap = std::unordered_map<std::string, std::shared_ptr<CmdEntry>>;
   using SymbolIterator = SymbolMap::iterator;
-  using CmdIterator = CmdMap::iterator;
   using SymbolConstIterator = SymbolMap::const_iterator;
-  using CmdAliasMap = std::unordered_map<std::string,
-      std::vector<std::string>>;
 
   SymbolTable(TableType type = TableType::SCOPE_TABLE): type_(type) {}
 
@@ -134,6 +132,76 @@ class SymbolTable {
       bool global = false);
 
   bool SetValue(const std::string& name, SymbolAttr&& symbol);
+
+  inline SymbolIterator Lookup(const std::string& name) {
+    return map_.find(name);
+  }
+
+  inline bool Remove(const std::string& name) {
+    if (map_.erase(name) == 1) {
+      return true;
+    }
+
+    return false;
+  }
+
+  inline SymbolConstIterator end() const noexcept {
+    return map_.end();
+  }
+
+  inline SymbolConstIterator begin() const noexcept {
+    return map_.begin();
+  }
+
+  void Dump() {
+    for (const auto& e: map_) {
+      std::cout << e.first << "\n";
+    }
+  }
+
+  inline TableType Type() const noexcept {
+    return type_;
+  }
+
+  void Clear() {
+    map_.clear();
+  }
+
+ private:
+  SymbolMap map_;
+  TableType type_;
+};
+
+class SysSymbolTable {
+ public:
+  using SymbolMap = std::unordered_map<std::string, SymbolAttr>;
+  using SymbolIterator = SymbolMap::iterator;
+  using SymbolConstIterator = SymbolMap::const_iterator;
+  using CmdMap = std::unordered_map<std::string, std::shared_ptr<CmdEntry>>;
+  using CmdIterator = CmdMap::iterator;
+  using CmdAliasMap = std::unordered_map<std::string,
+      std::vector<std::string>>;
+
+  static SysSymbolTable *instance() {
+    if (!instance_) {
+      instance_ = new SysSymbolTable;
+    }
+
+    return instance_;
+  }
+
+  inline SymbolAttr& SetValue(const std::string& name, bool global = false) {
+    return symbol_table_->SetValue(name, global);
+  }
+
+  inline void SetValue(const std::string& name, std::shared_ptr<Object> value,
+      bool global = false) {
+    symbol_table_->SetValue(name, value, global);
+  }
+
+  inline bool SetValue(const std::string& name, SymbolAttr&& symbol) {
+    return symbol_table_->SetValue(name, std::move(symbol));
+  }
 
   inline void SetCmd(const std::string& name, std::shared_ptr<CmdEntry> cmd) {
     cmd_map_[name] = cmd;
@@ -179,50 +247,55 @@ class SymbolTable {
   }
 
   inline SymbolIterator Lookup(const std::string& name) {
-    return map_.find(name);
+    return symbol_table_->Lookup(name);
   }
 
   inline bool Remove(const std::string& name) {
-    if (map_.erase(name) == 1) {
-      return true;
-    }
-
-    return false;
+    return symbol_table_->Remove(name);
   }
 
   inline SymbolConstIterator end() const noexcept {
-    return map_.end();
+    return symbol_table_->end();
   }
 
   inline SymbolConstIterator begin() const noexcept {
-    return map_.begin();
+    return symbol_table_->begin();
   }
 
-  void Dump() {
-    for (const auto& e: map_) {
-      std::cout << e.first << "\n";
-    }
+  inline void Dump() {
+    symbol_table_->Dump();
   }
 
-  inline TableType Type() const noexcept {
-    return type_;
+  inline SymbolTable::TableType Type() const noexcept {
+    return symbol_table_->Type();
   }
 
   void Clear() {
-    map_.clear();
+    symbol_table_->Clear();
   }
 
+  friend void AlocTypes(SymbolTableStack& symbol_table) ;
+
  private:
-  SymbolMap map_;
+  SysSymbolTable()
+      : symbol_table_(SymbolTablePtr(new SymbolTable(
+            SymbolTable::TableType::SYS_TABLE)))
+      , type_allocated_(false) {}
+
+  static SysSymbolTable *instance_;
+  SymbolTablePtr symbol_table_;
+  bool type_allocated_;
   CmdMap cmd_map_;
-  TableType type_;
   CmdAliasMap cmd_alias_;
 };
+
+void AlocTypes(SymbolTableStack& symbol_table);
 
 class SymbolTableStack {
  public:
   SymbolTableStack(SymbolTablePtr symbol_table = SymbolTablePtr(nullptr))
-      : pos_func_table_(-1)
+      : sys_table_(SysSymbolTable::instance())
+      , pos_func_table_(-1)
       , pos_class_table_(-1)
       , pos_lambda_table_(-1) {
     if (symbol_table) {
@@ -234,6 +307,7 @@ class SymbolTableStack {
     stack_ = st.stack_;
     main_table_ = st.main_table_;
     class_table_ = st.class_table_;
+    sys_table_ = st.sys_table_;
     pos_func_table_ = st.pos_func_table_;
     pos_class_table_ = st.pos_class_table_;
     pos_lambda_table_ = st.pos_lambda_table_;
@@ -243,6 +317,7 @@ class SymbolTableStack {
     stack_ = st.stack_;
     main_table_ = st.main_table_;
     class_table_ = st.class_table_;
+    sys_table_ = st.sys_table_;
     pos_func_table_ = st.pos_func_table_;
     pos_class_table_ = st.pos_class_table_;
     pos_lambda_table_ = st.pos_lambda_table_;
@@ -254,6 +329,7 @@ class SymbolTableStack {
     stack_ = std::move(st.stack_);
     main_table_ = st.main_table_;
     class_table_ = st.class_table_;
+    sys_table_ = st.sys_table_;
     pos_func_table_ = st.pos_func_table_;
     pos_class_table_ = st.pos_class_table_;
     pos_lambda_table_ = st.pos_lambda_table_;
@@ -263,6 +339,7 @@ class SymbolTableStack {
     stack_ = std::move(st.stack_);
     main_table_ = st.main_table_;
     class_table_ = st.class_table_;
+    sys_table_ = st.sys_table_;
     pos_func_table_ = st.pos_func_table_;
     pos_class_table_ = st.pos_class_table_;
     pos_lambda_table_ = st.pos_lambda_table_;
@@ -310,7 +387,18 @@ class SymbolTableStack {
   // it exists, or if create = true, create a new symbol if it
   // doesn't exists and return its reference
   SymbolAttr& Lookup(const std::string& name, bool create,
-      bool global = false);
+      bool global = false, bool sys = false);
+
+  inline SymbolAttr& LookupSys(const std::string& name) {
+    auto it_obj = sys_table_->Lookup(name);
+
+    if (it_obj != sys_table_->end()) {
+      return it_obj->second;
+    }
+
+    throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
+        boost::format("symbol %1% not found")% name);
+  }
 
   std::shared_ptr<Object>& LookupFuncRef(const std::string& name, bool create);
 
@@ -321,12 +409,16 @@ class SymbolTableStack {
 
   bool Remove(const std::string& name);
 
-  bool InsertEntry(const std::string& name, SymbolAttr&& symbol) {
+  inline bool InsertEntry(const std::string& name, SymbolAttr&& symbol) {
     if (stack_.size() > 0) {
       return stack_.back()->SetValue(name, std::move(symbol));
     }
 
     return main_table_.lock()->SetValue(name, std::move(symbol));
+  }
+
+  inline bool InsertSysEntry(const std::string& name, SymbolAttr&& symbol) {
+    return sys_table_->SetValue(name, std::move(symbol));
   }
 
   void SetEntry(const std::string& name,
@@ -340,25 +432,25 @@ class SymbolTableStack {
   }
 
   std::shared_ptr<CmdEntry> LookupCmd(const std::string& name) {
-    std::shared_ptr<CmdEntry> cmd = main_table_.lock()->LookupCmd(name);
+    std::shared_ptr<CmdEntry> cmd = sys_table_->LookupCmd(name);
 
     return cmd;
   }
 
   void SetCmd(const std::string& name, std::shared_ptr<CmdEntry> cmd) {
-    main_table_.lock()->SetCmd(name, cmd);
+    sys_table_->SetCmd(name, cmd);
   }
 
   void SetCmdAlias(const std::string& name, std::vector<std::string>&& cmd) {
-    main_table_.lock()->SetCmdAlias(name, std::move(cmd));
+    sys_table_->SetCmdAlias(name, std::move(cmd));
   }
 
   bool ExistsCmdAlias(const std::string& name) const {
-    return main_table_.lock()->ExistsCmdAlias(name);
+    return sys_table_->ExistsCmdAlias(name);
   }
 
   const std::vector<std::string>& GetCmdAlias(const std::string& name) {
-    return main_table_.lock()->GetCmdAlias(name);
+    return sys_table_->GetCmdAlias(name);
   }
 
   // insert the object on the table stack of the function
@@ -427,6 +519,10 @@ class SymbolTableStack {
 
   bool ExistsSymbolInClass(const std::string& name);
 
+  inline SysSymbolTable* SysTable() {
+    return sys_table_;
+  }
+
   void Dump() {
     std::cout << "*************\n";
     std::cout << "Table: " << this << " Num: " << stack_.size() << " this: " << this << "\n";
@@ -446,6 +542,7 @@ class SymbolTableStack {
   std::vector<SymbolTablePtr> stack_;
   std::weak_ptr<SymbolTable> main_table_;
   std::shared_ptr<SymbolTable> class_table_;
+  SysSymbolTable* sys_table_;
   int pos_func_table_;
   int pos_class_table_;
   int pos_lambda_table_;

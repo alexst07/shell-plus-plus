@@ -193,7 +193,7 @@ void Interpreter::RegisterMainModule(const std::string& full_path) {
   auto main_tab = symbol_table_stack_.MainTable();
   table_stack.Push(main_tab, true);
 
-  auto obj_type = symbol_table_stack_.Lookup("module", false).SharedAccess();
+  auto obj_type = symbol_table_stack_.LookupSys("module").SharedAccess();
   ObjectPtr module_obj = ObjectPtr(new ModuleMainObject(obj_type,
       std::move(table_stack)));
 

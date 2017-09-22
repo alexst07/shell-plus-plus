@@ -368,7 +368,7 @@ class Object {
 
   virtual std::shared_ptr<Object> BaseType() noexcept {
     if (!base_) {
-      return symbol_table_stack().Lookup("object", false).SharedAccess();
+      return symbol_table_stack().LookupSys("object").SharedAccess();
     }
 
     return base_;

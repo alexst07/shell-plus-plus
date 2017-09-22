@@ -222,7 +222,9 @@ ObjectPtr ExpressionExecutor::ExecLetExpression(LetExpression* node) {
 ObjectPtr ExpressionExecutor::ExecIdentifier(AstNode* node) try {
   Identifier* id_node = static_cast<Identifier*>(node);
   const std::string& name = id_node->name();
-  auto obj = symbol_table_stack().Lookup(name, false).Ref();
+
+  // Lookup: name = name, create = false, global = false, sys_table = true
+  auto obj = symbol_table_stack().Lookup(name, false, false, true).Ref();
 
   if (pass_ref_) {
     return obj;

@@ -14,8 +14,12 @@
 
 #include "symbol-table.h"
 
+#include "objects/object-factory.h"
+
 namespace shpp {
 namespace internal {
+
+SysSymbolTable *SysSymbolTable::instance_ = 0;
 
 SymbolAttr& SymbolTable::SetValue(const std::string& name, bool global) {
   auto it = map_.find(name);
@@ -63,8 +67,161 @@ bool SymbolTable::SetValue(const std::string& name, SymbolAttr&& symbol) {
   return true;
 }
 
+#define ALOC_TYPE(NAME, FNAME)                                                \
+  ObjectPtr type_ ## NAME = obj_factory.New ## FNAME ## Type();               \
+  SymbolAttr symbol_ ## NAME(type_ ## NAME, true);                            \
+  symbol_table.InsertSysEntry(static_cast<const FNAME ## Type&>(              \
+      *type_ ## NAME).name(), std::move(symbol_ ## NAME));
+
+void AlocTypes(SymbolTableStack& symbol_table) {
+  if (symbol_table.SysTable()->type_allocated_) {
+    return;
+  }
+
+  symbol_table.SysTable()->type_allocated_ = true;
+
+  ObjectFactory obj_factory(symbol_table);
+
+  ObjectPtr obj_type = obj_factory.NewType();
+  SymbolAttr symbol_type(obj_type, true);
+  symbol_table.InsertSysEntry(static_cast<const Type&>(*obj_type).name(),
+                           std::move(symbol_type));
+
+  ObjectPtr type_obj_root = obj_factory.NewRootObjectType();
+  SymbolAttr symbol_root(type_obj_root, true);
+  symbol_table.InsertSysEntry(static_cast<const RootObjectType&>(*type_obj_root)
+                           .name(), std::move(symbol_root));
+
+  ObjectPtr type_func = obj_factory.NewFuncType();
+  SymbolAttr symbol_func(type_func, true);
+  symbol_table.InsertSysEntry(static_cast<const FuncType&>(*type_func).name(),
+                           std::move(symbol_func));
+
+  ObjectPtr type_null = obj_factory.NewNullType();
+  SymbolAttr symbol_null(type_null, true);
+  symbol_table.InsertSysEntry(static_cast<const NullType&>(*type_null).name(),
+                           std::move(symbol_null));
+
+  ObjectPtr type_int = obj_factory.NewIntType();
+  SymbolAttr symbol_int(type_int, true);
+  symbol_table.InsertSysEntry(static_cast<const IntType&>(*type_int).name(),
+                           std::move(symbol_int));
+
+  ObjectPtr type_real = obj_factory.NewRealType();
+  SymbolAttr symbol_real(type_real, true);
+  symbol_table.InsertSysEntry(static_cast<const RealType&>(*type_real).name(),
+                           std::move(symbol_real));
+
+  ObjectPtr type_bool = obj_factory.NewBoolType();
+  SymbolAttr symbol_bool(type_bool, true);
+  symbol_table.InsertSysEntry(static_cast<const BoolType&>(*type_bool).name(),
+                           std::move(symbol_bool));
+
+  ObjectPtr type_array = obj_factory.NewArrayType();
+  SymbolAttr symbol_array(type_array, true);
+  symbol_table.InsertSysEntry(static_cast<const ArrayType&>(*type_array).name(),
+                           std::move(symbol_array));
+
+  ObjectPtr type_cmd = obj_factory.NewCmdType();
+  SymbolAttr symbol_cmd(type_cmd, true);
+  symbol_table.InsertSysEntry(static_cast<const CmdType&>(*type_cmd).name(),
+                           std::move(symbol_cmd));
+
+  ObjectPtr type_slice = obj_factory.NewSliceType();
+  SymbolAttr symbol_slice(type_slice, true);
+  symbol_table.InsertSysEntry(static_cast<const CmdType&>(*type_slice).name(),
+                           std::move(symbol_slice));
+
+  ObjectPtr type_cmd_iter = obj_factory.NewCmdIterType();
+  SymbolAttr symbol_cmd_iter(type_cmd_iter, true);
+  symbol_table.InsertSysEntry(static_cast<const CmdIterType&>(
+                           *type_cmd_iter).name(), std::move(symbol_cmd_iter));
+
+  ObjectPtr type_file_iter = obj_factory.NewFileIterType();
+  SymbolAttr symbol_file_iter(type_file_iter, true);
+  symbol_table.InsertSysEntry(static_cast<const FileIterType&>(
+      *type_file_iter).name(), std::move(symbol_file_iter));
+
+  ObjectPtr type_array_iter = obj_factory.NewArrayIterType();
+  SymbolAttr symbol_array_iter(type_array_iter, true);
+  symbol_table.InsertSysEntry(static_cast<const ArrayIterType&>(
+      *type_array_iter).name(), std::move(symbol_array_iter));
+
+  ObjectPtr type_tuple_iter = obj_factory.NewTupleIterType();
+  SymbolAttr symbol_tuple_iter(type_tuple_iter, true);
+  symbol_table.InsertSysEntry(static_cast<const TupleIterType&>(
+      *type_tuple_iter).name(), std::move(symbol_tuple_iter));
+
+  ObjectPtr type_range_iter = obj_factory.NewRangeIterType();
+  SymbolAttr symbol_range_iter(type_range_iter, true);
+  symbol_table.InsertSysEntry(static_cast<const RangeIterType&>(
+      *type_range_iter).name(), std::move(symbol_range_iter));
+
+  ObjectPtr type_map_iter = obj_factory.NewMapIterType();
+  SymbolAttr symbol_map_iter(type_map_iter, true);
+  symbol_table.InsertSysEntry(static_cast<const MapIterType&>(
+      *type_map_iter).name(), std::move(symbol_map_iter));
+
+  ObjectPtr type_tuple = obj_factory.NewTupleType();
+  SymbolAttr symbol_tuple(type_tuple, true);
+  symbol_table.InsertSysEntry(static_cast<const TupleType&>(*type_tuple).name(),
+                           std::move(symbol_tuple));
+
+  ObjectPtr type_map = obj_factory.NewMapType();
+  SymbolAttr symbol_map(type_map, true);
+  symbol_table.InsertSysEntry(static_cast<const MapType&>(*type_map).name(),
+                           std::move(symbol_map));
+
+  ObjectPtr type_regex = obj_factory.NewRegexType();
+  SymbolAttr symbol_regex(type_regex, true);
+  symbol_table.InsertSysEntry(static_cast<const RegexType&>(*type_regex).name(),
+                          std::move(symbol_regex));
+
+  ObjectPtr type_path = obj_factory.NewPathType();
+  SymbolAttr symbol_path(type_path, true);
+  symbol_table.InsertSysEntry(static_cast<const PathType&>(*type_path).name(),
+                          std::move(symbol_path));
+
+  ObjectPtr type_file = obj_factory.NewFileType();
+  SymbolAttr symbol_file(type_file, true);
+  symbol_table.InsertSysEntry(static_cast<const FileType&>(*type_file).name(),
+                          std::move(symbol_file));
+
+  ObjectPtr type_module = obj_factory.NewModuleType();
+  SymbolAttr symbol_module(type_module, true);
+  symbol_table.InsertSysEntry(static_cast<const ModuleType&>(*type_module).name(),
+                           std::move(symbol_module));
+
+  ObjectPtr type_str = obj_factory.NewStringType();
+  SymbolAttr symbol_str(type_str, true);
+  symbol_table.InsertSysEntry(static_cast<const StringType&>(*type_str).name(),
+                           std::move(symbol_str));
+
+  ALOC_TYPE(except, Exception)
+  ALOC_TYPE(null_acces_except, NullAccessException)
+  ALOC_TYPE(lookup_except, LookupException)
+  ALOC_TYPE(invalid_cmd_except, InvalidCmdException)
+  ALOC_TYPE(bad_alloc_except, BadAllocException)
+  ALOC_TYPE(index_except, IndexException)
+  ALOC_TYPE(key_except, KeyException)
+  ALOC_TYPE(inv_args_except, InvalidArgsException)
+  ALOC_TYPE(type_except, TypeException)
+  ALOC_TYPE(func_params_except, FuncParamsException)
+  ALOC_TYPE(zero_div_except, ZeroDivException)
+  ALOC_TYPE(fd_except, FdNotFoundException)
+  ALOC_TYPE(io_except, IOException)
+  ALOC_TYPE(import_except, ImportException)
+  ALOC_TYPE(assert_except, AssertException)
+  ALOC_TYPE(parser_except, ParserException)
+  ALOC_TYPE(regex_except, RegexException)
+  ALOC_TYPE(glob_except, GlobException)
+  ALOC_TYPE(eval_except, EvalException)
+  ALOC_TYPE(error_except, ErrorException)
+
+}
+
 SymbolAttr& SymbolTableStack::Lookup(const std::string& name, bool create,
-    bool global) {
+    bool global, bool sys) {
   for (int i = (stack_.size() - 1); i >= 0 ; i--) {
     auto it_obj = stack_.at(i)->Lookup(name);
 
@@ -78,6 +235,15 @@ SymbolAttr& SymbolTableStack::Lookup(const std::string& name, bool create,
 
   if (it_obj != main_table_.lock()->end()) {
     return it_obj->second;
+  }
+
+  if (sys) {
+    // search on sys table if no symbol was found before
+    auto it_obj = sys_table_->Lookup(name);
+
+    if (it_obj != sys_table_->end()) {
+      return it_obj->second;
+    }
   }
 
   if (create) {
