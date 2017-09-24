@@ -80,7 +80,8 @@ class DeclClassType: public TypeObject {
       SymbolTableStack&& sym_table,
       ObjectPtr base = ObjectPtr(nullptr),
       InterfacesList&& ifaces = InterfacesList(),
-      bool abstract = false);
+      bool abstract = false,
+      bool is_final = false);
 
   virtual ~DeclClassType() {}
 

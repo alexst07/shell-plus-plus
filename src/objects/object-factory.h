@@ -459,11 +459,11 @@ class ObjectFactory {
       ObjectPtr base = ObjectPtr(nullptr),
       std::vector<std::shared_ptr<Object>>&& ifaces =
           std::vector<std::shared_ptr<Object>>(),
-      bool abstract = false) {
+      bool abstract = false, bool is_false = false) {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
     SymbolTableStack table_stack(symbol_table_);
     return ObjectPtr(new DeclClassType(name_type, obj_type,
-        std::move(table_stack), base, std::move(ifaces), abstract));
+        std::move(table_stack), base, std::move(ifaces), abstract, is_false));
   }
 
   inline ObjectPtr NewDeclIFace(const std::string& name_type,

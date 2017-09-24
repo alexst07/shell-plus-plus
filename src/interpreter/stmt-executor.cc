@@ -228,10 +228,11 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
     }
 
     type_obj = obj_factory_.NewDeclType(class_decl_node->name()->name(), base,
-        std::move(ifaces));
+        std::move(ifaces), class_decl_node->abstract(),
+        class_decl_node->is_final());
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(),
-        class_decl_node->interfaces()->pos(), e.messages());
+        class_decl_node->pos(), e.messages());
   }
 
   // insert all declared methods on symbol table

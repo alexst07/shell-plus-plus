@@ -42,7 +42,8 @@ namespace internal {
                                                                               \
   NAME ## Type::NAME ## Type(ObjectPtr obj_type,                              \
       SymbolTableStack&& sym_table, ObjectPtr base)                           \
-      : TypeObject(#NAME, obj_type, std::move(sym_table), base) {             \
+      : TypeObject(#NAME, obj_type, std::move(sym_table), base,               \
+                   TypeObject::InterfacesList(), ObjectType::TYPE, false) {   \
     RegisterMethod<NAME ## InitFunc>("__init__", symbol_table_stack(), *this);\
     RegisterMethod<NAME ## StrFunc>("__str__", symbol_table_stack(), *this);  \
   }                                                                           \
@@ -190,4 +191,3 @@ ObjectPtr MapExceptionError(RunTimeError& err, SymbolTableStack& sym_table) {
 
 }
 }
-

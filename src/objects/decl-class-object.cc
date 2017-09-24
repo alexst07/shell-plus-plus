@@ -79,8 +79,9 @@ bool AbstractMethod::operator!=(const AbstractMethod& func) const {
 
 DeclClassType::DeclClassType(const std::string& name, ObjectPtr obj_type,
     SymbolTableStack&& sym_table, ObjectPtr base,
-    InterfacesList&& ifaces, bool abstract)
-    : TypeObject(name, obj_type, std::move(sym_table), base, std::move(ifaces))
+    InterfacesList&& ifaces, bool abstract, bool is_final)
+    : TypeObject(name, obj_type, std::move(sym_table), base, std::move(ifaces),
+          ObjectType::TYPE, is_final)
     , abstract_(abstract) {
   symbol_table_stack().Push(SymbolTablePtr(new SymbolTable(
       SymbolTable::TableType::CLASS_TABLE)));
@@ -94,6 +95,12 @@ DeclClassType::DeclClassType(const std::string& name, ObjectPtr obj_type,
   // the class TypeObject already check if the base is a type, so we can
   // cast this object to TypeObject without any problem with segfault
   TypeObject& type_base = static_cast<TypeObject&>(*base);
+
+  if (type_base.is_final()) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("'%1%' can't extends from final type '%2%'")
+        %name%type_base.ObjectName());
+  }
 
   // only user declared class has abstract methods
   if (!type_base.Declared()) {

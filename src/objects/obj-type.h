@@ -176,10 +176,11 @@ class TypeObject: public Object {
              SymbolTableStack&& sym_table,
              ObjectPtr base = ObjectPtr(nullptr),
              InterfacesList&& ifaces = InterfacesList(),
-             ObjectType type = ObjectType::TYPE)
-      : Object(type, obj_type, std::move(sym_table), base,
-               std::move(ifaces))
-      , name_(name) {
+             ObjectType type = ObjectType::TYPE,
+             bool is_final = true)
+      : Object(type, obj_type, std::move(sym_table), base, std::move(ifaces))
+      , name_(name)
+      , is_final_(is_final) {
     // if some base class was defined, this class must be a type
     if (base) {
       if (base->type() != ObjectType::TYPE) {
@@ -244,6 +245,10 @@ class TypeObject: public Object {
 
   bool ExistsAttr(const std::string& name);
 
+  bool is_final() const {
+    return is_final_;
+  }
+
   std::string Print() override {
     return std::string("<type: ") + name_ + ">";
   }
@@ -252,6 +257,7 @@ class TypeObject: public Object {
   std::string name_;
   std::weak_ptr<Object> parent_;
   std::vector<std::weak_ptr<Object>> interfaces_;
+  bool is_final_;
 };
 
 class Type: public TypeObject {
