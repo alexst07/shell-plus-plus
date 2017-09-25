@@ -204,6 +204,45 @@ ObjectPtr GetAttrTypeFunc::Call(Executor*, Args&& params, KWArgs&&) {
   return obj_map;
 }
 
+ObjectPtr GetLastForegroundPidFunc::Call(Executor*, Args&& params, KWArgs&&) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 0, params)
+
+  int pid = EnvShell::instance()->last_foreground_pid();
+
+  if (pid < 0) {
+    throw RunTimeError(RunTimeError::ErrorCode::INVALID_ARGS,
+        boost::format("no command in foreground was executed"));
+  }
+
+  return obj_factory_.NewInt(pid);
+}
+
+ObjectPtr GetLastBackgroundPidFunc::Call(Executor*, Args&& params, KWArgs&&) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 0, params)
+
+  int pid = EnvShell::instance()->last_background_pid();
+
+  if (pid < 0) {
+    throw RunTimeError(RunTimeError::ErrorCode::INVALID_ARGS,
+        boost::format("no command in background was executed"));
+  }
+
+  return obj_factory_.NewInt(pid);
+}
+
+ObjectPtr GetLastForegroundExitFunc::Call(Executor*, Args&& params, KWArgs&&) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 0, params)
+
+  int pid = EnvShell::instance()->last_foreground_exit_code();
+
+  if (pid < 0) {
+    throw RunTimeError(RunTimeError::ErrorCode::INVALID_ARGS,
+        boost::format("no command in foreground was executed"));
+  }
+
+  return obj_factory_.NewInt(pid);
+}
+
 ObjectPtr IsInteractiveFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 0, params)
 

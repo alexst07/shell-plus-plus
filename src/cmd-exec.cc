@@ -563,6 +563,13 @@ void Job::LaunchJob(int foreground) {
       process_[i]->pid(pid);
       int shell_is_interactive = isatty(shell_terminal);
 
+      // store the pid of command on EnvShell
+      if (foreground) {
+        EnvShell::instance()->last_foreground_pid(pid);
+      } else {
+        EnvShell::instance()->last_background_pid(pid);
+      }
+
       if (shell_is_interactive) {
         if (!pgid_) {
           pgid_ = pid;
@@ -584,9 +591,11 @@ void Job::LaunchJob(int foreground) {
 
   if (!shell_is_interactive) {
     WaitForJob();
+    EnvShell::instance()->last_foreground_exit_code(Status());
     CheckCmdError();
   } else if (foreground) {
     PutJobInForeground(0);
+    EnvShell::instance()->last_foreground_exit_code(Status());
     CheckCmdError();
   } else {
     PutJobInBackground(0);

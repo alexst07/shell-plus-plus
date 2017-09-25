@@ -76,6 +76,43 @@ class LenFunc: public FuncObject {
   ObjectFactory obj_factory_;
 };
 
+class GetLastForegroundPidFunc: public FuncObject {
+ public:
+  GetLastForegroundPidFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
+class GetLastBackgroundPidFunc: public FuncObject {
+ public:
+  GetLastBackgroundPidFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
+class GetLastForegroundExitFunc: public FuncObject {
+ public:
+  GetLastForegroundExitFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
+
 class CompFunc: public FuncObject {
  public:
   CompFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
@@ -239,7 +276,13 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
     {"globr",                 ObjectMethod<GlobRFunc>(sym_table)},
     {"instance_of",           ObjectMethod<InstanceOfFunc>(sym_table)},
     {"dump_symbol_table",     ObjectMethod<DumpSymbolTableFunc>(sym_table)},
-    {"eval",                  ObjectMethod<EvalFunc>(sym_table)}
+    {"eval",                  ObjectMethod<EvalFunc>(sym_table)},
+    {"get_last_foreground_pid",
+          ObjectMethod<GetLastForegroundPidFunc>(sym_table)},
+    {"get_last_background_pid",
+          ObjectMethod<GetLastBackgroundPidFunc>(sym_table)},
+    {"get_last_foreground_exit",
+          ObjectMethod<GetLastForegroundExitFunc>(sym_table)}
   };
 
   for (auto& pair: table) {

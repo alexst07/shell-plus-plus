@@ -123,10 +123,38 @@ class EnvShell {
     return argv_;
   }
 
+  inline void last_background_pid(int pid) {
+    last_background_pid_ = pid;
+  }
+
+  inline int last_background_pid() {
+    return last_background_pid_;
+  }
+
+  inline void last_foreground_pid(int pid) {
+    last_foreground_pid_ = pid;
+  }
+
+  inline int last_foreground_pid() {
+    return last_foreground_pid_;
+  }
+
+  inline void last_foreground_exit_code(int code) {
+    last_foreground_exit_code_ = code;
+  }
+
+  inline int last_foreground_exit_code() {
+    return last_foreground_exit_code_;
+  }
+
   ~EnvShell();
 
  private:
-  EnvShell(): interective_exec_(false) {}
+  EnvShell()
+      : interective_exec_(false)
+      , last_background_pid_(-1)
+      , last_foreground_pid_(-1)
+      , last_foreground_exit_code_(-1) {}
 
   static EnvShell *instance_;
 
@@ -140,6 +168,9 @@ class EnvShell {
   bool interective_exec_;
   ImportTable import_table_;
   std::vector<std::string> argv_;
+  int last_background_pid_;
+  int last_foreground_pid_;
+  int last_foreground_exit_code_;
 };
 
 }
