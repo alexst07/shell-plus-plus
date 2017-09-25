@@ -37,11 +37,12 @@ namespace internal {
 Interpreter::Interpreter(bool main)
     : symbol_table_(SymbolTablePtr(new SymbolTable))
     , symbol_table_stack_(symbol_table_)
+    , sys_symbol_table_stack_(symbol_table_stack_.SysTable()->ptr())
     , main_(main) {
   AlocTypes(symbol_table_stack_);
 
-  module::stdf::RegisterModule(symbol_table_stack_);
-  module::env::RegisterModule(symbol_table_stack_);
+  module::stdf::RegisterModule(sys_symbol_table_stack_);
+  module::env::RegisterModule(sys_symbol_table_stack_);
   cmds::stdf::RegisterCmds(symbol_table_stack_);
 }
 

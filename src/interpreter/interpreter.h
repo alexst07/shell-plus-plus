@@ -68,6 +68,7 @@ class Interpreter {
 
   SymbolTablePtr symbol_table_;
   SymbolTableStack symbol_table_stack_;
+  SymbolTableStack sys_symbol_table_stack_;
   std::unique_ptr<StatementList> stmt_list_;
   bool main_;
   std::string full_path_;

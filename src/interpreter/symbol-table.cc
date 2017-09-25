@@ -220,6 +220,16 @@ void AlocTypes(SymbolTableStack& symbol_table) {
 
 }
 
+SymbolTableStack::SymbolTableStack(SymbolTablePtr symbol_table)
+    : sys_table_(SysSymbolTable::instance())
+    , pos_func_table_(-1)
+    , pos_class_table_(-1)
+    , pos_lambda_table_(-1) {
+  if (symbol_table) {
+    main_table_ = symbol_table;
+  }
+}
+
 SymbolAttr& SymbolTableStack::Lookup(const std::string& name, bool create,
     bool global, bool sys) {
   for (int i = (stack_.size() - 1); i >= 0 ; i--) {

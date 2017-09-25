@@ -30,6 +30,7 @@ namespace internal {
 class Object;
 class CmdEntry;
 class SymbolTableStack;
+class SysSymbolTable;
 
 class SymbolAttr {
  public:
@@ -172,6 +173,8 @@ class SymbolTable {
   TableType type_;
 };
 
+void AlocTypes(SymbolTableStack& symbol_table);
+
 class SysSymbolTable {
  public:
   using SymbolMap = std::unordered_map<std::string, SymbolAttr>;
@@ -270,8 +273,12 @@ class SysSymbolTable {
     return symbol_table_->Type();
   }
 
-  void Clear() {
+  inline void Clear() {
     symbol_table_->Clear();
+  }
+
+  inline SymbolTablePtr ptr() {
+    return symbol_table_;
   }
 
   friend void AlocTypes(SymbolTableStack& symbol_table) ;
@@ -289,19 +296,9 @@ class SysSymbolTable {
   CmdAliasMap cmd_alias_;
 };
 
-void AlocTypes(SymbolTableStack& symbol_table);
-
 class SymbolTableStack {
  public:
-  SymbolTableStack(SymbolTablePtr symbol_table = SymbolTablePtr(nullptr))
-      : sys_table_(SysSymbolTable::instance())
-      , pos_func_table_(-1)
-      , pos_class_table_(-1)
-      , pos_lambda_table_(-1) {
-    if (symbol_table) {
-      main_table_ = symbol_table;
-    }
-  }
+  SymbolTableStack(SymbolTablePtr symbol_table = SymbolTablePtr(nullptr));
 
   SymbolTableStack(const SymbolTableStack& st) {
     stack_ = st.stack_;
@@ -348,7 +345,7 @@ class SymbolTableStack {
   }
 
   // Insert a table on the stack
-  void Push(SymbolTablePtr table, bool is_main = false) {
+  inline void Push(SymbolTablePtr table, bool is_main = false) {
     if (is_main) {
       main_table_ = table;
       return;
@@ -370,7 +367,7 @@ class SymbolTableStack {
   }
 
   // Create a new table on the stack
-  void NewTable(bool is_main = false) {
+  inline void NewTable(bool is_main = false) {
     SymbolTablePtr table(new SymbolTable);
     if (is_main) {
       main_table_ = table;
@@ -379,7 +376,7 @@ class SymbolTableStack {
     stack_.push_back(std::move(table));
   }
 
-  void Pop() {
+  inline void Pop() {
     stack_.pop_back();
   }
 
