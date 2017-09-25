@@ -170,6 +170,8 @@ class SymbolTable {
     map_.clear();
   }
 
+  std::map<std::string, std::shared_ptr<Object>> SymMap();
+
  private:
   SymbolMap map_;
   TableType type_;

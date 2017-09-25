@@ -212,8 +212,8 @@ class DeclClassObject: public Object {
 
   ObjectPtr Call(Executor*, Args&& params, KWArgs&& kw_params) override;
 
-  SymbolTableStack& SymTable() {
-    return symbol_table_stack();
+  SymbolTablePtr& SymTable() {
+    return sym_table_;
   }
 
   void SetSelf(ObjectPtr self_obj) {

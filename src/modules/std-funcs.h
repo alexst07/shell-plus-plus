@@ -124,6 +124,30 @@ class ArgvFunc: public FuncObject {
   ObjectFactory obj_factory_;
 };
 
+class GetAttrObjFunc: public FuncObject {
+ public:
+  GetAttrObjFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor*, Args&&, KWArgs&&);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
+class GetAttrTypeFunc: public FuncObject {
+ public:
+  GetAttrTypeFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor*, Args&&, KWArgs&&);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
 class IsInteractiveFunc: public FuncObject {
  public:
   IsInteractiveFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
@@ -208,10 +232,12 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
     {"comp",                  ObjectMethod<CompFunc>(sym_table)},
     {"assert",                ObjectMethod<AssertFunc>(sym_table)},
     {"argv",                  ObjectMethod<ArgvFunc>(sym_table)},
+    {"get_attr_obj",          ObjectMethod<GetAttrObjFunc>(sym_table)},
+    {"get_attr_type",         ObjectMethod<GetAttrTypeFunc>(sym_table)},
     {"is_interactive",        ObjectMethod<IsInteractiveFunc>(sym_table)},
     {"glob",                  ObjectMethod<GlobFunc>(sym_table)},
     {"globr",                 ObjectMethod<GlobRFunc>(sym_table)},
-    {"instance_of",            ObjectMethod<InstanceOfFunc>(sym_table)},
+    {"instance_of",           ObjectMethod<InstanceOfFunc>(sym_table)},
     {"dump_symbol_table",     ObjectMethod<DumpSymbolTableFunc>(sym_table)},
     {"eval",                  ObjectMethod<EvalFunc>(sym_table)}
   };

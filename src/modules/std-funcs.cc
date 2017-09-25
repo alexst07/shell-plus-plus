@@ -152,6 +152,58 @@ ObjectPtr ArgvFunc::Call(Executor*, Args&&, KWArgs&&) {
   return obj_args;
 }
 
+ObjectPtr GetAttrObjFunc::Call(Executor*, Args&& params, KWArgs&&) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, object)
+  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], object, DECL_OBJ)
+
+  DeclClassObject& obj = static_cast<DeclClassObject&>(*params[0]);
+  auto& sym_table = obj.SymTable();
+
+  std::map<std::string, ObjectPtr> map = sym_table->SymMap();
+  std::vector<std::pair<ObjectPtr, ObjectPtr>> elements;
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  for (auto& m: map) {
+    elements.push_back(std::pair<ObjectPtr, ObjectPtr>(
+        obj_factory.NewString(m.first), m.second));
+  }
+
+  ObjectPtr obj_map = obj_factory.NewMap(std::move(elements));
+  return obj_map;
+}
+
+ObjectPtr GetAttrTypeFunc::Call(Executor*, Args&& params, KWArgs&&) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, object)
+
+  ObjectPtr obj;
+
+  if (params[0]->type() == ObjectType::TYPE) {
+    obj = params[0];
+  } else {
+    obj = params[0]->ObjType();
+  }
+
+  std::vector<std::pair<ObjectPtr, ObjectPtr>> elements;
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  while (obj) {
+    TypeObject& tobj = static_cast<TypeObject&>(*obj);
+    auto& sym_table = tobj.SymTable();
+
+    std::map<std::string, ObjectPtr> map = sym_table->SymMap();
+
+    for (auto& m: map) {
+      elements.push_back(std::pair<ObjectPtr, ObjectPtr>(
+          obj_factory.NewString(m.first), m.second));
+    }
+
+    obj = obj->BaseType();
+  }
+
+  ObjectPtr obj_map = obj_factory.NewMap(std::move(elements));
+  return obj_map;
+}
+
 ObjectPtr IsInteractiveFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 0, params)
 

@@ -84,6 +84,17 @@ SymbolAttr& SymbolTable::Lookup(const std::string& name, bool create) {
                       boost::format("symbol %1% not found")% name);
 }
 
+std::map<std::string, std::shared_ptr<Object>> SymbolTable::SymMap() {
+  std::map<std::string, ObjectPtr> map;
+
+  for (auto& e: map_) {
+    map.insert(std::pair<std::string, ObjectPtr>(e.first,
+        e.second.SharedAccess()));
+  }
+
+  return map;
+}
+
 #define ALOC_TYPE(NAME, FNAME)                                                \
   ObjectPtr type_ ## NAME = obj_factory.New ## FNAME ## Type();               \
   SymbolAttr symbol_ ## NAME(type_ ## NAME, true);                            \

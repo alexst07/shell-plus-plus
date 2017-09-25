@@ -199,6 +199,7 @@ class FuncDeclObject: public FuncObject {
   // so shared_ptr avoid lost this pointer
   std::shared_ptr<Block> start_node_;
   SymbolTableStack symbol_table_;
+  SymbolTablePtr fsym_table_;
   std::vector<std::string> params_;
   std::unordered_map<std::string, ObjectPtr> default_values_;
   bool variadic_;

@@ -76,6 +76,7 @@ FuncDeclObject::FuncDeclObject(const std::string& id,
     , id_(id)
     , start_node_(start_node)
     , symbol_table_{lambda?symbol_table:SymbolTableStack()}
+    , fsym_table_(new SymbolTable(SymbolTable::TableType::FUNC_TABLE))
     , params_(std::move(params))
     , default_values_(std::move(default_values))
     , variadic_(variadic)
@@ -89,13 +90,14 @@ FuncDeclObject::FuncDeclObject(const std::string& id,
     symbol_table_.Push(symbol_table.MainTable(), true);
   }
 
+  symbol_table_stack().Push(fsym_table_);
   symbol_table_stack().SetEntry("__params__", Params());
   symbol_table_stack().SetEntry("__default_params__", DefaultParams());
   symbol_table_stack().SetEntry("__variadic__", Variadic());
 }
 
 ObjectPtr FuncDeclObject::Attr(ObjectPtr, const std::string& name) {
-  return symbol_table_stack().Lookup(name, false).SharedAccess();
+  return fsym_table_->Lookup(name, false).SharedAccess();
 }
 
 void FuncDeclObject::HandleSimpleArguments(Args&& params, KWArgs&& kw_params) {
