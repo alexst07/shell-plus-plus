@@ -138,6 +138,8 @@ class SymbolTable {
     return map_.find(name);
   }
 
+  SymbolAttr& Lookup(const std::string& name, bool create);
+
   inline bool Remove(const std::string& name) {
     if (map_.erase(name) == 1) {
       return true;

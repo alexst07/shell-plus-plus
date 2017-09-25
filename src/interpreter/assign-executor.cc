@@ -143,7 +143,8 @@ void AssignExecutor::AssignIdentifier(AstNode* node, ObjectPtr value,
 }
 
 void AssignExecutor::AssignAtrribute(AstNode* node, ObjectPtr value,
-                                     TokenKind token) {
+                                     TokenKind token)
+try {
   Attribute* att_node = static_cast<Attribute*>(node);
   Expression* att_exp = att_node->exp();
 
@@ -152,6 +153,8 @@ void AssignExecutor::AssignAtrribute(AstNode* node, ObjectPtr value,
 
   ObjectPtr& ref = exp_obj->AttrAssign(exp_obj, att_node->id()->name());
   AssignToRef(ref, value, token);
+} catch (RunTimeError& e) {
+  throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
 }
 
 void AssignExecutor::AssignArray(AstNode* node, ObjectPtr value,

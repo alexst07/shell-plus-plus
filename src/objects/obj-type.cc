@@ -78,7 +78,7 @@ ObjectPtr RangeIterObject::Equal(ObjectPtr obj) {
 
 ObjectPtr TypeObject::CallObject(const std::string& name,
                                  ObjectPtr self_param) {
-  ObjectPtr obj = symbol_table_stack().Lookup(name, false).SharedAccess();
+  ObjectPtr obj = sym_table_->Lookup(name, false).SharedAccess();
 
   if (obj->type() == ObjectType::FUNC) {
     ObjectFactory obj_factory(symbol_table_stack());
@@ -92,7 +92,7 @@ ObjectPtr TypeObject::CallObject(const std::string& name,
 }
 
 ObjectPtr TypeObject::CallStaticObject(const std::string& name) {
-  ObjectPtr obj = symbol_table_stack().Lookup(name, false).SharedAccess();
+  ObjectPtr obj = sym_table_->Lookup(name, false).SharedAccess();
   return obj;
 }
 
@@ -104,8 +104,9 @@ ObjectPtr TypeObject::Equal(ObjectPtr obj) {
 }
 
 ObjectPtr TypeObject::SearchAttr(const std::string& name) {
-  if (symbol_table_stack().Exists(name)) {
-    auto obj_ref = symbol_table_stack().Lookup(name, false).Ref();
+  auto it = sym_table_->Lookup(name);
+  if (it != sym_table_->end()) {
+    auto obj_ref = it->second.Ref();
     return PassVar(obj_ref, symbol_table_stack());
   }
 
@@ -125,6 +126,29 @@ ObjectPtr TypeObject::SearchAttr(const std::string& name) {
 
   auto obj_ref = static_cast<TypeObject&>(*base).SearchAttr(name);
   return PassVar(obj_ref, symbol_table_stack());
+}
+
+ObjectPtr& TypeObject::SearchAttrRef(const std::string& name) {
+  auto it = sym_table_->Lookup(name);
+  if (it != sym_table_->end()) {
+    return it->second.Ref();
+  }
+
+  ObjectPtr base = BaseType();
+
+  if (!base) {
+    // if there are no base super class, so the attribute was not found
+    throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
+                       boost::format("symbol %1% not found")% name);
+  }
+
+  if (base->type() != Object::ObjectType::TYPE) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       boost::format("'%1%' is not a valid type for super"
+                       " class")%base->ObjectName());
+  }
+
+  return static_cast<TypeObject&>(*base).SearchAttrRef(name);
 }
 
 bool TypeObject::ExistsAttr(const std::string& name) {

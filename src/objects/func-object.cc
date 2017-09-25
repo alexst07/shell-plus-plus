@@ -94,9 +94,8 @@ FuncDeclObject::FuncDeclObject(const std::string& id,
   symbol_table_stack().SetEntry("__variadic__", Variadic());
 }
 
-ObjectPtr FuncDeclObject::Attr(ObjectPtr self, const std::string& name) {
-  ObjectPtr obj_type = ObjType();
-  return static_cast<TypeObject&>(*obj_type).CallObject(name, self);
+ObjectPtr FuncDeclObject::Attr(ObjectPtr, const std::string& name) {
+  return symbol_table_stack().Lookup(name, false).SharedAccess();
 }
 
 void FuncDeclObject::HandleSimpleArguments(Args&& params, KWArgs&& kw_params) {

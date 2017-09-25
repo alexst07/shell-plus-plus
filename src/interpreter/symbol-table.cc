@@ -67,6 +67,23 @@ bool SymbolTable::SetValue(const std::string& name, SymbolAttr&& symbol) {
   return true;
 }
 
+SymbolAttr& SymbolTable::Lookup(const std::string& name, bool create) {
+  // search on main table if no symbol was found
+  auto it_obj = map_.find(name);
+
+  if (it_obj != map_.end()) {
+    return it_obj->second;
+  }
+
+  if (create) {
+    SymbolAttr& ref = SetValue(name, false);
+    return ref;
+  }
+
+  throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
+                      boost::format("symbol %1% not found")% name);
+}
+
 #define ALOC_TYPE(NAME, FNAME)                                                \
   ObjectPtr type_ ## NAME = obj_factory.New ## FNAME ## Type();               \
   SymbolAttr symbol_ ## NAME(type_ ## NAME, true);                            \

@@ -83,9 +83,6 @@ DeclClassType::DeclClassType(const std::string& name, ObjectPtr obj_type,
     : TypeObject(name, obj_type, std::move(sym_table), base, std::move(ifaces),
           ObjectType::TYPE, is_final)
     , abstract_(abstract) {
-  symbol_table_stack().Push(SymbolTablePtr(new SymbolTable(
-      SymbolTable::TableType::CLASS_TABLE)));
-
   // if there is no base type, so we don't need verify abstract methods
   // from base class
   if (!base) {
@@ -233,9 +230,10 @@ ObjectPtr DeclClassType::Constructor(Executor* parent, Args&& params,
   ObjectFactory obj_factory(symbol_table_stack());
   ObjectPtr obj_self(obj_factory.NewDeclObject(this->name()));
 
-  if (symbol_table_stack().Exists("__init__")) {
-    ObjectPtr obj_init = symbol_table_stack().Lookup("__init__", false)
-      .SharedAccess();
+  // search __init__ symbol on type symbol table
+  auto it = SymTable()->Lookup("__init__");
+  if (it != SymTable()->end()) {
+    ObjectPtr obj_init = it->second.SharedAccess();
 
     if (obj_init->type() == ObjectType::FUNC) {
       params.insert(params.begin(), obj_self);
@@ -265,9 +263,7 @@ ObjectPtr DeclClassType::CallObject(const std::string& name,
 
 std::shared_ptr<Object>& DeclClassType::AttrAssign(
     std::shared_ptr<Object> /*self*/, const std::string& name) {
-  ObjectPtr& att_obj = symbol_table_stack().Lookup(name, true).Ref();
-
-  return att_obj;
+  return SearchAttrRef(name);
 }
 
 std::shared_ptr<Object> DeclClassType::Attr(std::shared_ptr<Object>,
@@ -319,7 +315,7 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
 
 std::shared_ptr<Object>& DeclClassObject::AttrAssign(
     std::shared_ptr<Object> /*self*/, const std::string& name) {
-  ObjectPtr& att_obj = symbol_table_stack().Lookup(name, true).Ref();
+  ObjectPtr& att_obj = sym_table_->Lookup(name, true).Ref();
 
   return att_obj;
 }

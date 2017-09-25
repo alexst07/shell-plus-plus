@@ -85,15 +85,6 @@ class DeclClassType: public TypeObject {
 
   virtual ~DeclClassType() {}
 
-  inline bool RegisterAttr(const std::string& name, ObjectPtr obj) {
-    SymbolAttr sym_entry(obj, true);
-    return symbol_table_stack().InsertEntry(name, std::move(sym_entry));
-  }
-
-  bool RegiterMethod(const std::string& name, ObjectPtr obj) override {
-    return RegisterAttr(name, obj);
-  }
-
   ObjectPtr CallObject(const std::string& name, ObjectPtr self_param) override;
 
   std::shared_ptr<Object>& AttrAssign(std::shared_ptr<Object>,
@@ -134,9 +125,9 @@ class DeclClassType: public TypeObject {
 class DeclClassObject: public Object {
  public:
   DeclClassObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::DECL_OBJ, obj_type, std::move(sym_table)) {
-    symbol_table_stack().Push(SymbolTablePtr(new SymbolTable(
-        SymbolTable::TableType::CLASS_TABLE)));
+      : Object(ObjectType::DECL_OBJ, obj_type, std::move(sym_table))
+      , sym_table_(new SymbolTable(SymbolTable::TableType::CLASS_TABLE)){
+    symbol_table_stack().Push(sym_table_);
   }
 
   virtual ~DeclClassObject() {}
@@ -256,6 +247,7 @@ class DeclClassObject: public Object {
                    KWArgs&& kw_params);
 
   std::weak_ptr<Object> self_;
+  SymbolTablePtr sym_table_;
 };
 
 class DeclInterface: public TypeObject {

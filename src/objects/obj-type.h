@@ -179,6 +179,7 @@ class TypeObject: public Object {
              ObjectType type = ObjectType::TYPE,
              bool is_final = true)
       : Object(type, obj_type, std::move(sym_table), base, std::move(ifaces))
+      , sym_table_(new SymbolTable(SymbolTable::TableType::CLASS_TABLE))
       , name_(name)
       , is_final_(is_final) {
     // if some base class was defined, this class must be a type
@@ -189,7 +190,7 @@ class TypeObject: public Object {
       }
     }
 
-    symbol_table_stack().NewTable();
+    symbol_table_stack().Push(sym_table_);
   }
 
   virtual ~TypeObject() {}
@@ -234,7 +235,12 @@ class TypeObject: public Object {
 
   virtual bool RegiterMethod(const std::string& name, ObjectPtr obj) {
     SymbolAttr sym_entry(obj, true);
-    return symbol_table_stack().InsertEntry(name, std::move(sym_entry));
+    return sym_table_->SetValue(name, std::move(sym_entry));
+  }
+
+  virtual bool RegisterAttr(const std::string& name, ObjectPtr obj) {
+    SymbolAttr sym_entry(obj, true);
+    return sym_table_->SetValue(name, std::move(sym_entry));
   }
 
   virtual bool Declared() const {
@@ -243,10 +249,16 @@ class TypeObject: public Object {
 
   ObjectPtr SearchAttr(const std::string& name);
 
+  ObjectPtr& SearchAttrRef(const std::string& name);
+
   bool ExistsAttr(const std::string& name);
 
   bool is_final() const {
     return is_final_;
+  }
+
+  inline SymbolTablePtr& SymTable() {
+    return sym_table_;
   }
 
   std::string Print() override {
@@ -254,6 +266,7 @@ class TypeObject: public Object {
   }
 
  private:
+  SymbolTablePtr sym_table_;
   std::string name_;
   std::weak_ptr<Object> parent_;
   std::vector<std::weak_ptr<Object>> interfaces_;
