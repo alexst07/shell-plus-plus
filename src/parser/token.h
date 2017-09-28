@@ -310,7 +310,7 @@ class TokenStream {
     if (this == &tok_stream)
       return *this;
 
-    tok_stream = std::move(tok_stream);
+    tok_vec_ = std::move(tok_stream.tok_vec_);
     pos_ = tok_stream.pos_;
     tok_stream.pos_ = 0;
 

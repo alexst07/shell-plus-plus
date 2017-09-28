@@ -258,7 +258,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
 
   if (cmd) {
     try {
-      LaunchCmd(cmd, std::move(glob_args.args()));
+      LaunchCmd(cmd, glob_args.args());
       exit(0);
     } catch (RunTimeError& e) {
       // set error on memory region
@@ -309,7 +309,7 @@ char** Process::FillArgv(const std::vector<std::string>& args) {
 
 ProcessSubShell::ProcessSubShell(SymbolTableStack& sym_tab, SubShell* sub_shell,
     Executor* parent)
-    : ProcessBase(sym_tab, std::move(std::vector<std::string>()), parent)
+    : ProcessBase(sym_tab, std::vector<std::string>(), parent)
     , sub_shell_(sub_shell) {}
 
 void ProcessSubShell::LaunchProcess(int infile, int outfile, int errfile,
@@ -495,7 +495,7 @@ void Job::LaunchInternalCmd(CmdEntryPtr cmd) {
 
   Arguments glob_args(std::move(process_[0]->Args()));
 
-  cmd->Exec(parent_, std::move(glob_args.args()));
+  cmd->Exec(parent_, glob_args.args());
 
   if (stdin_ != STDIN_FILENO) {
     close (stdin_);

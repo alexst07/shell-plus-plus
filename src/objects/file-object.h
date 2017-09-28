@@ -95,7 +95,8 @@ class FileObject: public Object {
 
   void Seekg(std::streamoff off, std::ios_base::seekdir way);
 
-  ObjectPtr Attr(std::shared_ptr<Object> self, const std::string& name);
+  ObjectPtr Attr(std::shared_ptr<Object> self,
+      const std::string& name) override;
 
  private:
   std::fstream fs_;

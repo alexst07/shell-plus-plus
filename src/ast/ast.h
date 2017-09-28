@@ -446,8 +446,7 @@ class AssignableValue: public Expression {
    static_assert(std::is_base_of<AssignableInterface,T>::value,
                  "Type not implements AssignableInterface");
 
-   value_ =  std::move(std::unique_ptr<AstNode>(
-         static_cast<AstNode*>(value.release())));
+   value_ = std::unique_ptr<AstNode>(static_cast<AstNode*>(value.release()));
  }
 };
 
@@ -640,7 +639,7 @@ class ImportStatement: public Statement {
   ImportStatement(Import import, std::unique_ptr<Identifier> as,
                   Position position)
       : Statement(NodeType::kImportStatement, position)
-      , from_(std::move(std::unique_ptr<Identifier>(nullptr)))
+      , from_(std::unique_ptr<Identifier>(nullptr))
       , import_(std::move(import))
       , as_(std::move(as))
       , has_from_(false) {}

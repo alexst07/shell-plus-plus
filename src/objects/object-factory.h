@@ -48,14 +48,14 @@ constexpr int c_strcmp( char const* lhs, char const* rhs) {
 #define TYPE_OBJECT_EXCPET_FACTORY(NAME, FNAME, OBJ_CLASS, TYPE_CLASS, BASE)   \
   ObjectPtr New ## FNAME(const std::string& msg) {                             \
     auto obj_type = symbol_table_.LookupSys(#NAME).SharedAccess();             \
-    return ObjectPtr(new OBJ_CLASS(msg, obj_type, std::move(SymTableStack())));\
+    return ObjectPtr(new OBJ_CLASS(msg, obj_type, SymTableStack()));\
   }                                                                            \
                                                                                \
   inline ObjectPtr New ## FNAME ## Type() {                                    \
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();            \
     auto base = 0 == c_strcmp(#BASE, "object")?                                \
       ObjectPtr(nullptr):symbol_table_.LookupSys(#BASE).SharedAccess();        \
-    return std::make_shared<TYPE_CLASS>(obj_type, std::move(SymTableStack()),  \
+    return std::make_shared<TYPE_CLASS>(obj_type, SymTableStack(),  \
         base);                                                                 \
   }
 
@@ -135,39 +135,39 @@ class ObjectFactory {
 
   inline ObjectPtr NewRootObject() {
     auto obj_type = symbol_table_.LookupSys("object").SharedAccess();
-    return ObjectPtr(new RootObject(obj_type, std::move(SymTableStack())));
+    return ObjectPtr(new RootObject(obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewNull() {
     auto obj_type = symbol_table_.LookupSys("null_t").SharedAccess();
-    return ObjectPtr(new NullObject(obj_type, std::move(SymTableStack())));
+    return ObjectPtr(new NullObject(obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewBool(bool v) {
     auto obj_type = symbol_table_.LookupSys("bool").SharedAccess();
-    return ObjectPtr(new BoolObject(v, obj_type, std::move(SymTableStack())));
+    return ObjectPtr(new BoolObject(v, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewInt(int v) {
     auto obj_type = symbol_table_.LookupSys("int").SharedAccess();
-    return std::make_shared<IntObject>(v, obj_type, std::move(SymTableStack()));
+    return std::make_shared<IntObject>(v, obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewReal(float v) {
     auto obj_type = symbol_table_.LookupSys("real").SharedAccess();
-    return ObjectPtr(new RealObject(v, obj_type, std::move(SymTableStack())));
+    return ObjectPtr(new RealObject(v, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewString(const std::string& str) {
     auto obj_type = symbol_table_.LookupSys("string").SharedAccess();
     return ObjectPtr(new StringObject(str, obj_type,
-                                      std::move(SymTableStack())));
+         SymTableStack()));
   }
 
   inline ObjectPtr NewString(std::string&& str) {
     auto obj_type = symbol_table_.LookupSys("string").SharedAccess();
     return ObjectPtr(new StringObject(std::move(str), obj_type,
-                                      std::move(SymTableStack())));
+         SymTableStack()));
   }
 
  inline  ObjectPtr NewCmdObj(int status, std::string&& str_stdout,
@@ -175,37 +175,37 @@ class ObjectFactory {
     auto obj_type = symbol_table_.LookupSys("cmdobj").SharedAccess();
     return ObjectPtr(new CmdObject(status, std::move(str_stdout),
                                    std::move(str_stderr), obj_type,
-                                   std::move(SymTableStack())));
+                                   SymTableStack()));
   }
 
   inline ObjectPtr NewSlice(ObjectPtr start, ObjectPtr end, ObjectPtr step) {
     auto obj_type = symbol_table_.LookupSys("slice").SharedAccess();
     return ObjectPtr(new SliceObject(start, end, step, obj_type,
-                                     std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewCmdIter(std::string delim, int outerr, ObjectPtr cmd_obj) {
     auto obj_type = symbol_table_.LookupSys("cmd_iter").SharedAccess();
     return ObjectPtr(new CmdIterObject(delim, outerr, cmd_obj, obj_type,
-                                         std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewFileIter(ObjectPtr file_obj) {
     auto obj_type = symbol_table_.LookupSys("file_iter").SharedAccess();
     return ObjectPtr(new FileIterObject(file_obj, obj_type,
-                                        std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewTuple(std::vector<std::unique_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.LookupSys("tuple").SharedAccess();
     return ObjectPtr(new TupleObject(std::move(value), obj_type,
-                                     std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewTuple(std::vector<std::shared_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.LookupSys("tuple").SharedAccess();
     return ObjectPtr(new TupleObject(std::move(value), obj_type,
-                                     std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewTuple(const std::vector<std::shared_ptr<Object>>& value) {
@@ -214,19 +214,19 @@ class ObjectFactory {
 
     auto obj_type = symbol_table_.LookupSys("tuple").SharedAccess();
     return ObjectPtr(new TupleObject(std::move(v), obj_type,
-                                     std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewArray(std::vector<std::unique_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.LookupSys("array").SharedAccess();
     return ObjectPtr(new ArrayObject(std::move(value), obj_type,
-                                     std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewArray(std::vector<std::shared_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.LookupSys("array").SharedAccess();
     return ObjectPtr(new ArrayObject(std::move(value), obj_type,
-                                     std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewArray(const std::vector<std::shared_ptr<Object>>& value) {
@@ -235,79 +235,79 @@ class ObjectFactory {
 
     auto obj_type = symbol_table_.LookupSys("array").SharedAccess();
     return ObjectPtr(new ArrayObject(std::move(v), obj_type,
-                                     std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewRangeIter(int start, int end, int step) {
     auto obj_type = symbol_table_.LookupSys("range_iter").SharedAccess();
     return ObjectPtr(new RangeIterObject(start, end, step, obj_type,
-                                         std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewArrayIter(ObjectPtr array) {
     auto obj_type = symbol_table_.LookupSys("array_iter").SharedAccess();
     return ObjectPtr(new ArrayIterObject(array, obj_type,
-                                         std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewTupleIter(ObjectPtr array) {
     auto obj_type = symbol_table_.LookupSys("tuple_iter").SharedAccess();
     return ObjectPtr(new TupleIterObject(array, obj_type,
-                                         std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewMapIter(ObjectPtr map) {
     auto obj_type = symbol_table_.LookupSys("map_iter").SharedAccess();
     return ObjectPtr(new MapIterObject(map, obj_type,
-                                       std::move(SymTableStack())));
+          SymTableStack()));
   }
 
   inline ObjectPtr NewMap(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value) {
     auto obj_type = symbol_table_.LookupSys("map").SharedAccess();
     return ObjectPtr(new MapObject(std::move(value), obj_type,
-                                   std::move(SymTableStack())));
+                                   SymTableStack()));
   }
 
   inline ObjectPtr NewMap() {
     auto obj_type = symbol_table_.LookupSys("map").SharedAccess();
-    return ObjectPtr(new MapObject(obj_type, std::move(SymTableStack())));
+    return ObjectPtr(new MapObject(obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewRegex(const std::string str) {
     auto obj_type = symbol_table_.LookupSys("regex").SharedAccess();
     return ObjectPtr(new RegexObject(str, obj_type,
-                                     std::move(SymTableStack())));
+        SymTableStack()));
   }
 
   inline ObjectPtr NewPath(const std::string str) {
     auto obj_type = symbol_table_.LookupSys("path").SharedAccess();
     return ObjectPtr(new PathObject(str, obj_type,
-                                    std::move(SymTableStack())));
+                                    SymTableStack()));
   }
 
   inline ObjectPtr NewPath(const boost::filesystem::path& path) {
     auto obj_type = symbol_table_.LookupSys("path").SharedAccess();
     return ObjectPtr(new PathObject(path, obj_type,
-                                    std::move(SymTableStack())));
+                                    SymTableStack()));
   }
 
   inline ObjectPtr NewFile(const std::string& path, std::ios_base::openmode mode) {
     auto obj_type = symbol_table_.LookupSys("file").SharedAccess();
     return ObjectPtr(new FileObject(path, mode, obj_type,
-                                    std::move(SymTableStack())));
+                                    SymTableStack()));
   }
 
-  inline ObjectPtr NewModule(const std::string& module_path, bool is_file_path) {
+  inline ObjectPtr NewModule(const std::string& module_path) {
     auto obj_type = symbol_table_.LookupSys("module").SharedAccess();
-    return ObjectPtr(new ModuleImportObject(module_path, is_file_path, obj_type,
-                                   std::move(SymTableStack())));
+    return ObjectPtr(new ModuleImportObject(module_path, obj_type,
+                                   SymTableStack()));
   }
 
   inline ObjectPtr NewModule(const std::string& module,
                       ModuleCustonObject::MemberTable&& table) {
     auto obj_type = symbol_table_.LookupSys("module").SharedAccess();
     return ObjectPtr(new ModuleCustonObject(module, std::move(table), obj_type,
-                                            std::move(SymTableStack())));
+           SymTableStack()));
   }
 
   inline ObjectPtr NewDeclObject(const std::string& name_type) {
@@ -332,127 +332,127 @@ class ObjectFactory {
                                         std::move(params),
                                         std::move(default_values),
                                         variadic, lambda, fstatic, obj_type,
-                                        std::move(SymTableStack())));
+           SymTableStack()));
   }
 
   inline ObjectPtr NewWrapperFunc(ObjectPtr func, ObjectPtr self) {
     auto obj_type = symbol_table_.LookupSys("function").SharedAccess();
     return ObjectPtr(new FuncWrapperObject(obj_type, func, self,
-                                           std::move(SymTableStack())));
+          SymTableStack()));
   }
 
   inline ObjectPtr NewRootObjectType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<RootObjectType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<RootObjectType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewNullType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<NullType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<NullType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewIntType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<IntType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<IntType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewRealType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<RealType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<RealType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewBoolType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<BoolType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<BoolType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewStringType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<StringType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<StringType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewCmdType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<CmdType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<CmdType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewCmdIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<CmdIterType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<CmdIterType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewFileIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<FileIterType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<FileIterType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewArrayType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<ArrayType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<ArrayType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewRangeIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
     return std::make_shared<RangeIterType>(obj_type,
-                                           std::move(SymTableStack()));
+          SymTableStack());
   }
 
   inline ObjectPtr NewArrayIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
     return std::make_shared<ArrayIterType>(obj_type,
-                                           std::move(SymTableStack()));
+          SymTableStack());
   }
 
   inline ObjectPtr NewTupleIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
     return std::make_shared<TupleIterType>(obj_type,
-                                           std::move(SymTableStack()));
+          SymTableStack());
   }
 
   inline ObjectPtr NewMapIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
     return std::make_shared<MapIterType>(obj_type,
-                                         std::move(SymTableStack()));
+        SymTableStack());
   }
 
   inline ObjectPtr NewTupleType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<TupleType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<TupleType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewMapType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<MapType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<MapType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewRegexType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<RegexType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<RegexType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewPathType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<PathType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<PathType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewFileType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<FileType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<FileType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewModuleType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<ModuleType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<ModuleType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewSliceType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<SliceType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<SliceType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewFuncType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<FuncType>(obj_type, std::move(SymTableStack()));
+    return std::make_shared<FuncType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewDeclType(const std::string& name_type,
@@ -476,7 +476,7 @@ class ObjectFactory {
   }
 
   inline ObjectPtr NewType() {
-    return ObjectPtr(new Type(ObjectPtr(nullptr), std::move(SymTableStack())));
+    return ObjectPtr(new Type(ObjectPtr(nullptr), SymTableStack()));
   }
 
  private:

@@ -30,8 +30,8 @@ SymbolAttr& SymbolTable::SetValue(const std::string& name, bool global) {
 
     // declare a variable as local
     SymbolAttr symbol(global);
-    SymbolIterator it_symbol = map_.insert (it, std::move(
-        std::pair<std::string, SymbolAttr>(name, std::move(symbol))));
+    SymbolIterator it_symbol = map_.insert (it,
+        std::pair<std::string, SymbolAttr>(name, std::move(symbol)));
     return it_symbol->second;
   }
 }
@@ -47,8 +47,7 @@ void SymbolTable::SetValue(const std::string& name,
   // declare variable always as local
   SymbolAttr symbol(value, global);
   it = map_.begin();
-  map_.insert (it, std::move(std::pair<std::string, SymbolAttr>(
-      name, std::move(symbol))));
+  map_.insert (it, std::pair<std::string, SymbolAttr>(name, std::move(symbol)));
 }
 
 bool SymbolTable::SetValue(const std::string& name, SymbolAttr&& symbol) {
@@ -61,8 +60,7 @@ bool SymbolTable::SetValue(const std::string& name, SymbolAttr&& symbol) {
   // if the key not exists create a new
   // max efficiency inserting assign begin to i
   it = map_.begin();
-  map_.insert(it, std::move(std::pair<std::string, SymbolAttr>(
-      name, std::move(symbol))));
+  map_.insert(it, std::pair<std::string, SymbolAttr>(name, std::move(symbol)));
 
   return true;
 }

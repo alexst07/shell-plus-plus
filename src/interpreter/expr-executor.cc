@@ -283,9 +283,8 @@ try {
   FuncCallExecutor fcall_exec(this, symbol_table_stack());
   return fcall_exec.Exec(node);
 } catch (RunTimeError& e) {
-  e.messages().Push(std::move(Message(Message::Severity::ERR,
-      boost::format("on function call"),
-      node->pos().line, node->pos().col)));
+  e.messages().Push(Message(Message::Severity::ERR,
+      boost::format("on function call"), node->pos().line, node->pos().col));
 
   // when the exception is thrown inside some object function
   // this object doesn't have the position of the node, so
@@ -545,7 +544,7 @@ ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
 
   try {
     ObjectPtr obj(obj_factory.NewCmdObj(status, std::move(str),
-                                        std::move(std::string(""))));
+        std::string("")));
     return obj;
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
@@ -786,10 +785,10 @@ ObjectPtr ListComprehensionExecutor::Exec(AstNode* node) {
 
   if (last_item->type() == AstNode::NodeType::kCompIf) {
     CompIf* comp_if = static_cast<CompIf*>(last_item);
-    stmt = std::move(MountIfBlock(comp_if, list_comp_node));
+    stmt = MountIfBlock(comp_if, list_comp_node);
   } else {
     CompFor* comp_for = static_cast<CompFor*>(last_item);
-    stmt = std::move(MountForBlock(comp_for, list_comp_node));
+    stmt = MountForBlock(comp_for, list_comp_node);
   }
 
   AstNodeFactory ast_node_factory([&]() {
@@ -797,8 +796,7 @@ ObjectPtr ListComprehensionExecutor::Exec(AstNode* node) {
   });
 
   if (for_if_list.size() > 1) {
-    stmt = std::move(ExecForIfList(for_if_list, std::move(stmt),
-        ast_node_factory));
+    stmt = ExecForIfList(for_if_list, std::move(stmt), ast_node_factory);
   }
 
   StmtExecutor stmt_exec(this, symbol_table_stack());
@@ -826,7 +824,7 @@ std::unique_ptr<Statement> ListComprehensionExecutor::ExecForIfList(
       CompIf* comp_if = static_cast<CompIf*>(item);
 
       std::unique_ptr<Statement> if_stmt(ast_node_factory.NewIfStatement(
-          std::move(comp_if->MoveCompExp()), std::move(block),
+          comp_if->MoveCompExp(), std::move(block),
           std::unique_ptr<Statement>(nullptr)));
 
       stmt = std::move(if_stmt);
@@ -834,8 +832,7 @@ std::unique_ptr<Statement> ListComprehensionExecutor::ExecForIfList(
       CompFor* comp_for = static_cast<CompFor*>(item);
 
       std::unique_ptr<Statement> for_stmt(ast_node_factory.NewForInStatement(
-          std::move(comp_for->MoveExpList()),
-          std::move(comp_for->MoveTestList()), std::move(block)));
+          comp_for->MoveExpList(), comp_for->MoveTestList(), std::move(block)));
 
       stmt = std::move(for_stmt);
     }
@@ -851,16 +848,16 @@ std::unique_ptr<Statement> ListComprehensionExecutor::MountBlock(
   });
 
   std::unique_ptr<Identifier> id(ast_node_factory.NewIdentifier(
-      "%list_comp_val", std::move(std::unique_ptr<PackageScope>(nullptr))));
+      "%list_comp_val", std::unique_ptr<PackageScope>(nullptr)));
 
   std::unique_ptr<Identifier> id_func_name(ast_node_factory.NewIdentifier(
-      "append", std::move(std::unique_ptr<PackageScope>(nullptr))));
+      "append", std::unique_ptr<PackageScope>(nullptr)));
 
   std::unique_ptr<Attribute> attribute(ast_node_factory.NewAttribute(
       std::move(id), std::move(id_func_name)));
 
-  std::unique_ptr<Argument> arg(ast_node_factory.NewArgument(
-      std::string(""), std::move(list_comp_node->MoveResExp())));
+  std::unique_ptr<Argument> arg(ast_node_factory.NewArgument(std::string(""),
+      list_comp_node->MoveResExp()));
 
   std::vector<std::unique_ptr<Argument>> arg_vec;
   arg_vec.push_back(std::move(arg));
@@ -893,7 +890,7 @@ std::unique_ptr<Statement> ListComprehensionExecutor::MountIfBlock(
 
   // mount if statement
   std::unique_ptr<Statement> if_stmt(ast_node_factory.NewIfStatement(
-      std::move(comp_if->MoveCompExp()), std::move(block),
+      comp_if->MoveCompExp(), std::move(block),
       std::unique_ptr<Statement>(nullptr)));
 
   return if_stmt;
@@ -909,8 +906,7 @@ std::unique_ptr<Statement> ListComprehensionExecutor::MountForBlock(
 
   // mount if statement
   std::unique_ptr<Statement> for_stmt(ast_node_factory.NewForInStatement(
-      std::move(comp_for->MoveExpList()), std::move(comp_for->MoveTestList()),
-      std::move(block)));
+      comp_for->MoveExpList(), comp_for->MoveTestList(), std::move(block)));
 
   return for_stmt;
 }

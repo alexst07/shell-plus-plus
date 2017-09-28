@@ -298,8 +298,6 @@ class SwitchExecutor: public Executor {
 
  private:
   bool MatchAnyExp(ObjectPtr exp, std::vector<ObjectPtr> &&exp_list);
-
-  StopFlag stop_flag_;
 };
 
 class DeferExecutor: public Executor {

@@ -24,15 +24,13 @@ ParserResult<Declaration> Parser::ParserInterfaceDecl() {
   Advance();
   ValidToken();
 
-  std::unique_ptr<Identifier> iface_name;
-
   if (token_ != TokenKind::IDENTIFIER) {
     ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
     return ParserResult<Declaration>(); // Error
   }
 
-  iface_name = std::move(factory_.NewIdentifier(boost::get<std::string>(
-      token_.GetValue()), std::move(nullptr)));
+  std::unique_ptr<Identifier> iface_name = factory_.NewIdentifier(
+      boost::get<std::string>(token_.GetValue()), std::move(nullptr));
 
   Advance();
   ValidToken();
@@ -56,7 +54,7 @@ ParserResult<Declaration> Parser::ParserInterfaceDecl() {
 
   ParserResult<Declaration> iface_decl(factory_.NewInterfaceDeclaration(
       std::move(iface_name), std::move(interfaces),
-      std::move(iface_block.MoveAstNode())));
+      iface_block.MoveAstNode()));
 
   return iface_decl;
 }
@@ -184,7 +182,6 @@ ParserResult<Declaration> Parser::ParserClassDecl(bool is_final,
   Advance();
   ValidToken();
 
-  std::unique_ptr<Identifier> class_name;
   std::unique_ptr<Expression> parent;
 
   if (token_ != TokenKind::IDENTIFIER) {
@@ -192,8 +189,8 @@ ParserResult<Declaration> Parser::ParserClassDecl(bool is_final,
     return ParserResult<Declaration>(); // Error
   }
 
-  class_name = std::move(factory_.NewIdentifier(boost::get<std::string>(
-      token_.GetValue()), std::move(nullptr)));
+  std::unique_ptr<Identifier> class_name = factory_.NewIdentifier(
+      boost::get<std::string>(token_.GetValue()), std::move(nullptr));
 
   Advance();
   ValidToken();
@@ -235,7 +232,7 @@ ParserResult<Declaration> Parser::ParserClassDecl(bool is_final,
 
   ParserResult<Declaration> class_decl(factory_.NewClassDeclaration(
       std::move(class_name), std::move(parent), std::move(interfaces),
-      std::move(class_block.MoveAstNode()), is_final, abstract));
+      class_block.MoveAstNode(), is_final, abstract));
 
   return class_decl;
 }
@@ -244,15 +241,13 @@ ParserResult<Declaration> Parser::ParserVariableDecl() {
   // advance var keyword
   Advance();
 
-  std::unique_ptr<Identifier> var_name;
-
   if (token_ != TokenKind::IDENTIFIER) {
     ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
     return ParserResult<Declaration>(); // Error
   }
 
-  var_name = std::move(factory_.NewIdentifier(boost::get<std::string>(
-      token_.GetValue()), std::move(nullptr)));
+  std::unique_ptr<Identifier> var_name = factory_.NewIdentifier(
+      boost::get<std::string>(token_.GetValue()), std::move(nullptr));
 
   Advance();
 
@@ -283,14 +278,13 @@ std::unique_ptr<FinallyStatement> Parser::ParserFinally() {
 
 std::vector<std::unique_ptr<CatchStatement>> Parser::ParserCatchList() {
   std::vector<std::unique_ptr<CatchStatement>> catch_list;
+  std::unique_ptr<Identifier> var_name;
 
   while (ValidToken() == TokenKind::KW_CATCH) {
     // Advance catch
     Advance();
 
     ParserResult<ExpressionList> exp_list = ParserExpList();
-
-    std::unique_ptr<Identifier> var_name;
 
     if (token_ == TokenKind::KW_AS) {
       Advance();
@@ -300,8 +294,8 @@ std::vector<std::unique_ptr<CatchStatement>> Parser::ParserCatchList() {
         throw std::invalid_argument("expected identifier");
       }
 
-      var_name = std::move(factory_.NewIdentifier(boost::get<std::string>(
-      token_.GetValue()), std::move(nullptr)));
+      var_name = factory_.NewIdentifier(boost::get<std::string>(
+          token_.GetValue()), std::move(nullptr));
 
       Advance();
     }
@@ -344,7 +338,7 @@ ParserResult<Statement> Parser::ParserTryCatch() {
   }
 
   try {
-    catch_list = std::move(ParserCatchList());
+    catch_list = ParserCatchList();
   } catch (std::invalid_argument& e) {
     return ParserResult<Statement>();
   }

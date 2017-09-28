@@ -50,8 +50,7 @@ ParserResult<Statement> Parser::ParserImportIdStmt() {
       return ParserResult<Statement>(); // Error
     }
 
-    id = std::move(factory_.NewIdentifier(
-                   boost::get<std::string>(token_.GetValue())));
+    id = factory_.NewIdentifier(boost::get<std::string>(token_.GetValue()));
 
     Advance();
   }
@@ -259,8 +258,8 @@ ParserResult<AstNode> Parser::ParserFunctionDeclaration(
       return ParserResult<AstNode>(); // Error
     }
 
-    id = std::move(factory_.NewIdentifier(boost::get<std::string>(
-        token_.GetValue()), std::move(nullptr)));
+    id = factory_.NewIdentifier(boost::get<std::string>(token_.GetValue()),
+        std::move(nullptr));
 
     Advance();
     ValidToken();
@@ -364,9 +363,9 @@ ParserResult<Statement> Parser::ParserIfStmt() {
     Advance();
 
     if (ValidToken() == TokenKind::KW_IF) {
-      else_block = std::move(ParserIfStmt());
+      else_block = ParserIfStmt();
     } else {
-      else_block = std::move(ParserBlock());
+      else_block = ParserBlock();
     }
 
     if (!else_block) {
@@ -391,7 +390,7 @@ ParserResult<Statement> Parser::ParserSwitchStmt() {
   if (ValidToken() == TokenKind::LBRACE) {
     exp = std::move(nullptr);
   } else {
-    exp = std::move(ParserLetExp());
+    exp = ParserLetExp();
   }
 
   if (token_ != TokenKind::LBRACE) {
@@ -404,9 +403,9 @@ ParserResult<Statement> Parser::ParserSwitchStmt() {
   // parser switch block
   while (ValidToken().IsAny(TokenKind::KW_CASE, TokenKind::KW_DEFAULT)) {
     if (token_ == TokenKind::KW_CASE) {
-      case_list.push_back(std::move(ParserCaseStmt()));
+      case_list.push_back(ParserCaseStmt());
     } else if (token_ == TokenKind::KW_DEFAULT) {
-      default_stmt = std::move(ParserDefaultStmt());
+      default_stmt = ParserDefaultStmt();
     } else {
       ErrorMsg(boost::format("expected case or default"));
       return ParserResult<Statement>(); // Error
@@ -563,48 +562,48 @@ ParserResult<Statement> Parser::ParserStmt() {
   bool check_end_stmt = false;
 
   if (token_ == TokenKind::KW_IF) {
-    res = std::move(ParserIfStmt());
+    res = ParserIfStmt();
   } else if (token_ == TokenKind::KW_WHILE) {
-    res = std::move(ParserWhileStmt());
+    res = ParserWhileStmt();
   } else if (token_ == TokenKind::KW_BREAK) {
     check_end_stmt = true;
-    res = std::move(ParserBreakStmt());
+    res = ParserBreakStmt();
   } else if (token_ == TokenKind::KW_CONTINUE) {
     check_end_stmt = true;
-    res = std::move(ParserContinueStmt());
+    res = ParserContinueStmt();
   } else if (token_ == TokenKind::KW_RETURN) {
     check_end_stmt = true;
-    res = std::move(ParserReturnStmt());
+    res = ParserReturnStmt();
   } else if (token_ == TokenKind::KW_SWITCH) {
-    res = std::move(ParserSwitchStmt());
+    res = ParserSwitchStmt();
   } else if (token_ == TokenKind::KW_FOR) {
-    res = std::move(ParserForInStmt());
+    res = ParserForInStmt();
   } else if (token_ == TokenKind::KW_DEFER) {
     check_end_stmt = true;
-    res = std::move(ParserDeferStmt());
+    res = ParserDeferStmt();
   } else if (token_ == TokenKind::KW_GLOBAL) {
     check_end_stmt = true;
-    res = std::move(ParserGlobalAssignment());
+    res = ParserGlobalAssignment();
   } else if (token_ == TokenKind::KW_DEL) {
     check_end_stmt = true;
-    res = std::move(ParserDelStmt());
+    res = ParserDelStmt();
   } else if (token_ == TokenKind::KW_IMPORT) {
     check_end_stmt = true;
-    res = std::move(ParserImportStmt());
+    res = ParserImportStmt();
   } else if (token_ == TokenKind::KW_TRY) {
-    res = std::move(ParserTryCatch());
+    res = ParserTryCatch();
   } else if (token_ == TokenKind::KW_VARENV) {
-    res = std::move(ParserVarEnvStmt());
+    res = ParserVarEnvStmt();
   } else if (token_ == TokenKind::KW_THROW) {
     check_end_stmt = true;
-    res = std::move(ParserThrow());
+    res = ParserThrow();
   } else if (token_ == TokenKind::LBRACE) {
-    res = std::move(ParserBlock());
+    res = ParserBlock();
   } else if (IsStmtDecl()) {
-    res = std::move(ParserStmtDecl());
+    res = ParserStmtDecl();
   } else if (MatchLangStmt()) {
     check_end_stmt = true;
-    res = std::move(ParserSimpleStmt());
+    res = ParserSimpleStmt();
   } else if (token_ == TokenKind::KW_CATCH) {
     ErrorMsg(boost::format("catch must be after try block"));
     return ParserResult<Statement>(); // Error
@@ -613,7 +612,7 @@ ParserResult<Statement> Parser::ParserStmt() {
     return ParserResult<Statement>(); // Error
   } else {
     check_end_stmt = true;
-    res = std::move(ParserCmdFull());
+    res = ParserCmdFull();
   }
 
   if (check_end_stmt) {
@@ -665,11 +664,11 @@ ParserResult<Statement> Parser::ParserCmdAndOr() {
     Advance();
     ValidToken();
 
-    rcmd = std::move(ParserCmdPipe());
+    rcmd = ParserCmdPipe();
 
     if (rcmd) {
-      lcmd = std::move(factory_.NewCmdAndOr(
-          token_kind, lcmd.MoveAstNode<Cmd>(), rcmd.MoveAstNode<Cmd>()));
+      lcmd = factory_.NewCmdAndOr(token_kind, lcmd.MoveAstNode<Cmd>(),
+          rcmd.MoveAstNode<Cmd>());
     }
   }
 
@@ -738,7 +737,7 @@ ParserResult<Statement> Parser::ParserIoRedirectCmdList() {
   // Check if there are some io redirect on command
   while (IsIoRedirect()) {
     // Gets each io redirect
-    std::unique_ptr<CmdIoRedirect> io(std::move(ParserIoRedirectCmd()));
+    std::unique_ptr<CmdIoRedirect> io(ParserIoRedirectCmd());
     vec_io.push_back(std::move(io));
   }
 
@@ -759,8 +758,7 @@ std::unique_ptr<CmdIoRedirect> Parser::ParserIoRedirectCmd() {
 
   // Check if is an int before io redirect as 2> or 2>> for example
   if (CmdValidInt()) {
-    integer = std::move(factory_.NewLiteral(
-        token_.GetValue(), Literal::kInteger));
+    integer = factory_.NewLiteral(token_.GetValue(), Literal::kInteger);
     Advance();
   } else if (CmdValidAnd()) {
     // Check if the token is & follows by io token: &> or &>>
@@ -779,7 +777,7 @@ std::unique_ptr<CmdIoRedirect> Parser::ParserIoRedirectCmd() {
     // ex: cmd_any > f${v[0]}.any
     if (token_ == TokenKind::DOLLAR_LBRACE) {
       ParserResult<Cmd> exp(ParserExpCmd());
-      pieces.push_back(std::move(exp.MoveAstNode()));
+      pieces.push_back(exp.MoveAstNode());
       continue;
     }
 
@@ -819,7 +817,7 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
     // ex: cmd -e ${v[0] + 1} -d
     if (IsCmdExprToken()) {
       ParserResult<Cmd> exp(ParserExpCmd());
-      pieces.push_back(std::move(exp.MoveAstNode()));
+      pieces.push_back(exp.MoveAstNode());
       continue;
     }
 
@@ -914,7 +912,7 @@ ParserResult<Statement> Parser::ParserReturnStmt() {
   ParserResult<AssignableList> list(ParserAssignableList());
 
   return ParserResult<Statement>(factory_.NewReturnStatement(
-      std::move(list.MoveAstNode())));
+      list.MoveAstNode()));
 }
 
 ParserResult<Statement> Parser::ParserBreakStmt() {
@@ -1121,7 +1119,7 @@ ParserResult<Expression> Parser::ParserLambda() {
 
   // mount return statement
   ParserResult<Statement> ret_stmt(factory_.NewReturnStatement(
-      std::move(assign_list.MoveAstNode())));
+      assign_list.MoveAstNode()));
 
   // mount stmt list
   std::vector<std::unique_ptr<Statement>> stmt_vec;
@@ -1307,11 +1305,11 @@ ParserResult<Expression> Parser::ParserOrExp() {
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserAndExp());
+    rexp = ParserAndExp();
 
     if (rexp) {
-      lexp = std::move(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
+      lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
+          rexp.MoveAstNode());
     }
   }
 
@@ -1331,11 +1329,11 @@ ParserResult<Expression> Parser::ParserAndExp() {
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserNotExp());
+    rexp = ParserNotExp();
 
     if (rexp) {
-      lexp = std::move(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
+      lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
+          rexp.MoveAstNode());
     }
   }
 
@@ -1371,11 +1369,11 @@ ParserResult<Expression> Parser::ParserComparisonExp() {
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserBitOrExp());
+    rexp = ParserBitOrExp();
 
     if (rexp) {
-      lexp = std::move(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
+      lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
+          rexp.MoveAstNode());
     }
   }
 
@@ -1395,11 +1393,11 @@ ParserResult<Expression> Parser::ParserBitOrExp() {
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserBitXorExp());
+    rexp = ParserBitXorExp();
 
     if (rexp) {
-      lexp = std::move(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
+      lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
+          rexp.MoveAstNode());
     }
   }
 
@@ -1419,11 +1417,11 @@ ParserResult<Expression> Parser::ParserBitXorExp() {
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserBitAndExp());
+    rexp = ParserBitAndExp();
 
     if (rexp) {
-      lexp = std::move(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
+      lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
+          rexp.MoveAstNode());
     }
   }
 
@@ -1443,11 +1441,11 @@ ParserResult<Expression> Parser::ParserBitAndExp() {
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserShiftExp());
+    rexp = ParserShiftExp();
 
     if (rexp) {
-      lexp = std::move(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
+      lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
+          rexp.MoveAstNode());
     }
   }
 
@@ -1467,11 +1465,11 @@ ParserResult<Expression> Parser::ParserShiftExp() {
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserArithExp());
+    rexp = ParserArithExp();
 
     if (rexp) {
-      lexp = std::move(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
+      lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
+          rexp.MoveAstNode());
     }
   }
 
@@ -1491,11 +1489,11 @@ ParserResult<Expression> Parser::ParserArithExp() {
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserTerm());
+    rexp = ParserTerm();
 
     if (rexp) {
-      lexp = std::move(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
+      lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
+          rexp.MoveAstNode());
     }
   }
 
@@ -1515,11 +1513,11 @@ ParserResult<Expression> Parser::ParserTerm() {
     Advance();
     ValidToken();
 
-    rexp = std::move(ParserUnaryExp());
+    rexp = ParserUnaryExp();
 
     if (rexp) {
-      lexp = std::move(factory_.NewBinaryOperation(
-          token_kind, lexp.MoveAstNode(), rexp.MoveAstNode()));
+      lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
+          rexp.MoveAstNode());
     }
   }
 
@@ -1678,8 +1676,8 @@ ParserResult<Expression> Parser::ParserScopeIdentifier() {
       return ParserResult<Expression>(); // Error
     }
 
-    id = std::move(factory_.NewIdentifier(boost::get<std::string>(
-        token_.GetValue()), std::move(scope)));
+    id = factory_.NewIdentifier(boost::get<std::string>(token_.GetValue()),
+        std::move(scope));
     Advance();
   }
 

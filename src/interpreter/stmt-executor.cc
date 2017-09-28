@@ -337,8 +337,8 @@ void InterfaceDeclExecutor::Exec(AstNode* node) {
 
   try {
     if (iface_node->has_interfaces()) {
-    ifaces = std::move(InterfaceDeclExecutor::HandleInterfaces(this,
-        iface_node->interfaces(), symbol_table_stack()));
+    ifaces = InterfaceDeclExecutor::HandleInterfaces(this,
+        iface_node->interfaces(), symbol_table_stack());
     }
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(), iface_node->pos(), e.messages());
@@ -1068,7 +1068,7 @@ ObjectPtr ImportExecutor::ProcessModule(const std::string& module,
 
   // process the module and store it on import table
   ObjectFactory obj_factory(symbol_table_stack());
-  module_obj = obj_factory.NewModule(full_path, true);
+  module_obj = obj_factory.NewModule(full_path);
 
   EnvShell::instance()->GetImportTable().AddModule(full_path, module_obj);
   static_cast<ModuleImportObject&>(*module_obj).Execute();

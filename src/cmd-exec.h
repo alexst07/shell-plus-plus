@@ -139,10 +139,8 @@ class ProcessSubShell: public ProcessBase {
 
 class Job {
  public:
-  Job(SymbolTableStack& sym_tab, Executor* parent, bool var_out_mode = false)
-      : status_(0)
-      , var_out_mode_(var_out_mode)
-      , pgid_(0)
+  Job(SymbolTableStack& sym_tab, Executor* parent)
+      : pgid_(0)
       , parent_(parent)
       , sym_tab_(sym_tab.MainTable()) {}
 
@@ -168,13 +166,7 @@ class Job {
   std::vector<std::unique_ptr<ProcessBase>> process_;
   int stdin_, stdout_, stderr_;
   std::string strout_, strerr_;
-  int status_;
-  bool var_out_mode_;
-  bool wait_;
-  int shell_terminal_;
   pid_t pgid_;
-  int shell_pgid_;
-  struct termios tmodes_;
   struct termios shell_tmodes_;
   Executor* parent_;
   SymbolTableStack sym_tab_;

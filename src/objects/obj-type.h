@@ -70,12 +70,11 @@ class RangeIterObject: public BaseIter {
 
 class ModuleImportObject: public Object {
  public:
-  ModuleImportObject(const std::string& module_path, bool is_file_path,
-      ObjectPtr obj_type, SymbolTableStack&& sym_table)
+  ModuleImportObject(const std::string& module_path, ObjectPtr obj_type,
+      SymbolTableStack&& sym_table)
       : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
       , interpreter_(false)
-      , module_path_(module_path)
-      , is_file_path_(is_file_path) {}
+      , module_path_(module_path) {}
 
   virtual ~ModuleImportObject() {}
 
@@ -106,7 +105,6 @@ class ModuleImportObject: public Object {
  private:
   Interpreter interpreter_;
   std::string module_path_;
-  bool is_file_path_;
 };
 
 class ModuleMainObject: public Object {
@@ -229,7 +227,7 @@ class TypeObject: public Object {
     return name_;
   }
 
-  virtual std::string ObjectName() {
+  virtual std::string ObjectName() override {
     return name_;
   }
 
