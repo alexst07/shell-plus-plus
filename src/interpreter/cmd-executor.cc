@@ -27,6 +27,7 @@
 #include "scope-executor.h"
 #include "env-shell.h"
 #include "utils/scope-exit.h"
+#include "utils/glob.h"
 #include "objects/obj-type.h"
 #include "parser/extract_expr.h"
 
@@ -285,6 +286,12 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
   bool blank_after = false;
   bool is_cmd_piece = false;
 
+  // indicate if the part is a unique literal string
+  bool composed_part = false;
+
+  // indicate if is the first part of command
+  bool is_first_part = true;
+
   for (AstNode* piece: pieces) {
     if (piece->type() == AstNode::NodeType::kCmdPiece) {
       is_cmd_piece = true;
@@ -296,13 +303,23 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
         str_part += ExtractCmdExprFromString(this, cmd_part->cmd_str());
       } else {
         str_part += cmd_part->cmd_str();
+        composed_part = true;
       }
 
       blank_after = cmd_part->blank_after();
 
       if (blank_after) {
-        cmd.push_back(str_part);
-        str_part = "";
+        if (composed_part && !is_first_part) {
+          std::vector<std::string> args = GlobArguments(str_part);
+          cmd.insert(cmd.end(), args.begin(), args.end());
+          composed_part = false;
+          str_part = "";
+        } else {
+          cmd.push_back(str_part);
+          is_first_part = false;
+          composed_part = false;
+          str_part = "";
+        }
       }
     } else if (piece->type() == AstNode::NodeType::kCmdValueExpr) {
       is_cmd_piece = true;
@@ -323,6 +340,9 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
 
         // when pass array to command, it must be considered blank space after
         str_part = "";
+        composed_part = false;
+        is_first_part = false;
+
         continue;
       }
 
@@ -335,6 +355,8 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
       if (blank_after) {
         cmd.push_back(str_part);
         str_part = "";
+        is_first_part = false;
+        composed_part = false;
       }
     } else {
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
@@ -344,7 +366,13 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
 
   // if the cmd doesn't finish with blank space, put its content on vector
   if (!blank_after && is_cmd_piece) {
-    cmd.push_back(str_part);
+    if (composed_part && !is_first_part) {
+      std::vector<std::string> args = GlobArguments(str_part);
+      cmd.insert(cmd.end(), args.begin(), args.end());
+    } else {
+      cmd.push_back(str_part);
+      is_first_part = false;
+    }
   }
 
   return cmd;

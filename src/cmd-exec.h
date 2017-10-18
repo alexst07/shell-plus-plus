@@ -34,7 +34,7 @@ namespace internal {
 
 class Arguments {
  public:
-  Arguments(std::vector<std::string>&& args);
+  Arguments(const std::vector<std::string>& args);
   ~Arguments();
 
   char **argsv();
@@ -43,9 +43,7 @@ class Arguments {
 
   void Process();
  private:
-  glob_t globbuf_;
   char **argv_;
-  bool aloc_glob_;
 };
 
 class ProcessBase {

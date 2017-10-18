@@ -643,7 +643,8 @@ ParserResult<Statement> Parser::ParserCmdFull() {
     background_exec = true;
     Advance();
   } else if (!TokenEndFullCmd()) {
-    ErrorMsg(boost::format("unexpected token in the end of command"));
+    ErrorMsg(boost::format("unexpected token %1% in the end of command")%
+        TokenValueStr());
     return ParserResult<Statement>(); // Error
   }
 

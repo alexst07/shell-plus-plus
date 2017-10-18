@@ -34,6 +34,8 @@ std::vector<ObjectPtr> ListTree(boost::filesystem::path path,
 std::vector<ObjectPtr> ExecGlob(const std::string& glob_str,
     SymbolTableStack& symbol_table_stack, const std::string& root_str = "");
 
+std::vector<std::string> GlobArguments(const std::string& arg);
+
 }
 }
 

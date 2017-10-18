@@ -238,7 +238,6 @@ class Token {
       case TokenKind::RBRACE:         // }
       case TokenKind::AND:            // &&
       case TokenKind::OR:             // ||
-      case TokenKind::EXCL_NOT:       // !
       case TokenKind::LESS_THAN:      // <
       case TokenKind::GREATER_THAN:   // >
       case TokenKind::GREAT_AND:      // >&

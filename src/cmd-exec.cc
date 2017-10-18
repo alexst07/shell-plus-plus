@@ -29,32 +29,15 @@
 namespace shpp {
 namespace internal {
 
-Arguments::Arguments(std::vector<std::string>&& args)
-    : aloc_glob_(false) {
+Arguments::Arguments(const std::vector<std::string>& args) {
   if (args.size() > 1) {
-    globbuf_.gl_offs = 1;
-    int flag = GLOB_NOMAGIC | GLOB_BRACE | GLOB_TILDE | GLOB_DOOFFS;
+    argv_ = new char*[args.size() + 2];
 
-    for (size_t i = 1; i < args.size(); i++) {
-      if (i > 1) {
-        flag |= GLOB_APPEND;
-      }
-
-      glob(args[i].c_str(), flag, nullptr, &globbuf_);
-      aloc_glob_ = true;
+    for (size_t i = 0; i < args.size(); i++) {
+      argv_[i] = const_cast<char*>(args[i].c_str());
     }
 
-    globbuf_.gl_pathv[0] = const_cast<char*>(args[0].c_str());
-
-    // globbuf_.gl_pathc don't count the offset, so we need plus one
-    // on the memory allocation, on the loop and in the nullptr assignment
-    argv_ = new char*[globbuf_.gl_pathc + 2];
-
-    for (size_t i = 0; i <= globbuf_.gl_pathc; i++) {
-      argv_[i] = const_cast<char*>(globbuf_.gl_pathv[i]);
-    }
-
-    argv_[globbuf_.gl_pathc + 1] = nullptr;
+    argv_[args.size()] = nullptr;
     return;
   }
 
@@ -66,10 +49,6 @@ Arguments::Arguments(std::vector<std::string>&& args)
 Arguments::~Arguments() {
   if (argv_ != nullptr) {
     delete argv_;
-  }
-
-  if (aloc_glob_) {
-    globfree (&globbuf_);
   }
 }
 
@@ -254,7 +233,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
       shmat(EnvShell::instance()->shmid(), 0, 0);
   err->error = false;
 
-  Arguments glob_args(std::move(args));
+  Arguments glob_args(args);
 
   if (cmd) {
     try {

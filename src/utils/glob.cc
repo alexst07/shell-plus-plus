@@ -118,5 +118,27 @@ std::vector<ObjectPtr> ExecGlob(const std::string& glob_str,
   return glob_obj;
 }
 
+std::vector<std::string> GlobArguments(const std::string& arg) {
+  glob_t globbuf;
+  std::vector<std::string> arg_vec;
+
+  int flag = GLOB_NOMAGIC | GLOB_BRACE | GLOB_TILDE;
+
+  glob(arg.c_str(), flag, nullptr, &globbuf);
+
+  for (size_t i = 0; i < globbuf.gl_pathc; i++) {
+    arg_vec.push_back(std::string(globbuf.gl_pathv[i]));
+  }
+
+  // free glob
+  globfree (&globbuf);
+
+  if (arg_vec.size() == 0) {
+    return std::vector<std::string>(1, arg);
+  }
+
+  return arg_vec;
+}
+
 }
 }
