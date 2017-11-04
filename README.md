@@ -32,8 +32,13 @@ Follows some examples just to get an idea of how the language works.
 echo Hello World
 print("Hello World")
 ```
-
 In Shell++ you can use an other program as echo, or a native function print.
+
+# List comprehension
+```shell
+files = [f for f in $(ls) if path(f).size("M") > 50]
+```
+In this example files will be an array with all files listed by ls command with size bigger than 50Mb.
 
 ## Reading file line by line
 ```python
@@ -275,18 +280,32 @@ class Complex {
     return Complex(n.r - this.r, n.i - this.i)
   }
 
-  func __print() {
+  func __print__() {
     return string(this.r) + " + " + string(this.i) + "i"
   }
 }
 
-c = Complex(2, 3)
+c1 = Complex(2, 3)
+c2 = Complex(1, 2)
+c = c1 + c2
+
 print(c)
 ```
 Output:
 ```
-2 + 3i
+3 + 5i
 ```
+
+## Try-Catch
+```php
+try {
+  git clone git@github.com:alexst07/shell-plus-plus.git
+} catch InvalidCmdException as ex {
+  print("git not installed [msg: ", ex, "]")
+}
+```
+Shell++ has exception control, when a command is not found an InvalidCmdException is thrown.
+
 ## Quick-sort
 
 ```go
@@ -353,51 +372,6 @@ the command whereis inside $() have as result an object cmd, you can convert its
 ## Compiling
 
 ### Ubuntu
-First you need intall the requirements to build Shell++
-```
-# apt-get install -y build-essential
-# apt-get install -y libboost-all-dev libreadline6 libreadline6-dev git cmake
-```
-
-With the requirements installed, make a clone of the repository
-```
-$ git clone git@github.com:alexst07/shell-plus-plus.git
-```
-After the clone, change to directory of the project
-```
-$ cd shell-plus-plus
-```
-To compile the project, you need create a directory when the cmake files will
-be generated, and so, build the project
-
-```
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
-```
-Now you can already use the Shell++, the binary is generated at shell/ directory.
-To use Shell++ to execute a script, first, create an example script called my.shpp.
-
-```
-echo my first script in shell++
-```
-In the build path, call the binary to execute your script
-
-```
-$ ./shell/shpp my.shpp
-```
-You should see the output:
-```
-my first script in shell++
-```
-If you saw this output your build is working, if you want install Shell++.
-
-```
-$ sudo make install
-```
-
-### Fedora
 First you need intall the requirements to build Shell++
 ```
 # apt-get install -y build-essential
