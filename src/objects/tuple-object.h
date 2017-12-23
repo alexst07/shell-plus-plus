@@ -108,6 +108,8 @@ class TupleObject: public Object {
 
    ObjectPtr ObjIter(ObjectPtr obj) override;
 
+   ObjectPtr Copy() override;
+
    ObjectPtr GetItem(ObjectPtr index) override;
 
    ObjectPtr& GetItemRef(ObjectPtr index) override;

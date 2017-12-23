@@ -93,6 +93,8 @@ class ArrayObject: public Object {
 
    ObjectPtr ObjCmd() override;
 
+   ObjectPtr Copy() override;
+
    ObjectPtr Equal(ObjectPtr obj) override;
 
    ObjectPtr In(ObjectPtr obj) override;
@@ -142,6 +144,10 @@ class ArrayObject: public Object {
 
    std::vector<std::shared_ptr<Object>>& value() {
      return value_;
+   }
+
+   inline void set_value(std::vector<std::shared_ptr<Object>>&& value) {
+     value_ = std::move(value);
    }
 
    std::string Print() override;
@@ -264,6 +270,14 @@ class ArrayForEachFunc: public FuncObject {
 class ArrayMapFunc: public FuncObject {
  public:
   ArrayMapFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* parent, Args&& params, KWArgs&&);
+};
+
+class ArrayFilterFunc: public FuncObject {
+ public:
+  ArrayFilterFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
   ObjectPtr Call(Executor* parent, Args&& params, KWArgs&&);

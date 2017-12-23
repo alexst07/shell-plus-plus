@@ -140,6 +140,12 @@ ObjectPtr TupleObject::ObjIter(ObjectPtr obj) {
   return obj_factory.NewTupleIter(obj);
 }
 
+ObjectPtr TupleObject::Copy() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  std::vector<std::shared_ptr<Object>> value = value_;
+  return obj_factory.NewTuple(std::move(value));
+}
+
 ObjectPtr TupleObject::GetItem(ObjectPtr index) {
   if (index->type() == ObjectType::SLICE) {
     return Element(static_cast<SliceObject&>(*index));

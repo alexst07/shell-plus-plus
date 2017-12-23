@@ -76,6 +76,18 @@ class LenFunc: public FuncObject {
   ObjectFactory obj_factory_;
 };
 
+class CopyFunc: public FuncObject {
+ public:
+  CopyFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table))
+      , obj_factory_(symbol_table_stack()) {}
+
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
+
+ private:
+  ObjectFactory obj_factory_;
+};
+
 class GetLastForegroundPidFunc: public FuncObject {
  public:
   GetLastForegroundPidFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
@@ -265,6 +277,7 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
     {"print_err",             ObjectMethod<PrintErrFunc>(sym_table)},
     {"read",                  ObjectMethod<ReadFunc>(sym_table)},
     {"len",                   ObjectMethod<LenFunc>(sym_table)},
+    {"copy",                  ObjectMethod<CopyFunc>(sym_table)},
     {"range",                 ObjectMethod<RangeFunc>(sym_table)},
     {"comp",                  ObjectMethod<CompFunc>(sym_table)},
     {"assert",                ObjectMethod<AssertFunc>(sym_table)},

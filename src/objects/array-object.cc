@@ -124,6 +124,12 @@ ObjectPtr ArrayObject::ObjCmd() {
   return obj_factory.NewArray(value_);
 }
 
+ObjectPtr ArrayObject::Copy() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  std::vector<std::shared_ptr<Object>> value = value_;
+  return obj_factory.NewArray(std::move(value));
+}
+
 void ArrayObject::DelItem(ObjectPtr index) {
   if (index->type() == ObjectType::INT) {
     // remove the item pointed by index
@@ -343,6 +349,7 @@ ArrayType::ArrayType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<ArrayCountFunc>("count", symbol_table_stack(), *this);
   RegisterMethod<ArraySortFunc>("sort", symbol_table_stack(), *this);
   RegisterMethod<ArrayReverseFunc>("reverse", symbol_table_stack(), *this);
+  RegisterMethod<ArrayFilterFunc>("filter", symbol_table_stack(), *this);
 }
 
 ObjectPtr ArrayType::Constructor(Executor* /*parent*/,
@@ -597,6 +604,31 @@ ObjectPtr ArrayMapFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
     Args fparams(1, array_obj.Element(i));
     array_obj.set(i, params[1]->Call(parent, std::move(fparams)));
   }
+
+  return params[0];
+}
+
+ObjectPtr ArrayFilterFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, filter)
+
+  ArrayObject& array_obj = static_cast<ArrayObject&>(*params[0]);
+  std::vector<std::shared_ptr<Object>> value;
+
+  for (int i = 0; i < array_obj.Len(); i++) {
+    ObjectPtr element = array_obj.Element(i);
+    Args fparams(1, element);
+    ObjectPtr res = params[1]->Call(parent, std::move(fparams));
+
+    // cast res to bool
+    ObjectPtr res_bool = res->ObjBool();
+    bool v = static_cast<BoolObject&>(*res_bool).value();
+
+    if (v) {
+      value.push_back(element);
+    }
+  }
+
+  array_obj.set_value(std::move(value));
 
   return params[0];
 }

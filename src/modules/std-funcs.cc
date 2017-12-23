@@ -99,6 +99,12 @@ ObjectPtr LenFunc::Call(Executor*, Args&& params, KWArgs&&) {
   return obj_factory_.NewInt(static_cast<int>(size));
 }
 
+ObjectPtr CopyFunc::Call(Executor*, Args&& params, KWArgs&&) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, copy)
+
+  return params[0]->Copy();
+}
+
 ObjectPtr CompFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, comp)
 

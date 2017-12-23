@@ -94,6 +94,8 @@ class MapObject: public Object {
 
   ObjectPtr Add(ObjectPtr obj) override;
 
+  ObjectPtr Copy() override;
+
   std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
                                const std::string& name) override;
 
@@ -125,6 +127,14 @@ class MapObject: public Object {
 
   Map& value() noexcept {
     return value_;
+  }
+
+  void set_value(Map&& value) {
+    value_ = std::move(value);
+  }
+
+  void set_value(const Map& value) {
+    value_ = value;
   }
 
   std::string Print() override {
@@ -192,6 +202,14 @@ class MapUpdateFunc: public FuncObject {
 class MapExistsFunc: public FuncObject {
  public:
   MapExistsFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : FuncObject(obj_type, std::move(sym_table)) {}
+
+  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
+};
+
+class MapFilterFunc: public FuncObject {
+ public:
+  MapFilterFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
 
   ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);

@@ -137,6 +137,15 @@ ObjectPtr MapObject::Add(ObjectPtr obj) {
   return Update(obj, false);
 }
 
+ObjectPtr MapObject::Copy() {
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr map_new = obj_factory.NewMap();
+  MapObject& obj_map_new = static_cast<MapObject&>(*map_new);
+
+  obj_map_new.set_value(value_);
+  return map_new;
+}
+
 ObjectPtr& MapObject::ElementRef(ObjectPtr obj_index) {
   if (Exists(obj_index)) {
     size_t hash = obj_index->Hash();
@@ -313,6 +322,7 @@ MapType::MapType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<MapClearFunc>("clear", symbol_table_stack(), *this);
   RegisterMethod<MapUpdateFunc>("update", symbol_table_stack(), *this);
   RegisterMethod<MapExistsFunc>("exists", symbol_table_stack(), *this);
+  RegisterMethod<MapFilterFunc>("filter", symbol_table_stack(), *this);
 }
 
 ObjectPtr MapKeysFunc::Call(Executor*, Args&& params, KWArgs&&) {
@@ -391,6 +401,34 @@ ObjectPtr MapExistsFunc::Call(Executor*, Args&& params, KWArgs&&) {
 
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewBool(exists);
+}
+
+ObjectPtr MapFilterFunc::Call(Executor* parent, Args&& params, KWArgs&&) {
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, filter)
+
+  MapObject& map_obj = static_cast<MapObject&>(*params[0]);
+
+  ObjectFactory obj_factory(symbol_table_stack());
+  ObjectPtr map_new = obj_factory.NewMap();
+  MapObject& obj_map_new = static_cast<MapObject&>(*map_new);
+
+  for (auto& list: map_obj.value()) {
+    for (auto& pair: list.second) {
+      Args fparams = {pair.first, pair.second};
+      ObjectPtr res = params[1]->Call(parent, std::move(fparams));
+
+      // cast res to bool
+      ObjectPtr res_bool = res->ObjBool();
+      bool v = static_cast<BoolObject&>(*res_bool).value();
+
+      if (v) {
+        obj_map_new.SetItem(pair.first, pair.second);
+      }
+    }
+  }
+
+  map_obj.set_value(obj_map_new.value());
+  return params[0];
 }
 
 }
