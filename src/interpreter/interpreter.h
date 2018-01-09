@@ -63,6 +63,7 @@ class Interpreter {
   void RegisterArgs(std::vector<std::string>&& args);
   void InsertVar(const std::string& name, std::shared_ptr<Object> obj);
   void RegisterFileVars(const std::string& file);
+  void RegisterSysVars();
   void ShowErrors(RunTimeError& e, const std::string& code,
       const std::string& filename);
 

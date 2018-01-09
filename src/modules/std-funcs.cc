@@ -145,19 +145,6 @@ ObjectPtr AssertFunc::Call(Executor*, Args&& params, KWArgs&&) {
   return obj_factory_.NewNull();
 }
 
-ObjectPtr ArgvFunc::Call(Executor*, Args&&, KWArgs&&) {
-  const std::vector<std::string>& vec = EnvShell::instance()->Argv();
-  std::vector<ObjectPtr> vec_objs;
-  ObjectFactory obj_factory(symbol_table_stack());
-
-  for (const auto& arg: vec) {
-    vec_objs.push_back(obj_factory.NewString(arg));
-  }
-
-  ObjectPtr obj_args = obj_factory.NewArray(std::move(vec_objs));
-  return obj_args;
-}
-
 ObjectPtr GetAttrObjFunc::Call(Executor*, Args&& params, KWArgs&&) {
   SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, object)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[0], object, DECL_OBJ)

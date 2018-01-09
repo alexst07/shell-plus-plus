@@ -161,18 +161,6 @@ class AssertFunc: public FuncObject {
   ObjectFactory obj_factory_;
 };
 
-class ArgvFunc: public FuncObject {
- public:
-  ArgvFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : FuncObject(obj_type, std::move(sym_table))
-      , obj_factory_(symbol_table_stack()) {}
-
-  ObjectPtr Call(Executor*, Args&&, KWArgs&&);
-
- private:
-  ObjectFactory obj_factory_;
-};
-
 class GetAttrObjFunc: public FuncObject {
  public:
   GetAttrObjFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
@@ -281,7 +269,6 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
     {"range",                 ObjectMethod<RangeFunc>(sym_table)},
     {"comp",                  ObjectMethod<CompFunc>(sym_table)},
     {"assert",                ObjectMethod<AssertFunc>(sym_table)},
-    {"argv",                  ObjectMethod<ArgvFunc>(sym_table)},
     {"get_attr_obj",          ObjectMethod<GetAttrObjFunc>(sym_table)},
     {"get_attr_type",         ObjectMethod<GetAttrTypeFunc>(sym_table)},
     {"is_interactive",        ObjectMethod<IsInteractiveFunc>(sym_table)},
@@ -300,7 +287,7 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
 
   for (auto& pair: table) {
     SymbolAttr sym_entry(pair.second, true);
-    sym_table.InsertEntry(pair.first, std::move(sym_entry));
+    sym_table.InsertSysEntry(pair.first, std::move(sym_entry));
   }
 }
 

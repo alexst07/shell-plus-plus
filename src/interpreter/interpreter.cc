@@ -29,6 +29,7 @@
 #include "objects/object-factory.h"
 #include "modules/std-cmds.h"
 #include "modules/env.h"
+#include "modules/sys.h"
 #include "env-shell.h"
 
 namespace shpp {
@@ -43,6 +44,7 @@ Interpreter::Interpreter(bool main)
 
   module::stdf::RegisterModule(sys_symbol_table_stack_);
   module::env::RegisterModule(sys_symbol_table_stack_);
+  module::sys::RegisterModule(symbol_table_stack_);
   cmds::stdf::RegisterCmds(symbol_table_stack_);
 }
 
@@ -55,6 +57,7 @@ void Interpreter::RegisterVars() {
   ObjectFactory obj_factory(symbol_table_stack_);
 
   InsertVar("__main__", obj_factory.NewBool(main_));
+  RegisterSysVars();
 }
 
 void Interpreter::RegisterFileVars(const std::string& file) {
@@ -73,7 +76,32 @@ void Interpreter::RegisterFileVars(const std::string& file) {
 }
 
 void Interpreter::RegisterArgs(std::vector<std::string>&& args) {
-  EnvShell::instance()->SetArgv(std::move(args));
+  // avoid overwrite arguments with invalid value
+  if (!main_) {
+    return;
+  }
+
+  ObjectFactory obj_factory(symbol_table_stack_);
+  std::shared_ptr<Object> sys_mod;
+  sys_mod = symbol_table_stack_.LookupSys("sys").SharedAccess();
+
+  std::vector<ObjectPtr> vec_objs;
+
+  for (const auto& arg: args) {
+    vec_objs.push_back(obj_factory.NewString(arg));
+  }
+
+  ObjectPtr obj_argv = obj_factory.NewArray(std::move(vec_objs));
+  sys_mod->symbol_table_stack().SetEntry("argv", obj_argv);
+}
+
+void Interpreter::RegisterSysVars() {
+  ObjectFactory obj_factory(symbol_table_stack_);
+  std::shared_ptr<Object> sys_mod;
+  sys_mod = symbol_table_stack_.LookupSys("sys").SharedAccess();
+
+  ObjectPtr obj_argv = obj_factory.NewString("0.0.1");
+  sys_mod->symbol_table_stack().SetEntry("version", obj_argv);
 }
 
 void Interpreter::Exec(ScriptStream& file, std::vector<std::string>&& args) {

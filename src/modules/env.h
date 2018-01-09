@@ -100,7 +100,7 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
   ObjectFactory obj_factory(sym_table);
   ObjectPtr obj_module = obj_factory.NewModule("env", std::move(table));
   SymbolAttr symbol(obj_module, true);
-  sym_table.InsertEntry("env", std::move(symbol));
+  sym_table.InsertSysEntry("env", std::move(symbol));
 }
 
 }
@@ -109,5 +109,3 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
 }
 
 #endif  // SHPP_ENV_FUNCS_H
-
-
