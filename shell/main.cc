@@ -37,11 +37,11 @@ std::vector<std::string> Args(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-  shpp::Runner runner;
-
   if (argc == 1) {
+    shpp::InteractiveRunner runner;
     runner.ExecInterative();
   } else {
+    shpp::Runner runner;
     std::vector<std::string> args = Args(argc, argv);
     runner.Exec(argv[1], std::move(args));
   }
