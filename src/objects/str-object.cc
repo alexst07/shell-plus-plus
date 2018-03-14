@@ -176,9 +176,9 @@ StringType::StringType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
   RegisterMethod<StringSplitFunc>("split", symbol_table_stack(), *this);
   RegisterMethod<StringFindFunc>("find", symbol_table_stack(), *this);
   RegisterMethod<StringReplaceFunc>("replace", symbol_table_stack(), *this);
-  RegisterMethod<StringReplaceFunc>("replace_first", symbol_table_stack(),
+  RegisterMethod<StringReplaceFirstFunc>("replace_first", symbol_table_stack(),
                                     *this);
-  RegisterMethod<StringReplaceFunc>("replace_last", symbol_table_stack(),
+  RegisterMethod<StringReplaceLastFunc>("replace_last", symbol_table_stack(),
                                     *this);
   RegisterMethod<StringEraseAllFunc>("erase_all", symbol_table_stack(),
                                      *this);
@@ -411,7 +411,7 @@ ObjectPtr StringReplaceLastFunc::Call(Executor*, Args&& params, KWArgs&&) {
 }
 
 ObjectPtr StringEraseAllFunc::Call(Executor*, Args&& params, KWArgs&&) {
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, ends_with)
+  SHPP_FUNC_CHECK_NUM_PARAMS(params, 2, erase_all)
   SHPP_FUNC_CHECK_PARAM_TYPE(params[1], str, STRING)
 
   StringObject& obj = static_cast<StringObject&>(*params[0]);
