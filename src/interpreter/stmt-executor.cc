@@ -247,8 +247,8 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
         FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(decl);
 
         // the last argument specify that is a static method inside the class
-        FuncDeclExecutor fexec(this, symbol_table_stack(), true, false,
-            fdecl->fstatic());
+        FuncDeclExecutor fexec(this, symbol_table_stack(), /*method=*/true,
+            /*lambda=*/false, /*fstatic=*/fdecl->fstatic());
 
         // handle no abstract method
         if (fdecl->has_block()) {

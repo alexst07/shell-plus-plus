@@ -51,7 +51,7 @@ class AbstractMethod {
   AbstractMethod(FuncObject& fobj)
       : num_params_(fobj.NumParams())
       , num_default_params_(fobj.NumDefaultParams())
-      , variadic_(fobj.CVariadic()) {}
+      , variadic_(fobj.IsVariadic()) {}
 
   virtual ~AbstractMethod() = default;
 

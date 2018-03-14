@@ -78,7 +78,7 @@ class FuncObject: public Object {
     return default_params_;
   }
 
-  virtual bool CVariadic() const noexcept {
+  virtual bool IsVariadic() const noexcept {
     return variadic_;
   }
 
@@ -161,12 +161,16 @@ class FuncDeclObject: public FuncObject {
     return default_values_.size();
   }
 
-  bool CVariadic() const noexcept override {
+  bool IsVariadic() const noexcept override {
     return variadic_;
   }
 
-  bool Static() const noexcept {
+  bool IsStatic() const noexcept {
     return fstatic_;
+  }
+
+  bool IsLambda() const noexcept {
+    return lambda_;
   }
 
  private:

@@ -152,7 +152,8 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
 
 ObjectPtr ExpressionExecutor::ExecLambdaFunc(AstNode* node) {
   // executes lambda assignment
-  FuncDeclExecutor func_exec(this, symbol_table_stack(), false, true);
+  FuncDeclExecutor func_exec(this, symbol_table_stack(), /*method=*/false,
+      /*lambda=*/true);
   return func_exec.FuncObj(node);
 }
 
