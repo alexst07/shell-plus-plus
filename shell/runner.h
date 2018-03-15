@@ -17,9 +17,7 @@
 
 #include <setjmp.h>
 #include <signal.h>
-#include <functional>
 #include <boost/optional.hpp>
-#include <readlinepp/readline.h>
 
 #include "interpreter/symbol-table.h"
 #include "ast/ast.h"
@@ -29,42 +27,15 @@ namespace shpp {
 
 class Runner {
  public:
-  using CompleteFnRet = std::tuple<std::unique_ptr<readline::List>,
-      readline::RetType, bool>;
-
   Runner();
 
   ~Runner() = default;
 
   void Exec(std::string file_name, std::vector<std::string>&& args = {});
-
- private:
-  internal::Interpreter interpreter_;
-};
-
-class InteractiveRunner {
- public:
-  using CompleteFnRet = std::tuple<std::unique_ptr<readline::List>,
-      readline::RetType, bool>;
-
-  InteractiveRunner();
-
-  ~InteractiveRunner() = default;
-
-  void Exec(std::string file_name, std::vector<std::string>&& args = {});
-
   void ExecInterative();
 
  private:
-  readline::Text MountText(const std::string& str);
-
-  CompleteFnRet CompleteFn(const std::vector<std::string>& args, bool tip);
-
-  readline::Text HighlightFn(const std::string& line);
-
   internal::Interpreter interpreter_;
-
-  readline::Readline readline_;
 };
 
 }
