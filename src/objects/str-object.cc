@@ -157,6 +157,28 @@ ObjectPtr StringObject::ObjCmd() {
   return obj_factory.NewString(value_);
 }
 
+ObjectPtr StringObject::Lesser(ObjectPtr obj) {
+  SHPP_FUNC_CHECK_PARAM_TYPE(obj, __lesser__, STRING)
+
+  const StringObject& str_obj = static_cast<const StringObject&>(*obj);
+  const std::string str = str_obj.value();
+
+  bool r = value_ < str;
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(r);
+}
+
+ObjectPtr StringObject::Greater(ObjectPtr obj) {
+  SHPP_FUNC_CHECK_PARAM_TYPE(obj, __greater__, STRING)
+
+  const StringObject& str_obj = static_cast<const StringObject&>(*obj);
+  const std::string str = str_obj.value();
+
+  bool r = value_ > str;
+  ObjectFactory obj_factory(symbol_table_stack());
+  return obj_factory.NewBool(r);
+}
+
 std::shared_ptr<Object> StringObject::Attr(std::shared_ptr<Object> self,
                                            const std::string& name) {
   ObjectPtr obj_type = ObjType();

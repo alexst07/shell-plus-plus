@@ -88,6 +88,10 @@ class StringObject: public Object {
 
   ObjectPtr GetItem(ObjectPtr index) override;
 
+  ObjectPtr Lesser(ObjectPtr obj) override;
+
+  ObjectPtr Greater(ObjectPtr obj) override;
+
   inline char Element(size_t i) {
     return value_[i];
   }
