@@ -1259,12 +1259,12 @@ ParserResult<Expression> Parser::ParserLetExp() {
         assign.MoveAstNode<AssignmentStatement>()));
   }
 
-  // if it is not let expression, so execute the or expression
+  // if it is not let expression, so execute the if-else expression
   return ParserIfElseExp();
 }
 
 ParserResult<Expression> Parser::ParserIfElseExp() {
-  ParserResult<Expression> then_exp = ParserOrExp();
+  ParserResult<Expression> then_exp = ParserNotExp();
 
   // if the keyword "if" was found on the same line, so it is
   // an if else expression
@@ -1272,7 +1272,7 @@ ParserResult<Expression> Parser::ParserIfElseExp() {
     Advance();
     ValidToken();
 
-    ParserResult<Expression> comp_exp = ParserOrExp();
+    ParserResult<Expression> comp_exp = ParserNotExp();
 
     ValidToken();
     if (!token_.Is(TokenKind::KW_ELSE)) {
@@ -1283,7 +1283,7 @@ ParserResult<Expression> Parser::ParserIfElseExp() {
     Advance();
     ValidToken();
 
-    ParserResult<Expression> else_exp = ParserOrExp();
+    ParserResult<Expression> else_exp = ParserNotExp();
 
     return ParserResult<Expression>(factory_.NewIfElseExpression(
         comp_exp.MoveAstNode(), then_exp.MoveAstNode(),
@@ -1291,6 +1291,20 @@ ParserResult<Expression> Parser::ParserIfElseExp() {
   }
 
   return then_exp;
+}
+
+ParserResult<Expression> Parser::ParserNotExp() {
+  if (token_.Is(TokenKind::KW_NOT)) {
+    TokenKind token_kind = token_.GetKind();
+    Advance(); // Consume the token
+    ValidToken();
+
+    ParserResult<Expression> exp(ParserNotExp());
+    return ParserResult<Expression>(factory_.NewNotExpression(
+          token_kind, exp.MoveAstNode()));
+  }
+
+  return ParserOrExp();
 }
 
 ParserResult<Expression> Parser::ParserOrExp() {
@@ -1319,7 +1333,7 @@ ParserResult<Expression> Parser::ParserOrExp() {
 
 ParserResult<Expression> Parser::ParserAndExp() {
   ParserResult<Expression> rexp;
-  ParserResult<Expression> lexp = ParserNotExp();
+  ParserResult<Expression> lexp = ParserComparisonExp();
 
   if (!lexp) {
     return ParserResult<Expression>(); // Error
@@ -1330,7 +1344,7 @@ ParserResult<Expression> Parser::ParserAndExp() {
     Advance();
     ValidToken();
 
-    rexp = ParserNotExp();
+    rexp = ParserComparisonExp();
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
@@ -1339,20 +1353,6 @@ ParserResult<Expression> Parser::ParserAndExp() {
   }
 
   return lexp;
-}
-
-ParserResult<Expression> Parser::ParserNotExp() {
-  if (token_.Is(TokenKind::KW_NOT)) {
-    TokenKind token_kind = token_.GetKind();
-    Advance(); // Consume the token
-    ValidToken();
-
-    ParserResult<Expression> exp(ParserNotExp());
-    return ParserResult<Expression>(factory_.NewNotExpression(
-          token_kind, exp.MoveAstNode()));
-  }
-
-  return ParserComparisonExp();
 }
 
 ParserResult<Expression> Parser::ParserComparisonExp() {
