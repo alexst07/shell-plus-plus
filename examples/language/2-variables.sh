@@ -22,3 +22,21 @@ print("var1 is equal v2? ", var1 == var2)
 
 a, b, c, d = 4, 4.5, "string", true
 print(a, " ", b, " ", c, " ", d)
+
+#
+# let expression
+#
+
+# let keyword allow handle an assignment as an expression
+# and let return the same object that was assigned to the variables
+x = let y = (let w = 15) - 4
+print("x: ", x, " y: ", y, " w: ", w)
+
+# other example
+print(">> ", let q = "hello")
+print("q: ", q)
+
+# with tuple
+a, b = let x, y = 1, 5
+print("a: ", a, " b: ", b)
+print("x: ", x, " y: ", y)

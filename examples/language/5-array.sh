@@ -42,3 +42,55 @@ cmds.pop(4)
 print("cmds.pop(4)")
 print("-> ", cmds)
 print()
+
+# index
+print("cmds.index(\"mv\")")
+print("-> ", cmds.index("mv"))
+print()
+
+# count
+cmds += ["ls"]
+print("cmds.count(\"ls\")")
+print("-> ", cmds.count("ls"))
+print()
+
+# sort
+print("cmds.sort()")
+print("-> ", cmds.sort())
+print()
+
+# reverse
+print("cmds.reverse()")
+print("-> ", cmds.reverse())
+print()
+
+# map
+print("cmds.map...")
+cmds.map(lambda x: x.to_upper() if len(x) > 2 else x)
+print("-> ", cmds)
+print()
+
+# filter
+print("cmds.filter...")
+cmds.filter(lambda x: true if len(x) == 2 else false)
+print("-> ", cmds)
+print()
+
+# join
+print("cmds.join...")
+s = cmds.join("-")
+print(s)
+print("-> ", cmds)
+print()
+
+# del operator
+del cmds[2]
+print("del cmds[2]")
+print("-> ", cmds)
+print()
+
+# clear
+print("cmds.clear()")
+cmds.clear()
+print("-> ", cmds)
+print()
