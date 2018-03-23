@@ -27,3 +27,12 @@ cmd test2 {
 }
 
 test2 2>&1 > /dev/null | test
+
+# read file from subshell
+shell {
+  while let r = read() {
+    print("shell> ", r)
+  }
+} < test.txt
+
+rm test.txt

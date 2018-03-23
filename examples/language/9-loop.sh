@@ -39,7 +39,7 @@ while i < len(a) {
 # executes when the value of i is three.
 i = 0
 while i < 5 {
-  i += 1
+  i += 1break
 
   if i == 3 {
     continue
@@ -74,3 +74,9 @@ for a in arr {
 
   print("> ", a)
 }
+
+#
+# List comprehension
+#
+files = [file for file in $(ls) if file.size("k") > 10]
+print(files)
