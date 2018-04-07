@@ -24,39 +24,45 @@ ParserResult<Statement> Parser::ParserImportStmt() {
   ValidToken();
 
   if (token_ == TokenKind::IDENTIFIER) {
-    return ParserImportIdStmt();
+    return ParserImportIdListStmt();
   } else if (token_ == TokenKind::STRING_LITERAL) {
     return ParserImportPathStmt();
+  } else if (token_ == TokenKind::MUL) {
+    return ParserImportStarStmt();
   } else {
     ErrorMsg(boost::format("import statement not valid"));
     return ParserResult<Statement>(); // Error
   }
 }
 
-ParserResult<Statement> Parser::ParserImportIdStmt() {
-  std::unique_ptr<Identifier> path(factory_.NewIdentifier(
-                                   boost::get<std::string>(token_.GetValue())));
+ParserResult<Statement> Parser::ParserImportIdListStmt() {
+  std::vector<std::unique_ptr<Identifier>> id_list;
+
+  id_list = ParserIdList();
+
+  if (id_list.empty()) {
+    return ParserResult<Statement>(); // Error
+  }
+
+  if (token_ != TokenKind::KW_FROM) {
+    ErrorMsg(boost::format("expected from keyword, got %1%")% TokenValueStr());
+    return ParserResult<Statement>(); // Error
+  }
+
+  // advance from keyword
+  Advance();
+
+  if (token_ != TokenKind::STRING_LITERAL) {
+    ErrorMsg(boost::format("expected string path"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  std::string from = boost::get<std::string>(token_.GetValue());
 
   Advance();
 
-  std::unique_ptr<Identifier> id;
-
-  if (token_ == TokenKind::KW_AS) {
-    Advance();
-    ValidToken();
-
-    if (token_ != TokenKind::IDENTIFIER) {
-      ErrorMsg(boost::format("expected identifier"));
-      return ParserResult<Statement>(); // Error
-    }
-
-    id = factory_.NewIdentifier(boost::get<std::string>(token_.GetValue()));
-
-    Advance();
-  }
-
   return ParserResult<Statement>(
-        factory_.NewImportStatement(std::move(path), std::move(id)));
+      factory_.NewImportStatement(from, std::move(id_list), /*star*/false));
 }
 
 ParserResult<Statement> Parser::ParserImportPathStmt() {
@@ -85,6 +91,31 @@ ParserResult<Statement> Parser::ParserImportPathStmt() {
 
   return ParserResult<Statement>(
         factory_.NewImportStatement(std::move(path), std::move(id)));
+}
+
+ParserResult<Statement> Parser::ParserImportStarStmt() {
+  // advance MUL token
+  Advance();
+
+  if (token_ != TokenKind::KW_FROM) {
+    ErrorMsg(boost::format("expected from keyword, got %1%")% TokenValueStr());
+    return ParserResult<Statement>(); // Error
+  }
+
+  // advance from keyword
+  Advance();
+
+  if (token_ != TokenKind::STRING_LITERAL) {
+    ErrorMsg(boost::format("expected string path"));
+    return ParserResult<Statement>(); // Error
+  }
+
+  std::string from = boost::get<std::string>(token_.GetValue());
+
+  Advance();
+
+  return ParserResult<Statement>(factory_.NewImportStatement(from,
+      std::unique_ptr<Literal>(nullptr), /*star*/ true));
 }
 
 ParserResult<Statement> Parser::ParserStmtDecl() {
@@ -1070,6 +1101,28 @@ ParserResult<ExpressionList> Parser::ParserPostExpList() {
 
   return ParserResult<ExpressionList>(factory_.NewExpressionList(
       std::move(vec_list)));
+}
+
+std::vector<std::unique_ptr<Identifier>> Parser::ParserIdList() {
+  std::vector<std::unique_ptr<Identifier>> id_list;
+
+  do {
+    ValidToken();
+
+    if (token_ != TokenKind::IDENTIFIER) {
+      ErrorMsg(boost::format("Expected token ':', got %1%")
+          % Token::TokenValueToStr(token_.GetValue()));
+
+      return std::vector<std::unique_ptr<Identifier>>();
+    }
+
+    std::unique_ptr<Identifier> id(
+        factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
+    id_list.push_back(std::move(id));
+    Advance();
+  } while (CheckComma());
+
+  return id_list;
 }
 
 ParserResult<AssignableValue> Parser::ParserAssignable() {

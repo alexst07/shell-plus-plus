@@ -1020,37 +1020,106 @@ void CmdDeclExecutor::set_stop(StopFlag flag) {
 }
 
 void ImportExecutor::Exec(ImportStatement *node) {
+  // execute import with AS keyword, like import "test.sh" as test
   if (node->is_import_path()) {
-    // module path has to has "as" parameter
-    if (!node->has_as()) {
-      throw RunTimeError(RunTimeError::ErrorCode::IMPORT,
-                         boost::format("import has not a name given by 'as'"),
-                         node->pos());
+    ExecImportPath(node);
+  } else {
+    ExecImportFrom(node);
+  }
+}
+
+void ImportExecutor::ExecImportPath(ImportStatement *node) {
+  // module path has to has "as" parameter
+  if (!node->has_as()) {
+    throw RunTimeError(RunTimeError::ErrorCode::IMPORT,
+                       boost::format("import has not a name given by 'as'"),
+                       node->pos());
+  }
+
+  const std::unique_ptr<Literal>& ptr_value =
+      node->import<std::unique_ptr<Literal>>();
+  auto value = ptr_value->value();
+  std::string module_path = boost::get<std::string>(value);
+
+  ObjectPtr obj_module;
+
+  try {
+    // process the module pointed by import stmt
+    ObjectPtr path_obj = symbol_table_stack().Lookup("__path__", false)
+        .SharedAccess();
+    SHPP_FUNC_CHECK_PARAM_TYPE(path_obj, import, STRING)
+    std::string path_str = static_cast<StringObject&>(*path_obj).value();
+    obj_module = ProcessModule(module_path, path_str);
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+  }
+
+  // module entry on symbol table
+  std::string id_entry = node->as()->name();
+
+  try {
+    symbol_table_stack().SetEntry(id_entry, obj_module);
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+  }
+}
+
+void ImportExecutor::ExecImportFrom(ImportStatement *node) {
+  std::string module_path = node->from();
+  ObjectPtr obj_module;
+
+  try {
+    // process the module pointed by import stmt
+    ObjectPtr path_obj = symbol_table_stack().Lookup("__path__", false)
+        .SharedAccess();
+    SHPP_FUNC_CHECK_PARAM_TYPE(path_obj, import, STRING)
+    std::string path_str = static_cast<StringObject&>(*path_obj).value();
+    obj_module = ProcessModule(module_path, path_str);
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+  }
+
+  SymbolTablePtr module_top_table;
+
+  // check correct type of module
+  switch(static_cast<Module&>(*obj_module).ModuleType()) {
+    case Module::Type::Import:
+      module_top_table = static_cast<ModuleImportObject&>(*obj_module)
+          .SymTableStack().MainTable();
+      break;
+
+    case Module::Type::Main:
+      module_top_table = static_cast<ModuleMainObject&>(*obj_module)
+          .SymTableStack().MainTable();
+      break;
+
+    case Module::Type::Custon:
+      module_top_table = static_cast<ModuleCustonObject&>(*obj_module)
+          .SymTableStack().MainTable();
+      break;
+  }
+
+  try {
+    if (node->star()) {
+      // copy all symbols from top symbol table from module to main symbol table
+      for (const auto& entry : *module_top_table) {
+        symbol_table_stack().SetEntry(entry.first, entry.second.SharedAccess());
+      }
+    } else {
+      // get only symbols on import id list, like:
+      // import Class1, class2 from "test.sh"
+      const auto& id_list =
+          node->import<std::vector<std::unique_ptr<Identifier>>>();
+
+      for (const auto& id : id_list) {
+        const std::string& str_id = id->name();
+        ObjectPtr obj = module_top_table->Lookup(str_id, /*create*/false)
+            .SharedAccess();
+        symbol_table_stack().SetEntry(str_id, obj);
+      }
     }
-
-    auto value = node->import<Literal>()->value();
-    std::string module_path = boost::get<std::string>(value);
-
-    ObjectPtr obj_module;
-
-    try {
-      ObjectPtr path_obj = symbol_table_stack().Lookup("__path__", false)
-          .SharedAccess();
-      SHPP_FUNC_CHECK_PARAM_TYPE(path_obj, import, STRING)
-      std::string path_str = static_cast<StringObject&>(*path_obj).value();
-      obj_module = ProcessModule(module_path, path_str);
-    } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
-    }
-
-    // module entry on symbol table
-    std::string id_entry = node->as()->name();
-
-    try {
-      symbol_table_stack().SetEntry(id_entry, obj_module);
-    } catch (RunTimeError& e) {
-      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
-    }
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 }
 
@@ -1058,6 +1127,7 @@ ObjectPtr ImportExecutor::ProcessModule(const std::string& module,
     const std::string& path) {
   std::string full_path = path + std::string("/") + module;
 
+  // get module from the cache module table, if it was already processed
   ObjectPtr module_obj = EnvShell::instance()->GetImportTable()
       .GetModule(full_path);
 
@@ -1066,7 +1136,7 @@ ObjectPtr ImportExecutor::ProcessModule(const std::string& module,
     return module_obj;
   }
 
-  // process the module and store it on import table
+  // process the module and store it on cache module table
   ObjectFactory obj_factory(symbol_table_stack());
   module_obj = obj_factory.NewModule(full_path);
 

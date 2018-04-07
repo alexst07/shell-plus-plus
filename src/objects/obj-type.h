@@ -68,11 +68,34 @@ class RangeIterObject: public BaseIter {
   int value_;
 };
 
-class ModuleImportObject: public Object {
+class Module: public Object {
+ public:
+  enum class Type {
+    Import,
+    Main,
+    Custon
+  };
+
+  virtual ~Module() {}
+
+  Type ModuleType() {
+    return type_;
+  }
+
+ protected:
+  Module(Type type, ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
+      , type_(type) {}
+
+ private:
+  Type type_;
+};
+
+class ModuleImportObject: public Module {
  public:
   ModuleImportObject(const std::string& module_path, ObjectPtr obj_type,
       SymbolTableStack&& sym_table)
-      : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
+      : Module(Module::Type::Import, obj_type, std::move(sym_table))
       , interpreter_(false)
       , module_path_(module_path) {}
 
@@ -107,10 +130,10 @@ class ModuleImportObject: public Object {
   std::string module_path_;
 };
 
-class ModuleMainObject: public Object {
+class ModuleMainObject: public Module {
  public:
   ModuleMainObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::MODULE, obj_type, std::move(sym_table)) {}
+      : Module(Module::Type::Main, obj_type, std::move(sym_table)) {}
 
   virtual ~ModuleMainObject() {}
 
@@ -126,13 +149,13 @@ class ModuleMainObject: public Object {
   }
 };
 
-class ModuleCustonObject: public Object {
+class ModuleCustonObject: public Module {
  public:
   using MemberTable = std::vector<std::pair<std::string, ObjectPtr>>;
 
   ModuleCustonObject(std::string module_name, MemberTable&& member_table,
                      ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
+      : Module(Module::Type::Custon, obj_type, std::move(sym_table))
       , module_name_(module_name)
       , symbol_table_(SymbolTablePtr(new SymbolTable))
       , symbol_table_stack_(symbol_table_) {

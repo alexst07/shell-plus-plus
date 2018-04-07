@@ -242,6 +242,7 @@ class Parser {
 
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserScopeIdentifier();
+  std::vector<std::unique_ptr<Identifier>> ParserIdList();
   ParserResult<Expression> ParserPrimaryExp();
   ParserResult<Expression> ParserGlobExp(bool recursive = false);
   ParserResult<Expression> ParserPostExp();
@@ -310,8 +311,6 @@ class Parser {
   // parser class declaration
   ParserResult<Declaration> ParserClassDecl(bool is_final, bool abstract);
 
-  std::vector<std::unique_ptr<Identifier>> ParserInterfaceList();
-
   std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>
   ParserParamsList();
 
@@ -342,8 +341,9 @@ class Parser {
   ParserResult<Expression> ParserSlice();
 
   ParserResult<Statement> ParserImportStmt();
-  ParserResult<Statement> ParserImportIdStmt();
+  ParserResult<Statement> ParserImportIdListStmt();
   ParserResult<Statement> ParserImportPathStmt();
+  ParserResult<Statement> ParserImportStarStmt();
   ParserResult<Statement> ParserDelStmt();
 
   TokenStream ts_;

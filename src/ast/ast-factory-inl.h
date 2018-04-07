@@ -418,10 +418,9 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<ImportStatement> NewImportStatement(
-      ImportStatement::From from, ImportStatement::Import import,
-      std::unique_ptr<Identifier> as) {
-    return std::unique_ptr<ImportStatement>(new ImportStatement(std::move(from),
-       std::move(import), std::move(as), fn_pos_()));
+      const std::string& from, ImportStatement::Import import, bool star) {
+    return std::unique_ptr<ImportStatement>(new ImportStatement(from,
+       std::move(import), star, fn_pos_()));
   }
 
   inline std::unique_ptr<ImportStatement> NewImportStatement(

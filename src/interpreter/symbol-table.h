@@ -524,6 +524,10 @@ class SymbolTableStack {
     return sys_table_;
   }
 
+  const std::vector<SymbolTablePtr>& StackTable() const {
+    return stack_;
+  }
+
   void Dump() {
     std::cout << "*************\n";
     std::cout << "Table: " << this << " Num: " << stack_.size() << " this: " << this << "\n";

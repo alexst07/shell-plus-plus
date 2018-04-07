@@ -708,21 +708,32 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitImportStatement(ImportStatement* import) {
     Level();
-    std::cout << "<import>\n";
+    std::cout << "<import";
+    if (import->star()) {
+      std::cout << " star=true";
+    }
     level_++;
 
     if (import->is_import_path()) {
-      Level();
-      std::cout << "<path>\n";
+      std::cout << ">\n";
       level_++;
-      import->import<Literal>()->Accept(this);
+      Level();
+      std::cout << "<from>";
+      level_++;
+      Level();
+      import->import<std::unique_ptr<Literal>>()->Accept(this);
       level_--;
+      level_--;
+    } else if (import->star()) {
+      std::cout << "from=" << import->from() << ">\n";
     } else {
-      Level();
-      std::cout << "<id>\n";
-      level_++;
-      import->import<Identifier>()->Accept(this);
-      level_--;
+      const std::vector<std::unique_ptr<Identifier>>& id_list =
+          import->import<std::vector<std::unique_ptr<Identifier>>>();
+      std::cout << " ids=";
+      for (const auto& id : id_list) {
+        std::cout << id->name() << " ";
+      }
+      std::cout << "from:" << import->from() << ">\n";
     }
 
     if (import->has_as()) {

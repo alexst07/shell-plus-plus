@@ -564,9 +564,9 @@ class ReturnStatement: public Statement {
 
 class ImportStatement: public Statement {
  public:
-  using From =
-      boost::variant<std::unique_ptr<Identifier>, std::unique_ptr<Literal>>;
-  using Import = From;
+  using Import =
+      boost::variant<std::vector<std::unique_ptr<Identifier>>,
+      std::unique_ptr<Literal>>;
 
   virtual ~ImportStatement() {}
 
@@ -574,24 +574,13 @@ class ImportStatement: public Statement {
     visitor->VisitImportStatement(this);
   }
 
- template<typename T>
- auto from() const noexcept -> T* {
-   return boost::get<T>(from_).get();
+ const std::string& from() const noexcept {
+   return from_;
  }
 
  template<typename T>
- auto import() const noexcept -> T* {
-   return boost::get<std::unique_ptr<T>>(import_).get();
- }
-
- bool is_from_path() const noexcept {
-   int index = from_.which();
-
-   if (index == 2) {
-     return true;
-   }
-
-   return false;
+ const T& import() noexcept {
+   return boost::get<T>(import_);
  }
 
  bool has_from() const noexcept {
@@ -602,7 +591,11 @@ class ImportStatement: public Statement {
    int index = import_.which();
 
    if (index == 1) {
-     return true;
+     if (boost::get<std::unique_ptr<Literal>>(import_)) {
+       return true;
+     }
+
+     return false;
    }
 
    return false;
@@ -620,29 +613,35 @@ class ImportStatement: public Statement {
    return false;
  }
 
+ bool star() const {
+   return star_;
+ }
+
  private:
   friend class AstNodeFactory;
 
-  From from_;
+  std::string from_;
   Import import_;
   std::unique_ptr<Identifier> as_;
   bool has_from_;
+  bool star_;
 
-  ImportStatement(From from,  Import import, std::unique_ptr<Identifier> as,
-                  Position position)
+  ImportStatement(const std::string& from,  Import import, bool star,
+      Position position)
       : Statement(NodeType::kImportStatement, position)
       , from_(std::move(from))
       , import_(std::move(import))
-      , as_(std::move(as))
-      , has_from_(true) {}
+      , as_(std::unique_ptr<Identifier>(nullptr))
+      , has_from_(true)
+      , star_(star) {}
 
   ImportStatement(Import import, std::unique_ptr<Identifier> as,
                   Position position)
       : Statement(NodeType::kImportStatement, position)
-      , from_(std::unique_ptr<Identifier>(nullptr))
       , import_(std::move(import))
       , as_(std::move(as))
-      , has_from_(false) {}
+      , has_from_(false)
+      , star_(false) {}
 };
 
 class Block: public Statement {
