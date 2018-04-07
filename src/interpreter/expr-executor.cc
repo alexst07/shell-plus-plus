@@ -71,6 +71,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecLiteral(node);
     } break;
 
+    case AstNode::NodeType::kAssignableValue: {
+      return Exec(static_cast<AssignableValue*>(node)->value(), pass_ref);
+    } break;
+
     case AstNode::NodeType::kIdentifier: {
       return ExecIdentifier(node);
     } break;
@@ -81,6 +85,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
 
     case AstNode::NodeType::kArrayInstantiation: {
       return ExecArrayInstantiation(node);
+    } break;
+
+    case AstNode::NodeType::kTupleInstantiation: {
+      return ExecTupleInstantiation(node);
     } break;
 
     case AstNode::NodeType::kDictionaryInstantiation: {
@@ -185,6 +193,36 @@ ObjectPtr ExpressionExecutor::ExecArrayInstantiation(AstNode* node) {
     return array_obj;
   }
 }
+
+ObjectPtr ExpressionExecutor::ExecTupleInstantiation(AstNode* node) {
+  TupleInstantiation* tuple_node = static_cast<TupleInstantiation*>(node);
+  AssignableListExecutor assignable_list(this, symbol_table_stack());
+
+  if (tuple_node->has_elements()) {
+    auto vec = assignable_list.Exec(tuple_node->assignable_list());
+    std::shared_ptr<Object> tuple_obj;
+
+    try {
+      tuple_obj = obj_factory_.NewTuple(std::move(vec));
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+    }
+
+    return tuple_obj;
+  } else {
+    std::vector<ObjectPtr> vec;
+    std::shared_ptr<Object> tuple_obj;
+
+    try {
+      tuple_obj = obj_factory_.NewTuple(std::move(vec));
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+    }
+
+    return tuple_obj;
+  }
+}
+
 
 ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {
   DictionaryInstantiation* map_node =

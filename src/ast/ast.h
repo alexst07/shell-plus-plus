@@ -109,6 +109,7 @@ namespace internal {
   V(CompIf)                     \
   V(CompFor)                    \
   V(ListComprehension)          \
+  V(TupleInstantiation)         \
   V(DictionaryInstantiation)    \
   V(IfElseExpression)           \
   V(Identifier)                 \
@@ -420,6 +421,45 @@ class ArrayInstantiation: public Expression {
       , elements_(std::move(elements)) {}
 };
 
+class TupleInstantiation: public Expression {
+ public:
+  virtual ~TupleInstantiation() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitTupleInstantiation(this);
+  }
+
+  AssignableList* assignable_list() {
+    return elements_.get();
+  }
+
+  bool has_elements() const noexcept {
+    if (elements_) {
+      return true;
+    }
+
+    return false;
+  }
+
+  bool valid_elements() const noexcept {
+    if (elements_) {
+      return true;
+    }
+
+    return false;
+  }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::unique_ptr<AssignableList> elements_;
+
+  TupleInstantiation(std::unique_ptr<AssignableList> elements,
+                     Position position)
+      : Expression(NodeType::kTupleInstantiation, position)
+      , elements_(std::move(elements)) {}
+};
+
 class AssignableValue: public Expression {
  public:
   virtual ~AssignableValue() {}
@@ -466,6 +506,14 @@ class AssignableList: public AstNode, public AssignableInterface {
     }
 
     return vec;
+  }
+
+  size_t size() const {
+    return nodes_.size();
+  }
+
+  std::vector<std::unique_ptr<AssignableValue>>& nodes() {
+    return nodes_;
   }
 
   bool IsEmpty() const noexcept {

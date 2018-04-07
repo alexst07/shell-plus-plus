@@ -1803,6 +1803,44 @@ std::vector<std::unique_ptr<Expression>> Parser::ParserListComprehension() {
   return comp_list;
 }
 
+ParserResult<Expression> Parser::ParserTupleInstantiation() {
+  // Advance token '(' and goes until a token different from new line
+  Advance();
+  ValidToken();
+
+  // Parser empty array
+  if (token_ == TokenKind::RPAREN) {
+    ParserResult<Expression> tuple(factory_.NewTupleInstantiation(
+      std::unique_ptr<AssignableList>(nullptr)));
+
+    Advance();
+    return tuple;
+  }
+
+  // get the assignable list
+  std::unique_ptr<AssignableList> rvalue_list;
+  rvalue_list = ParserAssignableList().MoveAstNode();
+
+  if (ValidToken() != TokenKind::RPAREN) {
+    ErrorMsg(boost::format("Expected ')' in the end of expression, got %1%")
+        % TokenValueStr());
+    return ParserResult<Expression>(); // Error
+  }
+
+  Advance(); // consume the token ')'
+
+  // check if the assignable list has exactly one element, if is the case
+  // only an common expression must be returned
+  if (rvalue_list->size() == 1) {
+    std::unique_ptr<AssignableValue> value = std::move(rvalue_list->nodes()[0]);
+    ParserResult<Expression> res(std::move(value));
+    return res;
+  }
+
+  return ParserResult<Expression>(factory_.NewTupleInstantiation(
+      std::move(rvalue_list)));
+}
+
 ParserResult<Expression> Parser::ParserArrayInstantiation() {
   // Advance token '[' and goes until a token different from new line
   Advance();
@@ -1936,17 +1974,7 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
     // parser dictionary instantiation: {a, b, c}
     return ParserDictionary();
   } else if (token_ == TokenKind::LPAREN) {
-    // parser expression: (4+3)
-    Advance(); // consume the token '('
-    ParserResult<Expression> res(ParserLetExp());
-
-    if (ValidToken() != TokenKind::RPAREN) {
-      ErrorMsg(boost::format("Expected ')' in the end of expression"));
-      return ParserResult<Expression>(); // Error
-    }
-
-    Advance(); // consume the token ')'
-    return res;
+    return ParserTupleInstantiation();
   } if (token_ == TokenKind::KW_FUNC) {
     ParserResult<AstNode> flambda(ParserFunctionDeclaration(true));
     return ParserResult<Expression>(flambda.MoveAstNode<Expression>());

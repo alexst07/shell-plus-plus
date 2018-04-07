@@ -331,6 +331,8 @@ class Parser {
 
   ParserResult<Expression> ParserArrayInstantiation();
 
+  ParserResult<Expression> ParserTupleInstantiation();
+
   std::vector<std::unique_ptr<Expression>> ParserListComprehension();
   ParserResult<Expression> ParserCompIf();
   ParserResult<Expression> ParserCompFor();

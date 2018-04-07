@@ -71,6 +71,9 @@ class ExpressionExecutor: public Executor {
   // Executes array instantiation
   ObjectPtr ExecArrayInstantiation(AstNode* node);
 
+  // Executes tuple instantiation
+  ObjectPtr ExecTupleInstantiation(AstNode* node);
+
   // Executes map instantiation
   ObjectPtr ExecMapInstantiation(AstNode* node);
 

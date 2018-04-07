@@ -312,6 +312,12 @@ class AstNodeFactory {
         std::move(elements), fn_pos_()));
   }
 
+  inline std::unique_ptr<TupleInstantiation> NewTupleInstantiation(
+      std::unique_ptr<AssignableList> elements) {
+    return std::unique_ptr<TupleInstantiation>(new TupleInstantiation(
+        std::move(elements), fn_pos_()));
+  }
+
   template<class T>
   inline std::unique_ptr<AssignableValue> NewAssignableValue(
       std::unique_ptr<T>&& value) {

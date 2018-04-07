@@ -589,6 +589,16 @@ class AstPrinter: public AstVisitor {
     }
   }
 
+  void virtual VisitTupleInstantiation(TupleInstantiation* tuple) {
+    Level();
+    std::cout << "<tuple_instantiation>\n";
+    if (tuple->valid_elements()) {
+      level_++;
+      tuple->assignable_list()->Accept(this);
+      level_--;
+    }
+  }
+
   void virtual VisitLetExpression(LetExpression* let) {
     Level();
     std::cout << "<let>\n";
