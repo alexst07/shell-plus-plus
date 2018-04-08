@@ -142,6 +142,10 @@ class ArrayObject: public Object {
      return value_.size();
    }
 
+   const std::vector<std::shared_ptr<Object>>& value() const {
+     return value_;
+   }
+
    std::vector<std::shared_ptr<Object>>& value() {
      return value_;
    }

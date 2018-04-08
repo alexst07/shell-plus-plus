@@ -344,6 +344,11 @@ class ImportExecutor: public Executor {
 
   void ExecImportFrom(ImportStatement *node);
 
+  void ExecImportStar(SymbolTablePtr& module_top_table);
+
+  void ExecImportIdList(ImportStatement *node,
+      SymbolTablePtr& module_top_table);
+
   ObjectPtr ProcessModule(const std::string& module, const std::string& path);
 
   void set_stop(StopFlag flag) override;

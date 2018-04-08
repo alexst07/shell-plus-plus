@@ -28,3 +28,9 @@ print(a.get())
 
 b = B("class B")
 print(b.get())
+
+cmd cmd_test {
+  print("my cmd")
+}
+
+cmd_test

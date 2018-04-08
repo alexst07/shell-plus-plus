@@ -1101,25 +1101,58 @@ void ImportExecutor::ExecImportFrom(ImportStatement *node) {
 
   try {
     if (node->star()) {
-      // copy all symbols from top symbol table from module to main symbol table
-      for (const auto& entry : *module_top_table) {
-        symbol_table_stack().SetEntry(entry.first, entry.second.SharedAccess());
-      }
+      ExecImportStar(module_top_table);
     } else {
-      // get only symbols on import id list, like:
-      // import Class1, class2 from "test.sh"
-      const auto& id_list =
-          node->import<std::vector<std::unique_ptr<Identifier>>>();
-
-      for (const auto& id : id_list) {
-        const std::string& str_id = id->name();
-        ObjectPtr obj = module_top_table->Lookup(str_id, /*create*/false)
-            .SharedAccess();
-        symbol_table_stack().SetEntry(str_id, obj);
-      }
+      ExecImportIdList(node, module_top_table);
     }
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+  }
+}
+
+void ImportExecutor::ExecImportIdList(ImportStatement *node,
+    SymbolTablePtr& module_top_table) {
+  // get only symbols on import id list, like:
+  // import Class1, class2 from "test.sh"
+  const auto& id_list =
+      node->import<std::vector<std::unique_ptr<Identifier>>>();
+
+  for (const auto& id : id_list) {
+    const std::string& str_id = id->name();
+    ObjectPtr obj = module_top_table->Lookup(str_id, /*create*/false)
+        .SharedAccess();
+    symbol_table_stack().SetEntry(str_id, obj);
+  }
+}
+
+void ImportExecutor::ExecImportStar(SymbolTablePtr& module_top_table) {
+  // copy all symbols from __all__ variable to main symbol table
+  ObjectPtr all_var = module_top_table->Lookup("__all__", /*create*/false)
+      .SharedAccess();
+
+  // check if __all__ is a array
+  if (all_var->type() != Object::ObjectType::ARRAY) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("__all__ must be array"));
+  }
+
+  const ArrayObject& all_array = static_cast<const ArrayObject&>(*all_var);
+
+  for (const auto& symbol_name : all_array.value()) {
+    // all symbol name must be string
+    // check if __all__ is a array
+    if (symbol_name->type() != Object::ObjectType::STRING) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("all elements from __all__ variabel must be "
+          "string"));
+    }
+
+    const std::string& str_symbol_name =
+        static_cast<const StringObject&>(*symbol_name).value();
+
+    ObjectPtr obj = module_top_table->Lookup(str_symbol_name,
+        /*create*/false).SharedAccess();
+    symbol_table_stack().SetEntry(str_symbol_name, obj);
   }
 }
 

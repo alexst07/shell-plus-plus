@@ -1,3 +1,5 @@
+__all__ = ["A", "B", "Test"]
+
 class A {
   func __init__(a) {
     this.a = a
@@ -20,4 +22,8 @@ class B {
 
 func Test() {
   print("test")
+}
+
+cmd cmd_test {
+  print("cmd test")
 }
