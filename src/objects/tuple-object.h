@@ -87,11 +87,39 @@ class TupleObject: public Object {
 
    virtual ~TupleObject() {}
 
-   inline std::shared_ptr<Object>& ElementRef(size_t i) {
+   inline std::shared_ptr<Object>& ElementRef(int i) {
+     if (i < 0) {
+       i = value_.size() + i;
+
+       if (i < 0) {
+         i = -i;
+       }
+     }
+
+     if (i >= static_cast<int>(value_.size())) {
+       throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                          boost::format("index: %1% must be lower than "
+                                        "the tuple size: %2%")%i%value_.size());
+     }
+
      return value_.at(i);
    }
 
-   inline std::shared_ptr<Object> Element(size_t i) {
+   inline std::shared_ptr<Object> Element(int i) {
+     if (i < 0) {
+       i = value_.size() + i;
+
+       if (i < 0) {
+         i = -i;
+       }
+     }
+
+     if (i >= static_cast<int>(value_.size())) {
+       throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+                          boost::format("index: %1% must be lower than "
+                                        "the tuple size: %2%")%i%value_.size());
+     }
+
      return value_.at(i);
    }
 

@@ -92,7 +92,21 @@ class StringObject: public Object {
 
   ObjectPtr Greater(ObjectPtr obj) override;
 
-  inline char Element(size_t i) {
+  inline char Element(int i) {
+    if (i < 0) {
+       i = value_.length() + i;
+
+       if (i < 0) {
+         i = -i;
+       }
+     }
+
+     if (i >= static_cast<int>(value_.size())) {
+       throw RunTimeError(RunTimeError::ErrorCode::OUT_OF_RANGE,
+          boost::format("index: %1% must be lower than "
+          "the string size: %2%")%i%value_.length());
+     }
+
     return value_[i];
   }
 
