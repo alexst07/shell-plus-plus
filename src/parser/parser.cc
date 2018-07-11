@@ -1230,6 +1230,7 @@ ParserResult<ArgumentsList> Parser::ParserArgumentsList() {
   std::vector<std::unique_ptr<Argument>> args_list;
 
   do {
+    ValidToken();
     ParserResult<Expression> arg = ParserArgument();
     args_list.push_back(arg.MoveAstNode<Argument>());
     ValidToken();
