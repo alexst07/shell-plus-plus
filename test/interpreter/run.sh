@@ -54,7 +54,7 @@ func get_file_output(file) {
 
 func compare_lines(out_lines, expected_lines) {
     for out_line, expected_line in out_lines, expected_lines {
-        if expected_line[0] == "*" {
+        if (len(expected_line) > 0) && (expected_line[0] == "*") {
             if out_line.find("Error") == false {
                 return false
             }

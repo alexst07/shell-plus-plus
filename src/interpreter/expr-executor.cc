@@ -426,94 +426,112 @@ ObjectPtr ExpressionExecutor::ExecUnary(AstNode* node) {
 ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
   // Executes the left and right side of the expression
   ObjectPtr left = Exec(static_cast<AstNode*>(node->left()));
-  ObjectPtr right = Exec(static_cast<AstNode*>(node->right()));
 
-  ObjectPtr res;
+  // Emulates lazy evaluation for don't exeucte two sides of boolean
+  // expression, as (exp1) && (exp2), executes exp2 only if exp1 is true
+  // (exp1) || (exp2) executes exp2 only if exp1 is false
+  auto right = [&]() -> ObjectPtr {
+    return Exec(static_cast<AstNode*>(node->right()));
+  };
 
   try {
     switch (node->kind()) {
       case TokenKind::ADD:
-        res = left->Add(right);
+        return left->Add(right());
         break;
 
       case TokenKind::SUB:
-        res = left->Sub(right);
+        return left->Sub(right());
         break;
 
       case TokenKind::MUL:
-        res = left->Mult(right);
+        return left->Mult(right());
         break;
 
       case TokenKind::DIV:
-        res = left->Div(right);
+        return left->Div(right());
         break;
 
       case TokenKind::MOD:
-        res = left->DivMod(right);
+        return left->DivMod(right());
         break;
 
       case TokenKind::SAR:
-        res = left->RightShift(right);
+        return left->RightShift(right());
         break;
 
       case TokenKind::SHL:
-        res = left->LeftShift(right);
+        return left->LeftShift(right());
         break;
 
       case TokenKind::BIT_AND:
-        res = left->BitAnd(right);
+        return left->BitAnd(right());
         break;
 
       case TokenKind::BIT_OR:
-        res = left->BitOr(right);
+        return left->BitOr(right());
         break;
 
       case TokenKind::BIT_XOR:
-        res = left->BitXor(right);
+        return left->BitXor(right());
         break;
 
-      case TokenKind::AND:
-        res = left->And(right);
-        break;
+      case TokenKind::AND: {
+        if (left->type() == Object::ObjectType::BOOL) {
+          if (static_cast<BoolObject&>(*left).value() == false) {
+            return obj_factory_.NewBool(false);
+          }
+        }
 
-      case TokenKind::OR:
-        res = left->Or(right);
+        return left->And(right());
         break;
+      }
+
+      case TokenKind::OR: {
+        if (left->type() == Object::ObjectType::BOOL) {
+          if (static_cast<BoolObject&>(*left).value() == true) {
+            return obj_factory_.NewBool(true);
+          }
+        }
+
+        return left->Or(right());
+        break;
+      }
 
       case TokenKind::EQUAL:
-        res = left->Equal(right);
+        return left->Equal(right());
         break;
 
       case TokenKind::NOT_EQUAL:
-        res = left->NotEqual(right);
+        return left->NotEqual(right());
         break;
 
       case TokenKind::LESS_THAN:
-        res = left->Lesser(right);
+        return left->Lesser(right());
         break;
 
       case TokenKind::GREATER_THAN:
-        res = left->Greater(right);
+        return left->Greater(right());
         break;
 
       case TokenKind::LESS_EQ:
-        res = left->LessEqual(right);
+        return left->LessEqual(right());
         break;
 
       case TokenKind::GREATER_EQ:
-        res = left->GreatEqual(right);
+        return left->GreatEqual(right());
         break;
 
       case TokenKind::KW_IN:
-        res = right->In(left);
+        return right()->In(left);
         break;
 
       case TokenKind::KW_INSTANCEOF:
-        res = ExecInstanceOf(left, right);
+        return ExecInstanceOf(left, right());
         break;
 
       case TokenKind::KW_IS:
-        res = ExecIs(left, right);
+        return ExecIs(left, right());
         break;
 
       default:
@@ -524,7 +542,7 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
     throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
   }
 
-  return res;
+  return obj_factory_.NewNull();
 }
 
 ObjectPtr ExpressionExecutor::ExecIs(ObjectPtr obj, ObjectPtr type) {
