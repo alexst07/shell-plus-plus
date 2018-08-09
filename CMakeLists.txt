@@ -68,8 +68,9 @@ find_package(Threads REQUIRED)
 
 if (BUILD_UNIT_TESTS)
   enable_testing()
-  find_package(GTest REQUIRED)
-  include_directories(${GTEST_INCLUDE_DIRS})
+  include(googletest)
+  include_directories(${googletest_INCLUDE_DIRS}
+                      ${googlemock_INCLUDE_DIRS})
 endif ()
 
 include_directories(${CMAKE_SOURCE_DIR}/src/)

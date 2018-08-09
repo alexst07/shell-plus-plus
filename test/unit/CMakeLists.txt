@@ -9,7 +9,7 @@ foreach(local_file ${SOURCES_TEST})
 
   add_executable(${local_filename} ${local_file})
   target_link_libraries(${local_filename} shpp ${CMAKE_THREAD_LIBS_INIT}
-    ${GTEST_BOTH_LIBRARIES}
+    ${googletest_STATIC_LIBRARIES}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY})
   add_test(UnitTests ${local_filename})
