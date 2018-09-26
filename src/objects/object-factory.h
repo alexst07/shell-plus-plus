@@ -273,13 +273,13 @@ class ObjectFactory {
     return ObjectPtr(new MapObject(obj_type, SymTableStack()));
   }
 
-  inline ObjectPtr NewRegex(const std::string str) {
+  inline ObjectPtr NewRegex(const std::string& str) {
     auto obj_type = symbol_table_.LookupSys("regex").SharedAccess();
     return ObjectPtr(new RegexObject(str, obj_type,
         SymTableStack()));
   }
 
-  inline ObjectPtr NewPath(const std::string str) {
+  inline ObjectPtr NewPath(const std::string& str) {
     auto obj_type = symbol_table_.LookupSys("path").SharedAccess();
     return ObjectPtr(new PathObject(str, obj_type,
                                     SymTableStack()));

@@ -51,8 +51,10 @@ class PathObject: public Object {
 
    ObjectPtr Equal(ObjectPtr obj) override;
 
+   ObjectPtr Div(ObjectPtr obj) override;
+
    std::string Print() override {
-     return "path<" + path_.string() + ">";
+     return path_.string();
    }
 
    long int Len() override {

@@ -63,8 +63,33 @@ ObjectPtr PathObject::Equal(ObjectPtr obj) {
 
   PathObject& path_obj = static_cast<PathObject&>(*obj);
 
-  bool v = fs::equivalent(path_, path_obj.value());
-  return obj_factory.NewBool(v);
+  try {
+    bool v = fs::equivalent(path_, path_obj.value());
+    return obj_factory.NewBool(v);
+  } catch (boost::filesystem::filesystem_error& ex) {
+    throw RunTimeError(RunTimeError::ErrorCode::INVALID_ARGS,
+        boost::format("Operation not permitted: not valid paths %1%, %2%")%
+        path_ % path_obj.value());
+  }
+}
+
+ObjectPtr PathObject::Div(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if (obj->type() != Object::ObjectType::STRING) {
+    const std::string& str_path = static_cast<StringObject&>(*obj).value();
+    boost::filesystem::path tmp_path(str_path);
+    boost::filesystem::path path = path_ / tmp_path;
+    return obj_factory.NewPath(path);
+  } else if (obj->type() != Object::ObjectType::PATH) {
+    const boost::filesystem::path& tmp_path =
+        static_cast<PathObject&>(*obj).value();
+    boost::filesystem::path path = path_ / tmp_path;
+    return obj_factory.NewPath(path);
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("given argument must be string or path object"));
+  }
 }
 
 PathType::PathType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
@@ -121,7 +146,7 @@ ObjectPtr PathPwdStaticFunc::Call(Executor*, Args&& params, KWArgs&&) {
   fs::path path = fs::current_path();
 
   ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewString(path.string());
+  return obj_factory.NewPath(path.string());
 }
 
 ObjectPtr PathExistsFunc::Call(Executor*, Args&& params, KWArgs&&) {
