@@ -1326,7 +1326,7 @@ ParserResult<Expression> Parser::ParserIfElseExp() {
     Advance();
     ValidToken();
 
-    ParserResult<Expression> comp_exp = ParserNotExp();
+    ParserResult<Expression> comp_exp = ParserLetExp();
 
     ValidToken();
     if (!token_.Is(TokenKind::KW_ELSE)) {
@@ -1337,7 +1337,7 @@ ParserResult<Expression> Parser::ParserIfElseExp() {
     Advance();
     ValidToken();
 
-    ParserResult<Expression> else_exp = ParserNotExp();
+    ParserResult<Expression> else_exp = ParserLetExp();
 
     return ParserResult<Expression>(factory_.NewIfElseExpression(
         comp_exp.MoveAstNode(), then_exp.MoveAstNode(),
