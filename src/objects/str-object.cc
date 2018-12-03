@@ -179,6 +179,20 @@ ObjectPtr StringObject::Greater(ObjectPtr obj) {
   return obj_factory.NewBool(r);
 }
 
+ObjectPtr StringObject::Div(ObjectPtr obj) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  if ((obj->type() == ObjectType::STRING) ||
+      (obj->type() == ObjectType::PATH)) {
+    ObjectPtr path = obj_factory.NewPath(value_);
+    ObjectPtr path_concat = static_cast<PathObject&>(*path).Div(obj);
+    return path_concat;
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("given argument must be string or path object"));
+  }
+}
+
 std::shared_ptr<Object> StringObject::Attr(std::shared_ptr<Object> self,
                                            const std::string& name) {
   ObjectPtr obj_type = ObjType();

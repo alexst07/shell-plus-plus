@@ -76,12 +76,12 @@ ObjectPtr PathObject::Equal(ObjectPtr obj) {
 ObjectPtr PathObject::Div(ObjectPtr obj) {
   ObjectFactory obj_factory(symbol_table_stack());
 
-  if (obj->type() != Object::ObjectType::STRING) {
+  if (obj->type() == ObjectType::STRING) {
     const std::string& str_path = static_cast<StringObject&>(*obj).value();
     boost::filesystem::path tmp_path(str_path);
     boost::filesystem::path path = path_ / tmp_path;
     return obj_factory.NewPath(path);
-  } else if (obj->type() != Object::ObjectType::PATH) {
+  } else if (obj->type() == ObjectType::PATH) {
     const boost::filesystem::path& tmp_path =
         static_cast<PathObject&>(*obj).value();
     boost::filesystem::path path = path_ / tmp_path;
