@@ -14,9 +14,9 @@ func PS1() {
     }
   }
 
-  path_ = path.pwd().replace(env.get("HOME"), "~/").split("/")
+  path_ = path.pwd().replace($HOME, "~/").split("/")
 
-  search = path.pwd().find(env.get("HOME"))
+  search = string(path.pwd()).find($HOME)
   search = not search == false
 
   if search {
