@@ -155,6 +155,10 @@ class TupleObject: public Object {
      return value_.size();
    }
 
+   const std::vector<ObjectPtr>& value() const {
+     return value_;
+   }
+
    std::string Print() override {
      std::string str = "(";
      for (const auto& e: value_) {

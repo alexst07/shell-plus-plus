@@ -97,23 +97,19 @@ void AssignExecutor::Assign(std::vector<Expression*>& left_exp_vec,
     ObjectPtr tuple_obj(obj_factory_.NewTuple(std::move(values)));
     AssignOperation(left_exp_vec[0], tuple_obj, assign_kind);
   } else if ((num_left_exp != 1) && (values.size() == 1)) {
-    // only tuple object is accept on this case
-    if (values[0]->type() != Object::ObjectType::TUPLE) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                         boost::format("expect tuple object as rvalue"));
+    // unpack values from right side
+    std::vector<ObjectPtr> rvalues = Unpack(values[0]);
+    size_t rvalues_size = rvalues.size();
+
+    if (num_left_exp != rvalues_size) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("unpack values size different from left values"
+        " (expected %1%, got %2%)")%num_left_exp%rvalues_size);
     }
 
-    // numbers of variables must be equal the number of tuple elements
-    TupleObject &tuple_obj = static_cast<TupleObject&>(*values[0]);
-    if (num_left_exp != tuple_obj.Size()) {
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-          boost::format("numbers of variables: %1% and "
-                        "numbers of tuples: %2% are "
-                        "incompatibles")% num_left_exp % tuple_obj.Size());
-    }
-
-    for (size_t i = 0; i < num_left_exp; i++) {
-      AssignOperation(left_exp_vec[i], tuple_obj.Element(i), assign_kind);
+    // apply assignment operation for each expression on left side
+    for (size_t i = 0; i < num_left_exp; ++i) {
+      AssignOperation(left_exp_vec[i], rvalues[i], assign_kind);
     }
   } else {
     // on this case there are the same number of variables and values
@@ -169,6 +165,62 @@ void AssignExecutor::AssignArray(AstNode* node, ObjectPtr value,
   AssignToArray(arr_obj, index, value, token);
 }
 
+void AssignExecutor::AssignLeftTuple(AstNode* node, ObjectPtr value,
+                                     TokenKind token) {
+  TupleInstantiation* tuple_node = static_cast<TupleInstantiation*>(node);
+
+  if (!tuple_node->has_elements()) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("tuple can't be empty in assignment operation"));
+  }
+
+  AssignableList* assignable_list = tuple_node->assignable_list();
+  std::vector<AssignableValue*> lvalues = assignable_list->children();
+  std::vector<ObjectPtr> rvalues = Unpack(value);
+
+  size_t lvalues_size = lvalues.size();
+  size_t rvalues_size = rvalues.size();
+
+  if (lvalues_size != rvalues_size) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("unpack values size different from left values"
+        " (expected %1%, got %2%)")%lvalues_size%rvalues_size);
+  }
+
+  for (size_t i = 0; i < lvalues_size; ++i) {
+    // execute assignment operation for each value of AssignableValue
+    AssignmentAcceptorExpr(lvalues[i]->value(), rvalues[i], token);
+  }
+}
+
+void AssignExecutor::AssignLeftArray(AstNode* node, ObjectPtr value,
+                                     TokenKind token) {
+  ArrayInstantiation* array_node = static_cast<ArrayInstantiation*>(node);
+
+  if (!array_node->has_elements()) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("array can't be empty in assignment operation"));
+  }
+
+  AssignableList* assignable_list = array_node->assignable_list();
+  std::vector<AssignableValue*> lvalues = assignable_list->children();
+  std::vector<ObjectPtr> rvalues = Unpack(value);
+
+  size_t lvalues_size = lvalues.size();
+  size_t rvalues_size = rvalues.size();
+
+  if (lvalues_size != rvalues_size) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("unpack values size different from left values"
+        " (expected %1%, got %2%)")%lvalues_size%rvalues_size);
+  }
+
+  for (size_t i = 0; i < lvalues_size; ++i) {
+    // execute assignment operation for each value of AssignableValue
+    AssignmentAcceptorExpr(lvalues[i]->value(), rvalues[i], token);
+  }
+}
+
 void AssignExecutor::AssignmentAcceptorExpr(AstNode* node, ObjectPtr value,
                                             TokenKind token) {
   switch(node->type()) {
@@ -182,6 +234,14 @@ void AssignExecutor::AssignmentAcceptorExpr(AstNode* node, ObjectPtr value,
 
     case AstNode::NodeType::kAttribute:
       AssignAtrribute(node, value, token);
+      break;
+
+    case AstNode::NodeType::kTupleInstantiation:
+      AssignLeftTuple(node, value, token);
+      break;
+
+    case AstNode::NodeType::kArrayInstantiation:
+      AssignLeftArray(node, value, token);
       break;
 
     default:
@@ -298,6 +358,40 @@ void AssignExecutor::AssignToArray(ObjectPtr arr, ObjectPtr index,
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
                          boost::format("not valid assignment operation"));
   }
+}
+
+std::vector<ObjectPtr> Unpack(ObjectPtr obj) {
+  if (obj->type() == Object::ObjectType::TUPLE) {
+    TupleObject &tuple_obj = static_cast<TupleObject&>(*obj);
+    std::vector<ObjectPtr> r = tuple_obj.value();
+    return r;
+  } else if (obj->type() == Object::ObjectType::ARRAY) {
+    ArrayObject &array_obj = static_cast<ArrayObject&>(*obj);
+    std::vector<ObjectPtr> r = array_obj.value();
+    return r;
+  }
+
+  std::vector<ObjectPtr> unpack_vec;
+  ObjectPtr obj_iter = obj->ObjIter(obj);
+
+  // check if there is next value on iterator
+  auto check_iter = [&] () -> bool {
+    ObjectPtr has_next_obj = obj_iter->HasNext();
+    if (has_next_obj->type() != Object::ObjectType::BOOL) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                          boost::format("expect bool from __has_next__"));
+    }
+
+    bool v = static_cast<BoolObject&>(*has_next_obj).value();
+    return v;
+  };
+
+  while (check_iter()) {
+    ObjectPtr next_obj = obj_iter->Next();
+    unpack_vec.push_back(next_obj);
+  }
+
+  return unpack_vec;
 }
 
 }

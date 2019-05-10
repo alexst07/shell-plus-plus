@@ -66,6 +66,10 @@ class AssignExecutor: public Executor {
 
   void AssignArray(AstNode* node, ObjectPtr value, TokenKind token);
 
+  void AssignLeftArray(AstNode* node, ObjectPtr value, TokenKind token);
+
+  void AssignLeftTuple(AstNode* node, ObjectPtr value, TokenKind token);
+
   void AssignmentAcceptorExpr(AstNode* node, ObjectPtr value, TokenKind token);
 
   void set_stop(StopFlag flag);
@@ -79,6 +83,8 @@ class AssignExecutor: public Executor {
   ObjectFactory obj_factory_;
   bool global_;
 };
+
+std::vector<ObjectPtr> Unpack(ObjectPtr obj);
 
 }
 }
