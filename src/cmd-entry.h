@@ -35,6 +35,8 @@ class CmdEntry {
 
   CmdEntry(Type type): type_(type) {}
 
+  virtual ~CmdEntry() = default;
+
   virtual void Exec(Executor* parent, std::vector<std::string>&& args) = 0;
 
   Type type() const noexcept {
@@ -55,6 +57,8 @@ class CmdDeclEntry: public CmdEntry {
       , start_node_(start_node)
       , symbol_table_(symbol_table.MainTable()) {}
 
+  virtual ~CmdDeclEntry() = default;
+
   void Exec(Executor* parent, std::vector<std::string>&& args) override;
 
  private:
@@ -67,6 +71,8 @@ class CmdInEntry: public CmdEntry {
   CmdInEntry(const SymbolTableStack& symbol_table)
       : CmdEntry(Type::kIn)
       , symbol_table_(symbol_table.MainTable()) {}
+
+  virtual ~CmdInEntry() = default;
 
   virtual void Exec(Executor* parent, std::vector<std::string>&& args) = 0;
 
@@ -106,6 +112,9 @@ void CmdSet(const std::string& name, SymbolTableStack& symbol_table) {
 class CmdAliasEntry: public CmdEntry {
 public:
  CmdAliasEntry(AstNode* start_node, const SymbolTableStack& symbol_table);
+
+ virtual ~CmdAliasEntry() = default;
+
  const std::vector<std::string>& args() const noexcept;
 
 private:
