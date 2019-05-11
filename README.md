@@ -27,6 +27,15 @@ However everything here can change without warning, because to date, the only pu
 # Examples
 Follows some examples just to get an idea of how the language works.
 
+## A powerful glob
+Shell++ has a powerful glob, that allows you to perform laborious tasks in a few lines. For example, suppose you want to modify the extension of all `txt` files to `csv` recursively.
+
+```shell
+for p, [n] in %**/*.txt% {
+  mv ${p} ${p.parent_path()/(n + ".csv")}
+}
+```
+
 ## Hello World
 ```shell
 echo Hello World
@@ -34,7 +43,7 @@ print("Hello World")
 ```
 In Shell++ you can use an other program as echo, or a native function print.
 
-# List comprehension
+## List comprehension
 ```shell
 files = [f for f in $(ls) if path(f).size("M") > 50]
 ```
