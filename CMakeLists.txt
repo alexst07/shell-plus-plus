@@ -74,6 +74,7 @@ if (BUILD_UNIT_TESTS)
 endif ()
 
 include_directories(${CMAKE_SOURCE_DIR}/src/)
+include_directories(${CMAKE_SOURCE_DIR}/glob-cpp/include)
 
 add_subdirectory(src)
 add_subdirectory(test)

@@ -804,15 +804,6 @@ void EllipsisExprExecutor::set_stop(StopFlag flag) {
 ObjectPtr GlobExecutor::Exec(Glob* glob_node) {
   ObjectFactory obj_factory(symbol_table_stack());
   std::string glob_str = GetGlobStr(glob_node);
-
-  if (glob_node->recursive()) {
-    std::vector<ObjectPtr> glob_obj =
-        ListTree(boost::filesystem::current_path(), glob_str,
-        symbol_table_stack());
-
-    return obj_factory.NewArray(std::move(glob_obj));
-  }
-
   std::vector<ObjectPtr> glob_obj = ExecGlob(glob_str, symbol_table_stack());
   return obj_factory.NewArray(std::move(glob_obj));
 }

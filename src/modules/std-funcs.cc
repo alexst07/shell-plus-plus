@@ -262,20 +262,6 @@ ObjectPtr GlobFunc::Call(Executor*, Args&& params, KWArgs&&) {
   return obj_factory.NewArray(std::move(glob_obj));
 }
 
-ObjectPtr GlobRFunc::Call(Executor*, Args&& params, KWArgs&&) {
-  SHPP_FUNC_CHECK_NUM_PARAMS(params, 1, params)
-  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], msg, STRING)
-
-  ObjectFactory obj_factory(symbol_table_stack());
-  const std::string& glob_str = static_cast<StringObject&>(*params[0]).value();
-
-  Args glob_obj =
-      ListTree(boost::filesystem::current_path(), glob_str,
-      symbol_table_stack());
-
-  return obj_factory.NewArray(std::move(glob_obj));
-}
-
 ObjectPtr DumpSymbolTableFunc::SpecialCall(Executor*,
     Args&& params, KWArgs&&, SymbolTableStack& curret_sym_tab) {
   if (params.size() > 0) {

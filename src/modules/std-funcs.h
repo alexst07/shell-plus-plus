@@ -209,18 +209,6 @@ class GlobFunc: public FuncObject {
   ObjectFactory obj_factory_;
 };
 
-class GlobRFunc: public FuncObject {
- public:
-  GlobRFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : FuncObject(obj_type, std::move(sym_table))
-      , obj_factory_(symbol_table_stack()) {}
-
-  ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
-
- private:
-  ObjectFactory obj_factory_;
-};
-
 class EvalFunc: public SpecialFuncObject {
  public:
   EvalFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
@@ -273,7 +261,6 @@ inline void RegisterModule(SymbolTableStack& sym_table) {
     {"get_attr_type",         ObjectMethod<GetAttrTypeFunc>(sym_table)},
     {"is_interactive",        ObjectMethod<IsInteractiveFunc>(sym_table)},
     {"glob",                  ObjectMethod<GlobFunc>(sym_table)},
-    {"globr",                 ObjectMethod<GlobRFunc>(sym_table)},
     {"instance_of",           ObjectMethod<InstanceOfFunc>(sym_table)},
     {"dump_symbol_table",     ObjectMethod<DumpSymbolTableFunc>(sym_table)},
     {"eval",                  ObjectMethod<EvalFunc>(sym_table)},
