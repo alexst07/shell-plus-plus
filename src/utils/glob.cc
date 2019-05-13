@@ -25,8 +25,6 @@ std::string GetGlobStr(Glob* glob) {
 
 std::vector<ObjectPtr> ExecGlob(const std::string& glob_str,
     SymbolTableStack& symbol_table_stack) {
-  namespace fs = boost::filesystem;
-
   ObjectFactory obj_factory(symbol_table_stack);
   std::vector<ObjectPtr> glob_obj;
 
@@ -46,6 +44,27 @@ std::vector<ObjectPtr> ExecGlob(const std::string& glob_str,
     ObjectPtr tuple_obj = obj_factory.NewTuple(
         std::vector<ObjectPtr>{path_obj, array_token_obj});
     glob_obj.push_back(tuple_obj);
+  }
+
+  return glob_obj;
+}
+
+std::vector<ObjectPtr> ExecGlobSimple(const std::string& glob_str,
+    SymbolTableStack& symbol_table_stack) {
+  ObjectFactory obj_factory(symbol_table_stack);
+  std::vector<ObjectPtr> glob_obj;
+
+  glob::file_glob fglob{glob_str};
+  std::vector<glob::path_match> results = fglob.Exec();
+
+  for (auto& res : results) {
+    ObjectPtr path_obj = obj_factory.NewPath(res.path());
+    glob_obj.push_back(path_obj);
+  }
+
+  if (glob_obj.empty()) {
+    ObjectPtr default_obj = obj_factory.NewPath(glob_str);
+    glob_obj.push_back(default_obj);
   }
 
   return glob_obj;

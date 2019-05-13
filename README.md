@@ -31,9 +31,43 @@ Follows some examples just to get an idea of how the language works.
 Shell++ has a powerful glob, that allows you to perform laborious tasks in a few lines. For example, suppose you want to modify the extension of all `txt` files to `csv` recursively.
 
 ```shell
-for p, [n] in %**/*.txt% {
+for p, [n] in %%**/*.txt% {
   mv ${p} ${p.parent_path()/(n + ".csv")}
 }
+```
+
+## List comprehension
+```shell
+files = [f for f in $(ls) if path(f).size("M") > 50]
+```
+In this example files will be an array with all files listed by ls command with size bigger than 50Mb.
+
+## Try-Catch
+try catch helps you handle situations in an elegant way, for example, instead of giving a raw message to the user's face, you can treat the message that a command does not exist.
+
+```php
+try {
+  git clone git@github.com:alexst07/shell-plus-plus.git
+} catch InvalidCmdException as ex {
+  print("git not installed [msg: ", ex, "]")
+}
+```
+
+
+## Reading file line by line
+```python
+for line in file("example.txt") {
+  print("line: ", line)
+}
+```
+
+## Reading file line by line in shell style
+```shell
+shell {
+  while let line = read() {
+    print("line: ", line)
+  }
+} < example.txt
 ```
 
 ## Hello World
@@ -42,19 +76,6 @@ echo Hello World
 print("Hello World")
 ```
 In Shell++ you can use an other program as echo, or a native function print.
-
-## List comprehension
-```shell
-files = [f for f in $(ls) if path(f).size("M") > 50]
-```
-In this example files will be an array with all files listed by ls command with size bigger than 50Mb.
-
-## Reading file line by line
-```python
-for line in file("example.txt") {
-  print("line: ", line)
-}
-```
 
 ## String operations
 ### Length
@@ -166,7 +187,7 @@ ${ex} # execute ls commad
 ### Execute command from array variabel
 ```shell
 scp = ["sch", "-i", "path/file.pem", "user@addr:path"]
-${scp} # execute command from variable array
+$@{scp} # execute command from iterator
 ```
 It is possible execute a command from an array, using this feature
 you have much more flexibility to mount the command with its arguments
@@ -178,15 +199,15 @@ file *.txt
 ```
 Glob in this case works like in bash.
 
-```php
-for f in %%*.txt% {
+```shell
+for f in %**/*.txt% {
   file ${f}
 }
 ```
 iterate over all txt files recursively
 
 ```shell
-file ${%%*.txt%}
+file **/*.txt
 ```
 This peace of code has the same output from above
 
@@ -198,7 +219,7 @@ if path("/home/me/file.txt").exists() {
 }
 ```
 
-### Comparing path
+### Smart path comparison
 ```php
 p1 = path("/home/../home/me/file.txt")
 p2 = path("/home/me/file.txt")
@@ -260,7 +281,7 @@ Output:
 ```
 
 ### Lambda
-
+Return a closure function
 ```go
 func ftest(a) {
   v = ["echo", "ls", a]
@@ -270,6 +291,13 @@ func ftest(a) {
     return v.append(x)
   }
 }
+```
+
+The keyword lambda is valid too. This example convert all array elements to
+upper case string.
+```python
+vec = ["apple", "orange", "grape"]
+vec.map(lambda x: x.to_upper())
 ```
 
 ## Classes
@@ -304,16 +332,6 @@ Output:
 ```
 3 + 5i
 ```
-
-## Try-Catch
-```php
-try {
-  git clone git@github.com:alexst07/shell-plus-plus.git
-} catch InvalidCmdException as ex {
-  print("git not installed [msg: ", ex, "]")
-}
-```
-Shell++ has exception control, when a command is not found an InvalidCmdException is thrown.
 
 ## Quick-sort
 

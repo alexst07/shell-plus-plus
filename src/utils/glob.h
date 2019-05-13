@@ -23,6 +23,9 @@ std::string GetGlobStr(Glob* glob);
 std::vector<ObjectPtr> ExecGlob(const std::string& glob_str,
     SymbolTableStack& symbol_table_stack);
 
+std::vector<ObjectPtr> ExecGlobSimple(const std::string& glob_str,
+    SymbolTableStack& symbol_table_stack);
+
 std::vector<std::string> GlobArguments(const std::string& arg);
 
 }

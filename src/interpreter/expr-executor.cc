@@ -804,8 +804,18 @@ void EllipsisExprExecutor::set_stop(StopFlag flag) {
 ObjectPtr GlobExecutor::Exec(Glob* glob_node) {
   ObjectFactory obj_factory(symbol_table_stack());
   std::string glob_str = GetGlobStr(glob_node);
-  std::vector<ObjectPtr> glob_obj = ExecGlob(glob_str, symbol_table_stack());
-  return obj_factory.NewArray(std::move(glob_obj));
+
+  if (glob_node->recursive()) {
+    std::vector<ObjectPtr> glob_obj = ExecGlob(glob_str, symbol_table_stack());
+    return obj_factory.NewArray(std::move(glob_obj));
+  } else {
+    std::vector<ObjectPtr> glob_obj = ExecGlobSimple(glob_str,
+        symbol_table_stack());
+    if (glob_obj.size() == 1) {
+      return glob_obj[0];
+    }
+    return obj_factory.NewArray(std::move(glob_obj));
+  }
 }
 
 ObjectPtr ListComprehensionExecutor::Exec(AstNode* node) {
