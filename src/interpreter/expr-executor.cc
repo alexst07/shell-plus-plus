@@ -545,8 +545,8 @@ ObjectPtr ExpressionExecutor::ExecBinOp(BinaryOperation* node) {
   return obj_factory_.NewNull();
 }
 
-ObjectPtr ExpressionExecutor::ExecIs(ObjectPtr obj, ObjectPtr type) {
-  bool res = obj->ObjType().get() == type.get();
+ObjectPtr ExpressionExecutor::ExecIs(ObjectPtr obj1, ObjectPtr obj2) {
+  bool res = obj1.get() == obj2.get();
   return obj_factory_.NewBool(res);
 }
 

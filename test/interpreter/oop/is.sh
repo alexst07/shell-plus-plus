@@ -11,20 +11,20 @@
 # false
 # --output:end
 
-print("s" is string)
-print(8 is int)
-print(15 is bool)
+print(type("s") is string)
+print(type(8) is int)
+print(type(15) is bool)
 
 class Foo {}
-print(Foo() is Foo)
+print(type(Foo()) is Foo)
 f = Foo()
-print(f is Foo)
+print(type(f) is Foo)
 
 interface ITest {}
 class Test: ITest {}
 
 t = Test()
-print(t is ITest)
-print(t is Test)
-print(t is object)
-print(t is Foo)
+print(type(t) is ITest)
+print(type(t) is Test)
+print(type(t) is object)
+print(type(t) is Foo)

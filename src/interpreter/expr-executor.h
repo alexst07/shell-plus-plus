@@ -111,7 +111,7 @@ class ExpressionExecutor: public Executor {
 
   ObjectPtr ExecInstanceOf(ObjectPtr obj, ObjectPtr base);
 
-  ObjectPtr ExecIs(ObjectPtr obj, ObjectPtr type);
+  ObjectPtr ExecIs(ObjectPtr obj1, ObjectPtr obj2);
 
   ObjectPtr ExecListComprehension(AstNode* node);
 
