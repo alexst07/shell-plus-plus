@@ -17,8 +17,8 @@ try {
   throw TestException("tessdfte", 5)
   echo fdsa
 } catch GlobException as t {
-  print(string(t))
+  print(t)
 } catch Exception, TestException as t {
   print(type(t))
-  print("Exception: " + string(t))
+  print("Exception: " + t)
 }

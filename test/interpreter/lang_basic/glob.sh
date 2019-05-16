@@ -1,16 +1,17 @@
 # glob test
 # --output:start
-# a.txt b.txt c.txt
+# ./b.txt ./c.txt ./a.txt
 # *.txt
 # *.err
-# adir bdir cdir testdir
-# bdir
+# ./adir ./testdir ./cdir ./bdir
+# ./bdir
 # *dir
 # --output:end
 
 files = ["a.txt", "b.txt", "c.txt", "file"]
 dirs = ["adir", "bdir", "cdir", "testdir"]
 
+rm -rf test
 mkdir test
 cd test
 

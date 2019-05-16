@@ -297,21 +297,20 @@ std::shared_ptr<Object> DeclClassObject::Attr(std::shared_ptr<Object> self,
   ObjectPtr att_obj = static_cast<TypeObject&>(*ObjType()).SearchAttr(name);
 
   if (att_obj->type() == ObjectType::FUNC) {
-    const FuncDeclObject& decl_fn_obj = static_cast<const FuncDeclObject&>(
-        *att_obj);
-
     // if the function is not declared, just return it
     if (!static_cast<FuncObject&>(*att_obj).Declared()) {
-      if (!decl_fn_obj.IsLambda()) {
-        return ObjectPtr(obj_factory.NewWrapperFunc(att_obj, self));
-      }
+      return ObjectPtr(obj_factory.NewWrapperFunc(att_obj, self));
     }
+
+    const FuncDeclObject& decl_fn_obj = static_cast<const FuncDeclObject&>(
+        *att_obj);
 
     // if the function is static don't wrapper the function to pass the
     // parameter this
     if (static_cast<FuncDeclObject&>(*att_obj).IsStatic()) {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-            boost::format("static method '%1%' must not be called by object")%name);
+          boost::format("static method '%1%' must not be called by object")
+          %name);
     }
 
     // the function wrapper insert the object self_param as the first param
