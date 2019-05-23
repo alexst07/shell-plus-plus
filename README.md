@@ -375,18 +375,20 @@ If you need execute a no standard application, sometimes you need to check if th
 
 ```php
 func exist_cmd(name) {
-  c = $(whereis ${name})
+  c = $(which ${name})
 
-  arr = string(c).trim().split(":")
-
-  if arr[1] == "" {
+  if string(c) == "" {
     return false
   }
 
   return true
 }
+
+print("Does cmd exist?")
+print("ls: ", exist_cmd("ls"))
+print("non-exist-cmd ", exist_cmd("non-exist-cmd"))
 ```
-the command whereis inside $() have as result an object cmd, you can convert its result to string and the handle it.
+the command which inside $() have as result an cmd object, you can convert its result to string and handle it.
 # Building
 
 ## Requirements:
