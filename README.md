@@ -52,7 +52,13 @@ try {
   print("git not installed [msg: ", ex, "]")
 }
 ```
+## Reading user input
+```python
+line = read()
+print(line)
+```
 
+Function `read` is used to read user input, until the enter key is pressed, and the next line print the user input.
 
 ## Reading file line by line
 ```python
