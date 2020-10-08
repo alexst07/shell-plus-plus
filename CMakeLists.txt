@@ -30,7 +30,7 @@ else()
   message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+include(cmake/CompilerWarnings.cmake)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
