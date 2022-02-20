@@ -400,7 +400,7 @@ ObjectPtr RealObject::ObjInt() {
   int v = static_cast<int>(value_);
 
   ObjectFactory obj_factory(symbol_table_stack());
-  ObjectPtr obj_int(obj_factory.NewReal(v));
+  ObjectPtr obj_int(obj_factory.NewInt(v));
   return obj_int;
 }
 
