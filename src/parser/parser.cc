@@ -31,7 +31,7 @@ ParserResult<Statement> Parser::ParserImportStmt() {
     return ParserImportStarStmt();
   } else {
     ErrorMsg(boost::format("import statement not valid"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 }
 
@@ -41,12 +41,12 @@ ParserResult<Statement> Parser::ParserImportIdListStmt() {
   id_list = ParserIdList();
 
   if (id_list.empty()) {
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   if (token_ != TokenKind::KW_FROM) {
-    ErrorMsg(boost::format("expected from keyword, got %1%")% TokenValueStr());
-    return ParserResult<Statement>(); // Error
+    ErrorMsg(boost::format("expected from keyword, got %1%") % TokenValueStr());
+    return ParserResult<Statement>();  // Error
   }
 
   // advance from keyword
@@ -54,7 +54,7 @@ ParserResult<Statement> Parser::ParserImportIdListStmt() {
 
   if (token_ != TokenKind::STRING_LITERAL) {
     ErrorMsg(boost::format("expected string path"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   std::string from = boost::get<std::string>(token_.GetValue());
@@ -62,18 +62,18 @@ ParserResult<Statement> Parser::ParserImportIdListStmt() {
   Advance();
 
   return ParserResult<Statement>(
-      factory_.NewImportStatement(from, std::move(id_list), /*star*/false));
+      factory_.NewImportStatement(from, std::move(id_list), /*star*/ false));
 }
 
 ParserResult<Statement> Parser::ParserImportPathStmt() {
-  std::unique_ptr<Literal> path(factory_.NewLiteral(token_.GetValue(),
-                                                    Literal::kString));
+  std::unique_ptr<Literal> path(
+      factory_.NewLiteral(token_.GetValue(), Literal::kString));
 
   Advance();
 
   if (token_ != TokenKind::KW_AS) {
     ErrorMsg(boost::format("expected as keyword"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -81,16 +81,16 @@ ParserResult<Statement> Parser::ParserImportPathStmt() {
 
   if (token_ != TokenKind::IDENTIFIER) {
     ErrorMsg(boost::format("expected identifier"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
-  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
-      boost::get<std::string>(token_.GetValue())));
+  std::unique_ptr<Identifier> id(
+      factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
 
   Advance();
 
   return ParserResult<Statement>(
-        factory_.NewImportStatement(std::move(path), std::move(id)));
+      factory_.NewImportStatement(std::move(path), std::move(id)));
 }
 
 ParserResult<Statement> Parser::ParserImportStarStmt() {
@@ -98,8 +98,8 @@ ParserResult<Statement> Parser::ParserImportStarStmt() {
   Advance();
 
   if (token_ != TokenKind::KW_FROM) {
-    ErrorMsg(boost::format("expected from keyword, got %1%")% TokenValueStr());
-    return ParserResult<Statement>(); // Error
+    ErrorMsg(boost::format("expected from keyword, got %1%") % TokenValueStr());
+    return ParserResult<Statement>();  // Error
   }
 
   // advance from keyword
@@ -107,15 +107,15 @@ ParserResult<Statement> Parser::ParserImportStarStmt() {
 
   if (token_ != TokenKind::STRING_LITERAL) {
     ErrorMsg(boost::format("expected string path"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   std::string from = boost::get<std::string>(token_.GetValue());
 
   Advance();
 
-  return ParserResult<Statement>(factory_.NewImportStatement(from,
-      std::unique_ptr<Literal>(nullptr), /*star*/ true));
+  return ParserResult<Statement>(factory_.NewImportStatement(
+      from, std::unique_ptr<Literal>(nullptr), /*star*/ true));
 }
 
 ParserResult<Statement> Parser::ParserStmtDecl() {
@@ -144,30 +144,31 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
     return ParserResult<Statement>(alias.MoveAstNode<Statement>());
   }
 
-  return ParserResult<Statement>(); // error
+  return ParserResult<Statement>();  // error
 }
 
 bool Parser::IsStmtDecl() {
   return token_.IsAny(TokenKind::KW_FUNC, TokenKind::KW_CMD,
-      TokenKind::KW_CLASS, TokenKind::KW_ALIAS, TokenKind::KW_ABSTRACT,
-      TokenKind::KW_INTERFACE, TokenKind::KW_FINAL);
+                      TokenKind::KW_CLASS, TokenKind::KW_ALIAS,
+                      TokenKind::KW_ABSTRACT, TokenKind::KW_INTERFACE,
+                      TokenKind::KW_FINAL);
 }
 
 ParserResult<Declaration> Parser::ParserCmdDeclaration() {
   if (token_ != TokenKind::KW_CMD) {
     ErrorMsg(boost::format("expected cmd"));
-    return ParserResult<Declaration>(); // Error
+    return ParserResult<Declaration>();  // Error
   }
 
   Advance();
 
   if (token_ != TokenKind::IDENTIFIER) {
     ErrorMsg(boost::format("expected identifier"));
-    return ParserResult<Declaration>(); // Error
+    return ParserResult<Declaration>();  // Error
   }
 
-  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
-      boost::get<std::string>(token_.GetValue())));
+  std::unique_ptr<Identifier> id(
+      factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
 
   Advance();
 
@@ -184,11 +185,11 @@ Parser::ParserParamsList() {
     if (token_ != TokenKind::IDENTIFIER) {
       ErrorMsg(boost::format("expected identifier"));
       return std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>(
-          std::move(vec_params), false); // Error
+          std::move(vec_params), false);  // Error
     }
 
-    std::unique_ptr<Identifier> id(factory_.NewIdentifier(
-        boost::get<std::string>(token_.GetValue())));
+    std::unique_ptr<Identifier> id(
+        factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
 
     Advance();
     ValidToken();
@@ -200,14 +201,14 @@ Parser::ParserParamsList() {
       variadic = true;
       Advance();
       ValidToken();
-    } else if (token_ == TokenKind::ASSIGN){
+    } else if (token_ == TokenKind::ASSIGN) {
       Advance();
       ValidToken();
       value_ = ParserAssignable().MoveAstNode();
     }
 
-    std::unique_ptr<FunctionParam> param(factory_.NewFunctionParam(
-        std::move(id), std::move(value_), variadic));
+    std::unique_ptr<FunctionParam> param(
+        factory_.NewFunctionParam(std::move(id), std::move(value_), variadic));
     vec_params.push_back(std::move(param));
 
     // if the token is comma (,) goes to next parameter
@@ -230,7 +231,7 @@ ParserResult<Statement> Parser::ParserDeferStmt() {
 
   if (token_ == TokenKind::KW_DEFER) {
     ErrorMsg(boost::format("defer not allowed inside defer"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   std::unique_ptr<Statement> stmt(ParserDeferableStmt());
@@ -255,7 +256,7 @@ std::unique_ptr<Statement> Parser::ParserDeferableStmt() {
     stmt = ParserForInStmt().MoveAstNode();
   } else if (token_ == TokenKind::KW_TRY) {
     stmt = ParserTryCatch().MoveAstNode();
-  }  else if (token_ == TokenKind::LBRACE) {
+  } else if (token_ == TokenKind::LBRACE) {
     stmt = ParserBlock().MoveAstNode();
   } else if (token_ == TokenKind::KW_VARENV) {
     stmt = ParserVarEnvStmt().MoveAstNode();
@@ -268,11 +269,12 @@ std::unique_ptr<Statement> Parser::ParserDeferableStmt() {
   return stmt;
 }
 
-ParserResult<AstNode> Parser::ParserFunctionDeclaration(
-    bool lambda, bool abstract, bool fstatic) {
+ParserResult<AstNode> Parser::ParserFunctionDeclaration(bool lambda,
+                                                        bool abstract,
+                                                        bool fstatic) {
   if (token_ != TokenKind::KW_FUNC) {
     ErrorMsg(boost::format("expected function"));
-    return ParserResult<AstNode>(); // Error
+    return ParserResult<AstNode>();  // Error
   }
 
   Position pos = {token_.Line(), token_.Col()};
@@ -286,19 +288,19 @@ ParserResult<AstNode> Parser::ParserFunctionDeclaration(
   if (!lambda) {
     if (token_ != TokenKind::IDENTIFIER) {
       ErrorMsg(boost::format("expected identifier"));
-      return ParserResult<AstNode>(); // Error
+      return ParserResult<AstNode>();  // Error
     }
 
     id = factory_.NewIdentifier(boost::get<std::string>(token_.GetValue()),
-        std::move(nullptr));
+                                std::move(nullptr));
 
     Advance();
     ValidToken();
   }
 
   if (token_ != TokenKind::LPAREN) {
-    ErrorMsg(boost::format("expected token '(' got %1%")% TokenValueStr());
-    return ParserResult<AstNode>(); // Error
+    ErrorMsg(boost::format("expected token '(' got %1%") % TokenValueStr());
+    return ParserResult<AstNode>();  // Error
   }
 
   Advance();
@@ -314,11 +316,11 @@ ParserResult<AstNode> Parser::ParserFunctionDeclaration(
     std::tie(func_params, ok) = ParserParamsList();
     if (token_ != TokenKind::RPAREN) {
       ErrorMsg(boost::format("expected token ')'"));
-      return ParserResult<AstNode>(); // Error
+      return ParserResult<AstNode>();  // Error
     }
 
     if (!ok) {
-      return ParserResult<AstNode>(); // Error
+      return ParserResult<AstNode>();  // Error
     }
 
     Advance();
@@ -332,7 +334,7 @@ ParserResult<AstNode> Parser::ParserFunctionDeclaration(
 
   if (id) {
     return ParserResult<AstNode>(factory_.NewFunctionDeclaration(
-      std::move(func_params), std::move(id), std::move(block), fstatic, pos));
+        std::move(func_params), std::move(id), std::move(block), fstatic, pos));
   }
 
   return ParserResult<AstNode>(factory_.NewFunctionExpression(
@@ -342,7 +344,7 @@ ParserResult<AstNode> Parser::ParserFunctionDeclaration(
 ParserResult<Statement> Parser::ParserForInStmt() {
   if (token_ != TokenKind::KW_FOR) {
     ErrorMsg(boost::format("expected for statement"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -351,7 +353,7 @@ ParserResult<Statement> Parser::ParserForInStmt() {
 
   if (token_ != TokenKind::KW_IN) {
     ErrorMsg(boost::format("expected in operator"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -372,7 +374,7 @@ ParserResult<Statement> Parser::ParserForInStmt() {
 ParserResult<Statement> Parser::ParserIfStmt() {
   if (token_ != TokenKind::KW_IF) {
     ErrorMsg(boost::format("expected if statement"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -404,7 +406,7 @@ ParserResult<Statement> Parser::ParserIfStmt() {
     }
 
     return ParserResult<Statement>(factory_.NewIfStatement(
-      exp.MoveAstNode(), then_block.MoveAstNode(), else_block.MoveAstNode()));
+        exp.MoveAstNode(), then_block.MoveAstNode(), else_block.MoveAstNode()));
   }
 
   return ParserResult<Statement>(factory_.NewIfStatement(
@@ -426,7 +428,7 @@ ParserResult<Statement> Parser::ParserSwitchStmt() {
 
   if (token_ != TokenKind::LBRACE) {
     ErrorMsg(boost::format("expected { token"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -439,19 +441,19 @@ ParserResult<Statement> Parser::ParserSwitchStmt() {
       default_stmt = ParserDefaultStmt();
     } else {
       ErrorMsg(boost::format("expected case or default"));
-      return ParserResult<Statement>(); // Error
+      return ParserResult<Statement>();  // Error
     }
   }
 
   if (token_ != TokenKind::RBRACE) {
     ErrorMsg(boost::format("expected } token"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
 
-  return ParserResult<Statement>(factory_.NewSwitchStatement(exp.MoveAstNode(),
-      std::move(case_list), std::move(default_stmt)));
+  return ParserResult<Statement>(factory_.NewSwitchStatement(
+      exp.MoveAstNode(), std::move(case_list), std::move(default_stmt)));
 }
 
 std::unique_ptr<CaseStatement> Parser::ParserCaseStmt() {
@@ -467,8 +469,8 @@ std::unique_ptr<CaseStatement> Parser::ParserCaseStmt() {
 
   std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
 
-  return std::unique_ptr<CaseStatement>(factory_.NewCaseStatement(
-      exp_list.MoveAstNode(), std::move(block)));
+  return std::unique_ptr<CaseStatement>(
+      factory_.NewCaseStatement(exp_list.MoveAstNode(), std::move(block)));
 }
 
 ParserResult<Statement> Parser::ParserVarEnvStmt() {
@@ -478,16 +480,16 @@ ParserResult<Statement> Parser::ParserVarEnvStmt() {
 
   if (token_ != TokenKind::IDENTIFIER) {
     ErrorMsg(boost::format("expected identifier"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
-  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
-      boost::get<std::string>(token_.GetValue())));
+  std::unique_ptr<Identifier> id(
+      factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
 
   Advance();
   if (ValidToken() != TokenKind::ASSIGN) {
-    ErrorMsg(boost::format("expected '=' token, got %1%")% TokenValueStr());
-      return ParserResult<Statement>(); // Error
+    ErrorMsg(boost::format("expected '=' token, got %1%") % TokenValueStr());
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -495,14 +497,14 @@ ParserResult<Statement> Parser::ParserVarEnvStmt() {
 
   ParserResult<Expression> exp(ParserLetExp());
 
-  return ParserResult<Statement>(factory_.NewVarEnvStatement(
-      std::move(id), exp.MoveAstNode()));
+  return ParserResult<Statement>(
+      factory_.NewVarEnvStatement(std::move(id), exp.MoveAstNode()));
 }
 
 ParserResult<Statement> Parser::ParserBlock() {
   if (token_ != TokenKind::LBRACE) {
-    ErrorMsg(boost::format("expected { token, got %1%")% TokenValueStr());
-      return ParserResult<Statement>(); // Error
+    ErrorMsg(boost::format("expected { token, got %1%") % TokenValueStr());
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -521,8 +523,8 @@ ParserResult<Statement> Parser::ParserBlock() {
   }
 
   if (ValidToken() != TokenKind::RBRACE) {
-    ErrorMsg(boost::format("expected } token, got %1%")% TokenValueStr());
-      return ParserResult<Statement>(); // Error
+    ErrorMsg(boost::format("expected } token, got %1%") % TokenValueStr());
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -561,14 +563,14 @@ ParserResult<StatementList> Parser::ParserStmtList() {
     }
   }
 
-  return ParserResult<StatementList>(factory_.NewStatementList(
-      std::move(stmt_list)));
+  return ParserResult<StatementList>(
+      factory_.NewStatementList(std::move(stmt_list)));
 }
 
 ParserResult<Statement> Parser::ParserWhileStmt() {
   if (token_ != TokenKind::KW_WHILE) {
     ErrorMsg(boost::format("expected while statement"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -580,8 +582,8 @@ ParserResult<Statement> Parser::ParserWhileStmt() {
 
   ParserResult<Statement> block(ParserBlock());
 
-  return ParserResult<Statement>(factory_.NewWhileStatement(
-      exp.MoveAstNode(), block.MoveAstNode()));
+  return ParserResult<Statement>(
+      factory_.NewWhileStatement(exp.MoveAstNode(), block.MoveAstNode()));
 }
 
 ParserResult<Statement> Parser::ParserStmt() {
@@ -637,10 +639,10 @@ ParserResult<Statement> Parser::ParserStmt() {
     res = ParserSimpleStmt();
   } else if (token_ == TokenKind::KW_CATCH) {
     ErrorMsg(boost::format("catch must be after try block"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   } else if (token_ == TokenKind::KW_FINALLY) {
     ErrorMsg(boost::format("finally must be after try catch block"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   } else {
     check_end_stmt = true;
     res = ParserCmdFull();
@@ -653,9 +655,9 @@ ParserResult<Statement> Parser::ParserStmt() {
                (token_ == TokenKind::SEMI_COLON)) {
       Advance();
     } else {
-      ErrorMsg(boost::format("expected end of statement, got %1%")%
+      ErrorMsg(boost::format("expected end of statement, got %1%") %
                TokenValueStr());
-      return ParserResult<Statement>(); // Error
+      return ParserResult<Statement>();  // Error
     }
   }
 
@@ -667,20 +669,20 @@ ParserResult<Statement> Parser::ParserCmdFull() {
   bool background_exec = false;
 
   if (!cmd) {
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   if (token_ == TokenKind::BIT_AND) {
     background_exec = true;
     Advance();
   } else if (!TokenEndFullCmd()) {
-    ErrorMsg(boost::format("unexpected token %1% in the end of command")%
-        TokenValueStr());
-    return ParserResult<Statement>(); // Error
+    ErrorMsg(boost::format("unexpected token %1% in the end of command") %
+             TokenValueStr());
+    return ParserResult<Statement>();  // Error
   }
 
-  return ParserResult<Statement>(factory_.NewCmdFull(
-      cmd.MoveAstNode<Cmd>(), background_exec));
+  return ParserResult<Statement>(
+      factory_.NewCmdFull(cmd.MoveAstNode<Cmd>(), background_exec));
 }
 
 ParserResult<Statement> Parser::ParserCmdAndOr() {
@@ -688,7 +690,7 @@ ParserResult<Statement> Parser::ParserCmdAndOr() {
   ParserResult<Statement> lcmd = ParserCmdPipe();
 
   if (!lcmd) {
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   while (token_.IsAny(TokenKind::OR, TokenKind::AND)) {
@@ -700,7 +702,7 @@ ParserResult<Statement> Parser::ParserCmdAndOr() {
 
     if (rcmd) {
       lcmd = factory_.NewCmdAndOr(token_kind, lcmd.MoveAstNode<Cmd>(),
-          rcmd.MoveAstNode<Cmd>());
+                                  rcmd.MoveAstNode<Cmd>());
     }
   }
 
@@ -708,7 +710,7 @@ ParserResult<Statement> Parser::ParserCmdAndOr() {
 }
 
 ParserResult<Statement> Parser::ParserCmdPipe() {
-  auto check_pipe = [&]()-> bool {
+  auto check_pipe = [&]() -> bool {
     if (token_.Is(TokenKind::BIT_OR)) {
       Advance();
       ValidToken();
@@ -753,15 +755,15 @@ ParserResult<Statement> Parser::ParserSubShell() {
 
   ParserResult<Statement> block(ParserBlock());
 
-  return ParserResult<Statement>(factory_.NewSubShell(block.MoveAstNode<Block>(),
-      self_process));
+  return ParserResult<Statement>(
+      factory_.NewSubShell(block.MoveAstNode<Block>(), self_process));
 }
 
 ParserResult<Statement> Parser::ParserIoRedirectCmdList() {
   ParserResult<Statement> simple_cmd(ParserSimpleCmd());
 
   if (!simple_cmd) {
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   std::vector<std::unique_ptr<CmdIoRedirect>> vec_io;
@@ -780,13 +782,13 @@ ParserResult<Statement> Parser::ParserIoRedirectCmdList() {
   // Cast from statment to command
   std::unique_ptr<Cmd> cmdptr(simple_cmd.MoveAstNode<Cmd>());
 
-  return ParserResult<Statement>(factory_.NewCmdIoRedirectList(
-      std::move(cmdptr), std::move(vec_io)));
+  return ParserResult<Statement>(
+      factory_.NewCmdIoRedirectList(std::move(cmdptr), std::move(vec_io)));
 }
 
 std::unique_ptr<CmdIoRedirect> Parser::ParserIoRedirectCmd() {
   ParserResult<Expression> integer(nullptr);
-  bool all = false; // all output interfaces
+  bool all = false;  // all output interfaces
 
   // Check if is an int before io redirect as 2> or 2>> for example
   if (CmdValidInt()) {
@@ -820,14 +822,12 @@ std::unique_ptr<CmdIoRedirect> Parser::ParserIoRedirectCmd() {
     Advance();
   }
 
-  std::unique_ptr<FilePathCmd> path(
-      factory_.NewFilePathCmd(std::move(pieces)));
+  std::unique_ptr<FilePathCmd> path(factory_.NewFilePathCmd(std::move(pieces)));
 
   std::unique_ptr<Literal> intptr(integer.MoveAstNode<Literal>());
 
   return factory_.NewCmdIoRedirect(std::move(intptr), std::move(path), kind,
                                    all);
-
 }
 
 ParserResult<Statement> Parser::ParserSimpleCmd() {
@@ -862,9 +862,9 @@ ParserResult<Statement> Parser::ParserSimpleCmd() {
 
   // if the command is empty there is an error
   if (num_pieces == 0) {
-    ErrorMsg(boost::format("Empty command, token %1% unexpected")%
+    ErrorMsg(boost::format("Empty command, token %1% unexpected") %
              TokenValueStr());
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   return ParserResult<Statement>(factory_.NewSimpleCmd(std::move(pieces)));
@@ -875,17 +875,17 @@ ParserResult<Declaration> Parser::ParserAliasDeclaration() {
 
   if (token_ != TokenKind::IDENTIFIER) {
     ErrorMsg(boost::format("expected identifier"));
-    return ParserResult<Declaration>(); // Error
+    return ParserResult<Declaration>();  // Error
   }
 
-  std::unique_ptr<Identifier> id(factory_.NewIdentifier(
-      boost::get<std::string>(token_.GetValue())));
+  std::unique_ptr<Identifier> id(
+      factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
 
   Advance();
 
   if (token_ != TokenKind::ASSIGN) {
     ErrorMsg(boost::format("expected assign operator"));
-    return ParserResult<Declaration>(); // Error
+    return ParserResult<Declaration>();  // Error
   }
 
   Advance();
@@ -893,8 +893,8 @@ ParserResult<Declaration> Parser::ParserAliasDeclaration() {
 
   std::unique_ptr<SimpleCmd> cmd(ParserSimpleCmd().MoveAstNode<SimpleCmd>());
 
-  return ParserResult<Declaration>(factory_.NewAliasDeclaration(
-      std::move(cmd), std::move(id)));
+  return ParserResult<Declaration>(
+      factory_.NewAliasDeclaration(std::move(cmd), std::move(id)));
 }
 
 ParserResult<Cmd> Parser::ParserExpCmd() {
@@ -909,48 +909,48 @@ ParserResult<Cmd> Parser::ParserExpCmd() {
 
   if (token_ == TokenKind::NWL) {
     ErrorMsg(boost::format("New line not allowed"));
-    return ParserResult<Cmd>(); // Error
+    return ParserResult<Cmd>();  // Error
   }
 
   ParserResult<Expression> exp(ParserLetExp());
 
   if (token_ != TokenKind::RBRACE) {
     ErrorMsg(boost::format("token '}' expected"));
-    return ParserResult<Cmd>(); // Error
+    return ParserResult<Cmd>();  // Error
   }
 
   bool has_space = token_.BlankAfter();
 
   Advance();
 
-  return ParserResult<Cmd>(factory_.NewCmdValueExpr(exp.MoveAstNode(),
-                                                    has_space, is_iterator));
+  return ParserResult<Cmd>(
+      factory_.NewCmdValueExpr(exp.MoveAstNode(), has_space, is_iterator));
 }
 
 ParserResult<Statement> Parser::ParserReturnStmt() {
   if (token_ != TokenKind::KW_RETURN) {
-    ErrorMsg(boost::format("expected return token, got %1%")% TokenValueStr());
-    return ParserResult<Statement>(); // Error
+    ErrorMsg(boost::format("expected return token, got %1%") % TokenValueStr());
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
 
   // Parser return for void functions
   if (IsEndOfStmt()) {
-    return ParserResult<Statement>(factory_.NewReturnStatement(
-        std::unique_ptr<AssignableList>(nullptr)));
+    return ParserResult<Statement>(
+        factory_.NewReturnStatement(std::unique_ptr<AssignableList>(nullptr)));
   }
 
   ParserResult<AssignableList> list(ParserAssignableList());
 
-  return ParserResult<Statement>(factory_.NewReturnStatement(
-      list.MoveAstNode()));
+  return ParserResult<Statement>(
+      factory_.NewReturnStatement(list.MoveAstNode()));
 }
 
 ParserResult<Statement> Parser::ParserBreakStmt() {
   if (token_ != TokenKind::KW_BREAK) {
-    ErrorMsg(boost::format("expected break token, got %1%")% TokenValueStr());
-    return ParserResult<Statement>(); // Error
+    ErrorMsg(boost::format("expected break token, got %1%") % TokenValueStr());
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -971,11 +971,11 @@ std::unique_ptr<DefaultStatement> Parser::ParserDefaultStmt() {
   std::unique_ptr<Block> block(ParserBlock().MoveAstNode<Block>());
 
   return std::unique_ptr<DefaultStatement>(
-        factory_.NewDefaultStatement(std::move(block)));
+      factory_.NewDefaultStatement(std::move(block)));
 }
 
 ParserResult<Statement> Parser::ParserSimpleStmt(bool force_assignment) {
-  enum Type {kErro, kAssign, kExpStm};
+  enum Type { kErro, kAssign, kExpStm };
   Type type = kErro;
   std::vector<std::unique_ptr<Expression>> vec_list;
   ParserResult<AssignableList> rvalue_list;
@@ -989,13 +989,15 @@ ParserResult<Statement> Parser::ParserSimpleStmt(bool force_assignment) {
     ParserResult<Expression> exp = ParserPostExp();
     vec_list.push_back(exp.MoveAstNode());
 
-    if (token_.Is(TokenKind::COMMA)) {num_comma++;}
+    if (token_.Is(TokenKind::COMMA)) {
+      num_comma++;
+    }
   } while (CheckComma());
 
   // if there are comma on statement, so it has to be assignment statement
   if ((num_comma > 0) && token_.IsNot(TokenKind::ASSIGN)) {
     ErrorMsg(boost::format("assign expected"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   type = kExpStm;
@@ -1005,7 +1007,7 @@ ParserResult<Statement> Parser::ParserSimpleStmt(bool force_assignment) {
     type = Type::kAssign;
     kind = token_.GetKind();
 
-    Advance(); // consume assign token
+    Advance();  // consume assign token
     ValidToken();
 
     rvalue_list = ParserAssignableList();
@@ -1015,7 +1017,7 @@ ParserResult<Statement> Parser::ParserSimpleStmt(bool force_assignment) {
   // operation, it is useful in let expression
   if (force_assignment && type != Type::kAssign) {
     ErrorMsg(boost::format("expected assignment operation"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   switch (type) {
@@ -1031,13 +1033,13 @@ ParserResult<Statement> Parser::ParserSimpleStmt(bool force_assignment) {
       // if there is no assing token, so it is a statement expression
       // function call is the only expression accept, this check is
       // done on semantic analysis
-      return ParserResult<Statement>(factory_.NewExpressionStatement(
-          std::move(vec_list[0])));
+      return ParserResult<Statement>(
+          factory_.NewExpressionStatement(std::move(vec_list[0])));
       break;
 
     default:
       ErrorMsg(boost::format("not a statement"));
-      return ParserResult<Statement>(); // Error
+      return ParserResult<Statement>();  // Error
   }
 }
 
@@ -1052,7 +1054,7 @@ ParserResult<Statement> Parser::ParserGlobalAssignment() {
 
     if (token_ != TokenKind::IDENTIFIER) {
       ErrorMsg(boost::format("expected identifier token"));
-      return ParserResult<Statement>(); // Error
+      return ParserResult<Statement>();  // Error
     }
 
     std::unique_ptr<Expression> id(
@@ -1064,7 +1066,7 @@ ParserResult<Statement> Parser::ParserGlobalAssignment() {
 
   if (token_.IsNot(TokenKind::ASSIGN)) {
     ErrorMsg(boost::format("assign operator expected"));
-    return ParserResult<Statement>(); // Error
+    return ParserResult<Statement>();  // Error
   }
 
   Advance();
@@ -1076,8 +1078,8 @@ ParserResult<Statement> Parser::ParserGlobalAssignment() {
       TokenKind::ASSIGN, factory_.NewExpressionList(std::move(vec_list)),
       rvalue_list.MoveAstNode()));
 
-  return ParserResult<Statement>(factory_.NewGlobalAssignmentStatement(
-      std::move(assign)));
+  return ParserResult<Statement>(
+      factory_.NewGlobalAssignmentStatement(std::move(assign)));
 }
 
 ParserResult<Statement> Parser::ParserDelStmt() {
@@ -1099,8 +1101,8 @@ ParserResult<ExpressionList> Parser::ParserPostExpList() {
     vec_list.push_back(exp.MoveAstNode());
   } while (CheckComma());
 
-  return ParserResult<ExpressionList>(factory_.NewExpressionList(
-      std::move(vec_list)));
+  return ParserResult<ExpressionList>(
+      factory_.NewExpressionList(std::move(vec_list)));
 }
 
 std::vector<std::unique_ptr<Identifier>> Parser::ParserIdList() {
@@ -1110,8 +1112,8 @@ std::vector<std::unique_ptr<Identifier>> Parser::ParserIdList() {
     ValidToken();
 
     if (token_ != TokenKind::IDENTIFIER) {
-      ErrorMsg(boost::format("Expected token ':', got %1%")
-          % Token::TokenValueToStr(token_.GetValue()));
+      ErrorMsg(boost::format("Expected token ':', got %1%") %
+               Token::TokenValueToStr(token_.GetValue()));
 
       return std::vector<std::unique_ptr<Identifier>>();
     }
@@ -1151,8 +1153,8 @@ ParserResult<Expression> Parser::ParserLambda() {
     std::tie(func_params, ok) = ParserParamsList();
 
     if (token_ != TokenKind::COLON) {
-      ErrorMsg(boost::format("Expected token ':', got %1%")
-          % Token::TokenValueToStr(token_.GetValue()));
+      ErrorMsg(boost::format("Expected token ':', got %1%") %
+               Token::TokenValueToStr(token_.GetValue()));
 
       return ParserResult<Expression>();
     }
@@ -1168,19 +1170,19 @@ ParserResult<Expression> Parser::ParserLambda() {
   vec_values.push_back(value.MoveAstNode());
 
   // mount assignment libboost-all-dev
-  ParserResult<AssignableList> assign_list(factory_.NewAssignableList(
-      std::move(vec_values)));
+  ParserResult<AssignableList> assign_list(
+      factory_.NewAssignableList(std::move(vec_values)));
 
   // mount return statement
-  ParserResult<Statement> ret_stmt(factory_.NewReturnStatement(
-      assign_list.MoveAstNode()));
+  ParserResult<Statement> ret_stmt(
+      factory_.NewReturnStatement(assign_list.MoveAstNode()));
 
   // mount stmt list
   std::vector<std::unique_ptr<Statement>> stmt_vec;
   stmt_vec.push_back(ret_stmt.MoveAstNode());
 
-  ParserResult<StatementList> stmt_list(factory_.NewStatementList(
-      std::move(stmt_vec)));
+  ParserResult<StatementList> stmt_list(
+      factory_.NewStatementList(std::move(stmt_vec)));
 
   // mount the block
   ParserResult<Statement> block(factory_.NewBlock(stmt_list.MoveAstNode()));
@@ -1209,19 +1211,19 @@ ParserResult<Expression> Parser::ParserArgument() {
 
     // on this case ellipsis expression isn't valid
     ParserResult<AssignableValue> value(ParserAssignable());
-    return ParserResult<Expression>(factory_.NewArgument(name,
-        value.MoveAstNode()));
+    return ParserResult<Expression>(
+        factory_.NewArgument(name, value.MoveAstNode()));
 
   } else {
     // name is empty if user didnp't defined it
     if (token_.Is(TokenKind::ELLIPSIS)) {
       ParserResult<Expression> ellipsis_exp = ParserEllipsisExp();
-      return ParserResult<Expression>(factory_.NewArgument("",
-          ellipsis_exp.MoveAstNode<AssignableValue>()));
+      return ParserResult<Expression>(factory_.NewArgument(
+          "", ellipsis_exp.MoveAstNode<AssignableValue>()));
     } else {
       ParserResult<AssignableValue> value(ParserAssignable());
-      return ParserResult<Expression>(factory_.NewArgument("",
-          value.MoveAstNode()));
+      return ParserResult<Expression>(
+          factory_.NewArgument("", value.MoveAstNode()));
     }
   }
 }
@@ -1236,8 +1238,8 @@ ParserResult<ArgumentsList> Parser::ParserArgumentsList() {
     ValidToken();
   } while (CheckComma());
 
-  return ParserResult<ArgumentsList>(factory_.NewArgumentsList(
-      std::move(args_list)));
+  return ParserResult<ArgumentsList>(
+      factory_.NewArgumentsList(std::move(args_list)));
 }
 
 ParserResult<AssignableList> Parser::ParserAssignableList(
@@ -1252,8 +1254,8 @@ ParserResult<AssignableList> Parser::ParserAssignableList(
       Advance();
       ValidToken();
     } else {
-      return ParserResult<AssignableList>(factory_.NewAssignableList(
-      std::move(vec_values)));
+      return ParserResult<AssignableList>(
+          factory_.NewAssignableList(std::move(vec_values)));
     }
   }
 
@@ -1268,8 +1270,8 @@ ParserResult<AssignableList> Parser::ParserAssignableList(
     }
   } while (CheckComma());
 
-  return ParserResult<AssignableList>(factory_.NewAssignableList(
-      std::move(vec_values)));
+  return ParserResult<AssignableList>(
+      factory_.NewAssignableList(std::move(vec_values)));
 }
 
 ParserResult<Expression> Parser::ParserEllipsisExp() {
@@ -1279,8 +1281,8 @@ ParserResult<Expression> Parser::ParserEllipsisExp() {
   ValidToken();
   ParserResult<Expression> expr = ParserBitOrExp();
 
-  return ParserResult<Expression>(factory_.NewEllipsisExpression(
-      expr.MoveAstNode()));
+  return ParserResult<Expression>(
+      factory_.NewEllipsisExpression(expr.MoveAstNode()));
 }
 
 ParserResult<ExpressionList> Parser::ParserExpList() {
@@ -1298,8 +1300,8 @@ ParserResult<ExpressionList> Parser::ParserExpList() {
     }
   } while (CheckComma());
 
-  return ParserResult<ExpressionList>(factory_.NewExpressionList(
-      std::move(vec_exp)));
+  return ParserResult<ExpressionList>(
+      factory_.NewExpressionList(std::move(vec_exp)));
 }
 
 ParserResult<Expression> Parser::ParserLetExp() {
@@ -1309,8 +1311,8 @@ ParserResult<Expression> Parser::ParserLetExp() {
 
     // parser assignment operation
     ParserResult<Statement> assign = ParserSimpleStmt(true);
-    return ParserResult<Expression>(factory_.NewLetExpression(
-        assign.MoveAstNode<AssignmentStatement>()));
+    return ParserResult<Expression>(
+        factory_.NewLetExpression(assign.MoveAstNode<AssignmentStatement>()));
   }
 
   // if it is not let expression, so execute the if-else expression
@@ -1350,12 +1352,12 @@ ParserResult<Expression> Parser::ParserIfElseExp() {
 ParserResult<Expression> Parser::ParserNotExp() {
   if (token_.Is(TokenKind::KW_NOT)) {
     TokenKind token_kind = token_.GetKind();
-    Advance(); // Consume the token
+    Advance();  // Consume the token
     ValidToken();
 
     ParserResult<Expression> exp(ParserNotExp());
-    return ParserResult<Expression>(factory_.NewNotExpression(
-          token_kind, exp.MoveAstNode()));
+    return ParserResult<Expression>(
+        factory_.NewNotExpression(token_kind, exp.MoveAstNode()));
   }
 
   return ParserOrExp();
@@ -1366,7 +1368,7 @@ ParserResult<Expression> Parser::ParserOrExp() {
   ParserResult<Expression> lexp = ParserAndExp();
 
   if (!lexp) {
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   while (token_.Is(TokenKind::OR)) {
@@ -1378,7 +1380,7 @@ ParserResult<Expression> Parser::ParserOrExp() {
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
-          rexp.MoveAstNode());
+                                         rexp.MoveAstNode());
     }
   }
 
@@ -1390,7 +1392,7 @@ ParserResult<Expression> Parser::ParserAndExp() {
   ParserResult<Expression> lexp = ParserComparisonExp();
 
   if (!lexp) {
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   while (token_.Is(TokenKind::AND)) {
@@ -1402,7 +1404,7 @@ ParserResult<Expression> Parser::ParserAndExp() {
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
-          rexp.MoveAstNode());
+                                         rexp.MoveAstNode());
     }
   }
 
@@ -1414,7 +1416,7 @@ ParserResult<Expression> Parser::ParserComparisonExp() {
   ParserResult<Expression> lexp = ParserBitOrExp();
 
   if (!lexp) {
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   while (Token::IsComparisonToken(token_.GetKind()) ||
@@ -1428,7 +1430,7 @@ ParserResult<Expression> Parser::ParserComparisonExp() {
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
-          rexp.MoveAstNode());
+                                         rexp.MoveAstNode());
     }
   }
 
@@ -1440,7 +1442,7 @@ ParserResult<Expression> Parser::ParserBitOrExp() {
   ParserResult<Expression> lexp = ParserBitXorExp();
 
   if (!lexp) {
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   while (token_.Is(TokenKind::BIT_OR)) {
@@ -1452,7 +1454,7 @@ ParserResult<Expression> Parser::ParserBitOrExp() {
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
-          rexp.MoveAstNode());
+                                         rexp.MoveAstNode());
     }
   }
 
@@ -1464,7 +1466,7 @@ ParserResult<Expression> Parser::ParserBitXorExp() {
   ParserResult<Expression> lexp = ParserBitAndExp();
 
   if (!lexp) {
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   while (token_.Is(TokenKind::BIT_XOR)) {
@@ -1476,7 +1478,7 @@ ParserResult<Expression> Parser::ParserBitXorExp() {
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
-          rexp.MoveAstNode());
+                                         rexp.MoveAstNode());
     }
   }
 
@@ -1488,7 +1490,7 @@ ParserResult<Expression> Parser::ParserBitAndExp() {
   ParserResult<Expression> lexp = ParserShiftExp();
 
   if (!lexp) {
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   while (token_.Is(TokenKind::BIT_AND)) {
@@ -1500,7 +1502,7 @@ ParserResult<Expression> Parser::ParserBitAndExp() {
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
-          rexp.MoveAstNode());
+                                         rexp.MoveAstNode());
     }
   }
 
@@ -1512,7 +1514,7 @@ ParserResult<Expression> Parser::ParserShiftExp() {
   ParserResult<Expression> lexp = ParserArithExp();
 
   if (!lexp) {
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   while (token_.IsAny(TokenKind::SHL, TokenKind::SAR)) {
@@ -1524,7 +1526,7 @@ ParserResult<Expression> Parser::ParserShiftExp() {
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
-          rexp.MoveAstNode());
+                                         rexp.MoveAstNode());
     }
   }
 
@@ -1536,7 +1538,7 @@ ParserResult<Expression> Parser::ParserArithExp() {
   ParserResult<Expression> lexp = ParserTerm();
 
   if (!lexp) {
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   while (token_.IsAny(TokenKind::ADD, TokenKind::SUB)) {
@@ -1548,7 +1550,7 @@ ParserResult<Expression> Parser::ParserArithExp() {
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
-          rexp.MoveAstNode());
+                                         rexp.MoveAstNode());
     }
   }
 
@@ -1560,7 +1562,7 @@ ParserResult<Expression> Parser::ParserTerm() {
   ParserResult<Expression> lexp = ParserUnaryExp();
 
   if (!lexp) {
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   while (token_.IsAny(TokenKind::MUL, TokenKind::DIV, TokenKind::MOD)) {
@@ -1572,7 +1574,7 @@ ParserResult<Expression> Parser::ParserTerm() {
 
     if (rexp) {
       lexp = factory_.NewBinaryOperation(token_kind, lexp.MoveAstNode(),
-          rexp.MoveAstNode());
+                                         rexp.MoveAstNode());
     }
   }
 
@@ -1582,12 +1584,12 @@ ParserResult<Expression> Parser::ParserTerm() {
 ParserResult<Expression> Parser::ParserUnaryExp() {
   if (IsUnaryOp()) {
     TokenKind token_kind = token_.GetKind();
-    Advance(); // Consume the token
+    Advance();  // Consume the token
     ValidToken();
 
     ParserResult<Expression> exp = ParserUnaryExp();
-    return ParserResult<Expression>(factory_.NewUnaryOperation(
-          token_kind, exp.MoveAstNode()));
+    return ParserResult<Expression>(
+        factory_.NewUnaryOperation(token_kind, exp.MoveAstNode()));
   }
 
   return ParserPostExp();
@@ -1596,8 +1598,7 @@ ParserResult<Expression> Parser::ParserUnaryExp() {
 ParserResult<Expression> Parser::ParserPostExp() {
   ParserResult<Expression> exp = ParserPrimaryExp();
 
-  while (token_.IsAny(TokenKind::LBRACKET, TokenKind::DOT,
-         TokenKind::LPAREN)) {
+  while (token_.IsAny(TokenKind::LBRACKET, TokenKind::DOT, TokenKind::LPAREN)) {
     if (token_ == TokenKind::LBRACKET) {
       // parser array
       Advance();
@@ -1606,22 +1607,22 @@ ParserResult<Expression> Parser::ParserPostExp() {
 
       if (ValidToken().IsNot(TokenKind::RBRACKET)) {
         ErrorMsg(boost::format("Expected ']' in the end of expression"));
-        return ParserResult<Expression>(); // Error
+        return ParserResult<Expression>();  // Error
       }
       Advance();
 
-      exp = factory_.NewArray(exp.MoveAstNode(),index_exp.MoveAstNode());
+      exp = factory_.NewArray(exp.MoveAstNode(), index_exp.MoveAstNode());
     } else if (token_ == TokenKind::DOT) {
       // parser attributes
       Advance();
       if (ValidToken().IsNot(TokenKind::IDENTIFIER)) {
         ErrorMsg(boost::format("Expected identifier"));
-        return ParserResult<Expression>(); // Error
+        return ParserResult<Expression>();  // Error
       }
 
-      ParserResult<Identifier> id(factory_.NewIdentifier(
-          boost::get<std::string>(token_.GetValue())));
-      Advance(); // Consume the token
+      ParserResult<Identifier> id(
+          factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
+      Advance();  // Consume the token
 
       exp = factory_.NewAttribute(exp.MoveAstNode(), id.MoveAstNode());
     } else if (token_ == TokenKind::LPAREN) {
@@ -1632,23 +1633,22 @@ ParserResult<Expression> Parser::ParserPostExp() {
         // empty expression list
         std::vector<std::unique_ptr<Argument>> args;
         exp = factory_.NewFunctionCall(
-            exp.MoveAstNode(), factory_.NewArgumentsList(
-                std::move(args)));
+            exp.MoveAstNode(), factory_.NewArgumentsList(std::move(args)));
       } else {
         // Parser expression list separted by (,) comma
         auto args_list = ParserArgumentsList();
         exp = factory_.NewFunctionCall(exp.MoveAstNode(),
-            args_list.MoveAstNode());
+                                       args_list.MoveAstNode());
 
         if (ValidToken().IsNot(TokenKind::RPAREN)) {
           ErrorMsg(boost::format("Expected close right paren"));
-          return ParserResult<Expression>(); // Error
+          return ParserResult<Expression>();  // Error
         }
-      } // if token_ == TokenKind::RPAREN
+      }  // if token_ == TokenKind::RPAREN
 
-      Advance(); // advance rparen ')'
-    } // if token_ == TokenKind::LPAREN
-  } // while
+      Advance();  // advance rparen ')'
+    }             // if token_ == TokenKind::LPAREN
+  }               // while
 
   return exp;
 }
@@ -1659,8 +1659,8 @@ std::tuple<std::unique_ptr<KeyValue>, bool> Parser::ParserKeyValue() {
   ValidToken();
 
   if (token_ != TokenKind::COLON) {
-    ErrorMsg(boost::format("Expected token ':', got %1%")
-        % Token::TokenValueToStr(token_.GetValue()));
+    ErrorMsg(boost::format("Expected token ':', got %1%") %
+             Token::TokenValueToStr(token_.GetValue()));
 
     return std::tuple<std::unique_ptr<KeyValue>, bool>(
         std::unique_ptr<KeyValue>(nullptr), false);
@@ -1674,8 +1674,8 @@ std::tuple<std::unique_ptr<KeyValue>, bool> Parser::ParserKeyValue() {
   std::unique_ptr<KeyValue> key_value(
       factory_.NewKeyValue(exp.MoveAstNode(), rvalue.MoveAstNode()));
 
-  return std::tuple<std::unique_ptr<KeyValue>, bool>(
-      std::move(key_value), true);
+  return std::tuple<std::unique_ptr<KeyValue>, bool>(std::move(key_value),
+                                                     true);
 }
 
 ParserResult<Expression> Parser::ParserDictionary() {
@@ -1686,8 +1686,8 @@ ParserResult<Expression> Parser::ParserDictionary() {
   std::vector<std::unique_ptr<KeyValue>> key_value_list;
 
   if (token_ == TokenKind::RBRACE) {
-    ParserResult<Expression> dic(factory_.NewDictionaryInstantiation(
-        std::move(key_value_list)));
+    ParserResult<Expression> dic(
+        factory_.NewDictionaryInstantiation(std::move(key_value_list)));
     Advance();
     return dic;
   }
@@ -1703,37 +1703,39 @@ ParserResult<Expression> Parser::ParserDictionary() {
   ValidToken();
 
   if (token_ != TokenKind::RBRACE) {
-    ErrorMsg(boost::format("Expected token '}', got %1%")
-        % Token::TokenValueToStr(token_.GetValue()));
+    ErrorMsg(boost::format("Expected token '}', got %1%") %
+             Token::TokenValueToStr(token_.GetValue()));
 
     return ParserResult<Expression>();
   }
 
   Advance();
 
-  return ParserResult<Expression>(factory_.NewDictionaryInstantiation(
-      std::move(key_value_list)));
+  return ParserResult<Expression>(
+      factory_.NewDictionaryInstantiation(std::move(key_value_list)));
 }
 
 ParserResult<Expression> Parser::ParserScopeIdentifier() {
   std::unique_ptr<Identifier> id(
       factory_.NewIdentifier(boost::get<std::string>(token_.GetValue())));
 
-  Advance(); // Consume the id token
+  // detect if has white space after identifier
+  bool has_blank = token_.BlankAfter();
 
-  while (token_ == TokenKind::SCOPE) {
-    std::unique_ptr<PackageScope> scope(factory_.NewPackageScope(
-        std::move(id)));
-    Advance();
+  Advance();  // Consume the id token
 
-    if (token_ != TokenKind::IDENTIFIER) {
-      ErrorMsg(boost::format("Expected identifier after scope operator"));
-      return ParserResult<Expression>(); // Error
+  if (token_ == TokenKind::STRING_LITERAL) {
+    if (!has_blank) {
+      std::unique_ptr<Literal> literal_string =
+          factory_.NewLiteral(token_.GetValue(), Literal::kString);
+      Advance();  // consume string token
+      return ParserResult<Expression>(
+          factory_.NewSpecialString(std::move(literal_string), std::move(id)));
+    } else {
+      ErrorMsg(boost::format(
+          "String token after identifier must have no blank space"));
+      return ParserResult<Expression>();  // Error
     }
-
-    id = factory_.NewIdentifier(boost::get<std::string>(token_.GetValue()),
-        std::move(scope));
-    Advance();
   }
 
   ParserResult<Expression> res(std::move(id));
@@ -1755,8 +1757,8 @@ ParserResult<ExpressionList> Parser::ParserExpNoTestList() {
     }
   } while (CheckComma());
 
-  return ParserResult<ExpressionList>(factory_.NewExpressionList(
-      std::move(vec_exp)));
+  return ParserResult<ExpressionList>(
+      factory_.NewExpressionList(std::move(vec_exp)));
 }
 
 ParserResult<Expression> Parser::ParserCompIf() {
@@ -1777,15 +1779,15 @@ ParserResult<Expression> Parser::ParserCompFor() {
 
   if (token_ != TokenKind::KW_IN) {
     ErrorMsg(boost::format("expected in operator"));
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   Advance();
   ValidToken();
   ParserResult<ExpressionList> test_list(ParserExpNoTestList());
 
-  return ParserResult<Expression>(factory_.NewCompFor(exp_list.MoveAstNode(),
-      test_list.MoveAstNode()));
+  return ParserResult<Expression>(
+      factory_.NewCompFor(exp_list.MoveAstNode(), test_list.MoveAstNode()));
 }
 
 std::vector<std::unique_ptr<Expression>> Parser::ParserListComprehension() {
@@ -1812,7 +1814,7 @@ ParserResult<Expression> Parser::ParserTupleInstantiation() {
   // Parser empty array
   if (token_ == TokenKind::RPAREN) {
     ParserResult<Expression> tuple(factory_.NewTupleInstantiation(
-      std::unique_ptr<AssignableList>(nullptr)));
+        std::unique_ptr<AssignableList>(nullptr)));
 
     Advance();
     return tuple;
@@ -1823,12 +1825,12 @@ ParserResult<Expression> Parser::ParserTupleInstantiation() {
   rvalue_list = ParserAssignableList().MoveAstNode();
 
   if (ValidToken() != TokenKind::RPAREN) {
-    ErrorMsg(boost::format("Expected ')' in the end of expression, got %1%")
-        % TokenValueStr());
-    return ParserResult<Expression>(); // Error
+    ErrorMsg(boost::format("Expected ')' in the end of expression, got %1%") %
+             TokenValueStr());
+    return ParserResult<Expression>();  // Error
   }
 
-  Advance(); // consume the token ')'
+  Advance();  // consume the token ')'
 
   // check if the assignable list has exactly one element, if is the case
   // only an common expression must be returned
@@ -1838,8 +1840,8 @@ ParserResult<Expression> Parser::ParserTupleInstantiation() {
     return res;
   }
 
-  return ParserResult<Expression>(factory_.NewTupleInstantiation(
-      std::move(rvalue_list)));
+  return ParserResult<Expression>(
+      factory_.NewTupleInstantiation(std::move(rvalue_list)));
 }
 
 ParserResult<Expression> Parser::ParserArrayInstantiation() {
@@ -1850,7 +1852,7 @@ ParserResult<Expression> Parser::ParserArrayInstantiation() {
   // Parser empty array
   if (token_ == TokenKind::RBRACKET) {
     ParserResult<Expression> arr(factory_.NewArrayInstantiation(
-      std::unique_ptr<AssignableList>(nullptr)));
+        std::unique_ptr<AssignableList>(nullptr)));
 
     Advance();
     return arr;
@@ -1874,7 +1876,7 @@ ParserResult<Expression> Parser::ParserArrayInstantiation() {
       ValidToken();
       if (token_ != TokenKind::RBRACKET) {
         ErrorMsg(boost::format("Expected token ]"));
-        return ParserResult<Expression>(); // Error
+        return ParserResult<Expression>();  // Error
       }
 
       Advance();
@@ -1891,13 +1893,13 @@ ParserResult<Expression> Parser::ParserArrayInstantiation() {
   ValidToken();
   if (token_ != TokenKind::RBRACKET) {
     ErrorMsg(boost::format("Expected token ]"));
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
   Advance();
 
-  ParserResult<Expression> arr(factory_.NewArrayInstantiation(
-      std::move(rvalue_list)));
+  ParserResult<Expression> arr(
+      factory_.NewArrayInstantiation(std::move(rvalue_list)));
 
   return arr;
 }
@@ -1922,7 +1924,7 @@ ParserResult<Expression> Parser::ParserSlice() {
 
   ValidToken();
 
-  END_PART:
+END_PART:
   if (token_ == TokenKind::COLON) {
     is_slice = true;
     Advance();
@@ -1938,11 +1940,11 @@ ParserResult<Expression> Parser::ParserSlice() {
     has_end = true;
   }
 
-  FINISH:
+FINISH:
   if (is_slice) {
-    return ParserResult<Expression>(factory_.NewSlice(
-        has_start? start_exp.MoveAstNode() : nullptr,
-        has_end? end_exp.MoveAstNode() : nullptr));
+    return ParserResult<Expression>(
+        factory_.NewSlice(has_start ? start_exp.MoveAstNode() : nullptr,
+                          has_end ? end_exp.MoveAstNode() : nullptr));
   } else {
     // If it is not slice, only the start expression is valid
     // because only slice has token :
@@ -1955,16 +1957,16 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
     // parser scope id: scope1::scope2::id
     return ParserScopeIdentifier();
   } else if (token_ == TokenKind::VARENVID) {
-    ParserResult<Expression> varenvid(factory_.NewVarEnvId(
-        boost::get<std::string>(token_.GetValue())));
+    ParserResult<Expression> varenvid(
+        factory_.NewVarEnvId(boost::get<std::string>(token_.GetValue())));
     Advance();
     return varenvid;
   } else if (token_ == TokenKind::DOLLAR_LPAREN) {
     // parser expression command: $(ls)
-    Advance(); // consume the token '$('
+    Advance();  // consume the token '$('
 
     std::unique_ptr<CmdFull> cmd(ParserCmdFull().MoveAstNode<CmdFull>());
-    Advance(); // consume the token ')'
+    Advance();  // consume the token ')'
 
     ParserResult<Expression> res(factory_.NewCmdExpression(std::move(cmd)));
     return res;
@@ -1976,7 +1978,8 @@ ParserResult<Expression> Parser::ParserPrimaryExp() {
     return ParserDictionary();
   } else if (token_ == TokenKind::LPAREN) {
     return ParserTupleInstantiation();
-  } if (token_ == TokenKind::KW_FUNC) {
+  }
+  if (token_ == TokenKind::KW_FUNC) {
     ParserResult<AstNode> flambda(ParserFunctionDeclaration(true));
     return ParserResult<Expression>(flambda.MoveAstNode<Expression>());
   } else {
@@ -1995,7 +1998,7 @@ ParserResult<Expression> Parser::ParserGlobExp(bool recursive) {
 
     if (token_ == TokenKind::EOS) {
       ErrorMsg(boost::format("Invalid end before end glob"));
-      return ParserResult<Expression>(); // Error
+      return ParserResult<Expression>();  // Error
     }
 
     // Puts piece of the command on a vector, this vector will be the
@@ -2011,25 +2014,25 @@ ParserResult<Expression> Parser::ParserGlobExp(bool recursive) {
   // if the glob is empty there is an error
   if (num_pieces == 0) {
     ErrorMsg(boost::format("Glob can't be empty"));
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 
-  return ParserResult<Expression>(factory_.NewGlob(std::move(pieces),
-                                                   recursive));
+  return ParserResult<Expression>(
+      factory_.NewGlob(std::move(pieces), recursive));
 }
 
 ParserResult<Expression> Parser::LiteralExp() {
   Token token(ValidToken());
   Advance();
   if (token.Is(TokenKind::INT_LITERAL)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
-                                                        Literal::kInteger));
+    return ParserResult<Expression>(
+        factory_.NewLiteral(token.GetValue(), Literal::kInteger));
   } else if (token.Is(TokenKind::STRING_LITERAL)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
-                                                        Literal::kString));
+    return ParserResult<Expression>(
+        factory_.NewLiteral(token.GetValue(), Literal::kString));
   } else if (token.Is(TokenKind::REAL_LITERAL)) {
-    return ParserResult<Expression>(factory_.NewLiteral(token.GetValue(),
-                                                        Literal::kReal));
+    return ParserResult<Expression>(
+        factory_.NewLiteral(token.GetValue(), Literal::kReal));
   } else if (token.Is(TokenKind::KW_TRUE)) {
     Token::Value value = true;
     return ParserResult<Expression>(factory_.NewLiteral(value, Literal::kBool));
@@ -2041,14 +2044,14 @@ ParserResult<Expression> Parser::LiteralExp() {
   } else if (token.Is(TokenKind::MOD)) {
     return ParserGlobExp();
   } else if (token.Is(TokenKind::RGLOB)) {
-    return ParserGlobExp(true); // recursive
-  } else{
-    ErrorMsg(boost::format("primary expression expected, got %1%")
-        % Token::TokenValueToStr(token.GetValue()));
+    return ParserGlobExp(true);  // recursive
+  } else {
+    ErrorMsg(boost::format("primary expression expected, got %1%") %
+             Token::TokenValueToStr(token.GetValue()));
     SetTokenError(token);
-    return ParserResult<Expression>(); // Error
+    return ParserResult<Expression>();  // Error
   }
 }
 
-}
-}
+}  // namespace internal
+}  // namespace shpp

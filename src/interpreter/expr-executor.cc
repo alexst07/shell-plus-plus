@@ -14,8 +14,8 @@
 
 #include "expr-executor.h"
 
-#include <string>
 #include <boost/variant.hpp>
+#include <string>
 
 #include "assign-executor.h"
 #include "cmd-executor.h"
@@ -26,14 +26,13 @@
 namespace shpp {
 namespace internal {
 
-std::vector<ObjectPtr> AssignableListExecutor::Exec(
-    AstNode* node) {
+std::vector<ObjectPtr> AssignableListExecutor::Exec(AstNode* node) {
   AssignableList* assign_list_node = static_cast<AssignableList*>(node);
 
   std::vector<ObjectPtr> obj_vec;
   EllipsisExprExecutor ellipsis_expr_executor(this, symbol_table_stack());
 
-  for (AstNode* value: assign_list_node->children()) {
+  for (AstNode* value : assign_list_node->children()) {
     if (value->type() == AstNode::NodeType::kEllipsisExpression) {
       std::vector<ObjectPtr> elems = ellipsis_expr_executor.Exec(value);
       obj_vec.insert(obj_vec.end(), elems.begin(), elems.end());
@@ -131,6 +130,10 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecGlob(static_cast<Glob*>(node));
       break;
 
+    case AstNode::NodeType::kSpecialString:
+      return ExecSpecialString(static_cast<SpecialString*>(node));
+      break;
+
     case AstNode::NodeType::kFunctionExpression:
       return ExecLambdaFunc(node);
       break;
@@ -161,7 +164,7 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
 ObjectPtr ExpressionExecutor::ExecLambdaFunc(AstNode* node) {
   // executes lambda assignment
   FuncDeclExecutor func_exec(this, symbol_table_stack(), /*method=*/false,
-      /*lambda=*/true);
+                             /*lambda=*/true);
   return func_exec.FuncObj(node);
 }
 
@@ -223,7 +226,6 @@ ObjectPtr ExpressionExecutor::ExecTupleInstantiation(AstNode* node) {
   }
 }
 
-
 ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {
   DictionaryInstantiation* map_node =
       static_cast<DictionaryInstantiation*>(node);
@@ -232,7 +234,7 @@ ObjectPtr ExpressionExecutor::ExecMapInstantiation(AstNode* node) {
   auto children_vec = map_node->children();
 
   // traverses the vector assembling the vector of pairs of objects
-  for (auto& key_value: children_vec) {
+  for (auto& key_value : children_vec) {
     ObjectPtr obj_key(Exec(key_value->key()));
     AssignableListExecutor assignable(this, symbol_table_stack());
     ObjectPtr obj_value(assignable.ExecAssignable(key_value->value()));
@@ -278,7 +280,7 @@ ObjectPtr ExpressionExecutor::ExecVarEnvId(AstNode* node) {
   VarEnvId* varenv_id = static_cast<VarEnvId*>(node);
   const std::string& name = varenv_id->name();
 
-  char *r = getenv(name.c_str());
+  char* r = getenv(name.c_str());
   std::string str_var;
 
   if (r != nullptr) {
@@ -291,6 +293,11 @@ ObjectPtr ExpressionExecutor::ExecVarEnvId(AstNode* node) {
 ObjectPtr ExpressionExecutor::ExecGlob(Glob* glob) {
   GlobExecutor glob_exec(this, symbol_table_stack());
   return glob_exec.Exec(glob);
+}
+
+ObjectPtr ExpressionExecutor::ExecSpecialString(SpecialString* sstr) {
+  SpecialStringExecutor sstr_exec(this, symbol_table_stack());
+  return sstr_exec.Exec(sstr);
 }
 
 ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
@@ -307,7 +314,7 @@ ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
     val = array_obj->GetItem(index);
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(), array_node->index_exp()->pos(),
-        e.messages());
+                       e.messages());
   }
 
   if (pass_ref_) {
@@ -317,20 +324,20 @@ ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
   }
 }
 
-ObjectPtr ExpressionExecutor::ExecFuncCall(FunctionCall* node)
-try {
+ObjectPtr ExpressionExecutor::ExecFuncCall(FunctionCall* node) try {
   FuncCallExecutor fcall_exec(this, symbol_table_stack());
   return fcall_exec.Exec(node);
 } catch (RunTimeError& e) {
   e.messages().Push(Message(Message::Severity::ERR,
-      boost::format("on function call"), node->pos().line, node->pos().col));
+                            boost::format("on function call"), node->pos().line,
+                            node->pos().col));
 
   // when the exception is thrown inside some object function
   // this object doesn't have the position of the node, so
   // we have to check if the line is 0 to set the correct line
   // on this case
-  Position pos = {e.pos().line == 0? node->pos().line:e.pos().line,
-      e.pos().col == 0? node->pos().col:e.pos().col};
+  Position pos = {e.pos().line == 0 ? node->pos().line : e.pos().line,
+                  e.pos().col == 0 ? node->pos().col : e.pos().col};
   throw RunTimeError(e.err_code(), e.msg(), pos, e.messages());
 }
 
@@ -360,7 +367,7 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) try {
 
     default:
       throw RunTimeError(RunTimeError::ErrorCode::INVALID_OPCODE,
-          boost::format("literal opcode not valid"));
+                         boost::format("literal opcode not valid"));
   }
 } catch (RunTimeError& e) {
   throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
@@ -368,7 +375,7 @@ ObjectPtr ExpressionExecutor::ExecLiteral(AstNode* node) try {
 
 ObjectPtr ExpressionExecutor::ExecNotExpr(AstNode* node) {
   if (node->type() == AstNode::NodeType::kNotExpression) {
-    NotExpression *not_expr = static_cast<NotExpression*>(node);
+    NotExpression* not_expr = static_cast<NotExpression*>(node);
     ObjectPtr exp(Exec(not_expr->exp()));
 
     try {
@@ -388,9 +395,7 @@ ObjectPtr ExpressionExecutor::ExecNotExpr(AstNode* node) {
   }
 }
 
-ObjectPtr ExpressionExecutor::ExecNull() {
-  return obj_factory_.NewNull();
-}
+ObjectPtr ExpressionExecutor::ExecNull() { return obj_factory_.NewNull(); }
 
 ObjectPtr ExpressionExecutor::ExecUnary(AstNode* node) {
   UnaryOperation* unary_expr = static_cast<UnaryOperation*>(node);
@@ -591,8 +596,7 @@ ObjectPtr ExpressionExecutor::ExecSlice(Slice* node) {
 
 ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
   CmdExecutor cmd_full(this, symbol_table_stack());
-  CmdExprData res(cmd_full.ExecGetResult(
-      static_cast<CmdFull*>(node->cmd())));
+  CmdExprData res(cmd_full.ExecGetResult(static_cast<CmdFull*>(node->cmd())));
 
   // create command object
   int status = std::get<0>(res);
@@ -600,8 +604,8 @@ ObjectPtr ExpressionExecutor::ExecCmdExpr(CmdExpression* node) {
   ObjectFactory obj_factory(symbol_table_stack());
 
   try {
-    ObjectPtr obj(obj_factory.NewCmdObj(status, std::move(str),
-        std::string("")));
+    ObjectPtr obj(
+        obj_factory.NewCmdObj(status, std::move(str), std::string("")));
     return obj;
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
@@ -626,7 +630,7 @@ ObjectPtr ExpressionExecutor::ExecIfElseExpr(AstNode* node) {
     cond = static_cast<BoolObject&>(*obj_exp->ObjBool()).value();
   } catch (RunTimeError& e) {
     throw RunTimeError(e.err_code(), e.msg(), if_else_expr->exp()->pos(),
-        e.messages());
+                       e.messages());
   }
 
   if (cond) {
@@ -636,12 +640,9 @@ ObjectPtr ExpressionExecutor::ExecIfElseExpr(AstNode* node) {
   }
 }
 
-void ExpressionExecutor::set_stop(StopFlag flag) {
-  parent()->set_stop(flag);
-}
+void ExpressionExecutor::set_stop(StopFlag flag) { parent()->set_stop(flag); }
 
-std::vector<ObjectPtr> ExprListExecutor::Exec(
-    AstNode* node) {
+std::vector<ObjectPtr> ExprListExecutor::Exec(AstNode* node) {
   ExpressionList* expr_list_node = static_cast<ExpressionList*>(node);
 
   std::vector<ObjectPtr> obj_vec;
@@ -650,7 +651,7 @@ std::vector<ObjectPtr> ExprListExecutor::Exec(
   EllipsisExprExecutor ellipsis_expr_executor(this, symbol_table_stack());
 
   std::vector<Expression*> expr_vec = expr_list_node->children();
-  for (AstNode* value: expr_vec) {
+  for (AstNode* value : expr_vec) {
     if (value->type() == AstNode::NodeType::kEllipsisExpression) {
       std::vector<ObjectPtr> elems = ellipsis_expr_executor.Exec(value);
       obj_vec.insert(obj_vec.end(), elems.begin(), elems.end());
@@ -662,9 +663,7 @@ std::vector<ObjectPtr> ExprListExecutor::Exec(
   return obj_vec;
 }
 
-void ExprListExecutor::set_stop(StopFlag flag) {
-  parent()->set_stop(flag);
-}
+void ExprListExecutor::set_stop(StopFlag flag) { parent()->set_stop(flag); }
 
 std::tuple<ArgumentsExecutor::Args, ArgumentsExecutor::KWArgs>
 ArgumentsExecutor::Exec(ArgumentsList* args_list) {
@@ -674,7 +673,7 @@ ArgumentsExecutor::Exec(ArgumentsList* args_list) {
 
   AssignableListExecutor assign_exec(this, symbol_table_stack());
 
-  for (Argument* arg: args_list->children()) {
+  for (Argument* arg : args_list->children()) {
     if (arg->has_key()) {
       found_kwarg = true;
 
@@ -685,7 +684,8 @@ ArgumentsExecutor::Exec(ArgumentsList* args_list) {
       kw_args.insert(std::pair<std::string, ObjectPtr>(name, value));
     } else {
       if (found_kwarg) {
-        throw RunTimeError(RunTimeError::ErrorCode::INVALID_ARGS,
+        throw RunTimeError(
+            RunTimeError::ErrorCode::INVALID_ARGS,
             boost::format("positional argument follows keyword argument"));
       }
 
@@ -703,9 +703,7 @@ ArgumentsExecutor::Exec(ArgumentsList* args_list) {
   return std::tuple<Args, KWArgs>(std::move(args), std::move(kw_args));
 }
 
-void ArgumentsExecutor::set_stop(StopFlag flag) {
-  parent()->set_stop(flag);
-}
+void ArgumentsExecutor::set_stop(StopFlag flag) { parent()->set_stop(flag); }
 
 ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
   ExpressionExecutor expr_exec(this, symbol_table_stack());
@@ -721,19 +719,19 @@ ObjectPtr FuncCallExecutor::Exec(FunctionCall* node) {
     switch (fobj->type()) {
       case Object::ObjectType::FUNC: {
         return static_cast<FuncObject&>(*fobj).Call(this, std::move(args),
-            std::move(kw_args));
+                                                    std::move(kw_args));
         break;
       }
 
       case Object::ObjectType::SPEC_FUNC: {
-        return static_cast<SpecialFuncObject&>(*fobj).SpecialCall(this,
-            std::move(args), std::move(kw_args), symbol_table_stack());
+        return static_cast<SpecialFuncObject&>(*fobj).SpecialCall(
+            this, std::move(args), std::move(kw_args), symbol_table_stack());
         break;
       }
 
       case Object::ObjectType::TYPE: {
-        return static_cast<TypeObject&>(*fobj).Constructor(this,
-            std::move(args), std::move(kw_args));
+        return static_cast<TypeObject&>(*fobj).Constructor(
+            this, std::move(args), std::move(kw_args));
         break;
       }
 
@@ -771,7 +769,7 @@ std::vector<ObjectPtr> EllipsisExprExecutor::Exec(AstNode* node) {
   ObjectPtr obj_iter = obj_expr->ObjIter(obj_expr);
 
   // check if there is next value on iterator
-  auto check_iter = [&] () -> bool {
+  auto check_iter = [&]() -> bool {
     ObjectPtr has_next_obj = obj_iter->HasNext();
     if (has_next_obj->type() != Object::ObjectType::BOOL) {
       throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -809,12 +807,38 @@ ObjectPtr GlobExecutor::Exec(Glob* glob_node) {
     std::vector<ObjectPtr> glob_obj = ExecGlob(glob_str, symbol_table_stack());
     return obj_factory.NewArray(std::move(glob_obj));
   } else {
-    std::vector<ObjectPtr> glob_obj = ExecGlobSimple(glob_str,
-        symbol_table_stack());
+    std::vector<ObjectPtr> glob_obj =
+        ExecGlobSimple(glob_str, symbol_table_stack());
     if (glob_obj.size() == 1) {
       return glob_obj[0];
     }
     return obj_factory.NewArray(std::move(glob_obj));
+  }
+}
+
+ObjectPtr SpecialStringExecutor::Exec(SpecialString* sstr_node) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr ptr_lit = expr_exec.ExecLiteral(sstr_node->GetString());
+  const std::string& id_name = sstr_node->GetIdentifier()->name();
+
+  // ptr_lit is always a string object, because the parser only accept
+  // id"string" this kind of format
+  StringObject& str_obj = static_cast<StringObject&>(*ptr_lit);
+  const std::string& str_arg = str_obj.value();
+
+  if (id_name == "p") {
+    // create path object
+    return obj_factory.NewPath(str_arg);
+  } else if (id_name == "r") {
+    // create regular expression object
+    return obj_factory.NewRegex(str_arg);
+  } else {
+    throw RunTimeError(
+        RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("String modifier don't defined for this id"),
+        sstr_node->pos());
   }
 }
 
@@ -849,9 +873,7 @@ ObjectPtr ListComprehensionExecutor::Exec(AstNode* node) {
     stmt = MountForBlock(comp_for, list_comp_node);
   }
 
-  AstNodeFactory ast_node_factory([&]() {
-    return list_comp_node->pos();
-  });
+  AstNodeFactory ast_node_factory([&]() { return list_comp_node->pos(); });
 
   if (for_if_list.size() > 1) {
     stmt = ExecForIfList(for_if_list, std::move(stmt), ast_node_factory);
@@ -873,8 +895,8 @@ std::unique_ptr<Statement> ListComprehensionExecutor::ExecForIfList(
     std::vector<std::unique_ptr<Statement>> stmt_vec;
     stmt_vec.push_back(std::move(stmt));
 
-    std::unique_ptr<StatementList> stmt_list(ast_node_factory.NewStatementList(
-        std::move(stmt_vec)));
+    std::unique_ptr<StatementList> stmt_list(
+        ast_node_factory.NewStatementList(std::move(stmt_vec)));
 
     auto block = ast_node_factory.NewBlock(std::move(stmt_list));
 
@@ -901,9 +923,7 @@ std::unique_ptr<Statement> ListComprehensionExecutor::ExecForIfList(
 
 std::unique_ptr<Statement> ListComprehensionExecutor::MountBlock(
     ListComprehension* list_comp_node) {
-  AstNodeFactory ast_node_factory([&]() {
-    return list_comp_node->pos();
-  });
+  AstNodeFactory ast_node_factory([&]() { return list_comp_node->pos(); });
 
   std::unique_ptr<Identifier> id(ast_node_factory.NewIdentifier(
       "%list_comp_val", std::unique_ptr<PackageScope>(nullptr)));
@@ -911,17 +931,17 @@ std::unique_ptr<Statement> ListComprehensionExecutor::MountBlock(
   std::unique_ptr<Identifier> id_func_name(ast_node_factory.NewIdentifier(
       "append", std::unique_ptr<PackageScope>(nullptr)));
 
-  std::unique_ptr<Attribute> attribute(ast_node_factory.NewAttribute(
-      std::move(id), std::move(id_func_name)));
+  std::unique_ptr<Attribute> attribute(
+      ast_node_factory.NewAttribute(std::move(id), std::move(id_func_name)));
 
-  std::unique_ptr<Argument> arg(ast_node_factory.NewArgument(std::string(""),
-      list_comp_node->MoveResExp()));
+  std::unique_ptr<Argument> arg(ast_node_factory.NewArgument(
+      std::string(""), list_comp_node->MoveResExp()));
 
   std::vector<std::unique_ptr<Argument>> arg_vec;
   arg_vec.push_back(std::move(arg));
 
-  std::unique_ptr<ArgumentsList> arg_list(ast_node_factory.NewArgumentsList(
-      std::move(arg_vec)));
+  std::unique_ptr<ArgumentsList> arg_list(
+      ast_node_factory.NewArgumentsList(std::move(arg_vec)));
 
   // mount function call
   std::unique_ptr<FunctionCall> func_call(ast_node_factory.NewFunctionCall(
@@ -930,8 +950,8 @@ std::unique_ptr<Statement> ListComprehensionExecutor::MountBlock(
   std::vector<std::unique_ptr<Statement>> stmt_vec;
   stmt_vec.push_back(std::move(func_call));
 
-  std::unique_ptr<StatementList> stmt_list(ast_node_factory.NewStatementList(
-      std::move(stmt_vec)));
+  std::unique_ptr<StatementList> stmt_list(
+      ast_node_factory.NewStatementList(std::move(stmt_vec)));
 
   auto block = ast_node_factory.NewBlock(std::move(stmt_list));
 
@@ -940,25 +960,21 @@ std::unique_ptr<Statement> ListComprehensionExecutor::MountBlock(
 
 std::unique_ptr<Statement> ListComprehensionExecutor::MountIfBlock(
     CompIf* comp_if, ListComprehension* list_comp_node) {
-  AstNodeFactory ast_node_factory([&]() {
-    return list_comp_node->pos();
-  });
+  AstNodeFactory ast_node_factory([&]() { return list_comp_node->pos(); });
 
   auto block = MountBlock(list_comp_node);
 
   // mount if statement
-  std::unique_ptr<Statement> if_stmt(ast_node_factory.NewIfStatement(
-      comp_if->MoveCompExp(), std::move(block),
-      std::unique_ptr<Statement>(nullptr)));
+  std::unique_ptr<Statement> if_stmt(
+      ast_node_factory.NewIfStatement(comp_if->MoveCompExp(), std::move(block),
+                                      std::unique_ptr<Statement>(nullptr)));
 
   return if_stmt;
 }
 
 std::unique_ptr<Statement> ListComprehensionExecutor::MountForBlock(
     CompFor* comp_for, ListComprehension* list_comp_node) {
-  AstNodeFactory ast_node_factory([&]() {
-    return list_comp_node->pos();
-  });
+  AstNodeFactory ast_node_factory([&]() { return list_comp_node->pos(); });
 
   auto block = MountBlock(list_comp_node);
 
@@ -969,5 +985,5 @@ std::unique_ptr<Statement> ListComprehensionExecutor::MountForBlock(
   return for_stmt;
 }
 
-}
-}
+}  // namespace internal
+}  // namespace shpp

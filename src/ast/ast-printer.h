@@ -15,18 +15,18 @@
 #ifndef SHPP_AST_TRAVERSAL_VISITOR_H
 #define SHPP_AST_TRAVERSAL_VISITOR_H
 
-#include <string>
+#include <boost/format.hpp>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <vector>
-#include <boost/format.hpp>
 
 #include "ast.h"
 
 namespace shpp {
 namespace internal {
 
-class AstPrinter: public AstVisitor {
+class AstPrinter : public AstVisitor {
  public:
   AstPrinter() {
     inside_scope_ = false;
@@ -39,7 +39,7 @@ class AstPrinter: public AstVisitor {
   bool inside_scope_;
 
   void Level() {
-    for (int i = 0; i < level_-1; i++) {
+    for (int i = 0; i < level_ - 1; i++) {
       std::cout << " │";
     }
 
@@ -48,10 +48,10 @@ class AstPrinter: public AstVisitor {
   }
 
  public:
-  void virtual VisitStatementList(StatementList * stmt_list) {
+  void virtual VisitStatementList(StatementList* stmt_list) {
     auto vec = stmt_list->children();
     int i = 0;
-    for (const auto stmt: vec) {
+    for (const auto stmt : vec) {
       Level();
       std::cout << "<stmt i: " << i << ">\n";
       level_++;
@@ -63,8 +63,7 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitBinaryOperation(BinaryOperation* bin_op) {
     Level();
-    std::cout << "<bin_op type: "
-              << Token::name(bin_op->kind()) << ">\n";
+    std::cout << "<bin_op type: " << Token::name(bin_op->kind()) << ">\n";
     level_++;
     bin_op->left()->Accept(this);
     bin_op->right()->Accept(this);
@@ -73,8 +72,7 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitUnaryOperation(UnaryOperation* un_op) {
     Level();
-    std::cout << "<un_op type: "
-              << Token::name(un_op->kind()) << ">\n";
+    std::cout << "<un_op type: " << Token::name(un_op->kind()) << ">\n";
     level_++;
     un_op->exp()->Accept(this);
     level_--;
@@ -82,8 +80,7 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitNotExpression(NotExpression* not_expr) {
     Level();
-    std::cout << "<not type: "
-              << Token::name(not_expr->kind()) << ">\n";
+    std::cout << "<not type: " << Token::name(not_expr->kind()) << ">\n";
     level_++;
     not_expr->exp()->Accept(this);
     level_--;
@@ -91,8 +88,7 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitVarEnvId(VarEnvId* var_env_id) {
     Level();
-    std::cout << "<var_env_id: "
-              << var_env_id->name() << ">\n";
+    std::cout << "<var_env_id: " << var_env_id->name() << ">\n";
   }
 
   void virtual VisitIdentifier(Identifier* id) {
@@ -100,14 +96,13 @@ class AstPrinter: public AstVisitor {
       std::cout << id->name();
       std::cout << "::";
       if (id->has_scope()) {
-
         id->scope()->Accept(this);
       }
       return;
     }
 
     Level();
-    std::cout << "<identifier name: "<< id->name();
+    std::cout << "<identifier name: " << id->name();
     if (id->has_scope()) {
       std::cout << " scope: ";
       id->scope()->Accept(this);
@@ -123,7 +118,7 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitLiteral(Literal* lit_exp) {
     Level();
-    std::cout << "<literal value: "<< lit_exp->value() << ">\n";
+    std::cout << "<literal value: " << lit_exp->value() << ">\n";
   }
 
   void virtual VisitGlob(Glob* glob) {
@@ -132,10 +127,23 @@ class AstPrinter: public AstVisitor {
     std::cout << "<glob: ";
     auto vec = glob->children();
 
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       c->Accept(this);
     }
     std::cout << ">\n";
+  }
+
+  void virtual VisitSpecialString(SpecialString* special_str) {
+    Level();
+    std::cout << "<special_sring>\n";
+    level_++;
+
+    special_str->GetIdentifier()->Accept(this);
+    special_str->GetString()->Accept(this);
+
+    level_--;
+    Level();
+    std::cout << "</special_sring>\n";
   }
 
   void virtual VisitAttribute(Attribute* att) {
@@ -195,7 +203,7 @@ class AstPrinter: public AstVisitor {
     level_++;
     auto vec = list->children();
     int i = 0;
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       Level();
       std::cout << "<expression i: " << i << ">\n";
       level_++;
@@ -206,13 +214,13 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
-  void virtual VisitArgumentsList(ArgumentsList *list) {
+  void virtual VisitArgumentsList(ArgumentsList* list) {
     Level();
     std::cout << "<arguments_list>\n";
     level_++;
     auto vec = list->children();
     int i = 0;
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       Level();
       std::cout << "<arg i: " << i << ">\n";
       level_++;
@@ -223,7 +231,7 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
-  void virtual VisitArgument(Argument *arg) {
+  void virtual VisitArgument(Argument* arg) {
     level_++;
 
     if (arg->has_key()) {
@@ -376,7 +384,7 @@ class AstPrinter: public AstVisitor {
     std::cout << "<cmd: ";
     auto vec = cmd->children();
 
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       c->Accept(this);
     }
     std::cout << ">\n";
@@ -387,21 +395,21 @@ class AstPrinter: public AstVisitor {
     std::cout << "<cmd_path: ";
     auto vec = fp_cmd->children();
 
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       c->Accept(this);
     }
 
     std::cout << ">\n";
   }
 
-  void virtual VisitCmdIoRedirectList(CmdIoRedirectList *cmd_io_list) {
+  void virtual VisitCmdIoRedirectList(CmdIoRedirectList* cmd_io_list) {
     Level();
     std::cout << "<io_redirect_list: ";
 
     cmd_io_list->cmd()->Accept(this);
     auto vec = cmd_io_list->children();
 
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       c->Accept(this);
     }
 
@@ -428,7 +436,7 @@ class AstPrinter: public AstVisitor {
     level_++;
 
     if (switch_stmt->has_exp()) {
-       Level();
+      Level();
       std::cout << "<exp>\n";
       level_++;
       switch_stmt->exp()->Accept(this);
@@ -439,7 +447,7 @@ class AstPrinter: public AstVisitor {
     std::cout << "<block_switch>\n";
     level_++;
     std::vector<CaseStatement*> case_list = switch_stmt->case_list();
-    for (auto& c: case_list) {
+    for (auto& c : case_list) {
       c->Accept(this);
     }
 
@@ -478,7 +486,7 @@ class AstPrinter: public AstVisitor {
     level_--;
   }
 
-  void Visit(AstNode *node) {
+  void Visit(AstNode* node) {
     level_ = 0;
     inside_cmd_ = false;
     node->Accept(this);
@@ -488,7 +496,7 @@ class AstPrinter: public AstVisitor {
     Level();
     std::cout << "<command pipe>\n";
     level_++;
-    for (auto& e: cmd_pipe->cmds()) {
+    for (auto& e : cmd_pipe->cmds()) {
       e->Accept(this);
     }
     level_--;
@@ -505,8 +513,8 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitCmdAndOr(CmdAndOr* cmd_and_or) {
     Level();
-    std::cout << "<command_and_or type: "
-              << Token::name(cmd_and_or->kind()) << ">\n";
+    std::cout << "<command_and_or type: " << Token::name(cmd_and_or->kind())
+              << ">\n";
     level_++;
     cmd_and_or->cmd_left()->Accept(this);
     cmd_and_or->cmd_right()->Accept(this);
@@ -516,7 +524,7 @@ class AstPrinter: public AstVisitor {
   void virtual VisitCmdFull(CmdFull* cmd_full) {
     Level();
     std::cout << "<command_full background: "
-              << (cmd_full->background()? "true": "false") << ">\n";
+              << (cmd_full->background() ? "true" : "false") << ">\n";
     level_++;
     cmd_full->cmd()->Accept(this);
     level_--;
@@ -529,7 +537,7 @@ class AstPrinter: public AstVisitor {
   void virtual VisitFunctionParam(FunctionParam* func_param) {
     Level();
     std::cout << "<function_param variadic: "
-              << (func_param->variadic()? "true": "false") << ">\n";
+              << (func_param->variadic() ? "true" : "false") << ">\n";
     level_++;
     func_param->id()->Accept(this);
 
@@ -542,14 +550,15 @@ class AstPrinter: public AstVisitor {
   void virtual VisitFunctionDeclaration(FunctionDeclaration* func_decl) {
     Level();
     std::cout << "<function variadic:"
-              << (func_decl->variadic()? "true": "false") << "declaration: yes>\n";
+              << (func_decl->variadic() ? "true" : "false")
+              << "declaration: yes>\n";
     level_++;
 
     func_decl->name()->Accept(this);
 
     auto vec = func_decl->children();
 
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       c->Accept(this);
     }
 
@@ -563,12 +572,12 @@ class AstPrinter: public AstVisitor {
   void virtual VisitFunctionExpression(FunctionExpression* func_decl) {
     Level();
     std::cout << "<function variadic:"
-              << (func_decl->variadic()? "true": "false") << ">\n";
+              << (func_decl->variadic() ? "true" : "false") << ">\n";
     level_++;
 
     auto vec = func_decl->children();
 
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       c->Accept(this);
     }
 
@@ -639,7 +648,7 @@ class AstPrinter: public AstVisitor {
 
     auto vec = dic->children();
 
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       c->Accept(this);
     }
     level_--;
@@ -668,21 +677,20 @@ class AstPrinter: public AstVisitor {
 
   void virtual VisitSubShell(SubShell* sub_shell) {
     Level();
-    std::cout << "<sub_shell self-process:"
-      << sub_shell->self_process()
-      << ">\n";
+    std::cout << "<sub_shell self-process:" << sub_shell->self_process()
+              << ">\n";
     level_++;
     sub_shell->block()->Accept(this);
     level_--;
   }
 
   void virtual VisitAssignableList(AssignableList* assign_list) {
-    for (auto& e: assign_list->children()) {
+    for (auto& e : assign_list->children()) {
       e->Accept(this);
     }
   }
 
-  void virtual VisitSlice(Slice *slice) {
+  void virtual VisitSlice(Slice* slice) {
     Level();
     std::cout << "<slice>\n";
     level_++;
@@ -700,7 +708,7 @@ class AstPrinter: public AstVisitor {
     if (!class_decl_list->IsEmpty()) {
       auto vec = class_decl_list->children();
 
-      for (const auto c: vec) {
+      for (const auto c : vec) {
         c->Accept(this);
       }
     }
@@ -731,14 +739,14 @@ class AstPrinter: public AstVisitor {
       std::cout << "<from>";
       level_++;
       Level();
-      import->import<std::unique_ptr<Literal>>()->Accept(this);
+      import->import <std::unique_ptr<Literal>>()->Accept(this);
       level_--;
       level_--;
     } else if (import->star()) {
       std::cout << "from=" << import->from() << ">\n";
     } else {
       const std::vector<std::unique_ptr<Identifier>>& id_list =
-          import->import<std::vector<std::unique_ptr<Identifier>>>();
+          import->import <std::vector<std::unique_ptr<Identifier>>>();
       std::cout << " ids=";
       for (const auto& id : id_list) {
         std::cout << id->name() << " ";
@@ -798,7 +806,7 @@ class AstPrinter: public AstVisitor {
     if (!iface_decl_list->IsEmpty()) {
       auto vec = iface_decl_list->children();
 
-      for (const auto c: vec) {
+      for (const auto c : vec) {
         c->Accept(this);
       }
     }
@@ -886,7 +894,7 @@ class AstPrinter: public AstVisitor {
     std::cout << "</block>\n";
 
     if (try_catch->has_catch()) {
-      for (auto& catch_stmt: try_catch->catch_list()) {
+      for (auto& catch_stmt : try_catch->catch_list()) {
         catch_stmt->Accept(this);
       }
     }
@@ -927,7 +935,7 @@ class AstPrinter: public AstVisitor {
 
     auto vec = list_comp->comp_list();
 
-    for (const auto c: vec) {
+    for (const auto c : vec) {
       c->Accept(this);
     }
 
@@ -1040,6 +1048,6 @@ class AstPrinter: public AstVisitor {
   }
 };
 
-}
-}
+}  // namespace internal
+}  // namespace shpp
 #endif  // SETTI_AST_TRAVERSAL_VISITOR_H

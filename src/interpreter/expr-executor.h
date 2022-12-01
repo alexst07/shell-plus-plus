@@ -15,22 +15,22 @@
 #ifndef SHPP_EXPR_EXECUTOR_H
 #define SHPP_EXPR_EXECUTOR_H
 
-#include <string>
+#include <boost/filesystem.hpp>
 #include <memory>
+#include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
-#include <tuple>
-#include <boost/filesystem.hpp>
 
 #include "ast/ast.h"
-#include "objects/obj-type.h"
 #include "executor.h"
+#include "objects/obj-type.h"
 #include "objects/object-factory.h"
 
 namespace shpp {
 namespace internal {
 
-class AssignableListExecutor: public Executor {
+class AssignableListExecutor : public Executor {
  public:
   AssignableListExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
@@ -42,12 +42,12 @@ class AssignableListExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
-class ExpressionExecutor: public Executor {
+class ExpressionExecutor : public Executor {
  public:
   ExpressionExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
-      : Executor(parent, symbol_table_stack)
-      , pass_ref_(false)
-      , obj_factory_(symbol_table_stack) {}
+      : Executor(parent, symbol_table_stack),
+        pass_ref_(false),
+        obj_factory_(symbol_table_stack) {}
 
   // Entry point to execute expression
   ObjectPtr Exec(AstNode* node, bool pass_ref = false);
@@ -109,6 +109,8 @@ class ExpressionExecutor: public Executor {
 
   ObjectPtr ExecGlob(Glob* glob);
 
+  ObjectPtr ExecSpecialString(SpecialString* sstr);
+
   ObjectPtr ExecInstanceOf(ObjectPtr obj, ObjectPtr base);
 
   ObjectPtr ExecIs(ObjectPtr obj1, ObjectPtr obj2);
@@ -124,7 +126,7 @@ class ExpressionExecutor: public Executor {
   ObjectFactory obj_factory_;
 };
 
-class GlobExecutor: public Executor {
+class GlobExecutor : public Executor {
  public:
   GlobExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
@@ -132,7 +134,15 @@ class GlobExecutor: public Executor {
   ObjectPtr Exec(Glob* glob_node);
 };
 
-class ExprListExecutor: public Executor {
+class SpecialStringExecutor : public Executor {
+ public:
+  SpecialStringExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  ObjectPtr Exec(SpecialString* sstr_node);
+};
+
+class ExprListExecutor : public Executor {
  public:
   ExprListExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
@@ -142,7 +152,7 @@ class ExprListExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
-class EllipsisExprExecutor: public Executor {
+class EllipsisExprExecutor : public Executor {
  public:
   EllipsisExprExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
@@ -152,7 +162,7 @@ class EllipsisExprExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 };
 
-class ArgumentsExecutor: public Executor {
+class ArgumentsExecutor : public Executor {
  public:
   using Args = std::vector<ObjectPtr>;
   using KWArgs = std::unordered_map<std::string, ObjectPtr>;
@@ -166,17 +176,12 @@ class ArgumentsExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 
  protected:
-  bool inside_loop() override {
-    return false;
-  }
+  bool inside_loop() override { return false; }
 
-  bool inside_switch() override {
-    return false;
-  }
+  bool inside_switch() override { return false; }
 };
 
-
-class FuncCallExecutor: public Executor {
+class FuncCallExecutor : public Executor {
  public:
   using Args = std::vector<ObjectPtr>;
   using KWArgs = std::unordered_map<std::string, ObjectPtr>;
@@ -190,19 +195,15 @@ class FuncCallExecutor: public Executor {
   void set_stop(StopFlag flag) override;
 
  protected:
-  bool inside_loop() override {
-    return false;
-  }
+  bool inside_loop() override { return false; }
 
-  bool inside_switch() override {
-    return false;
-  }
+  bool inside_switch() override { return false; }
 };
 
-class ListComprehensionExecutor: public Executor {
+class ListComprehensionExecutor : public Executor {
  public:
   ListComprehensionExecutor(Executor* parent,
-      SymbolTableStack& symbol_table_stack)
+                            SymbolTableStack& symbol_table_stack)
       : Executor(parent, symbol_table_stack) {}
 
   ObjectPtr Exec(AstNode* node);
@@ -210,17 +211,17 @@ class ListComprehensionExecutor: public Executor {
   std::unique_ptr<Statement> MountBlock(ListComprehension* list_comp_node);
 
   std::unique_ptr<Statement> MountIfBlock(CompIf* comp_if,
-      ListComprehension* list_comp_node);
+                                          ListComprehension* list_comp_node);
 
   std::unique_ptr<Statement> ExecForIfList(
       std::vector<Expression*>& for_if_list,
       std::unique_ptr<Statement>&& stmt_l, AstNodeFactory& ast_node_factory);
 
   std::unique_ptr<Statement> MountForBlock(CompFor* comp_for,
-      ListComprehension* list_comp_node);
+                                           ListComprehension* list_comp_node);
 };
 
-}
-}
+}  // namespace internal
+}  // namespace shpp
 
 #endif  // SHPP_EXPR_EXECUTOR_H
