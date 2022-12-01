@@ -14,15 +14,15 @@
 
 #include "lexer.h"
 
-#include <sstream>
 #include <codecvt>
+#include <sstream>
 
 namespace shpp {
 namespace internal {
 
 void Lexer::SkipSingleLineComment() {
   Advance();
-  while (c_ != kEndOfInput && c_ != '\n'){
+  while (c_ != kEndOfInput && c_ != '\n') {
     Advance();
   }
 }
@@ -42,7 +42,7 @@ char Lexer::ScanAnsiEscapeCode() {
 
   Back();
 
-  return static_cast<char>(std::stoi(number,nullptr,8));
+  return static_cast<char>(std::stoi(number, nullptr, 8));
 }
 
 std::string Lexer::ScanUnicodeEscapeCode() {
@@ -56,12 +56,12 @@ std::string Lexer::ScanUnicodeEscapeCode() {
 
   Back();
 
-  uint32_t hex_number = static_cast<uint32_t>(std::stoi(number,nullptr,16));
+  uint32_t hex_number = static_cast<uint32_t>(std::stoi(number, nullptr, 16));
 
   // initialize wstring with 1 wchar_t
   std::wstring str_hex(1, static_cast<wchar_t>(hex_number));
 
-  //setup converter from wstring to string
+  // setup converter from wstring to string
   using convert_type = std::codecvt_utf8<wchar_t>;
   std::wstring_convert<convert_type, wchar_t> converter;
 
@@ -76,10 +76,11 @@ std::string Lexer::ScanStringEscape() {
   // Handle special char on string
   switch (c) {
     case '\'':  // fall through
-    case '"' :  // fall through
-    case '\\': break;
+    case '"':   // fall through
+    case '\\':
+      break;
 
-    case '0' :
+    case '0':
       if (IsOctalChar(PeekAhead())) {
         c = ScanAnsiEscapeCode();
       } else {
@@ -95,11 +96,21 @@ std::string Lexer::ScanStringEscape() {
       }
       break;
 
-    case 'b' : c = '\b'; break;
-    case 'f' : c = '\f'; break;
-    case 'n' : c = '\n'; break;
-    case 'r' : c = '\r'; break;
-    case 't' : c = '\t'; break;
+    case 'b':
+      c = '\b';
+      break;
+    case 'f':
+      c = '\f';
+      break;
+    case 'n':
+      c = '\n';
+      break;
+    case 'r':
+      c = '\r';
+      break;
+    case 't':
+      c = '\t';
+      break;
   }
 
   // construct a string with 1 char c
@@ -113,39 +124,50 @@ char Lexer::ScanWordEscape() {
   char c = c_;
 
   switch (c) {
-    case ' ' : c = ' '; break;
-    case 'b' : c = '\b'; break;
-    case 'f' : c = '\f'; break;
-    case 'n' : c = '\n'; break;
-    case 'r' : c = '\r'; break;
-    case 't' : c = '\t'; break;
+    case ' ':
+      c = ' ';
+      break;
+    case 'b':
+      c = '\b';
+      break;
+    case 'f':
+      c = '\f';
+      break;
+    case 'n':
+      c = '\n';
+      break;
+    case 'r':
+      c = '\r';
+      break;
+    case 't':
+      c = '\t';
+      break;
   }
 
   return c;
 }
 
-Token Lexer::ScanString() {
+Token Lexer::ScanString(char string_end_char) {
   std::string str = "";
   start_pos_ = line_pos_;
 
   Advance();
 
-  while(true) {
+  while (true) {
     if (c_ == kEndOfInput) {
       ErrorMsg(boost::format("string literal not terminated"));
       break;
     }
 
-    if (c_ == '"') {
+    if (c_ == string_end_char) {
       Advance();
       break;
     }
 
-
     if (c_ == '\\') {
-       str += ScanStringEscape();
-       Advance();
-       continue;
+      str += ScanStringEscape();
+      Advance();
+      continue;
     }
 
     str += c_;
@@ -181,8 +203,6 @@ Token Lexer::ScanIdentifier(bool varenv) {
     TokenKind token_kind;
     bool res;
     std::tie(token_kind, res) = Token::IsKeyWord(id);
-
-
 
     if (res) {
       return GetToken(token_kind, check_blank);
@@ -278,6 +298,10 @@ TokenStream Lexer::Scanner() {
 
       case '"':
         token = ScanString();
+        break;
+
+      case '\'':
+        token = ScanString('\'');
         break;
 
       case '<':
@@ -457,7 +481,7 @@ TokenStream Lexer::Scanner() {
       case '$': {
         // $ $( ${
         Advance();
-        std::string  pre_word = "$";
+        std::string pre_word = "$";
         if (c_ == '(') {
           token = Select(TokenKind::DOLLAR_LPAREN);
         } else if (c_ == '{') {
@@ -503,7 +527,7 @@ TokenStream Lexer::Scanner() {
 
       case '.': {
         // . ...
-        std::string  pre_word = ".";
+        std::string pre_word = ".";
         Advance();
         if (c_ == '.') {
           pre_word += '.';
@@ -534,7 +558,7 @@ TokenStream Lexer::Scanner() {
           token = ScanNumber();
         } else if (c_ == '\\') {
           // Allows insert newline without insert a token
-          if (PeekAhead() == '\n'){
+          if (PeekAhead() == '\n') {
             // advance char '\'
             Advance();
             // advace char '\n'
@@ -558,5 +582,5 @@ TokenStream Lexer::Scanner() {
   return ts;
 }
 
-}
-}
+}  // namespace internal
+}  // namespace shpp

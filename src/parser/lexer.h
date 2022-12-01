@@ -15,14 +15,14 @@
 #ifndef SHPP_LEXER_H
 #define SHPP_LEXER_H
 
-#include <string>
-#include <memory>
-#include <vector>
-#include <iostream>
 #include <cstring>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "token.h"
 #include "msg.h"
+#include "token.h"
 
 namespace shpp {
 namespace internal {
@@ -32,31 +32,25 @@ class Lexer {
   static const char kEndOfInput = -1;
 
   Lexer(const std::string& str)
-      : str_(str)
-      , strlen_(str.length())
-      , c_(str_[0])
-      , buffer_cursor_(0)
-      , line_(1)
-      , line_pos_(1)
-      , nerror_(0) {}
+      : str_(str),
+        strlen_(str.length()),
+        c_(str_[0]),
+        buffer_cursor_(0),
+        line_(1),
+        line_pos_(1),
+        nerror_(0) {}
 
   TokenStream Scanner();
 
-  inline uint NumErrors() noexcept {
-    return nerror_;
-  }
+  inline uint NumErrors() noexcept { return nerror_; }
 
-  inline const Messages& GetMessages() const noexcept {
-    return msgs_;
-  }
+  inline const Messages& GetMessages() const noexcept { return msgs_; }
 
-  inline Messages& GetMessages() noexcept {
-    return msgs_;
-  }
+  inline Messages& GetMessages() noexcept { return msgs_; }
 
-private:
+ private:
   void SkipSingleLineComment();
-  Token ScanString();
+  Token ScanString(char string_end_char = '"');
   Token ScanWord(const std::string& prestr = "");
   Token ScanNumber();
   std::string ScanStringEscape();
@@ -65,37 +59,23 @@ private:
   std::string ScanUnicodeEscapeCode();
 
   inline bool IsLetter(char c) {
-    return ((c >= 'a' && c <= 'z') || ( c >= 'A' && c <= 'Z'));
+    return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
   }
 
-  inline bool IsOctalChar(char c) {
-    return (c >= '0' && c < '8');
-  }
+  inline bool IsOctalChar(char c) { return (c >= '0' && c < '8'); }
 
   inline bool IsHexChar(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
-        (c >= 'A' && c <= 'F');
+           (c >= 'A' && c <= 'F');
   }
 
-  inline bool IsDigit(char c) {
-    return c >= '0' && c <= '9';
-  }
+  inline bool IsDigit(char c) { return c >= '0' && c <= '9'; }
 
-  inline bool IsIdentifierStart(char c) {
-    return (IsLetter(c) || c == '_');
-  }
+  inline bool IsIdentifierStart(char c) { return (IsLetter(c) || c == '_'); }
 
   inline bool IsSpecialChar(char c) {
-    bool b = c != ' ' &&
-             c != '\t' &&
-             c != '\n' &&
-             c != ')' &&
-             c != ';' &&
-             c != '}' &&
-             c != '|' &&
-             c != '&' &&
-             c != '%' &&
-             c != kEndOfInput;
+    bool b = c != ' ' && c != '\t' && c != '\n' && c != ')' && c != ';' &&
+             c != '}' && c != '|' && c != '&' && c != '%' && c != kEndOfInput;
     return b;
   }
 
@@ -117,13 +97,10 @@ private:
     line_pos_++;
   }
 
-  inline void Back() {
-    --buffer_cursor_;
-  }
+  inline void Back() { --buffer_cursor_; }
 
   inline char PeekAhead() {
-    if ((buffer_cursor_ + 1) == strlen_)
-      return kEndOfInput;
+    if ((buffer_cursor_ + 1) == strlen_) return kEndOfInput;
 
     return str_[buffer_cursor_ + 1];
   }
@@ -139,6 +116,7 @@ private:
     return t;
   }
 
+  // Make a new token, but it doesn't advance the cursor
   inline Token GetToken(TokenKind k, Token::Value v, char check_blank = 0) {
     if (check_blank == 0) {
       check_blank = c_;
@@ -149,6 +127,7 @@ private:
     return t;
   }
 
+  // Make a new token and advance the cursor
   inline Token Select(TokenKind k, char check_blank = 0) {
     if (check_blank == 0) {
       check_blank = PeekAhead();
@@ -182,10 +161,9 @@ private:
   uint start_pos_;
   uint nerror_;
   Messages msgs_;
-
 };
 
-}
-}
+}  // namespace internal
+}  // namespace shpp
 
 #endif  // SHPP_LEXER_H
