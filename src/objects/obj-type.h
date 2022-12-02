@@ -15,36 +15,34 @@
 #ifndef SHPP_OBJ_TYPE_H
 #define SHPP_OBJ_TYPE_H
 
-#include <string>
-#include <memory>
-#include <unordered_map>
-#include <tuple>
-#include <list>
 #include <iostream>
+#include <list>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <unordered_map>
 
-#include "run_time_error.h"
-#include "ast/ast.h"
-#include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
-#include "simple-object.h"
+#include "ast/ast.h"
 #include "interpreter/interpreter.h"
+#include "interpreter/symbol-table.h"
+#include "run_time_error.h"
+#include "simple-object.h"
 
 namespace shpp {
 namespace internal {
 
-class BaseIter: public Object {
+class BaseIter : public Object {
  public:
-  ObjectPtr ObjIter(ObjectPtr obj) override {
-    return obj;
-  }
+  ObjectPtr ObjIter(ObjectPtr obj) override { return obj; }
 
  protected:
-   BaseIter(ObjectType type, std::shared_ptr<Object> obj_type,
-            SymbolTableStack&& sym_table)
-       : Object(type, obj_type, std::move(sym_table)) {}
+  BaseIter(ObjectType type, std::shared_ptr<Object> obj_type,
+           SymbolTableStack&& sym_table)
+      : Object(type, obj_type, std::move(sym_table)) {}
 };
 
-class RangeIterObject: public BaseIter {
+class RangeIterObject : public BaseIter {
  public:
   RangeIterObject(int start, int end, int step, ObjectPtr obj_type,
                   SymbolTableStack&& sym_table);
@@ -57,9 +55,7 @@ class RangeIterObject: public BaseIter {
 
   ObjectPtr HasNext() override;
 
-  std::string Print() override {
-    return std::string("[range_iter]");
-  }
+  std::string Print() override { return std::string("[range_iter]"); }
 
  private:
   int start_;
@@ -68,45 +64,37 @@ class RangeIterObject: public BaseIter {
   int value_;
 };
 
-class Module: public Object {
+class Module : public Object {
  public:
-  enum class Type {
-    Import,
-    Main,
-    Custon
-  };
+  enum class Type { Import, Main, Custon };
 
   virtual ~Module() {}
 
-  Type ModuleType() {
-    return type_;
-  }
+  Type ModuleType() { return type_; }
 
  protected:
   Module(Type type, ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::MODULE, obj_type, std::move(sym_table))
-      , type_(type) {}
+      : Object(ObjectType::MODULE, obj_type, std::move(sym_table)),
+        type_(type) {}
 
  private:
   Type type_;
 };
 
-class ModuleImportObject: public Module {
+class ModuleImportObject : public Module {
  public:
   ModuleImportObject(const std::string& module_path, ObjectPtr obj_type,
-      SymbolTableStack&& sym_table)
-      : Module(Module::Type::Import, obj_type, std::move(sym_table))
-      , interpreter_(false)
-      , module_path_(module_path) {}
+                     SymbolTableStack&& sym_table)
+      : Module(Module::Type::Import, obj_type, std::move(sym_table)),
+        interpreter_(false),
+        module_path_(module_path) {}
 
   virtual ~ModuleImportObject() {}
 
-  std::shared_ptr<Object> Attr(std::shared_ptr<Object>/*self*/,
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object> /*self*/,
                                const std::string& name) override;
 
-  SymbolTableStack& SymTableStack() {
-    return interpreter_.SymTableStack();
-  }
+  SymbolTableStack& SymTableStack() { return interpreter_.SymTableStack(); }
 
   std::string Print() override {
     return std::string("[moule: ") + module_path_ + "]\n";
@@ -120,8 +108,8 @@ class ModuleImportObject: public Module {
                 e.pos().col);
     msg.file(module_path_);
 
-    throw RunTimeError (RunTimeError::ErrorCode::IMPORT,
-                        boost::format("import: %1% error")%module_path_)
+    throw RunTimeError(RunTimeError::ErrorCode::IMPORT,
+                       boost::format("import: %1% error") % module_path_)
         .AppendMsg(std::move(msg));
   }
 
@@ -130,36 +118,32 @@ class ModuleImportObject: public Module {
   std::string module_path_;
 };
 
-class ModuleMainObject: public Module {
+class ModuleMainObject : public Module {
  public:
   ModuleMainObject(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : Module(Module::Type::Main, obj_type, std::move(sym_table)) {}
 
   virtual ~ModuleMainObject() {}
 
-  std::shared_ptr<Object> Attr(std::shared_ptr<Object>/*self*/,
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object> /*self*/,
                                const std::string& name) override;
 
-  SymbolTableStack& SymTableStack() {
-    return symbol_table_stack();
-  }
+  SymbolTableStack& SymTableStack() { return symbol_table_stack(); }
 
-  std::string Print() override {
-    return std::string("[moule: MAIN]\n");
-  }
+  std::string Print() override { return std::string("[moule: MAIN]\n"); }
 };
 
-class ModuleCustonObject: public Module {
+class ModuleCustonObject : public Module {
  public:
   using MemberTable = std::vector<std::pair<std::string, ObjectPtr>>;
 
   ModuleCustonObject(std::string module_name, MemberTable&& member_table,
                      ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Module(Module::Type::Custon, obj_type, std::move(sym_table))
-      , module_name_(module_name)
-      , symbol_table_(SymbolTablePtr(new SymbolTable))
-      , symbol_table_stack_(symbol_table_) {
-    for (auto& pair: member_table) {
+      : Module(Module::Type::Custon, obj_type, std::move(sym_table)),
+        module_name_(module_name),
+        symbol_table_(SymbolTablePtr(new SymbolTable)),
+        symbol_table_stack_(symbol_table_) {
+    for (auto& pair : member_table) {
       SymbolAttr sym_entry(pair.second, true);
       symbol_table_stack_.InsertEntry(pair.first, std::move(sym_entry));
     }
@@ -167,12 +151,10 @@ class ModuleCustonObject: public Module {
 
   virtual ~ModuleCustonObject() {}
 
-  std::shared_ptr<Object> Attr(std::shared_ptr<Object>/*self*/,
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object> /*self*/,
                                const std::string& name) override;
 
-  SymbolTableStack& SymTableStack() {
-    return symbol_table_stack();
-  }
+  SymbolTableStack& SymTableStack() { return symbol_table_stack(); }
 
   std::string Print() override {
     return std::string("[module: ") + module_name_ + "]";
@@ -189,25 +171,24 @@ class ModuleCustonObject: public Module {
   SymbolTableStack symbol_table_stack_;
 };
 
-class TypeObject: public Object {
+class TypeObject : public Object {
  public:
   using InterfacesList = std::vector<std::shared_ptr<Object>>;
 
   TypeObject(const std::string& name, ObjectPtr obj_type,
-             SymbolTableStack&& sym_table,
-             ObjectPtr base = ObjectPtr(nullptr),
+             SymbolTableStack&& sym_table, ObjectPtr base = ObjectPtr(nullptr),
              InterfacesList&& ifaces = InterfacesList(),
-             ObjectType type = ObjectType::TYPE,
-             bool is_final = true)
-      : Object(type, obj_type, std::move(sym_table), base, std::move(ifaces))
-      , sym_table_(new SymbolTable(SymbolTable::TableType::CLASS_TABLE))
-      , name_(name)
-      , is_final_(is_final) {
+             ObjectType type = ObjectType::TYPE, bool is_final = true)
+      : Object(type, obj_type, std::move(sym_table), base, std::move(ifaces)),
+        sym_table_(new SymbolTable(SymbolTable::TableType::CLASS_TABLE)),
+        name_(name),
+        is_final_(is_final) {
     // if some base class was defined, this class must be a type
     if (base) {
       if (base->type() != ObjectType::TYPE) {
         throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-            boost::format("base type '%1%' is not a type")%base->ObjectName());
+                           boost::format("base type '%1%' is not a type") %
+                               base->ObjectName());
       }
     }
 
@@ -246,13 +227,9 @@ class TypeObject: public Object {
 
   virtual ObjectPtr CallStaticObject(const std::string& name);
 
-  const std::string& name() const noexcept {
-    return name_;
-  }
+  const std::string& name() const noexcept { return name_; }
 
-  virtual std::string ObjectName() override {
-    return name_;
-  }
+  virtual std::string ObjectName() override { return name_; }
 
   virtual bool RegiterMethod(const std::string& name, ObjectPtr obj) {
     SymbolAttr sym_entry(obj, true);
@@ -264,9 +241,7 @@ class TypeObject: public Object {
     return sym_table_->SetValue(name, std::move(sym_entry));
   }
 
-  virtual bool Declared() const {
-    return false;
-  }
+  virtual bool Declared() const { return false; }
 
   ObjectPtr SearchAttr(const std::string& name);
 
@@ -274,17 +249,11 @@ class TypeObject: public Object {
 
   bool ExistsAttr(const std::string& name);
 
-  bool is_final() const {
-    return is_final_;
-  }
+  bool is_final() const { return is_final_; }
 
-  inline SymbolTablePtr& SymTable() {
-    return sym_table_;
-  }
+  inline SymbolTablePtr& SymTable() { return sym_table_; }
 
-  std::string Print() override {
-    return std::string("<type: ") + name_ + ">";
-  }
+  std::string Print() override { return std::string("<type: ") + name_ + ">"; }
 
  private:
   SymbolTablePtr sym_table_;
@@ -294,7 +263,7 @@ class TypeObject: public Object {
   bool is_final_;
 };
 
-class Type: public TypeObject {
+class Type : public TypeObject {
  public:
   Type(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("type", obj_type, std::move(sym_table)) {}
@@ -304,7 +273,7 @@ class Type: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
-class NullType: public TypeObject {
+class NullType : public TypeObject {
  public:
   NullType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("null_t", obj_type, std::move(sym_table)) {}
@@ -314,7 +283,7 @@ class NullType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
-class BoolType: public TypeObject {
+class BoolType : public TypeObject {
  public:
   BoolType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("bool", obj_type, std::move(sym_table)) {}
@@ -323,7 +292,7 @@ class BoolType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
-class IntType: public TypeObject {
+class IntType : public TypeObject {
  public:
   IntType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("int", obj_type, std::move(sym_table)) {}
@@ -333,7 +302,7 @@ class IntType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
-class RealType: public TypeObject {
+class RealType : public TypeObject {
  public:
   RealType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("real", obj_type, std::move(sym_table)) {}
@@ -343,7 +312,7 @@ class RealType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
-class SliceType: public TypeObject {
+class SliceType : public TypeObject {
  public:
   SliceType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("slice", obj_type, std::move(sym_table)) {}
@@ -353,7 +322,7 @@ class SliceType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
-class CmdIterType: public TypeObject {
+class CmdIterType : public TypeObject {
  public:
   CmdIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("cmd_iter", obj_type, std::move(sym_table)) {}
@@ -363,18 +332,27 @@ class CmdIterType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&&, KWArgs&&) override;
 };
 
-class RangeIterType: public TypeObject {
+class GlobIterType : public TypeObject {
+ public:
+  GlobIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : TypeObject("glob_iter", obj_type, std::move(sym_table)) {}
+
+  virtual ~GlobIterType() {}
+
+  ObjectPtr Constructor(Executor*, Args&&, KWArgs&&) override;
+};
+
+class RangeIterType : public TypeObject {
  public:
   RangeIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("range_iter", obj_type, std::move(sym_table)) {}
 
   virtual ~RangeIterType() {}
 
-  ObjectPtr Constructor(Executor*, Args&& params,
-                        KWArgs&& = KWArgs()) override;
+  ObjectPtr Constructor(Executor*, Args&& params, KWArgs&& = KWArgs()) override;
 };
 
-class ArrayIterType: public TypeObject {
+class ArrayIterType : public TypeObject {
  public:
   ArrayIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("array_iter", obj_type, std::move(sym_table)) {}
@@ -384,7 +362,7 @@ class ArrayIterType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
-class MapIterType: public TypeObject {
+class MapIterType : public TypeObject {
  public:
   MapIterType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("map_iter", obj_type, std::move(sym_table)) {}
@@ -394,8 +372,7 @@ class MapIterType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
-
-class ContainerType: public TypeObject {
+class ContainerType : public TypeObject {
  public:
   ContainerType(const std::string& name, ObjectPtr obj_type,
                 SymbolTableStack&& sym_table)
@@ -405,16 +382,16 @@ class ContainerType: public TypeObject {
 
   virtual ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) {
     if (params.size() != 1) {
-      throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
-                         boost::format("%1%() takes exactly 1 argument")
-                         %name());
+      throw RunTimeError(
+          RunTimeError::ErrorCode::FUNC_PARAMS,
+          boost::format("%1%() takes exactly 1 argument") % name());
     }
 
     return params[0]->Copy();
   }
 };
 
-class TupleType: public ContainerType {
+class TupleType : public ContainerType {
  public:
   TupleType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : ContainerType("tuple", obj_type, std::move(sym_table)) {}
@@ -424,7 +401,7 @@ class TupleType: public ContainerType {
   virtual ~TupleType() {}
 };
 
-class ModuleType: public TypeObject {
+class ModuleType : public TypeObject {
  public:
   ModuleType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("module", obj_type, std::move(sym_table)) {}
@@ -434,23 +411,21 @@ class ModuleType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
-class RootObjectType: public TypeObject {
+class RootObjectType : public TypeObject {
  public:
   RootObjectType(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : TypeObject("object", obj_type, std::move(sym_table)) {}
 
   virtual ~RootObjectType() {}
 
-  ObjectPtr BaseType() noexcept override {
-    return ObjectPtr(nullptr);
-  }
+  ObjectPtr BaseType() noexcept override { return ObjectPtr(nullptr); }
 
   ObjectPtr Constructor(Executor*, Args&& params, KWArgs&&) override;
 };
 
 bool InstanceOf(ObjectPtr obj, ObjectPtr base);
 
-}
-}
+}  // namespace internal
+}  // namespace shpp
 
 #endif  // SHPP_OBJ_TYPE_H

@@ -48,6 +48,7 @@ class Object {
     FUNC,
     SPEC_FUNC,
     CMD,
+    GLOB,
     REGEX,
     PATH,
     FILE,

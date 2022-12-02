@@ -14,9 +14,9 @@
 
 #include "cmd-object.h"
 
-#include <string>
-#include <boost/variant.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/variant.hpp>
+#include <string>
 
 #include "obj-type.h"
 #include "object-factory.h"
@@ -27,8 +27,7 @@ namespace internal {
 
 CmdIterObject::CmdIterObject(std::string delim, int outerr, ObjectPtr cmd_obj,
                              ObjectPtr obj_type, SymbolTableStack&& sym_table)
-    : BaseIter(ObjectType::CMD_ITER, obj_type, std::move(sym_table))
-    , pos_(0) {
+    : BaseIter(ObjectType::CMD_ITER, obj_type, std::move(sym_table)), pos_(0) {
   if (cmd_obj->type() != ObjectType::CMD) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("only cmdobj supported"));
@@ -76,19 +75,19 @@ ObjectPtr CmdObject::ObjIter(ObjectPtr obj) {
   return obj_factory.NewCmdIter(delim_, 0, obj);
 }
 
-ObjectPtr CmdObject::ObjString()  {
+ObjectPtr CmdObject::ObjString() {
   ObjectFactory obj_factory(symbol_table_stack());
   return obj_factory.NewString(str_stdout());
 }
 
-ObjectPtr CmdObject::ObjBool()  {
+ObjectPtr CmdObject::ObjBool() {
   ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewBool(status_ == 0?true:false);
+  return obj_factory.NewBool(status_ == 0 ? true : false);
 }
 
-ObjectPtr CmdObject::Not()  {
+ObjectPtr CmdObject::Not() {
   ObjectFactory obj_factory(symbol_table_stack());
-  return obj_factory.NewBool(status_ == 0?false:true);
+  return obj_factory.NewBool(status_ == 0 ? false : true);
 }
 
 ObjectPtr CmdObject::ObjArray() {
@@ -107,7 +106,7 @@ ObjectPtr CmdObject::ObjArray() {
   boost::algorithm::split(arr_str, str_cmd, boost::is_any_of(delim_),
                           boost::algorithm::token_compress_on);
 
-  for (auto& s: arr_str) {
+  for (auto& s : arr_str) {
     arr_obj.push_back(obj_factory.NewString(s));
   }
 
@@ -177,7 +176,7 @@ ObjectPtr CmdObject::In(ObjectPtr obj) {
   boost::algorithm::split(arr_str, str_cmd, boost::is_any_of(delim_),
                           boost::algorithm::token_compress_on);
 
-  for (auto& s: arr_str) {
+  for (auto& s : arr_str) {
     Args params_array = {obj_factory.NewString(s)};
     ObjectPtr obj_comp = type.Constructor(nullptr, std::move(params_array));
     ObjectPtr obj_bool = obj_comp->Equal(obj);
@@ -252,5 +251,5 @@ ObjectPtr CmdStatusFunc::Call(Executor*, Args&& params, KWArgs&&) {
   return obj_factory.NewInt(cmd_obj.status());
 }
 
-}
-}
+}  // namespace internal
+}  // namespace shpp

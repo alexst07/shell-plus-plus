@@ -15,22 +15,22 @@
 #ifndef SHPP_CMD_OBJECT_H
 #define SHPP_CMD_OBJECT_H
 
-#include <memory>
-#include <iostream>
-#include <vector>
 #include <boost/algorithm/string.hpp>
+#include <iostream>
+#include <memory>
+#include <vector>
 
-#include "run_time_error.h"
-#include "ast/ast.h"
-#include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
-#include "obj-type.h"
+#include "ast/ast.h"
 #include "func-object.h"
+#include "interpreter/symbol-table.h"
+#include "obj-type.h"
+#include "run_time_error.h"
 
 namespace shpp {
 namespace internal {
 
-class CmdIterObject: public BaseIter {
+class CmdIterObject : public BaseIter {
  public:
   CmdIterObject(std::string delim, int outerr, ObjectPtr cmd_obj,
                 ObjectPtr obj_type, SymbolTableStack&& sym_table);
@@ -41,9 +41,7 @@ class CmdIterObject: public BaseIter {
 
   ObjectPtr HasNext() override;
 
-  std::string Print() override {
-    return std::string("[cmd_iter]");
-  }
+  std::string Print() override { return std::string("[cmd_iter]"); }
 
  private:
   size_t pos_;
@@ -51,71 +49,57 @@ class CmdIterObject: public BaseIter {
   std::vector<std::string> str_split_;
 };
 
-class CmdObject: public Object {
+class CmdObject : public Object {
  public:
-   CmdObject(int status, std::string&& str_stdout, std::string&& str_stderr,
-             ObjectPtr obj_type, SymbolTableStack&& sym_table)
-      : Object(ObjectType::CMD, obj_type, std::move(sym_table))
-      , status_(status)
-      , str_stdout_(std::move(str_stdout))
-      , str_stderr_(std::move(str_stderr))
-      , delim_("\n") {
-        boost::trim(str_stdout_);
-        boost::trim(str_stderr_);
-      }
+  CmdObject(int status, std::string&& str_stdout, std::string&& str_stderr,
+            ObjectPtr obj_type, SymbolTableStack&& sym_table)
+      : Object(ObjectType::CMD, obj_type, std::move(sym_table)),
+        status_(status),
+        str_stdout_(std::move(str_stdout)),
+        str_stderr_(std::move(str_stderr)),
+        delim_("\n") {
+    boost::trim(str_stdout_);
+    boost::trim(str_stderr_);
+  }
 
-   virtual ~CmdObject() {}
+  virtual ~CmdObject() {}
 
-   ObjectPtr ObjIter(ObjectPtr obj) override;
+  ObjectPtr ObjIter(ObjectPtr obj) override;
 
-   ObjectPtr ObjArray() override;
+  ObjectPtr ObjArray() override;
 
-   ObjectPtr In(ObjectPtr obj) override;
+  ObjectPtr In(ObjectPtr obj) override;
 
-   const std::string& str_stdout() const noexcept {
-     return str_stdout_;
-   }
+  const std::string& str_stdout() const noexcept { return str_stdout_; }
 
-   const std::string& str_stderr() const noexcept {
-     return str_stderr_;
-   }
+  const std::string& str_stderr() const noexcept { return str_stderr_; }
 
-   ObjectPtr ObjString() override;
+  ObjectPtr ObjString() override;
 
-   ObjectPtr ObjCmd() override;
+  ObjectPtr ObjCmd() override;
 
-   ObjectPtr ObjBool() override;
+  ObjectPtr ObjBool() override;
 
-   ObjectPtr Not() override;
+  ObjectPtr Not() override;
 
-   bool Compare(ObjectPtr obj);
+  bool Compare(ObjectPtr obj);
 
-   ObjectPtr Equal(ObjectPtr obj) override;
+  ObjectPtr Equal(ObjectPtr obj) override;
 
-   ObjectPtr NotEqual(ObjectPtr obj) override;
+  ObjectPtr NotEqual(ObjectPtr obj) override;
 
-   std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
-                                const std::string& name) override;
+  std::shared_ptr<Object> Attr(std::shared_ptr<Object> self,
+                               const std::string& name) override;
 
-   std::string Print() override {
-     return str_stdout_;
-   }
+  std::string Print() override { return str_stdout_; }
 
-   long int Len() override {
-     return str_stdout_.size();
-   }
+  long int Len() override { return str_stdout_.size(); }
 
-   inline void set_delim(const std::string& delim) {
-     delim_ = delim;
-   }
+  inline void set_delim(const std::string& delim) { delim_ = delim; }
 
-   const std::string delim() {
-     return delim_;
-   }
+  const std::string delim() { return delim_; }
 
-   int status() const {
-     return status_;
-   }
+  int status() const { return status_; }
 
  private:
   int status_;
@@ -124,7 +108,7 @@ class CmdObject: public Object {
   std::string delim_;
 };
 
-class CmdType: public TypeObject {
+class CmdType : public TypeObject {
  public:
   CmdType(ObjectPtr obj_type, SymbolTableStack&& sym_table);
 
@@ -133,7 +117,7 @@ class CmdType: public TypeObject {
   ObjectPtr Constructor(Executor*, Args&&, KWArgs&&) override;
 };
 
-class CmdOutFunc: public FuncObject {
+class CmdOutFunc : public FuncObject {
  public:
   CmdOutFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
@@ -141,7 +125,7 @@ class CmdOutFunc: public FuncObject {
   ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
-class CmdErrFunc: public FuncObject {
+class CmdErrFunc : public FuncObject {
  public:
   CmdErrFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
@@ -149,7 +133,7 @@ class CmdErrFunc: public FuncObject {
   ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
-class CmdDelimFunc: public FuncObject {
+class CmdDelimFunc : public FuncObject {
  public:
   CmdDelimFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
@@ -157,7 +141,7 @@ class CmdDelimFunc: public FuncObject {
   ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
-class CmdStatusFunc: public FuncObject {
+class CmdStatusFunc : public FuncObject {
  public:
   CmdStatusFunc(ObjectPtr obj_type, SymbolTableStack&& sym_table)
       : FuncObject(obj_type, std::move(sym_table)) {}
@@ -165,7 +149,7 @@ class CmdStatusFunc: public FuncObject {
   ObjectPtr Call(Executor* /*parent*/, Args&& params, KWArgs&&);
 };
 
-}
-}
+}  // namespace internal
+}  // namespace shpp
 
 #endif  // SHPP_CMD_OBJECT_H

@@ -15,54 +15,54 @@
 #ifndef SHPP_OBJECT_FACTORY_H
 #define SHPP_OBJECT_FACTORY_H
 
-#include <string>
-#include <memory>
-#include <unordered_map>
-#include <tuple>
 #include <list>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <unordered_map>
 
-#include "interpreter/symbol-table.h"
 #include "abstract-obj.h"
-#include "obj-type.h"
-#include "str-object.h"
 #include "array-object.h"
 #include "cmd-object.h"
-#include "map-object.h"
-#include "tuple-object.h"
-#include "regex.h"
-#include "path.h"
-#include "file-object.h"
 #include "decl-class-object.h"
 #include "exceptions-object.h"
+#include "file-object.h"
+#include "glob-object.h"
+#include "interpreter/symbol-table.h"
+#include "map-object.h"
+#include "obj-type.h"
+#include "path.h"
+#include "regex.h"
+#include "str-object.h"
+#include "tuple-object.h"
 
 namespace shpp {
 namespace internal {
 
 // compare string in compile time
-constexpr int c_strcmp( char const* lhs, char const* rhs) {
+constexpr int c_strcmp(char const* lhs, char const* rhs) {
   return (('\0' == lhs[0]) && ('\0' == rhs[0])) ? 0
-      :  (lhs[0] != rhs[0]) ? (lhs[0] - rhs[0])
-      : c_strcmp( lhs+1, rhs+1 );
+         : (lhs[0] != rhs[0])                   ? (lhs[0] - rhs[0])
+                                                : c_strcmp(lhs + 1, rhs + 1);
 }
 
-#define TYPE_OBJECT_EXCPET_FACTORY(NAME, FNAME, OBJ_CLASS, TYPE_CLASS, BASE)   \
-  ObjectPtr New ## FNAME(const std::string& msg) {                             \
-    auto obj_type = symbol_table_.LookupSys(#NAME).SharedAccess();             \
-    return ObjectPtr(new OBJ_CLASS(msg, obj_type, SymTableStack()));\
-  }                                                                            \
-                                                                               \
-  inline ObjectPtr New ## FNAME ## Type() {                                    \
-    auto obj_type = symbol_table_.LookupSys("type").SharedAccess();            \
-    auto base = 0 == c_strcmp(#BASE, "object")?                                \
-      ObjectPtr(nullptr):symbol_table_.LookupSys(#BASE).SharedAccess();        \
-    return std::make_shared<TYPE_CLASS>(obj_type, SymTableStack(),  \
-        base);                                                                 \
+#define TYPE_OBJECT_EXCPET_FACTORY(NAME, FNAME, OBJ_CLASS, TYPE_CLASS, BASE) \
+  ObjectPtr New##FNAME(const std::string& msg) {                             \
+    auto obj_type = symbol_table_.LookupSys(#NAME).SharedAccess();           \
+    return ObjectPtr(new OBJ_CLASS(msg, obj_type, SymTableStack()));         \
+  }                                                                          \
+                                                                             \
+  inline ObjectPtr New##FNAME##Type() {                                      \
+    auto obj_type = symbol_table_.LookupSys("type").SharedAccess();          \
+    auto base = 0 == c_strcmp(#BASE, "object")                               \
+                    ? ObjectPtr(nullptr)                                     \
+                    : symbol_table_.LookupSys(#BASE).SharedAccess();         \
+    return std::make_shared<TYPE_CLASS>(obj_type, SymTableStack(), base);    \
   }
 
 class ObjectFactory {
  public:
-  ObjectFactory(SymbolTableStack& symbol_table)
-      :symbol_table_(symbol_table) {}
+  ObjectFactory(SymbolTableStack& symbol_table) : symbol_table_(symbol_table) {}
 
   SymbolTableStack SymTableStack() {
     // create a symbol table on the start
@@ -74,64 +74,78 @@ class ObjectFactory {
   }
 
   TYPE_OBJECT_EXCPET_FACTORY(Exception, Exception, ExceptionObject,
-      ExceptionType, object)
+                             ExceptionType, object)
 
   TYPE_OBJECT_EXCPET_FACTORY(NullAccessException, NullAccessException,
-      NullAccessExceptionObject, NullAccessExceptionType, Exception)
+                             NullAccessExceptionObject, NullAccessExceptionType,
+                             Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(LookupException, LookupException,
-      LookupExceptionObject, LookupExceptionType, Exception)
+                             LookupExceptionObject, LookupExceptionType,
+                             Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(InvalidCmdException, InvalidCmdException,
-      InvalidCmdExceptionObject, InvalidCmdExceptionType, Exception)
+                             InvalidCmdExceptionObject, InvalidCmdExceptionType,
+                             Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(BadAllocException, BadAllocException,
-      BadAllocExceptionObject, BadAllocExceptionType, Exception)
+                             BadAllocExceptionObject, BadAllocExceptionType,
+                             Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(IndexException, IndexException,
-      IndexExceptionObject, IndexExceptionType, Exception)
+                             IndexExceptionObject, IndexExceptionType,
+                             Exception)
 
-  TYPE_OBJECT_EXCPET_FACTORY(KeyException, KeyException,
-      KeyExceptionObject, KeyExceptionType, Exception)
+  TYPE_OBJECT_EXCPET_FACTORY(KeyException, KeyException, KeyExceptionObject,
+                             KeyExceptionType, Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(InvalidArgsException, InvalidArgsException,
-      InvalidArgsExceptionObject, InvalidArgsExceptionType, Exception)
+                             InvalidArgsExceptionObject,
+                             InvalidArgsExceptionType, Exception)
 
-  TYPE_OBJECT_EXCPET_FACTORY(TypeException, TypeException,
-      TypeExceptionObject, TypeExceptionType, Exception)
+  TYPE_OBJECT_EXCPET_FACTORY(TypeException, TypeException, TypeExceptionObject,
+                             TypeExceptionType, Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(FuncParamsException, FuncParamsException,
-      FuncParamsExceptionObject, FuncParamsExceptionType, Exception)
+                             FuncParamsExceptionObject, FuncParamsExceptionType,
+                             Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(ZeroDivException, ZeroDivException,
-      ZeroDivExceptionObject, ZeroDivExceptionType, Exception)
+                             ZeroDivExceptionObject, ZeroDivExceptionType,
+                             Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(FdNotFoundException, FdNotFoundException,
-      FdNotFoundExceptionObject, FdNotFoundExceptionType, Exception)
+                             FdNotFoundExceptionObject, FdNotFoundExceptionType,
+                             Exception)
 
-  TYPE_OBJECT_EXCPET_FACTORY(IOException, IOException,
-      IOExceptionObject, IOExceptionType, Exception)
+  TYPE_OBJECT_EXCPET_FACTORY(IOException, IOException, IOExceptionObject,
+                             IOExceptionType, Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(ImportException, ImportException,
-      ImportExceptionObject, ImportExceptionType, Exception)
+                             ImportExceptionObject, ImportExceptionType,
+                             Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(AssertException, AssertException,
-      AssertExceptionObject, AssertExceptionType, Exception)
+                             AssertExceptionObject, AssertExceptionType,
+                             Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(ParserException, ParserException,
-      ParserExceptionObject,ParserExceptionType, Exception)
+                             ParserExceptionObject, ParserExceptionType,
+                             Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(RegexException, RegexException,
-      RegexExceptionObject, RegexExceptionType, Exception)
+                             RegexExceptionObject, RegexExceptionType,
+                             Exception)
 
-  TYPE_OBJECT_EXCPET_FACTORY(GlobException, GlobException,
-      GlobExceptionObject, GlobExceptionType, Exception)
+  TYPE_OBJECT_EXCPET_FACTORY(GlobException, GlobException, GlobExceptionObject,
+                             GlobExceptionType, Exception)
 
-  TYPE_OBJECT_EXCPET_FACTORY(EvalException, EvalException,
-      EvalExceptionObject, EvalExceptionType, Exception)
+  TYPE_OBJECT_EXCPET_FACTORY(EvalException, EvalException, EvalExceptionObject,
+                             EvalExceptionType, Exception)
 
   TYPE_OBJECT_EXCPET_FACTORY(ErrorException, ErrorException,
-      ErrorExceptionObject, ErrorExceptionType, Exception)
+                             ErrorExceptionObject, ErrorExceptionType,
+                             Exception)
 
   inline ObjectPtr NewRootObject() {
     auto obj_type = symbol_table_.LookupSys("object").SharedAccess();
@@ -160,18 +174,17 @@ class ObjectFactory {
 
   inline ObjectPtr NewString(const std::string& str) {
     auto obj_type = symbol_table_.LookupSys("string").SharedAccess();
-    return ObjectPtr(new StringObject(str, obj_type,
-         SymTableStack()));
+    return ObjectPtr(new StringObject(str, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewString(std::string&& str) {
     auto obj_type = symbol_table_.LookupSys("string").SharedAccess();
-    return ObjectPtr(new StringObject(std::move(str), obj_type,
-         SymTableStack()));
+    return ObjectPtr(
+        new StringObject(std::move(str), obj_type, SymTableStack()));
   }
 
- inline  ObjectPtr NewCmdObj(int status, std::string&& str_stdout,
-      std::string&& str_stderr) {
+  inline ObjectPtr NewCmdObj(int status, std::string&& str_stdout,
+                             std::string&& str_stderr) {
     auto obj_type = symbol_table_.LookupSys("cmdobj").SharedAccess();
     return ObjectPtr(new CmdObject(status, std::move(str_stdout),
                                    std::move(str_stderr), obj_type,
@@ -180,92 +193,99 @@ class ObjectFactory {
 
   inline ObjectPtr NewSlice(ObjectPtr start, ObjectPtr end, ObjectPtr step) {
     auto obj_type = symbol_table_.LookupSys("slice").SharedAccess();
-    return ObjectPtr(new SliceObject(start, end, step, obj_type,
-        SymTableStack()));
+    return ObjectPtr(
+        new SliceObject(start, end, step, obj_type, SymTableStack()));
   }
 
-  inline ObjectPtr NewCmdIter(std::string delim, int outerr, ObjectPtr cmd_obj) {
+  inline ObjectPtr NewCmdIter(std::string delim, int outerr,
+                              ObjectPtr cmd_obj) {
     auto obj_type = symbol_table_.LookupSys("cmd_iter").SharedAccess();
-    return ObjectPtr(new CmdIterObject(delim, outerr, cmd_obj, obj_type,
-        SymTableStack()));
+    return ObjectPtr(
+        new CmdIterObject(delim, outerr, cmd_obj, obj_type, SymTableStack()));
+  }
+
+  inline ObjectPtr NewGlobIter(ObjectPtr glob_obj) {
+    auto obj_type = symbol_table_.LookupSys("glob_iter").SharedAccess();
+    return ObjectPtr(new GlobIterObject(glob_obj, obj_type, SymTableStack()));
+  }
+
+  inline ObjectPtr NewGlob(const std::string& str_glob_expr, bool recursive) {
+    auto obj_type = symbol_table_.LookupSys("glob").SharedAccess();
+    return ObjectPtr(
+        new GlobObject(str_glob_expr, recursive, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewFileIter(ObjectPtr file_obj) {
     auto obj_type = symbol_table_.LookupSys("file_iter").SharedAccess();
-    return ObjectPtr(new FileIterObject(file_obj, obj_type,
-        SymTableStack()));
+    return ObjectPtr(new FileIterObject(file_obj, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewTuple(std::vector<std::unique_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.LookupSys("tuple").SharedAccess();
-    return ObjectPtr(new TupleObject(std::move(value), obj_type,
-        SymTableStack()));
+    return ObjectPtr(
+        new TupleObject(std::move(value), obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewTuple(std::vector<std::shared_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.LookupSys("tuple").SharedAccess();
-    return ObjectPtr(new TupleObject(std::move(value), obj_type,
-        SymTableStack()));
+    return ObjectPtr(
+        new TupleObject(std::move(value), obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewTuple(const std::vector<std::shared_ptr<Object>>& value) {
     std::vector<std::shared_ptr<Object>> v(value.size());
-    std::copy (value.begin(), value.end(), v.begin());
+    std::copy(value.begin(), value.end(), v.begin());
 
     auto obj_type = symbol_table_.LookupSys("tuple").SharedAccess();
-    return ObjectPtr(new TupleObject(std::move(v), obj_type,
-        SymTableStack()));
+    return ObjectPtr(new TupleObject(std::move(v), obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewArray(std::vector<std::unique_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.LookupSys("array").SharedAccess();
-    return ObjectPtr(new ArrayObject(std::move(value), obj_type,
-        SymTableStack()));
+    return ObjectPtr(
+        new ArrayObject(std::move(value), obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewArray(std::vector<std::shared_ptr<Object>>&& value) {
     auto obj_type = symbol_table_.LookupSys("array").SharedAccess();
-    return ObjectPtr(new ArrayObject(std::move(value), obj_type,
-        SymTableStack()));
+    return ObjectPtr(
+        new ArrayObject(std::move(value), obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewArray(const std::vector<std::shared_ptr<Object>>& value) {
     std::vector<std::shared_ptr<Object>> v(value.size());
-    std::copy (value.begin(), value.end(), v.begin());
+    std::copy(value.begin(), value.end(), v.begin());
 
     auto obj_type = symbol_table_.LookupSys("array").SharedAccess();
-    return ObjectPtr(new ArrayObject(std::move(v), obj_type,
-        SymTableStack()));
+    return ObjectPtr(new ArrayObject(std::move(v), obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewRangeIter(int start, int end, int step) {
     auto obj_type = symbol_table_.LookupSys("range_iter").SharedAccess();
-    return ObjectPtr(new RangeIterObject(start, end, step, obj_type,
-        SymTableStack()));
+    return ObjectPtr(
+        new RangeIterObject(start, end, step, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewArrayIter(ObjectPtr array) {
     auto obj_type = symbol_table_.LookupSys("array_iter").SharedAccess();
-    return ObjectPtr(new ArrayIterObject(array, obj_type,
-        SymTableStack()));
+    return ObjectPtr(new ArrayIterObject(array, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewTupleIter(ObjectPtr array) {
     auto obj_type = symbol_table_.LookupSys("tuple_iter").SharedAccess();
-    return ObjectPtr(new TupleIterObject(array, obj_type,
-        SymTableStack()));
+    return ObjectPtr(new TupleIterObject(array, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewMapIter(ObjectPtr map) {
     auto obj_type = symbol_table_.LookupSys("map_iter").SharedAccess();
-    return ObjectPtr(new MapIterObject(map, obj_type,
-          SymTableStack()));
+    return ObjectPtr(new MapIterObject(map, obj_type, SymTableStack()));
   }
 
-  inline ObjectPtr NewMap(std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value) {
+  inline ObjectPtr NewMap(
+      std::vector<std::pair<ObjectPtr, ObjectPtr>>&& value) {
     auto obj_type = symbol_table_.LookupSys("map").SharedAccess();
-    return ObjectPtr(new MapObject(std::move(value), obj_type,
-                                   SymTableStack()));
+    return ObjectPtr(
+        new MapObject(std::move(value), obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewMap() {
@@ -275,39 +295,36 @@ class ObjectFactory {
 
   inline ObjectPtr NewRegex(const std::string& str) {
     auto obj_type = symbol_table_.LookupSys("regex").SharedAccess();
-    return ObjectPtr(new RegexObject(str, obj_type,
-        SymTableStack()));
+    return ObjectPtr(new RegexObject(str, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewPath(const std::string& str) {
     auto obj_type = symbol_table_.LookupSys("path").SharedAccess();
-    return ObjectPtr(new PathObject(str, obj_type,
-                                    SymTableStack()));
+    return ObjectPtr(new PathObject(str, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewPath(const boost::filesystem::path& path) {
     auto obj_type = symbol_table_.LookupSys("path").SharedAccess();
-    return ObjectPtr(new PathObject(path, obj_type,
-                                    SymTableStack()));
+    return ObjectPtr(new PathObject(path, obj_type, SymTableStack()));
   }
 
-  inline ObjectPtr NewFile(const std::string& path, std::ios_base::openmode mode) {
+  inline ObjectPtr NewFile(const std::string& path,
+                           std::ios_base::openmode mode) {
     auto obj_type = symbol_table_.LookupSys("file").SharedAccess();
-    return ObjectPtr(new FileObject(path, mode, obj_type,
-                                    SymTableStack()));
+    return ObjectPtr(new FileObject(path, mode, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewModule(const std::string& module_path) {
     auto obj_type = symbol_table_.LookupSys("module").SharedAccess();
-    return ObjectPtr(new ModuleImportObject(module_path, obj_type,
-                                   SymTableStack()));
+    return ObjectPtr(
+        new ModuleImportObject(module_path, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewModule(const std::string& module,
-                      ModuleCustonObject::MemberTable&& table) {
+                             ModuleCustonObject::MemberTable&& table) {
     auto obj_type = symbol_table_.LookupSys("module").SharedAccess();
     return ObjectPtr(new ModuleCustonObject(module, std::move(table), obj_type,
-           SymTableStack()));
+                                            SymTableStack()));
   }
 
   inline ObjectPtr NewDeclObject(const std::string& name_type) {
@@ -321,24 +338,22 @@ class ObjectFactory {
     return obj;
   }
 
-   inline ObjectPtr NewFuncDeclObject(const std::string& id,
-      std::shared_ptr<Block> start_node,
-      const SymbolTableStack& symbol_table,
-      std::vector<std::string>&& params,
+  inline ObjectPtr NewFuncDeclObject(
+      const std::string& id, std::shared_ptr<Block> start_node,
+      const SymbolTableStack& symbol_table, std::vector<std::string>&& params,
       std::unordered_map<std::string, ObjectPtr>&& default_values,
       bool variadic, bool lambda, bool fstatic) {
     auto obj_type = symbol_table_.LookupSys("function").SharedAccess();
-    return ObjectPtr(new FuncDeclObject(id, start_node, symbol_table,
-                                        std::move(params),
-                                        std::move(default_values),
-                                        variadic, lambda, fstatic, obj_type,
-           SymTableStack()));
+    return ObjectPtr(
+        new FuncDeclObject(id, start_node, symbol_table, std::move(params),
+                           std::move(default_values), variadic, lambda, fstatic,
+                           obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewWrapperFunc(ObjectPtr func, ObjectPtr self) {
     auto obj_type = symbol_table_.LookupSys("function").SharedAccess();
-    return ObjectPtr(new FuncWrapperObject(obj_type, func, self,
-          SymTableStack()));
+    return ObjectPtr(
+        new FuncWrapperObject(obj_type, func, self, SymTableStack()));
   }
 
   inline ObjectPtr NewRootObjectType() {
@@ -381,6 +396,16 @@ class ObjectFactory {
     return std::make_shared<CmdIterType>(obj_type, SymTableStack());
   }
 
+  inline ObjectPtr NewGlobType() {
+    auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
+    return std::make_shared<GlobType>(obj_type, SymTableStack());
+  }
+
+  inline ObjectPtr NewGlobIterType() {
+    auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
+    return std::make_shared<GlobIterType>(obj_type, SymTableStack());
+  }
+
   inline ObjectPtr NewFileIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
     return std::make_shared<FileIterType>(obj_type, SymTableStack());
@@ -393,26 +418,22 @@ class ObjectFactory {
 
   inline ObjectPtr NewRangeIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<RangeIterType>(obj_type,
-          SymTableStack());
+    return std::make_shared<RangeIterType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewArrayIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<ArrayIterType>(obj_type,
-          SymTableStack());
+    return std::make_shared<ArrayIterType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewTupleIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<TupleIterType>(obj_type,
-          SymTableStack());
+    return std::make_shared<TupleIterType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewMapIterType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
-    return std::make_shared<MapIterType>(obj_type,
-        SymTableStack());
+    return std::make_shared<MapIterType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewTupleType() {
@@ -456,23 +477,24 @@ class ObjectFactory {
   }
 
   inline ObjectPtr NewDeclType(const std::string& name_type,
-      ObjectPtr base = ObjectPtr(nullptr),
-      std::vector<std::shared_ptr<Object>>&& ifaces =
-          std::vector<std::shared_ptr<Object>>(),
-      bool abstract = false, bool is_false = false) {
+                               ObjectPtr base = ObjectPtr(nullptr),
+                               std::vector<std::shared_ptr<Object>>&& ifaces =
+                                   std::vector<std::shared_ptr<Object>>(),
+                               bool abstract = false, bool is_false = false) {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
     SymbolTableStack table_stack(symbol_table_);
     return ObjectPtr(new DeclClassType(name_type, obj_type,
-        std::move(table_stack), base, std::move(ifaces), abstract, is_false));
+                                       std::move(table_stack), base,
+                                       std::move(ifaces), abstract, is_false));
   }
 
   inline ObjectPtr NewDeclIFace(const std::string& name_type,
-      std::vector<std::shared_ptr<Object>>&& ifaces =
-          std::vector<std::shared_ptr<Object>>()) {
+                                std::vector<std::shared_ptr<Object>>&& ifaces =
+                                    std::vector<std::shared_ptr<Object>>()) {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
     SymbolTableStack table_stack(symbol_table_);
-    return ObjectPtr(new DeclInterface(name_type, obj_type,
-        std::move(table_stack), std::move(ifaces)));
+    return ObjectPtr(new DeclInterface(
+        name_type, obj_type, std::move(table_stack), std::move(ifaces)));
   }
 
   inline ObjectPtr NewType() {
@@ -483,9 +505,9 @@ class ObjectFactory {
   SymbolTableStack& symbol_table_;
 };
 
-template<class Fn>
+template <class Fn>
 inline void RegisterMethod(const std::string& fname,
-    SymbolTableStack& symbol_table, TypeObject& type) {
+                           SymbolTableStack& symbol_table, TypeObject& type) {
   SymbolTableStack sym_stack;
   sym_stack.Push(symbol_table.MainTable(), true);
   auto func_type = symbol_table.LookupSys("function").SharedAccess();
@@ -493,13 +515,14 @@ inline void RegisterMethod(const std::string& fname,
   type.RegiterMethod(fname, obj_func);
 }
 
-template<class Fn>
+template <class Fn>
 inline void RegisterStaticMethod(const std::string& fname,
-    SymbolTableStack& symbol_table, TypeObject& type) {
+                                 SymbolTableStack& symbol_table,
+                                 TypeObject& type) {
   RegisterMethod<Fn>(fname, symbol_table, type);
 }
 
-template<class Fn>
+template <class Fn>
 inline ObjectPtr ObjectMethod(SymbolTableStack& symbol_table) {
   SymbolTableStack sym_stack(symbol_table.MainTable());
   auto func_type = symbol_table.LookupSys("function").SharedAccess();
@@ -541,7 +564,7 @@ inline ObjectPtr PassVar(ObjectPtr obj, SymbolTableStack& symbol_table_stack) {
   }
 }
 
-}
-}
+}  // namespace internal
+}  // namespace shpp
 
 #endif  // SHPP_OBJECT_FACTORY_H

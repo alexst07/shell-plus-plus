@@ -834,6 +834,12 @@ ObjectPtr SpecialStringExecutor::Exec(SpecialString* sstr_node) {
   } else if (id_name == "r") {
     // create regular expression object
     return obj_factory.NewRegex(str_arg);
+  } else if (id_name == "g") {
+    // create glob simple object
+    return obj_factory.NewGlob(str_arg, false);
+  } else if (id_name == "G") {
+    // create glob full object
+    return obj_factory.NewGlob(str_arg, true);
   } else {
     throw RunTimeError(
         RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,

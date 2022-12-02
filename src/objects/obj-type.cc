@@ -14,13 +14,13 @@
 
 #include "obj-type.h"
 
-#include <string>
 #include <boost/variant.hpp>
+#include <string>
 
-#include "str-object.h"
 #include "array-object.h"
-#include "object-factory.h"
 #include "interpreter/stmt-executor.h"
+#include "object-factory.h"
+#include "str-object.h"
 #include "utils/check.h"
 
 namespace shpp {
@@ -29,11 +29,11 @@ namespace internal {
 RangeIterObject::RangeIterObject(int start, int end, int step,
                                  ObjectPtr obj_type,
                                  SymbolTableStack&& sym_table)
-    : BaseIter(ObjectType::ARRAY_ITER, obj_type, std::move(sym_table))
-    , start_(start)
-    , step_(step)
-    , end_(end)
-    , value_(start_) {}
+    : BaseIter(ObjectType::ARRAY_ITER, obj_type, std::move(sym_table)),
+      start_(start),
+      step_(step),
+      end_(end),
+      value_(start_) {}
 
 ObjectPtr RangeIterObject::Next() {
   ObjectFactory obj_factory(symbol_table_stack());
@@ -71,7 +71,7 @@ ObjectPtr RangeIterObject::Equal(ObjectPtr obj) {
   RangeIterObject& range_it = static_cast<RangeIterObject&>(*obj);
 
   bool v = start_ == range_it.start_ && step_ == range_it.step_ &&
-      end_ == range_it.end_ && value_ == range_it.value_;
+           end_ == range_it.end_ && value_ == range_it.value_;
 
   return obj_factory.NewBool(v);
 }
@@ -115,13 +115,14 @@ ObjectPtr TypeObject::SearchAttr(const std::string& name) {
   if (!base) {
     // if there are no base super class, so the attribute was not found
     throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
-                       boost::format("symbol %1% not found")% name);
+                       boost::format("symbol %1% not found") % name);
   }
 
   if (base->type() != Object::ObjectType::TYPE) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("'%1%' is not a valid type for super"
-                       " class")%base->ObjectName());
+                                     " class") %
+                           base->ObjectName());
   }
 
   auto obj_ref = static_cast<TypeObject&>(*base).SearchAttr(name);
@@ -139,13 +140,14 @@ ObjectPtr& TypeObject::SearchAttrRef(const std::string& name) {
   if (!base) {
     // if there are no base super class, so the attribute was not found
     throw RunTimeError(RunTimeError::ErrorCode::SYMBOL_NOT_FOUND,
-                       boost::format("symbol %1% not found")% name);
+                       boost::format("symbol %1% not found") % name);
   }
 
   if (base->type() != Object::ObjectType::TYPE) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("'%1%' is not a valid type for super"
-                       " class")%base->ObjectName());
+                                     " class") %
+                           base->ObjectName());
   }
 
   return static_cast<TypeObject&>(*base).SearchAttrRef(name);
@@ -165,7 +167,8 @@ bool TypeObject::ExistsAttr(const std::string& name) {
   if (base->type() != Object::ObjectType::TYPE) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("'%1%' is not a valid type for super"
-                       " class")%base->ObjectName());
+                                     " class") %
+                           base->ObjectName());
   }
 
   return static_cast<TypeObject&>(*base).ExistsAttr(name);
@@ -190,20 +193,20 @@ ObjectPtr Type::Constructor(Executor*, Args&& params, KWArgs&&) {
   }
 }
 
-std::shared_ptr<Object> ModuleImportObject::Attr(std::shared_ptr<Object>/*self*/,
-    const std::string& name) {
+std::shared_ptr<Object> ModuleImportObject::Attr(
+    std::shared_ptr<Object> /*self*/, const std::string& name) {
   auto obj = SymTableStack().Lookup(name, false).Ref();
   return PassVar(obj, symbol_table_stack());
 }
 
-std::shared_ptr<Object> ModuleMainObject::Attr(std::shared_ptr<Object>/*self*/,
-    const std::string& name) {
+std::shared_ptr<Object> ModuleMainObject::Attr(std::shared_ptr<Object> /*self*/,
+                                               const std::string& name) {
   auto obj = SymTableStack().Lookup(name, false).Ref();
   return PassVar(obj, symbol_table_stack());
 }
 
-std::shared_ptr<Object> ModuleCustonObject::Attr(std::shared_ptr<Object>/*self*/,
-                                           const std::string& name) {
+std::shared_ptr<Object> ModuleCustonObject::Attr(
+    std::shared_ptr<Object> /*self*/, const std::string& name) {
   // search on symbol table of the module
   auto obj = symbol_table_stack_.Lookup(name, false).Ref();
 
@@ -238,8 +241,8 @@ ObjectPtr IntType::Constructor(Executor*, Args&& params, KWArgs&&) {
 
   if (params[0]->type() == ObjectType::INT) {
     ObjectFactory obj_factory(symbol_table_stack());
-    ObjectPtr obj_int(obj_factory.NewInt(static_cast<IntObject&>(
-        *params[0]).value()));
+    ObjectPtr obj_int(
+        obj_factory.NewInt(static_cast<IntObject&>(*params[0]).value()));
 
     return obj_int;
   }
@@ -263,8 +266,8 @@ ObjectPtr RealType::Constructor(Executor*, Args&& params, KWArgs&&) {
   if (params[0]->type() == ObjectType::REAL) {
     ObjectFactory obj_factory(symbol_table_stack());
 
-    ObjectPtr obj_real(obj_factory.NewReal(static_cast<RealObject&>(
-        *params[0]).value()));
+    ObjectPtr obj_real(
+        obj_factory.NewReal(static_cast<RealObject&>(*params[0]).value()));
 
     return obj_real;
   }
@@ -336,6 +339,11 @@ ObjectPtr CmdIterType::Constructor(Executor*, Args&&, KWArgs&&) {
                      boost::format("cmd_iter is not constructable"));
 }
 
+ObjectPtr GlobIterType::Constructor(Executor*, Args&&, KWArgs&&) {
+  throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
+                     boost::format("cmd_iter is not constructable"));
+}
+
 ObjectPtr ModuleType::Constructor(Executor*, Args&&, KWArgs&&) {
   throw RunTimeError(RunTimeError::ErrorCode::FUNC_PARAMS,
                      boost::format("module is not constructable"));
@@ -354,7 +362,7 @@ ObjectPtr RootObjectType::Constructor(Executor*, Args&&, KWArgs&&) {
 static bool InstanceOfIface(ObjectPtr obj, ObjectPtr base) {
   auto ifaces = obj->Interfaces();
 
-  for (auto& iface: ifaces) {
+  for (auto& iface : ifaces) {
     if (iface.get() == base.get()) {
       return true;
     } else {
@@ -400,5 +408,5 @@ bool InstanceOf(ObjectPtr obj, ObjectPtr base) {
   return false;
 }
 
-}
-}
+}  // namespace internal
+}  // namespace shpp
