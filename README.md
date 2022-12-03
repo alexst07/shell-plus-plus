@@ -32,7 +32,7 @@ Shell++ has a powerful glob, that allows you to perform laborious tasks in a few
 
 ```shell
 for p, [n] in G"**/*.txt" {
-  mv ${p} ${p.parent_path()/(n + ".csv")}
+  mv ${p} ${p.parent_path()/"{n}.csv"}
 }
 ```
 
