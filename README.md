@@ -30,7 +30,7 @@ Follows some examples just to get an idea of how the language works.
 ## A powerful glob
 Shell++ has a powerful glob, that allows you to perform laborious tasks in a few lines. For example, suppose you want to modify the extension of all `txt` files to `csv` recursively.
 
-```shell
+```python
 for p, [n] in G"**/*.txt" {
   mv ${p} ${p.parent_path()/"{n}.csv"}
 }
