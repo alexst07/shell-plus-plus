@@ -69,6 +69,7 @@ std::string Lexer::ScanUnicodeEscapeCode() {
 }
 
 std::string Lexer::ScanStringEscape() {
+  char c_first = c_;
   Advance();
 
   char c = c_;
@@ -111,6 +112,12 @@ std::string Lexer::ScanStringEscape() {
     case 't':
       c = '\t';
       break;
+
+    default: {
+      std::string r = std::string(1, c_first);
+      r += c;
+      return r;
+    }
   }
 
   // construct a string with 1 char c
