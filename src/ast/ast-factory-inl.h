@@ -45,6 +45,13 @@ class AstNodeFactory {
         std::move(str_literal), std::move(identifier), fn_pos_()));
   }
 
+  inline std::unique_ptr<LiteralStringsGroup> NewLiteralStringsGroup(
+      std::vector<std::unique_ptr<Expression>>&& str_groups,
+      const std::string& identifier) {
+    return std::unique_ptr<LiteralStringsGroup>(
+        new LiteralStringsGroup(std::move(str_groups), identifier, fn_pos_()));
+  }
+
   inline std::unique_ptr<BinaryOperation> NewBinaryOperation(
       TokenKind token_kind, std::unique_ptr<Expression> left,
       std::unique_ptr<Expression> right) {

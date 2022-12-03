@@ -130,8 +130,8 @@ ObjectPtr ExpressionExecutor::Exec(AstNode* node, bool pass_ref) {
       return ExecGlob(static_cast<Glob*>(node));
       break;
 
-    case AstNode::NodeType::kSpecialString:
-      return ExecSpecialString(static_cast<SpecialString*>(node));
+    case AstNode::NodeType::kLiteralStringsGroup:
+      return ExecLiteralStringsGroup(static_cast<LiteralStringsGroup*>(node));
       break;
 
     case AstNode::NodeType::kFunctionExpression:
@@ -298,6 +298,12 @@ ObjectPtr ExpressionExecutor::ExecGlob(Glob* glob) {
 ObjectPtr ExpressionExecutor::ExecSpecialString(SpecialString* sstr) {
   SpecialStringExecutor sstr_exec(this, symbol_table_stack());
   return sstr_exec.Exec(sstr);
+}
+
+ObjectPtr ExpressionExecutor::ExecLiteralStringsGroup(
+    LiteralStringsGroup* str_group) {
+  LiteralStringsGroupExecutor str_group_exec(this, symbol_table_stack());
+  return str_group_exec.Exec(str_group);
 }
 
 ObjectPtr ExpressionExecutor::ExecArrayAccess(AstNode* node) {
@@ -845,6 +851,74 @@ ObjectPtr SpecialStringExecutor::Exec(SpecialString* sstr_node) {
         RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
         boost::format("String modifier don't defined for this id"),
         sstr_node->pos());
+  }
+}
+
+ObjectPtr LiteralStringsGroupExecutor::Exec(
+    LiteralStringsGroup* str_groups_node) {
+  ObjectFactory obj_factory(symbol_table_stack());
+
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+
+  auto& vec = str_groups_node->GetStringsGroup();
+  std::vector<ObjectPtr> parts_str_obj = {};
+  for (const auto& str_part : vec) {
+    if (str_part->type() == AstNode::NodeType::kLiteral) {
+      ObjectPtr str_obj = expr_exec.ExecLiteral(str_part.get());
+      parts_str_obj.push_back(str_obj);
+    } else {
+      ObjectPtr obj = expr_exec.Exec(str_part.get());
+      if (obj->type() == Object::ObjectType::STRING) {
+        parts_str_obj.push_back(obj);
+      } else {
+        parts_str_obj.push_back(obj->ObjString());
+      }
+    }
+  }
+
+  std::string str_ret = MountString(parts_str_obj);
+
+  if (str_groups_node->hasIdentifier()) {
+    const std::string& id_name = str_groups_node->GetIdentifier();
+    return ExecStringObjectfy(id_name, str_ret, str_groups_node);
+  } else {
+    ObjectPtr obj(obj_factory.NewString(std::move(str_ret)));
+    return obj;
+  }
+}
+
+std::string LiteralStringsGroupExecutor::MountString(
+    std::vector<ObjectPtr> vec) {
+  std::string str = "";
+  for (ObjectPtr obj : vec) {
+    StringObject& str_obj = static_cast<StringObject&>(*obj);
+    str += str_obj.value();
+  }
+
+  return str;
+}
+
+ObjectPtr LiteralStringsGroupExecutor::ExecStringObjectfy(
+    const std::string& id_name, const std::string& str_arg,
+    LiteralStringsGroup* str_groups_node) {
+  ObjectFactory obj_factory(symbol_table_stack());
+  if (id_name == "p") {
+    // create path object
+    return obj_factory.NewPath(str_arg);
+  } else if (id_name == "r") {
+    // create regular expression object
+    return obj_factory.NewRegex(str_arg);
+  } else if (id_name == "g") {
+    // create glob simple object
+    return obj_factory.NewGlob(str_arg, false);
+  } else if (id_name == "G") {
+    // create glob full object
+    return obj_factory.NewGlob(str_arg, true);
+  } else {
+    throw RunTimeError(
+        RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("String modifier don't defined for this id"),
+        str_groups_node->pos());
   }
 }
 

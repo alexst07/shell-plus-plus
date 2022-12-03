@@ -16,6 +16,8 @@
 
 #include <sstream>
 
+#include "parser_literal_string.h"
+
 namespace shpp {
 namespace internal {
 
@@ -1285,19 +1287,23 @@ ParserResult<Expression> Parser::ParserEllipsisExp() {
       factory_.NewEllipsisExpression(expr.MoveAstNode()));
 }
 
+ParserResult<Expression> Parser::ParserExpr() {
+  if (token_.Is(TokenKind::ELLIPSIS)) {
+    ParserResult<Expression> ellipsis_exp = ParserEllipsisExp();
+    return ellipsis_exp;
+  } else {
+    ParserResult<Expression> expr = ParserLetExp();
+    return expr;
+  }
+}
+
 ParserResult<ExpressionList> Parser::ParserExpList() {
   std::vector<std::unique_ptr<Expression>> vec_exp;
 
   do {
     ValidToken();
-
-    if (token_.Is(TokenKind::ELLIPSIS)) {
-      ParserResult<Expression> ellipsis_exp = ParserEllipsisExp();
-      vec_exp.push_back(ellipsis_exp.MoveAstNode());
-    } else {
-      ParserResult<Expression> exp = ParserLetExp();
-      vec_exp.push_back(exp.MoveAstNode());
-    }
+    ParserResult<Expression> expr = ParserExpr();
+    vec_exp.push_back(expr.MoveAstNode());
   } while (CheckComma());
 
   return ParserResult<ExpressionList>(
@@ -1726,11 +1732,7 @@ ParserResult<Expression> Parser::ParserScopeIdentifier() {
 
   if (token_ == TokenKind::STRING_LITERAL) {
     if (!has_blank) {
-      std::unique_ptr<Literal> literal_string =
-          factory_.NewLiteral(token_.GetValue(), Literal::kString);
-      Advance();  // consume string token
-      return ParserResult<Expression>(
-          factory_.NewSpecialString(std::move(literal_string), std::move(id)));
+      return ParserLiteralStringsGroup(id->name());
     } else {
       ErrorMsg(boost::format(
           "String token after identifier must have no blank space"));
@@ -2022,14 +2024,15 @@ ParserResult<Expression> Parser::ParserGlobExp(bool recursive) {
 }
 
 ParserResult<Expression> Parser::LiteralExp() {
+  if (token_.Is(TokenKind::STRING_LITERAL)) {
+    return ParserLiteralStringsGroup();
+  }
+
   Token token(ValidToken());
   Advance();
   if (token.Is(TokenKind::INT_LITERAL)) {
     return ParserResult<Expression>(
         factory_.NewLiteral(token.GetValue(), Literal::kInteger));
-  } else if (token.Is(TokenKind::STRING_LITERAL)) {
-    return ParserResult<Expression>(
-        factory_.NewLiteral(token.GetValue(), Literal::kString));
   } else if (token.Is(TokenKind::REAL_LITERAL)) {
     return ParserResult<Expression>(
         factory_.NewLiteral(token.GetValue(), Literal::kReal));
@@ -2051,6 +2054,39 @@ ParserResult<Expression> Parser::LiteralExp() {
     SetTokenError(token);
     return ParserResult<Expression>();  // Error
   }
+}
+
+ParserResult<Expression> Parser::ParserLiteralStringsGroup(
+    const std::string& identifier_) {
+  // in this case only string toke is allowed, but we are certain that it's a
+  // string token, so we don't check
+  std::string str_value = boost::get<std::string>(token_.GetValue());
+
+  // parser literal string to parser expression string
+  ParserLiteralString str_parser(str_value);
+  str_parser.Scanner();
+  std::vector<LiteralStringToken>& vec = str_parser.getStringTokens();
+
+  std::vector<std::unique_ptr<Expression>> expr_vec = {};
+
+  for (LiteralStringToken& str_token : vec) {
+    if (str_token.IsInterpretable()) {
+      Lexer l(str_token.GetStrToken());
+      TokenStream ts = l.Scanner();
+      Parser p(std::move(ts));
+      ParserResult<Expression> expr = p.ParserExpr();
+      expr_vec.push_back(expr.MoveAstNode());
+    } else {
+      expr_vec.push_back(std::move(
+          factory_.NewLiteral(str_token.GetStrToken(), Literal::kString)));
+    }
+  }
+
+  // consume string token
+  Advance();
+
+  return ParserResult<Expression>(factory_.NewLiteralStringsGroup(
+      std::move(expr_vec), std::move(identifier_)));
 }
 
 }  // namespace internal

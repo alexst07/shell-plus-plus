@@ -146,6 +146,23 @@ class AstPrinter : public AstVisitor {
     std::cout << "</special_sring>\n";
   }
 
+  void virtual VisitLiteralStringsGroup(LiteralStringsGroup* str_group) {
+    Level();
+    std::cout << "<strings_group>\n";
+    level_++;
+    Level();
+    std::cout << "id:" << str_group->GetIdentifier() << std::endl;
+
+    auto& vec = str_group->GetStringsGroup();
+    for (const auto& c : vec) {
+      c->Accept(this);
+    }
+
+    level_--;
+    Level();
+    std::cout << "</strings_group>\n";
+  }
+
   void virtual VisitAttribute(Attribute* att) {
     Level();
     std::cout << "<attribute>\n";

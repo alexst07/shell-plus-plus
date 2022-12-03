@@ -130,6 +130,7 @@ namespace internal {
   V(Slice)                      \
   V(Glob)                       \
   V(SpecialString)              \
+  V(LiteralStringsGroup)        \
   V(ThisFunction)               \
   V(SuperPropertyReference)     \
   V(SuperCallReference)         \
@@ -1900,6 +1901,40 @@ class SpecialString : public Expression {
       : Expression(NodeType::kSpecialString, position),
         str_literal_(std::move(str_literal)),
         identifier_(std::move(identifier)) {}
+};
+
+class LiteralStringsGroup : public Expression {
+ public:
+  ~LiteralStringsGroup() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitLiteralStringsGroup(this);
+  }
+
+  std::vector<std::unique_ptr<Expression>>& GetStringsGroup() noexcept {
+    return str_groups_;
+  }
+
+  const std::vector<std::unique_ptr<Expression>>& GetStringsGroup()
+      const noexcept {
+    return str_groups_;
+  }
+
+  std::string GetIdentifier() noexcept { return identifier_; }
+
+  bool hasIdentifier() const noexcept { return identifier_ != ""; }
+
+ private:
+  friend class AstNodeFactory;
+
+  std::vector<std::unique_ptr<Expression>> str_groups_;
+  std::string identifier_;
+
+  LiteralStringsGroup(std::vector<std::unique_ptr<Expression>>&& str_groups,
+                      std::string identifier, Position position)
+      : Expression(NodeType::kLiteralStringsGroup, position),
+        str_groups_(std::move(str_groups)),
+        identifier_(identifier) {}
 };
 
 class Glob : public Expression {

@@ -111,6 +111,8 @@ class ExpressionExecutor : public Executor {
 
   ObjectPtr ExecSpecialString(SpecialString* sstr);
 
+  ObjectPtr ExecLiteralStringsGroup(LiteralStringsGroup* str_group);
+
   ObjectPtr ExecInstanceOf(ObjectPtr obj, ObjectPtr base);
 
   ObjectPtr ExecIs(ObjectPtr obj1, ObjectPtr obj2);
@@ -140,6 +142,21 @@ class SpecialStringExecutor : public Executor {
       : Executor(parent, symbol_table_stack) {}
 
   ObjectPtr Exec(SpecialString* sstr_node);
+};
+
+class LiteralStringsGroupExecutor : public Executor {
+ public:
+  LiteralStringsGroupExecutor(Executor* parent,
+                              SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  ObjectPtr Exec(LiteralStringsGroup* str_groups_node);
+
+  std::string MountString(std::vector<ObjectPtr> vec);
+
+  ObjectPtr ExecStringObjectfy(const std::string& id_name,
+                               const std::string& str_arg,
+                               LiteralStringsGroup* str_groups_node);
 };
 
 class ExprListExecutor : public Executor {

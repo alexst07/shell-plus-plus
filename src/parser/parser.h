@@ -15,18 +15,18 @@
 #ifndef SHPP_PARSER_H
 #define SHPP_PARSER_H
 
-#include <string>
-#include <memory>
-#include <vector>
-#include <iostream>
-#include <tuple>
 #include <boost/format.hpp>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <vector>
 
-#include "token.h"
-#include "msg.h"
-#include "lexer.h"
-#include "parser_result.h"
 #include "ast/ast.h"
+#include "lexer.h"
+#include "msg.h"
+#include "parser_result.h"
+#include "token.h"
 
 namespace shpp {
 namespace internal {
@@ -36,27 +36,19 @@ class Parser {
   Parser() = delete;
 
   Parser(TokenStream&& ts)
-      : ts_(std::move(ts))
-      , factory_(std::bind(&Parser::Pos, this))
-      , nerror_(0)
-      , token_(ts_.CurrentToken())
-      , token_error_(TokenKind::NUM_TOKENS, false, 0, 0) {}
+      : ts_(std::move(ts)),
+        factory_(std::bind(&Parser::Pos, this)),
+        nerror_(0),
+        token_(ts_.CurrentToken()),
+        token_error_(TokenKind::NUM_TOKENS, false, 0, 0) {}
 
-  ParserResult<StatementList> AstGen() {
-    return ParserStmtList();
-  }
+  ParserResult<StatementList> AstGen() { return ParserStmtList(); }
 
-  ParserResult<Cmd> AstGenCmdExpr() {
-    return ParserExpCmd();
-  }
+  ParserResult<Cmd> AstGenCmdExpr() { return ParserExpCmd(); }
 
-  inline uint nerrors() const {
-    return nerror_;
-  }
+  inline uint nerrors() const { return nerror_; }
 
-  inline const Message& Msgs() const {
-    return *msgs_.begin();
-  }
+  inline const Message& Msgs() const { return *msgs_.begin(); }
 
   bool StmtIncomplete() {
     if ((nerror_ > 0) && (token_error_ == TokenKind::EOS)) {
@@ -71,9 +63,7 @@ class Parser {
     return ts_.CurrentToken();
   }
 
-  inline const Token& PeekAhead() const noexcept {
-    return ts_.PeekAhead();
-  }
+  inline const Token& PeekAhead() const noexcept { return ts_.PeekAhead(); }
 
   inline void Advance() noexcept {
     ts_.Advance();
@@ -189,12 +179,10 @@ class Parser {
   // Test if the integer inside a command should be parsed as
   // only an integer token, or it is the io output channel
   inline bool CmdValidInt() {
-    if ((token_.Is(TokenKind::INT_LITERAL)) &&
-        (token_.BlankAfter() == false) &&
+    if ((token_.Is(TokenKind::INT_LITERAL)) && (token_.BlankAfter() == false) &&
         (PeekAhead() == TokenKind::GREATER_THAN ||
-        PeekAhead() == TokenKind::SAR ||
-        PeekAhead() == TokenKind::SSAR ||
-        PeekAhead() == TokenKind::GREAT_AND)) {
+         PeekAhead() == TokenKind::SAR || PeekAhead() == TokenKind::SSAR ||
+         PeekAhead() == TokenKind::GREAT_AND)) {
       return true;
     }
 
@@ -204,12 +192,10 @@ class Parser {
   // check if is redirecting all output descriptors, stdout and stderr
   // ex: test_cmd &> file.txt
   inline bool CmdValidAnd() {
-    if ((token_.Is(TokenKind::BIT_AND)) &&
-        (token_.BlankAfter() == false) &&
+    if ((token_.Is(TokenKind::BIT_AND)) && (token_.BlankAfter() == false) &&
         (PeekAhead() == TokenKind::GREATER_THAN ||
-        PeekAhead() == TokenKind::SAR ||
-        PeekAhead() == TokenKind::SSAR ||
-        PeekAhead() == TokenKind::GREAT_AND)) {
+         PeekAhead() == TokenKind::SAR || PeekAhead() == TokenKind::SSAR ||
+         PeekAhead() == TokenKind::GREAT_AND)) {
       return true;
     }
 
@@ -222,11 +208,8 @@ class Parser {
   }
 
   inline bool TokenEndFullCmd() {
-    bool r = token_.IsAny(TokenKind::NWL,
-                          TokenKind::EOS,
-                          TokenKind::RBRACE,
-                          TokenKind::SEMI_COLON,
-                          TokenKind::RPAREN);
+    bool r = token_.IsAny(TokenKind::NWL, TokenKind::EOS, TokenKind::RBRACE,
+                          TokenKind::SEMI_COLON, TokenKind::RPAREN);
     return r;
   }
 
@@ -236,9 +219,7 @@ class Parser {
     return r;
   }
 
-  void SetTokenError(const Token& tk_err) {
-    token_error_ = tk_err;
-  }
+  void SetTokenError(const Token& tk_err) { token_error_ = tk_err; }
 
   ParserResult<Expression> LiteralExp();
   ParserResult<Expression> ParserScopeIdentifier();
@@ -261,6 +242,7 @@ class Parser {
   ParserResult<Expression> ParserIfElseExp();
   ParserResult<Expression> ParserEllipsisExp();
   ParserResult<Expression> ParserLambda();
+  ParserResult<Expression> ParserExpr();
   ParserResult<ExpressionList> ParserExpList();
   ParserResult<ExpressionList> ParserExpNoTestList();
   ParserResult<Statement> ParserStmt();
@@ -291,7 +273,8 @@ class Parser {
   ParserResult<Statement> ParserCmdAndOr();
   ParserResult<Statement> ParserCmdFull();
   ParserResult<AstNode> ParserFunctionDeclaration(bool lambda,
-      bool abstract = false, bool fstatic = false);
+                                                  bool abstract = false,
+                                                  bool fstatic = false);
 
   // parser every declartion accpted by class
   ParserResult<ClassBlock> ParserClassBlock();
@@ -347,6 +330,8 @@ class Parser {
   ParserResult<Statement> ParserImportPathStmt();
   ParserResult<Statement> ParserImportStarStmt();
   ParserResult<Statement> ParserDelStmt();
+  ParserResult<Expression> ParserLiteralStringsGroup(
+      const std::string& identifier_ = "");
 
   TokenStream ts_;
   AstNodeFactory factory_;
@@ -356,7 +341,7 @@ class Parser {
   Messages msgs_;
 };
 
-}
-}
+}  // namespace internal
+}  // namespace shpp
 
 #endif  // SHPP_PARSER_H
