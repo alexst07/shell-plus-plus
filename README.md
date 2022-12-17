@@ -206,7 +206,7 @@ file *.txt
 Glob in this case works like in bash.
 
 ```shell
-for f in %**/*.txt% {
+for f in g"**/*.txt" {
   file ${f}
 }
 ```
@@ -232,8 +232,8 @@ p2 = path("/home/me/file.txt")
 
 print(p1 == p2) # true
 
-p1 = path("/home/me/file.txt")
-p2 = path("/home/me/file2.txt")
+p1 = p"/home/me/file.txt"
+p2 = p"/home/me/file2.txt"
 
 print(p1 == p2) # false
 ```
