@@ -193,7 +193,7 @@ ${ex} # execute ls commad
 ### Execute command from array variabel
 ```shell
 scp = ["sch", "-i", "path/file.pem", "user@addr:path"]
-$@{scp} # execute command from iterator
+${scp} # execute command from iterator
 ```
 It is possible execute a command from an array, using this feature
 you have much more flexibility to mount the command with its arguments
@@ -247,8 +247,8 @@ In Shell++ is easy create and access array, it works like in Python
 array1 = ['physics', 'chemistry', 1997, 2000];
 array2 = [1, 2, 3, 4, 5, 6, 7 ];
 
-print "array1[0]: ", array1[0]
-print "array2[1:5]: ", array2[1:5]
+print("array1[0]: {array1[0]}")
+print("array2[1:5]: {array2[1:5]}")
 ```
 Output:
 ```
@@ -262,8 +262,8 @@ Map is a hash map object, it works like dictionary in Python.
 ```python
 m = {'Name': 'Zara', 'Age': 7, 'Class': 'First'}
 
-print("m['Name']: ", m['Name'])
-print("m['Age']: ", m['Age'])
+print("m['Name']: {m['Name']}")
+print("m['Age']: {m['Age']}")
 ```
 Output:
 ```
