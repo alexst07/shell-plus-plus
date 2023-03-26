@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "parser.h"
-
 #include <sstream>
+
+#include "parser.h"
 
 namespace shpp {
 namespace internal {
@@ -25,8 +25,8 @@ ParserResult<Declaration> Parser::ParserInterfaceDecl() {
   ValidToken();
 
   if (token_ != TokenKind::IDENTIFIER) {
-    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
-    return ParserResult<Declaration>(); // Error
+    ErrorMsg(boost::format("expected identifier got %1%") % TokenValueStr());
+    return ParserResult<Declaration>();  // Error
   }
 
   std::unique_ptr<Identifier> iface_name = factory_.NewIdentifier(
@@ -46,15 +46,14 @@ ParserResult<Declaration> Parser::ParserInterfaceDecl() {
 
   ValidToken();
   if (token_ != TokenKind::LBRACE) {
-    ErrorMsg(boost::format("expected token { got %1%")% TokenValueStr());
-    return ParserResult<Declaration>(); // Error
+    ErrorMsg(boost::format("expected token { got %1%") % TokenValueStr());
+    return ParserResult<Declaration>();  // Error
   }
 
   ParserResult<InterfaceBlock> iface_block(ParserInterfaceBlock());
 
   ParserResult<Declaration> iface_decl(factory_.NewInterfaceDeclaration(
-      std::move(iface_name), std::move(interfaces),
-      iface_block.MoveAstNode()));
+      std::move(iface_name), std::move(interfaces), iface_block.MoveAstNode()));
 
   return iface_decl;
 }
@@ -75,25 +74,25 @@ ParserResult<InterfaceBlock> Parser::ParserInterfaceBlock() {
       } break;
 
       default:
-        ErrorMsg(boost::format("declaration expected, got %1%")
-            %TokenValueStr());
-        return ParserResult<InterfaceBlock>(); // Error
+        ErrorMsg(boost::format("declaration expected, got %1%") %
+                 TokenValueStr());
+        return ParserResult<InterfaceBlock>();  // Error
     }
   }
 
   if (ValidToken() != TokenKind::RBRACE) {
-    ErrorMsg(boost::format("expected } token, got %1%")% TokenValueStr());
-      return ParserResult<InterfaceBlock>(); // Error
+    ErrorMsg(boost::format("expected } token, got %1%") % TokenValueStr());
+    return ParserResult<InterfaceBlock>();  // Error
   }
 
   Advance();
   ValidToken();
 
-  std::unique_ptr<InterfaceDeclList> iface_list(factory_.NewInterfaceDeclList(
-      std::move(decl_list)));
+  std::unique_ptr<InterfaceDeclList> iface_list(
+      factory_.NewInterfaceDeclList(std::move(decl_list)));
 
-  ParserResult<InterfaceBlock> iface_block(factory_.NewInterfaceBlock(
-      std::move(iface_list)));
+  ParserResult<InterfaceBlock> iface_block(
+      factory_.NewInterfaceBlock(std::move(iface_list)));
 
   return iface_block;
 }
@@ -134,8 +133,8 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
           ParserResult<Declaration> class_decl(ParserClassDecl(false, true));
           decl_list.push_back(class_decl.MoveAstNode());
         } else {
-          ErrorMsg(boost::format("not a valid token after abstract '%1%'")
-            %TokenValueStr());
+          ErrorMsg(boost::format("not a valid token after abstract '%1%'") %
+                   TokenValueStr());
         }
       } break;
 
@@ -143,7 +142,8 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
         // advance static keyword
         Advance();
 
-        ParserResult<AstNode> func(ParserFunctionDeclaration(false, false, true));
+        ParserResult<AstNode> func(
+            ParserFunctionDeclaration(false, false, true));
         decl_list.push_back(func.MoveAstNode());
       } break;
 
@@ -153,31 +153,31 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
       } break;
 
       default:
-        ErrorMsg(boost::format("declaration expected, got %1%")
-            %TokenValueStr());
-        return ParserResult<ClassBlock>(); // Error
+        ErrorMsg(boost::format("declaration expected, got %1%") %
+                 TokenValueStr());
+        return ParserResult<ClassBlock>();  // Error
     }
   }
 
   if (ValidToken() != TokenKind::RBRACE) {
-    ErrorMsg(boost::format("expected } token, got %1%")% TokenValueStr());
-      return ParserResult<ClassBlock>(); // Error
+    ErrorMsg(boost::format("expected } token, got %1%") % TokenValueStr());
+    return ParserResult<ClassBlock>();  // Error
   }
 
   Advance();
   ValidToken();
 
-  std::unique_ptr<ClassDeclList> class_list(factory_.NewClassDeclList(
-      std::move(decl_list)));
+  std::unique_ptr<ClassDeclList> class_list(
+      factory_.NewClassDeclList(std::move(decl_list)));
 
-  ParserResult<ClassBlock> class_block(factory_.NewClassBlock(
-      std::move(class_list)));
+  ParserResult<ClassBlock> class_block(
+      factory_.NewClassBlock(std::move(class_list)));
 
   return class_block;
 }
 
 ParserResult<Declaration> Parser::ParserClassDecl(bool is_final,
-    bool abstract) {
+                                                  bool abstract) {
   // advance class keyword
   Advance();
   ValidToken();
@@ -185,8 +185,8 @@ ParserResult<Declaration> Parser::ParserClassDecl(bool is_final,
   std::unique_ptr<Expression> parent;
 
   if (token_ != TokenKind::IDENTIFIER) {
-    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
-    return ParserResult<Declaration>(); // Error
+    ErrorMsg(boost::format("expected identifier got %1%") % TokenValueStr());
+    return ParserResult<Declaration>();  // Error
   }
 
   std::unique_ptr<Identifier> class_name = factory_.NewIdentifier(
@@ -205,8 +205,8 @@ ParserResult<Declaration> Parser::ParserClassDecl(bool is_final,
     parent = super.MoveAstNode();
 
     if (token_ != TokenKind::RPAREN) {
-      ErrorMsg(boost::format("expected token ) got %1%")% TokenValueStr());
-      return ParserResult<Declaration>(); // Error
+      ErrorMsg(boost::format("expected token ) got %1%") % TokenValueStr());
+      return ParserResult<Declaration>();  // Error
     }
 
     Advance();
@@ -224,8 +224,8 @@ ParserResult<Declaration> Parser::ParserClassDecl(bool is_final,
 
   ValidToken();
   if (token_ != TokenKind::LBRACE) {
-    ErrorMsg(boost::format("expected token { got %1%")% TokenValueStr());
-    return ParserResult<Declaration>(); // Error
+    ErrorMsg(boost::format("expected token { got %1%") % TokenValueStr());
+    return ParserResult<Declaration>();  // Error
   }
 
   ParserResult<ClassBlock> class_block(ParserClassBlock());
@@ -242,8 +242,8 @@ ParserResult<Declaration> Parser::ParserVariableDecl() {
   Advance();
 
   if (token_ != TokenKind::IDENTIFIER) {
-    ErrorMsg(boost::format("expected identifier got %1%")% TokenValueStr());
-    return ParserResult<Declaration>(); // Error
+    ErrorMsg(boost::format("expected identifier got %1%") % TokenValueStr());
+    return ParserResult<Declaration>();  // Error
   }
 
   std::unique_ptr<Identifier> var_name = factory_.NewIdentifier(
@@ -252,9 +252,9 @@ ParserResult<Declaration> Parser::ParserVariableDecl() {
   Advance();
 
   if (token_ != TokenKind::ASSIGN) {
-    ErrorMsg(boost::format("expected assignment operator, got %1%")
-        %TokenValueStr());
-    return ParserResult<Declaration>(); // Error
+    ErrorMsg(boost::format("expected assignment operator, got %1%") %
+             TokenValueStr());
+    return ParserResult<Declaration>();  // Error
   }
 
   Advance();
@@ -290,12 +290,13 @@ std::vector<std::unique_ptr<CatchStatement>> Parser::ParserCatchList() {
       Advance();
 
       if (token_ != TokenKind::IDENTIFIER) {
-        ErrorMsg(boost::format("expected identifier got %1%")%TokenValueStr());
+        ErrorMsg(boost::format("expected identifier got %1%") %
+                 TokenValueStr());
         throw std::invalid_argument("expected identifier");
       }
 
-      var_name = factory_.NewIdentifier(boost::get<std::string>(
-          token_.GetValue()), std::move(nullptr));
+      var_name = factory_.NewIdentifier(
+          boost::get<std::string>(token_.GetValue()), std::move(nullptr));
 
       Advance();
     }
@@ -332,9 +333,9 @@ ParserResult<Statement> Parser::ParserTryCatch() {
   }
 
   if (token_ != TokenKind::KW_CATCH) {
-    ErrorMsg(boost::format("expected catch keyword, got '%1%'")
-        %TokenValueStr());
-    return ParserResult<Statement>(); // Error
+    ErrorMsg(boost::format("expected catch keyword, got '%1%'") %
+             TokenValueStr());
+    return ParserResult<Statement>();  // Error
   }
 
   try {
@@ -351,9 +352,9 @@ ParserResult<Statement> Parser::ParserTryCatch() {
   }
 
   std::unique_ptr<FinallyStatement> finally;
-  return ParserResult<Statement>(factory_.NewTryCatchStatement(
-        try_block.MoveAstNode<Block>(), std::move(catch_list),
-        std::move(finally)));
+  return ParserResult<Statement>(
+      factory_.NewTryCatchStatement(try_block.MoveAstNode<Block>(),
+                                    std::move(catch_list), std::move(finally)));
 }
 
 ParserResult<Statement> Parser::ParserThrow() {
@@ -362,9 +363,53 @@ ParserResult<Statement> Parser::ParserThrow() {
 
   ParserResult<Expression> exp = ParserLetExp();
 
-  return ParserResult<Statement>(factory_.NewThrowStatement(
-      exp.MoveAstNode()));
+  return ParserResult<Statement>(factory_.NewThrowStatement(exp.MoveAstNode()));
 }
 
+ParserResult<Declaration> Parser::ParserAnnotation() {
+  // advance @ token
+  Advance();
+
+  // parser the annotation expression
+  ParserResult<Expression> exp = ParserPostExp();
+
+  // it needs a new line after the annoation
+  if (token_ == TokenKind::NWL) {
+    Advance();
+  } else {
+    ErrorMsg(boost::format("expected end of annotation, got %1%") %
+             TokenValueStr());
+    return ParserResult<Declaration>();  // Error
+  }
+
+  ParserResult<Statement> decl_stmt;
+
+  if (token_ == TokenKind::KW_FUNC) {
+    ParserResult<AstNode> func(ParserFunctionDeclaration(false));
+    decl_stmt = func.MoveAstNode<Statement>();
+  } else if (token_ == TokenKind::KW_CLASS) {
+    ParserResult<Declaration> class_decl(ParserClassDecl(false, false));
+    decl_stmt = class_decl.MoveAstNode<Statement>();
+  } else if (token_ == TokenKind::KW_FINAL) {
+    Advance();
+    ParserResult<Declaration> class_decl(ParserClassDecl(true, false));
+    decl_stmt = class_decl.MoveAstNode<Statement>();
+  } else if (token_ == TokenKind::KW_ABSTRACT) {
+    Advance();
+    ParserResult<Declaration> class_decl(ParserClassDecl(false, true));
+    decl_stmt = class_decl.MoveAstNode<Statement>();
+  } else if (token_ == TokenKind::KW_INTERFACE) {
+    ParserResult<Declaration> iface_decl(ParserInterfaceDecl());
+    decl_stmt = iface_decl.MoveAstNode<Statement>();
+  } else {
+    ErrorMsg(boost::format("expected function or class declaration, got %1%") %
+             TokenValueStr());
+    return ParserResult<Declaration>();
+  }
+
+  return ParserResult<Declaration>(factory_.NewAnnotationDeclaration(
+      exp.MoveAstNode<Expression>(), decl_stmt.MoveAstNode<Declaration>()));
 }
-}
+
+}  // namespace internal
+}  // namespace shpp

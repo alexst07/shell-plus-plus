@@ -504,6 +504,13 @@ class AstNodeFactory {
         std::move(exp), std::move(then_exp), std::move(else_exp), fn_pos_()));
   }
 
+  inline std::unique_ptr<AnnotationDeclaration> NewAnnotationDeclaration(
+      std::unique_ptr<Expression> decorator_expr,
+      std::unique_ptr<Declaration> decl) {
+    return std::unique_ptr<AnnotationDeclaration>(new AnnotationDeclaration(
+        std::move(decorator_expr), std::move(decl), fn_pos_()));
+  }
+
  private:
   std::function<Position()> fn_pos_;
 };

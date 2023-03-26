@@ -29,6 +29,7 @@ namespace shpp {
 namespace internal {
 
 #define DECLARATION_NODE_LIST(V) \
+  V(AnnotationDeclaration)       \
   V(ClassDeclaration)            \
   V(InterfaceDeclaration)        \
   V(VariableDeclaration)         \
@@ -1476,6 +1477,8 @@ class Identifier : public Expression {
   virtual void Accept(AstVisitor* visitor) { visitor->VisitIdentifier(this); }
 
   const std::string& name() const noexcept { return name_; }
+
+  void SetName(const std::string& name) noexcept { name_ = name; }
 
   PackageScope* scope() const noexcept { return scope_.get(); }
 

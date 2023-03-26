@@ -144,6 +144,9 @@ ParserResult<Statement> Parser::ParserStmtDecl() {
   } else if (token_ == TokenKind::KW_ALIAS) {
     ParserResult<Declaration> alias(ParserAliasDeclaration());
     return ParserResult<Statement>(alias.MoveAstNode<Statement>());
+  } else if (token_ == TokenKind::AT_SIGN) {
+    ParserResult<Declaration> annotation(ParserAnnotation());
+    return ParserResult<Statement>(annotation.MoveAstNode<Statement>());
   }
 
   return ParserResult<Statement>();  // error
@@ -153,7 +156,7 @@ bool Parser::IsStmtDecl() {
   return token_.IsAny(TokenKind::KW_FUNC, TokenKind::KW_CMD,
                       TokenKind::KW_CLASS, TokenKind::KW_ALIAS,
                       TokenKind::KW_ABSTRACT, TokenKind::KW_INTERFACE,
-                      TokenKind::KW_FINAL);
+                      TokenKind::KW_FINAL, TokenKind::AT_SIGN);
 }
 
 ParserResult<Declaration> Parser::ParserCmdDeclaration() {

@@ -19,7 +19,7 @@
 namespace shpp {
 namespace internal {
 
-class CmdDeclaration: public Declaration {
+class CmdDeclaration : public Declaration {
  public:
   virtual ~CmdDeclaration() {}
 
@@ -27,13 +27,9 @@ class CmdDeclaration: public Declaration {
     visitor->VisitCmdDeclaration(this);
   }
 
-  Identifier* id() const noexcept {
-    return id_.get();
-  }
+  Identifier* id() const noexcept { return id_.get(); }
 
-  std::shared_ptr<Block> block() const noexcept {
-    return block_;
-  }
+  std::shared_ptr<Block> block() const noexcept { return block_; }
 
  private:
   friend class AstNodeFactory;
@@ -42,10 +38,36 @@ class CmdDeclaration: public Declaration {
   std::unique_ptr<Identifier> id_;
 
   CmdDeclaration(std::unique_ptr<Identifier> id, std::unique_ptr<Block> block,
-                Position position)
-      : Declaration(NodeType::kCmdDeclaration, position)
-      , block_(std::move(block))
-      , id_(std::move(id)) {}
+                 Position position)
+      : Declaration(NodeType::kCmdDeclaration, position),
+        block_(std::move(block)),
+        id_(std::move(id)) {}
+};
+
+class AnnotationDeclaration : public Declaration {
+ public:
+  virtual ~AnnotationDeclaration() {}
+
+  virtual void Accept(AstVisitor* visitor) {
+    visitor->VisitAnnotationDeclaration(this);
+  }
+
+  Expression* decorator_expr() noexcept { return decorator_expr_.get(); }
+
+  Declaration* decl() noexcept { return decl_.get(); }
+
+  const std::string& get_original_id_name() const noexcept {
+    return original_name_;
+  }
+
+ private:
+  friend class AstNodeFactory;
+  std::unique_ptr<Expression> decorator_expr_;
+  std::unique_ptr<Declaration> decl_;
+  std::string original_name_;
+
+  AnnotationDeclaration(std::unique_ptr<Expression> decorator_expr,
+                        std::unique_ptr<Declaration> decl, Position position);
 };
 
 class Function {
@@ -53,17 +75,17 @@ class Function {
   virtual ~Function() {}
 
   bool variadic() const noexcept {
-   if (params_.empty()) {
-     return false;
-   }
+    if (params_.empty()) {
+      return false;
+    }
 
-   return params_.back()->variadic();
+    return params_.back()->variadic();
   }
 
   std::vector<FunctionParam*> children() noexcept {
     std::vector<FunctionParam*> vec;
 
-    for (auto& p_exp: params_) {
+    for (auto& p_exp : params_) {
       vec.push_back(p_exp.get());
     }
 
@@ -78,9 +100,7 @@ class Function {
   // is used by others objects, this object can exists
   // even when the ast doesn't exists anymore, it happens
   // when is using interactive mode
-  std::shared_ptr<Block> block() const noexcept {
-    return block_;
-  }
+  std::shared_ptr<Block> block() const noexcept { return block_; }
 
   bool has_block() const noexcept {
     if (block_) {
@@ -99,11 +119,10 @@ class Function {
  protected:
   Function(std::vector<std::unique_ptr<FunctionParam>>&& params,
            std::shared_ptr<Block> block)
-    : params_(std::move(params))
-    , block_(std::move(block)) {}
+      : params_(std::move(params)), block_(std::move(block)) {}
 };
 
-class FunctionDeclaration: public Declaration, public Function {
+class FunctionDeclaration : public Declaration, public Function {
  public:
   virtual ~FunctionDeclaration() {}
 
@@ -111,13 +130,11 @@ class FunctionDeclaration: public Declaration, public Function {
     visitor->VisitFunctionDeclaration(this);
   }
 
-  Identifier* name() const noexcept {
-    return name_.get();
-  }
+  Identifier* name() const noexcept { return name_.get(); }
 
-  bool fstatic() const noexcept {
-    return fstatic_;
-  }
+  void SetName(const std::string& name) noexcept { name_->SetName(name); }
+
+  bool fstatic() const noexcept { return fstatic_; }
 
  private:
   friend class AstNodeFactory;
@@ -127,16 +144,15 @@ class FunctionDeclaration: public Declaration, public Function {
 
   FunctionDeclaration(std::vector<std::unique_ptr<FunctionParam>>&& params,
                       std::unique_ptr<Identifier> name,
-                      std::shared_ptr<Block> block,
-                      bool fstatic,
+                      std::shared_ptr<Block> block, bool fstatic,
                       Position position)
-    : Declaration(NodeType::kFunctionDeclaration, position)
-    , Function(std::move(params), block)
-    , name_(std::move(name))
-    , fstatic_(fstatic) {}
+      : Declaration(NodeType::kFunctionDeclaration, position),
+        Function(std::move(params), block),
+        name_(std::move(name)),
+        fstatic_(fstatic) {}
 };
 
-class FunctionExpression: public Expression, public Function {
+class FunctionExpression : public Expression, public Function {
  public:
   virtual ~FunctionExpression() {}
 
@@ -149,11 +165,11 @@ class FunctionExpression: public Expression, public Function {
 
   FunctionExpression(std::vector<std::unique_ptr<FunctionParam>>&& params,
                      std::shared_ptr<Block> block, Position position)
-    : Expression(NodeType::kFunctionExpression, position)
-    , Function(std::move(params), block) {}
+      : Expression(NodeType::kFunctionExpression, position),
+        Function(std::move(params), block) {}
 };
 
-class ClassDeclList: public AstNode {
+class ClassDeclList : public AstNode {
  public:
   virtual ~ClassDeclList() {}
 
@@ -161,23 +177,19 @@ class ClassDeclList: public AstNode {
     visitor->VisitClassDeclList(this);
   }
 
-  bool IsEmpty() const noexcept {
-    return decl_list_.empty();
-  }
+  bool IsEmpty() const noexcept { return decl_list_.empty(); }
 
   std::vector<AstNode*> children() noexcept {
     std::vector<AstNode*> vec;
 
-    for (auto&& p_decl: decl_list_) {
+    for (auto&& p_decl : decl_list_) {
       vec.push_back(p_decl.get());
     }
 
     return vec;
   }
 
-  size_t num_children() const noexcept {
-    return decl_list_.size();
-  }
+  size_t num_children() const noexcept { return decl_list_.size(); }
 
  private:
   friend class AstNodeFactory;
@@ -186,21 +198,17 @@ class ClassDeclList: public AstNode {
 
   ClassDeclList(std::vector<std::unique_ptr<AstNode>> decl_list,
                 Position position)
-      : AstNode(NodeType::kClassDeclList, position)
-      , decl_list_(std::move(decl_list)) {}
+      : AstNode(NodeType::kClassDeclList, position),
+        decl_list_(std::move(decl_list)) {}
 };
 
-class ClassBlock: public AstNode {
+class ClassBlock : public AstNode {
  public:
   virtual ~ClassBlock() {}
 
-  virtual void Accept(AstVisitor* visitor) {
-    visitor->VisitClassBlock(this);
-  }
+  virtual void Accept(AstVisitor* visitor) { visitor->VisitClassBlock(this); }
 
-  ClassDeclList* decl_list() const noexcept {
-    return decl_list_.get();
-  }
+  ClassDeclList* decl_list() const noexcept { return decl_list_.get(); }
 
   bool is_empty() const noexcept {
     if (decl_list_->num_children() == 0) {
@@ -216,11 +224,11 @@ class ClassBlock: public AstNode {
   std::unique_ptr<ClassDeclList> decl_list_;
 
   ClassBlock(std::unique_ptr<ClassDeclList> decl_list, Position position)
-      : AstNode(NodeType::kClassBlock, position)
-      , decl_list_(std::move(decl_list)) {}
+      : AstNode(NodeType::kClassBlock, position),
+        decl_list_(std::move(decl_list)) {}
 };
 
-class ClassDeclaration: public Declaration {
+class ClassDeclaration : public Declaration {
  public:
   virtual ~ClassDeclaration() {}
 
@@ -228,9 +236,7 @@ class ClassDeclaration: public Declaration {
     visitor->VisitClassDeclaration(this);
   }
 
-  Expression* parent() const noexcept {
-    return parent_.get();
-  }
+  Expression* parent() const noexcept { return parent_.get(); }
 
   bool has_parent() const noexcept {
     if (parent_) {
@@ -240,9 +246,7 @@ class ClassDeclaration: public Declaration {
     return false;
   }
 
-  ClassBlock* block() const noexcept {
-    return block_.get();
-  }
+  ClassBlock* block() const noexcept { return block_.get(); }
 
   bool has_block() const noexcept {
     if (block_) {
@@ -252,13 +256,11 @@ class ClassDeclaration: public Declaration {
     return false;
   }
 
-  Identifier* name() const noexcept {
-    return name_.get();
-  }
+  Identifier* name() const noexcept { return name_.get(); }
 
-  bool is_final() const noexcept {
-    return is_final_;
-  }
+  void SetName(const std::string& name) noexcept { name_->SetName(name); }
+
+  bool is_final() const noexcept { return is_final_; }
 
   bool has_interfaces() const noexcept {
     if (interfaces_) {
@@ -268,13 +270,9 @@ class ClassDeclaration: public Declaration {
     return false;
   }
 
-  ExpressionList* interfaces() noexcept {
-    return interfaces_.get();
-  }
+  ExpressionList* interfaces() noexcept { return interfaces_.get(); }
 
-  bool abstract() const noexcept {
-    return abstract_;
-  }
+  bool abstract() const noexcept { return abstract_; }
 
  private:
   friend class AstNodeFactory;
@@ -289,20 +287,18 @@ class ClassDeclaration: public Declaration {
   ClassDeclaration(std::unique_ptr<Identifier> name,
                    std::unique_ptr<Expression> parent,
                    std::unique_ptr<ExpressionList> interfaces,
-                   std::unique_ptr<ClassBlock> block,
-                   bool is_final,
-                   bool abstract,
-                   Position position)
-      : Declaration(NodeType::kClassDeclaration, position)
-      , name_(std::move(name))
-      , parent_(std::move(parent))
-      , interfaces_(std::move(interfaces))
-      , block_(std::move(block))
-      , is_final_(is_final)
-      , abstract_(abstract) {}
+                   std::unique_ptr<ClassBlock> block, bool is_final,
+                   bool abstract, Position position)
+      : Declaration(NodeType::kClassDeclaration, position),
+        name_(std::move(name)),
+        parent_(std::move(parent)),
+        interfaces_(std::move(interfaces)),
+        block_(std::move(block)),
+        is_final_(is_final),
+        abstract_(abstract) {}
 };
 
-class InterfaceDeclList: public AstNode {
+class InterfaceDeclList : public AstNode {
  public:
   virtual ~InterfaceDeclList() {}
 
@@ -310,37 +306,32 @@ class InterfaceDeclList: public AstNode {
     visitor->VisitInterfaceDeclList(this);
   }
 
-  bool IsEmpty() const noexcept {
-    return decl_list_.empty();
-  }
+  bool IsEmpty() const noexcept { return decl_list_.empty(); }
 
   std::vector<AstNode*> children() noexcept {
     std::vector<AstNode*> vec;
 
-    for (auto&& p_decl: decl_list_) {
+    for (auto&& p_decl : decl_list_) {
       vec.push_back(p_decl.get());
     }
 
     return vec;
   }
 
-  size_t num_children() const noexcept {
-    return decl_list_.size();
-  }
+  size_t num_children() const noexcept { return decl_list_.size(); }
 
  private:
   friend class AstNodeFactory;
 
   std::vector<std::unique_ptr<AstNode>> decl_list_;
 
-  InterfaceDeclList(
-      std::vector<std::unique_ptr<AstNode>> decl_list,
-      Position position)
-      : AstNode(NodeType::kInterfaceDeclList, position)
-      , decl_list_(std::move(decl_list)) {}
+  InterfaceDeclList(std::vector<std::unique_ptr<AstNode>> decl_list,
+                    Position position)
+      : AstNode(NodeType::kInterfaceDeclList, position),
+        decl_list_(std::move(decl_list)) {}
 };
 
-class InterfaceBlock: public AstNode {
+class InterfaceBlock : public AstNode {
  public:
   virtual ~InterfaceBlock() {}
 
@@ -348,9 +339,7 @@ class InterfaceBlock: public AstNode {
     visitor->VisitInterfaceBlock(this);
   }
 
-  InterfaceDeclList* decl_list() const noexcept {
-    return decl_list_.get();
-  }
+  InterfaceDeclList* decl_list() const noexcept { return decl_list_.get(); }
 
   bool is_empty() const noexcept {
     if (decl_list_->num_children() == 0) {
@@ -366,12 +355,12 @@ class InterfaceBlock: public AstNode {
   std::unique_ptr<InterfaceDeclList> decl_list_;
 
   InterfaceBlock(std::unique_ptr<InterfaceDeclList> decl_list,
-      Position position)
-      : AstNode(NodeType::kInterfaceBlock, position)
-      , decl_list_(std::move(decl_list)) {}
+                 Position position)
+      : AstNode(NodeType::kInterfaceBlock, position),
+        decl_list_(std::move(decl_list)) {}
 };
 
-class InterfaceDeclaration: public Declaration {
+class InterfaceDeclaration : public Declaration {
  public:
   virtual ~InterfaceDeclaration() {}
 
@@ -379,13 +368,9 @@ class InterfaceDeclaration: public Declaration {
     visitor->VisitInterfaceDeclaration(this);
   }
 
-  InterfaceBlock* block() const noexcept {
-    return block_.get();
-  }
+  InterfaceBlock* block() const noexcept { return block_.get(); }
 
-  Identifier* name() const noexcept {
-    return name_.get();
-  }
+  Identifier* name() const noexcept { return name_.get(); }
 
   bool has_interfaces() const noexcept {
     if (interfaces_) {
@@ -395,9 +380,7 @@ class InterfaceDeclaration: public Declaration {
     return false;
   }
 
-  ExpressionList* interfaces() noexcept {
-    return interfaces_.get();
-  }
+  ExpressionList* interfaces() noexcept { return interfaces_.get(); }
 
  private:
   friend class AstNodeFactory;
@@ -407,30 +390,25 @@ class InterfaceDeclaration: public Declaration {
   std::unique_ptr<InterfaceBlock> block_;
 
   InterfaceDeclaration(std::unique_ptr<Identifier> name,
-      std::unique_ptr<ExpressionList> interfaces,
-      std::unique_ptr<InterfaceBlock> block,
-      Position position)
-      : Declaration(NodeType::kInterfaceDeclaration, position)
-      , name_(std::move(name))
-      , interfaces_(std::move(interfaces))
-      , block_(std::move(block)) {}
+                       std::unique_ptr<ExpressionList> interfaces,
+                       std::unique_ptr<InterfaceBlock> block, Position position)
+      : Declaration(NodeType::kInterfaceDeclaration, position),
+        name_(std::move(name)),
+        interfaces_(std::move(interfaces)),
+        block_(std::move(block)) {}
 };
 
-class VariableDeclaration: public Declaration {
+class VariableDeclaration : public Declaration {
  public:
   virtual ~VariableDeclaration() {}
 
   virtual void Accept(AstVisitor* visitor) {
-   visitor->VisitVariableDeclaration(this);
+    visitor->VisitVariableDeclaration(this);
   }
 
-  Identifier* name() const noexcept {
-    return name_.get();
-  }
+  Identifier* name() const noexcept { return name_.get(); }
 
-  AssignableValue* value() const noexcept {
-    return value_.get();
-  }
+  AssignableValue* value() const noexcept { return value_.get(); }
 
  private:
   friend class AstNodeFactory;
@@ -439,40 +417,33 @@ class VariableDeclaration: public Declaration {
   std::unique_ptr<AssignableValue> value_;
 
   VariableDeclaration(std::unique_ptr<Identifier> name,
-      std::unique_ptr<AssignableValue> value,
-      Position position)
-      : Declaration(NodeType::kVariableDeclaration, position)
-      , name_(std::move(name))
-      , value_(std::move(value)) {}
+                      std::unique_ptr<AssignableValue> value, Position position)
+      : Declaration(NodeType::kVariableDeclaration, position),
+        name_(std::move(name)),
+        value_(std::move(value)) {}
 };
 
-class CatchStatement: public Statement {
+class CatchStatement : public Statement {
  public:
   virtual ~CatchStatement() {}
 
   virtual void Accept(AstVisitor* visitor) {
-   visitor->VisitCatchStatement(this);
+    visitor->VisitCatchStatement(this);
   }
 
-  Identifier* var() const noexcept {
-    return var_.get();
-  }
+  Identifier* var() const noexcept { return var_.get(); }
 
   bool has_var() const noexcept {
-    if (var_)  {
+    if (var_) {
       return true;
     }
 
     return false;
   }
 
-  ExpressionList* exp_list() const noexcept {
-    return exp_list_.get();
-  }
+  ExpressionList* exp_list() const noexcept { return exp_list_.get(); }
 
-  Block* block() const noexcept {
-    return block_.get();
-  }
+  Block* block() const noexcept { return block_.get(); }
 
  private:
   friend class AstNodeFactory;
@@ -482,25 +453,23 @@ class CatchStatement: public Statement {
   std::unique_ptr<Identifier> var_;
 
   CatchStatement(std::unique_ptr<ExpressionList> exp_list,
-      std::unique_ptr<Block> block, std::unique_ptr<Identifier> var,
-      Position position)
-      : Statement(NodeType::kCatchStatement, position)
-      , exp_list_(std::move(exp_list))
-      , block_(std::move(block))
-      , var_(std::move(var)) {}
+                 std::unique_ptr<Block> block, std::unique_ptr<Identifier> var,
+                 Position position)
+      : Statement(NodeType::kCatchStatement, position),
+        exp_list_(std::move(exp_list)),
+        block_(std::move(block)),
+        var_(std::move(var)) {}
 };
 
-class FinallyStatement: public Statement {
+class FinallyStatement : public Statement {
  public:
   virtual ~FinallyStatement() {}
 
   virtual void Accept(AstVisitor* visitor) {
-   visitor->VisitFinallyStatement(this);
+    visitor->VisitFinallyStatement(this);
   }
 
-  Block* block() const noexcept {
-    return block_.get();
-  }
+  Block* block() const noexcept { return block_.get(); }
 
  private:
   friend class AstNodeFactory;
@@ -508,26 +477,24 @@ class FinallyStatement: public Statement {
   std::unique_ptr<Block> block_;
 
   FinallyStatement(std::unique_ptr<Block> block, Position position)
-      : Statement(NodeType::kFinallyStatement, position)
-      , block_(std::move(block)) {}
+      : Statement(NodeType::kFinallyStatement, position),
+        block_(std::move(block)) {}
 };
 
-class TryCatchStatement: public Statement {
+class TryCatchStatement : public Statement {
  public:
   virtual ~TryCatchStatement() {}
 
   virtual void Accept(AstVisitor* visitor) {
-   visitor->VisitTryCatchStatement(this);
+    visitor->VisitTryCatchStatement(this);
   }
 
-  Block* try_block() const noexcept {
-    return try_block_.get();
-  }
+  Block* try_block() const noexcept { return try_block_.get(); }
 
   std::vector<CatchStatement*> catch_list() const noexcept {
     std::vector<CatchStatement*> vec;
 
-    for (auto& piece: catch_list_) {
+    for (auto& piece : catch_list_) {
       vec.push_back(piece.get());
     }
 
@@ -542,9 +509,7 @@ class TryCatchStatement: public Statement {
     return false;
   }
 
-  FinallyStatement* finally() const noexcept {
-    return finally_.get();
-  }
+  FinallyStatement* finally() const noexcept { return finally_.get(); }
 
   bool has_finally() const noexcept {
     if (finally_) {
@@ -562,25 +527,24 @@ class TryCatchStatement: public Statement {
   std::unique_ptr<FinallyStatement> finally_;
 
   TryCatchStatement(std::unique_ptr<Block> try_block,
-      std::vector<std::unique_ptr<CatchStatement>> catch_list,
-      std::unique_ptr<FinallyStatement> finally, Position position)
-      : Statement(NodeType::kTryCatchStatement, position)
-      , try_block_(std::move(try_block))
-      , catch_list_(std::move(catch_list))
-      , finally_(std::move(finally)) {}
+                    std::vector<std::unique_ptr<CatchStatement>> catch_list,
+                    std::unique_ptr<FinallyStatement> finally,
+                    Position position)
+      : Statement(NodeType::kTryCatchStatement, position),
+        try_block_(std::move(try_block)),
+        catch_list_(std::move(catch_list)),
+        finally_(std::move(finally)) {}
 };
 
-class ThrowStatement: public Statement {
+class ThrowStatement : public Statement {
  public:
   virtual ~ThrowStatement() {}
 
   virtual void Accept(AstVisitor* visitor) {
-   visitor->VisitThrowStatement(this);
+    visitor->VisitThrowStatement(this);
   }
 
-  Expression* exp() const noexcept {
-    return exp_.get();
-  }
+  Expression* exp() const noexcept { return exp_.get(); }
 
  private:
   friend class AstNodeFactory;
@@ -588,9 +552,8 @@ class ThrowStatement: public Statement {
   std::unique_ptr<Expression> exp_;
 
   ThrowStatement(std::unique_ptr<Expression> exp, Position position)
-      : Statement(NodeType::kThrowStatement, position)
-      , exp_(std::move(exp)) {}
+      : Statement(NodeType::kThrowStatement, position), exp_(std::move(exp)) {}
 };
 
-}
-}
+}  // namespace internal
+}  // namespace shpp

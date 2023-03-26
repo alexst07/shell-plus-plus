@@ -146,6 +146,29 @@ class AstPrinter : public AstVisitor {
     std::cout << "</special_sring>\n";
   }
 
+  void virtual VisitAnnotationDeclaration(AnnotationDeclaration* ann_decl) {
+    Level();
+    std::cout << "<decl_annotation>\n";
+    level_++;
+    Level();
+    std::cout << "<annotation>\n";
+    level_++;
+    ann_decl->decorator_expr()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "</annotation>\n";
+    Level();
+    std::cout << "<declaration>\n";
+    level_++;
+    ann_decl->decl()->Accept(this);
+    level_--;
+    Level();
+    std::cout << "</declaration>\n";
+    level_--;
+    Level();
+    std::cout << "</decl_annotation>\n";
+  }
+
   void virtual VisitLiteralStringsGroup(LiteralStringsGroup* str_group) {
     Level();
     std::cout << "<strings_group>\n";

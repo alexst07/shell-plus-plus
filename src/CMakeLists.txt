@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,8 +22,16 @@ file(GLOB SOURCES_AST ${CMAKE_CURRENT_SOURCE_DIR}/ast/*.cc)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(shpp SHARED ${SOURCES} ${SOURCES_PARSER} ${SOURCES_INTER}
-${SOURCES_OBJECTS} ${SOURCES_MODULES} ${SOURCES_UTILS} ${SOURCES_AST})
+if(STATIC_BUILD)
+  add_library(shpp STATIC ${SOURCES} ${SOURCES_PARSER} ${SOURCES_INTER}
+    ${SOURCES_OBJECTS} ${SOURCES_MODULES} ${SOURCES_UTILS} ${SOURCES_AST})
+else()
+  add_library(shpp SHARED ${SOURCES} ${SOURCES_PARSER} ${SOURCES_INTER}
+    ${SOURCES_OBJECTS} ${SOURCES_MODULES} ${SOURCES_UTILS} ${SOURCES_AST})
+endif()
+
+message(READLINE_LIBRARY: ${READLINE_LIBRARY})
+message(BOOST: ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_LOCALE_LIBRARY})
 
 target_link_libraries(shpp
   ${CMAKE_THREAD_LIBS_INIT}

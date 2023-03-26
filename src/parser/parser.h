@@ -294,6 +294,8 @@ class Parser {
   // parser class declaration
   ParserResult<Declaration> ParserClassDecl(bool is_final, bool abstract);
 
+  ParserResult<Declaration> ParserAnnotation();
+
   std::tuple<std::vector<std::unique_ptr<FunctionParam>>, bool>
   ParserParamsList();
 

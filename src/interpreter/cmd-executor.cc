@@ -14,36 +14,35 @@
 
 #include "cmd-executor.h"
 
-#include <unistd.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <unistd.h>
+
+#include <boost/algorithm/string.hpp>
 #include <climits>
 #include <cstdio>
-#include <boost/algorithm/string.hpp>
 
-#include "expr-executor.h"
-#include "objects/str-object.h"
-#include "stmt-executor.h"
-#include "scope-executor.h"
 #include "env-shell.h"
-#include "utils/scope-exit.h"
-#include "utils/glob.h"
+#include "expr-executor.h"
 #include "objects/obj-type.h"
+#include "objects/str-object.h"
 #include "parser/extract_expr.h"
+#include "scope-executor.h"
+#include "stmt-executor.h"
+#include "utils/glob.h"
+#include "utils/scope-exit.h"
 
 namespace shpp {
 namespace internal {
 
 void SetFdAsync(int fd) {
   int flags;
-  if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
-          flags = 0;
+  if (-1 == (flags = fcntl(fd, F_GETFL, 0))) flags = 0;
   fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
 
 std::tuple<std::string, std::string> ReadPipe(int pipe_out, int pipe_err) {
-  char buf[PIPE_BUF];
-  char buf_err[PIPE_BUF];
+  char buf[16 * PIPE_BUF];
+  char buf_err[16 * PIPE_BUF];
 
   int rd = 0;
   int rd_err = 0;
@@ -51,12 +50,16 @@ std::tuple<std::string, std::string> ReadPipe(int pipe_out, int pipe_err) {
   SetFdAsync(pipe_out);
   SetFdAsync(pipe_err);
 
-  std::string str_out = "";
-  std::string str_err = "";
+  std::string str_out;
+  std::string str_err;
 
-  while ((rd = read(pipe_out, buf, PIPE_BUF)) > 0) {
+  int i = 0;
+  while ((rd = read(pipe_out, buf, 16 * PIPE_BUF)) > 0) {
+    std::cout << "loop: " << i++ << std::endl;
     str_out.append(buf, rd);
   }
+
+  std::cout << "rd: " << rd << std::endl;
 
   while ((rd_err = read(pipe_err, buf_err, PIPE_BUF)) > 0) {
     str_err.append(buf_err, rd_err);
@@ -65,12 +68,11 @@ std::tuple<std::string, std::string> ReadPipe(int pipe_out, int pipe_err) {
   return std::tuple<std::string, std::string>(str_out, str_err);
 }
 
-CmdExprData CmdExecutor::ExecGetResult(CmdFull *node) {
+CmdExprData CmdExecutor::ExecGetResult(CmdFull* node) {
   return ExecCmdGetResult(node->cmd());
 }
 
-CmdExprData CmdExecutor::ExecCmdGetResult(Cmd *node)
-try {
+CmdExprData CmdExecutor::ExecCmdGetResult(Cmd* node) try {
   switch (node->type()) {
     case AstNode::NodeType::kSimpleCmd: {
       return ExecSimpleCmdWithResult(static_cast<SimpleCmd*>(node));
@@ -113,26 +115,26 @@ CmdExprData CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd) {
       CmdExprData rcmd = ExecCmdGetResult(cmd->cmd_right());
       std::string str_out = std::get<1>(lcmd) + std::get<1>(rcmd);
       std::string str_err = std::get<2>(lcmd) + std::get<2>(rcmd);
-      return CmdExprData(std::get<0>(rcmd),  str_out, str_err);
+      return CmdExprData(std::get<0>(rcmd), str_out, str_err);
     }
 
     std::string str_out = std::get<1>(lcmd);
     std::string str_err = std::get<2>(lcmd);
 
     // -1 set error on status of operation
-    return CmdExprData(-1,  str_out, str_err);
+    return CmdExprData(-1, str_out, str_err);
   } else /*TokenKind::OR*/ {
     if (std::get<0>(lcmd) == 0) {
       std::string str_out = std::get<1>(lcmd);
       std::string str_err = std::get<2>(lcmd);
       // -1 set error on status of operation
-      return CmdExprData(std::get<0>(lcmd),  str_out, str_err);
+      return CmdExprData(std::get<0>(lcmd), str_out, str_err);
     }
 
     CmdExprData rcmd = ExecCmdGetResult(cmd->cmd_right());
     std::string str_out = std::get<1>(lcmd) + std::get<1>(rcmd);
     std::string str_err = std::get<2>(lcmd) + std::get<2>(rcmd);
-    return CmdExprData(std::get<0>(rcmd),  str_out, str_err);
+    return CmdExprData(std::get<0>(rcmd), str_out, str_err);
   }
 }
 
@@ -157,13 +159,12 @@ int CmdExecutor::ExecCmdBinOp(CmdAndOr* cmd, bool background) {
   return rcmd;
 }
 
-int CmdExecutor::Exec(CmdFull *node) {
+int CmdExecutor::Exec(CmdFull* node) {
   bool background = node->background();
   return ExecCmd(node->cmd(), background);
 }
 
-int CmdExecutor::ExecCmd(Cmd *node, bool background)
-try {
+int CmdExecutor::ExecCmd(Cmd* node, bool background) try {
   switch (node->type()) {
     case AstNode::NodeType::kSimpleCmd: {
       return ExecSimpleCmd(static_cast<SimpleCmd*>(node), background);
@@ -191,7 +192,7 @@ try {
         // but the system cant waint, so, create a new process
         // to execute the whole command
         pid_t pid;
-        pid = fork ();
+        pid = fork();
         if (pid == 0) {
           int r = ExecCmdBinOp(cmd, false);
           exit(r);
@@ -213,14 +214,14 @@ try {
   throw RunTimeError(e.err_code(), e.msg(), node->pos());
 }
 
-int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool background) {
+int CmdExecutor::ExecSimpleCmd(SimpleCmd* node, bool background) {
   SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
 
   std::vector<std::string> cmd_args = simple_cmd.Exec(node);
 
   Job job(symbol_table_stack(), this);
-  std::unique_ptr<Process> p(new Process(symbol_table_stack(),
-      std::move(cmd_args), this));
+  std::unique_ptr<Process> p(
+      new Process(symbol_table_stack(), std::move(cmd_args), this));
 
   job.AddProcess(std::move(p))
       .Stderr(STDERR_FILENO)
@@ -236,8 +237,7 @@ int CmdExecutor::ExecSimpleCmd(SimpleCmd *node, bool background) {
   }
 }
 
-CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
-    SimpleCmd *node) {
+CmdExprData CmdExecutor::ExecSimpleCmdWithResult(SimpleCmd* node) {
   SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
 
   std::vector<std::string> cmd_args = simple_cmd.Exec(node);
@@ -254,8 +254,8 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
   SetFdAsync(pipettes[WRITE]);
   SetFdAsync(pipe_err[WRITE]);
 
-  std::unique_ptr<Process> p(new Process(symbol_table_stack(),
-      std::move(cmd_args), this));
+  std::unique_ptr<Process> p(
+      new Process(symbol_table_stack(), std::move(cmd_args), this));
 
   Job job(symbol_table_stack(), this);
   job.Stdout(pipettes[WRITE])
@@ -277,7 +277,7 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
+std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd* node) {
   std::vector<AstNode*> pieces = node->children();
   std::vector<std::string> cmd;
 
@@ -292,7 +292,7 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
   // indicate if is the first part of command
   bool is_first_part = true;
 
-  for (AstNode* piece: pieces) {
+  for (AstNode* piece : pieces) {
     if (piece->type() == AstNode::NodeType::kCmdPiece) {
       is_cmd_piece = true;
       CmdPiece* cmd_part = static_cast<CmdPiece*>(piece);
@@ -334,7 +334,7 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
       // if it has only one element, then, must be a string, if it is a string
       // the blank space after must be considered
       if (vec_part.size() > 1) {
-        for (const auto& part: vec_part) {
+        for (const auto& part : vec_part) {
           cmd.push_back(part);
         }
 
@@ -379,10 +379,10 @@ std::vector<std::string> SimpleCmdExecutor::Exec(SimpleCmd *node) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int SubShellExecutor::Exec(SubShell *node, bool background) {
+int SubShellExecutor::Exec(SubShell* node, bool background) {
   Job job(symbol_table_stack(), this);
-  std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
-      node, this));
+  std::unique_ptr<ProcessSubShell> p(
+      new ProcessSubShell(symbol_table_stack(), node, this));
 
   job.AddProcess(std::move(p))
       .Stderr(STDERR_FILENO)
@@ -398,7 +398,7 @@ int SubShellExecutor::Exec(SubShell *node, bool background) {
   }
 }
 
-CmdExprData SubShellExecutor::Exec(SubShell *node) {
+CmdExprData SubShellExecutor::Exec(SubShell* node) {
   const int READ = 0;
   const int WRITE = 1;
 
@@ -411,8 +411,8 @@ CmdExprData SubShellExecutor::Exec(SubShell *node) {
   SetFdAsync(pipettes[WRITE]);
   SetFdAsync(pipe_err[WRITE]);
 
-  std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
-      node, this));
+  std::unique_ptr<ProcessSubShell> p(
+      new ProcessSubShell(symbol_table_stack(), node, this));
 
   Job job(symbol_table_stack(), this);
   job.Stdout(pipettes[WRITE])
@@ -443,7 +443,7 @@ std::string CmdIoRedirectListExecutor::FileName(Executor* parent,
   std::vector<AstNode*> pieces = file_path->children();
   std::string str_part = "";
 
-  for (AstNode* piece: pieces) {
+  for (AstNode* piece : pieces) {
     if (piece->type() == AstNode::NodeType::kCmdPiece) {
       CmdPiece* cmd_part = static_cast<CmdPiece*>(piece);
 
@@ -452,7 +452,7 @@ std::string CmdIoRedirectListExecutor::FileName(Executor* parent,
       if (cmd_part->blank_after()) {
         str_part += " ";
       }
-    } else if(piece->type() == AstNode::NodeType::kCmdValueExpr) {
+    } else if (piece->type() == AstNode::NodeType::kCmdValueExpr) {
       CmdValueExpr* cmd_expr = static_cast<CmdValueExpr*>(piece);
       str_part += ResolveCmdExpr(parent, cmd_expr);
 
@@ -477,8 +477,8 @@ int CmdIoRedirectListExecutor::Var2Pipe(std::string var) {
 
   if (obj->type() != Object::ObjectType::STRING) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-                       boost::format("type: %1% has no cmd interface")%
-                       static_cast<TypeObject&>(*obj->ObjType()).name());
+                       boost::format("type: %1% has no cmd interface") %
+                           static_cast<TypeObject&>(*obj->ObjType()).name());
   }
 
   const int READ = 0;
@@ -513,7 +513,7 @@ int CmdIoRedirectListExecutor::Str2Pipe(const std::string& str) {
   return pipettes[READ];
 }
 
-void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
+void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList* node) {
   // iterate over redirect io list
   std::vector<CmdIoRedirect*> cmd_io_list = node->children();
   for (auto& l : cmd_io_list) {
@@ -521,27 +521,27 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
 
     std::string file_name = FileName(this, l->file_path_cmd());
 
-    if (l->kind() == TokenKind::GREATER_THAN)/* > */{
+    if (l->kind() == TokenKind::GREATER_THAN) /* > */ {
       fd = CreateFile(file_name);
-    } else if (l->kind() == TokenKind::SAR)/* >> */{
+    } else if (l->kind() == TokenKind::SAR) /* >> */ {
       fd = AppendFile(file_name);
-    } else if (l->kind() == TokenKind::LESS_THAN)/* < */{
+    } else if (l->kind() == TokenKind::LESS_THAN) /* < */ {
       fd = ReadFile(file_name);
       job.Stdin(fd);
-    } else if (l->kind() == TokenKind::SHL)/* << */{
+    } else if (l->kind() == TokenKind::SHL) /* << */ {
       // when o redirect operator is <<, the string is used in stdin
       // so, the new lines or space must be keept, insted of file names
       // where we maust execute a trim operation
       file_name = FileName(this, l->file_path_cmd(), false);
       fd = Str2Pipe(file_name);
       job.Stdin(fd);
-    } else if (l->kind() == TokenKind::SSHL)/* <<< */{
+    } else if (l->kind() == TokenKind::SSHL) /* <<< */ {
       fd = Var2Pipe(file_name);
       job.Stdin(fd);
-    } else if (l->kind() == TokenKind::GREAT_AND)/* >& */{
+    } else if (l->kind() == TokenKind::GREAT_AND) /* >& */ {
       FileDescriptorMap& fd_map = EnvShell::instance()->fd_map();
       fd = fd_map[file_name];
-    } else if (l->kind() == TokenKind::LESS_AND)/* <& */{
+    } else if (l->kind() == TokenKind::LESS_AND) /* <& */ {
       FileDescriptorMap& fd_map = EnvShell::instance()->fd_map();
       fd = fd_map[file_name];
       job.Stdin(fd);
@@ -560,8 +560,7 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
         }
       } else {
         if (l->kind() == TokenKind::GREATER_THAN ||
-            l->kind() == TokenKind::SAR ||
-            l->kind() == TokenKind::GREAT_AND) {
+            l->kind() == TokenKind::SAR || l->kind() == TokenKind::GREAT_AND) {
           job.Stdout(fd);
         }
       }
@@ -570,8 +569,8 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
 
   // io command can have simple command or sub-shell
   if (node->cmd()->type() == AstNode::NodeType::kSubShell) {
-    std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
-        static_cast<SubShell*>(node->cmd()), this));
+    std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(
+        symbol_table_stack(), static_cast<SubShell*>(node->cmd()), this));
     job.AddProcess(std::move(p));
 
     return;
@@ -584,20 +583,18 @@ void CmdIoRedirectListExecutor::PrepareData(Job& job, CmdIoRedirectList *node) {
   }
 
   SimpleCmdExecutor simple_cmd(this, symbol_table_stack());
-  std::vector<std::string> cmd_args = simple_cmd.Exec(static_cast<SimpleCmd*>(
-      node->cmd()));
+  std::vector<std::string> cmd_args =
+      simple_cmd.Exec(static_cast<SimpleCmd*>(node->cmd()));
 
-  std::unique_ptr<Process> p(new Process(symbol_table_stack(),
-      std::move(cmd_args), this));
+  std::unique_ptr<Process> p(
+      new Process(symbol_table_stack(), std::move(cmd_args), this));
   job.AddProcess(std::move(p));
 }
 
-int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
+int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList* node, bool background) {
   // starts job struct
   Job job(symbol_table_stack(), this);
-  job.Stderr(STDERR_FILENO)
-      .Stdout(STDOUT_FILENO)
-      .Stdin(STDIN_FILENO);
+  job.Stderr(STDERR_FILENO).Stdout(STDOUT_FILENO).Stdin(STDIN_FILENO);
 
   PrepareData(job, node);
   job.LaunchJob(!background);
@@ -605,8 +602,7 @@ int CmdIoRedirectListExecutor::Exec(CmdIoRedirectList *node, bool background) {
   return job.Status();
 }
 
-CmdExprData CmdIoRedirectListExecutor::Exec(
-    CmdIoRedirectList *node) {
+CmdExprData CmdIoRedirectListExecutor::Exec(CmdIoRedirectList* node) {
   const int READ = 0;
   const int WRITE = 1;
 
@@ -620,9 +616,7 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
   SetFdAsync(pipe_err[WRITE]);
 
   Job job(symbol_table_stack(), this);
-  job.Stderr(pipe_err[WRITE])
-      .Stdout(pipettes[WRITE])
-      .Stdin(STDIN_FILENO);
+  job.Stderr(pipe_err[WRITE]).Stdout(pipettes[WRITE]).Stdin(STDIN_FILENO);
 
   PrepareData(job, node);
   job.LaunchJob(true);
@@ -642,8 +636,8 @@ CmdExprData CmdIoRedirectListExecutor::Exec(
 void CmdPipeSequenceExecutor::AddCommand(Job& job, Cmd* cmd) {
   // handle sub-shell command
   if (cmd->type() == AstNode::NodeType::kSubShell) {
-    std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(symbol_table_stack(),
-        static_cast<SubShell*>(cmd), this));
+    std::unique_ptr<ProcessSubShell> p(new ProcessSubShell(
+        symbol_table_stack(), static_cast<SubShell*>(cmd), this));
     job.AddProcess(std::move(p));
 
     return;
@@ -659,15 +653,15 @@ void CmdPipeSequenceExecutor::AddCommand(Job& job, Cmd* cmd) {
   std::vector<std::string> cmd_args =
       simple_cmd.Exec(static_cast<SimpleCmd*>(cmd));
 
-  std::unique_ptr<Process> p(new Process(symbol_table_stack(),
-      std::move(cmd_args), this));
+  std::unique_ptr<Process> p(
+      new Process(symbol_table_stack(), std::move(cmd_args), this));
   job.AddProcess(std::move(p));
 }
 
-void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
+void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence* node) {
   std::vector<Cmd*> cmds = node->cmds();
 
-  for (auto& cmd: cmds) {
+  for (auto& cmd : cmds) {
     if (cmd->type() == AstNode::NodeType::kCmdIoRedirectList) {
       CmdIoRedirectList* cmd_io = static_cast<CmdIoRedirectList*>(cmd);
       CmdIoRedirectListExecutor io_process(this, symbol_table_stack());
@@ -680,11 +674,9 @@ void CmdPipeSequenceExecutor::PopulateCmd(Job& job, CmdPipeSequence *node) {
   }
 }
 
-int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
+int CmdPipeSequenceExecutor::Exec(CmdPipeSequence* node, bool background) {
   Job job(symbol_table_stack(), this);
-  job.Stderr(STDERR_FILENO)
-      .Stdout(STDOUT_FILENO)
-      .Stdin(STDIN_FILENO);
+  job.Stderr(STDERR_FILENO).Stdout(STDOUT_FILENO).Stdin(STDIN_FILENO);
 
   PopulateCmd(job, node);
 
@@ -693,7 +685,7 @@ int CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node, bool background) {
   return job.Status();
 }
 
-CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence *node) {
+CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence* node) {
   const int READ = 0;
   const int WRITE = 1;
 
@@ -756,7 +748,7 @@ std::vector<std::string> ResolveFullTypeCmdExpr(Executor* parent,
     ObjectPtr obj_iter = obj->ObjIter(obj);
 
     // check if there is next value on iterator
-    auto check_iter = [&] () -> bool {
+    auto check_iter = [&]() -> bool {
       ObjectPtr has_next_obj = obj_iter->HasNext();
       if (has_next_obj->type() != Object::ObjectType::BOOL) {
         throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
@@ -778,9 +770,10 @@ std::vector<std::string> ResolveFullTypeCmdExpr(Executor* parent,
         continue;
       }
 
-      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-          boost::format("cmd interface is not compatible with element '%1%'")
-          %cmd_obj->ObjType()->ObjectName());
+      throw RunTimeError(
+          RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("cmd interface is not compatible with element '%1%'") %
+              cmd_obj->ObjType()->ObjectName());
     }
 
     return vec_res;
@@ -795,9 +788,10 @@ std::vector<std::string> ResolveFullTypeCmdExpr(Executor* parent,
     return vec_res;
   }
 
-  throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
-      boost::format("cmd interface is not compatible with '%1%'")
-      %res_obj->ObjType()->ObjectName());
+  throw RunTimeError(
+      RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+      boost::format("cmd interface is not compatible with '%1%'") %
+          res_obj->ObjType()->ObjectName());
 }
 
 std::string ExtractCmdExprFromString(Executor* parent, const std::string& str) {
@@ -816,14 +810,14 @@ std::string ExtractCmdExprFromString(Executor* parent, const std::string& str) {
 
       // start - 1: gets the ${, because start indicates char {
       // end - (start - 2): gets until the end }
-      std::string src_expr_cmd = src.substr(start -1, end - (start - 2));
+      std::string src_expr_cmd = src.substr(start - 1, end - (start - 2));
 
       // gets the part of string before the expression ${}
-      result += src.substr(0, start -1);
+      result += src.substr(0, start - 1);
 
       ParserResult<Cmd> expr_cmd = ParserExpr(src_expr_cmd);
-      result += ResolveCmdExpr(parent, static_cast<CmdValueExpr*>(
-          expr_cmd.MoveAstNode().get()));
+      result += ResolveCmdExpr(
+          parent, static_cast<CmdValueExpr*>(expr_cmd.MoveAstNode().get()));
 
       if (end >= (static_cast<int>(src.length()) - 2)) {
         has_expr = false;
@@ -851,7 +845,7 @@ int CreateFile(std::string file_name) {
     return fd;
   } else {
     throw RunTimeError(RunTimeError::ErrorCode::FILE,
-                       boost::format("%1%: %2%")% file_name% strerror(errno));
+                       boost::format("%1%: %2%") % file_name % strerror(errno));
   }
 }
 
@@ -863,7 +857,7 @@ int AppendFile(std::string file_name) {
     return fd;
   } else {
     throw RunTimeError(RunTimeError::ErrorCode::FILE,
-                       boost::format("%1%: %2%")% file_name% strerror(errno));
+                       boost::format("%1%: %2%") % file_name % strerror(errno));
   }
 }
 
@@ -875,9 +869,9 @@ int ReadFile(std::string file_name) {
     return fd;
   } else {
     throw RunTimeError(RunTimeError::ErrorCode::FILE,
-                       boost::format("%1%: %2%")% file_name% strerror(errno));
+                       boost::format("%1%: %2%") % file_name % strerror(errno));
   }
 }
 
-}
-}
+}  // namespace internal
+}  // namespace shpp
