@@ -43,6 +43,7 @@ class Arguments {
 
   void Process();
  private:
+  std::vector<std::string> args_copy_;  // Keep strings alive
   char **argv_;
 };
 

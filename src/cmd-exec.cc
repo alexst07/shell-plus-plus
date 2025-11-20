@@ -30,26 +30,25 @@
 namespace shpp {
 namespace internal {
 
-Arguments::Arguments(const std::vector<std::string>& args) {
-  if (args.size() > 1) {
-    argv_ = new char*[args.size() + 2];
-
-    for (size_t i = 0; i < args.size(); i++) {
-      argv_[i] = const_cast<char*>(args[i].c_str());
-    }
-
-    argv_[args.size()] = nullptr;
-    return;
+Arguments::Arguments(const std::vector<std::string>& args) 
+    : args_copy_(args)  // Store a copy to keep strings alive
+    , argv_(nullptr) {
+  // Allocate array of char pointers
+  argv_ = new char*[args_copy_.size() + 1];
+  
+  // Point to our internal strings (safe because we own args_copy_)
+  for (size_t i = 0; i < args_copy_.size(); i++) {
+    argv_[i] = const_cast<char*>(args_copy_[i].c_str());
   }
-
-  argv_ = new char*[2];
-  argv_[0] = const_cast<char*>(args[0].c_str());
-  argv_[1] = nullptr;
+  
+  argv_[args_copy_.size()] = nullptr;
 }
 
 Arguments::~Arguments() {
   if (argv_ != nullptr) {
-    delete argv_;
+    // Only delete the array of pointers
+    // The strings are owned by args_copy_ and will be cleaned up automatically
+    delete[] argv_;
   }
 }
 
@@ -72,8 +71,10 @@ ProcessBase::ProcessBase(SymbolTableStack& sym_tab,
     std::vector<std::string>&& args, Executor* parent)
     : args_(std::move(args))
     , sym_tab_(sym_tab.MainTable())
+    , pid_(0)
     , completed_(false)
     , stopped_(false)
+    , status_(0)
     , parent_(parent) {}
 
 const std::vector<std::string>& ProcessBase::Args() const {
@@ -169,12 +170,16 @@ void SetUpFilesDescriptor(int infile, int outfile, int errfile, pid_t pgid,
     }
 
     // Set the handling for job control signals back to the default
-    signal (SIGINT, SIG_DFL);
-    signal (SIGQUIT, SIG_DFL);
-    signal (SIGTSTP, SIG_DFL);
-    signal (SIGTTIN, SIG_DFL);
-    signal (SIGTTOU, SIG_DFL);
-    signal (SIGCHLD, SIG_DFL);
+    struct sigaction sa;
+    sa.sa_handler = SIG_DFL;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, nullptr);
+    sigaction(SIGQUIT, &sa, nullptr);
+    sigaction(SIGTSTP, &sa, nullptr);
+    sigaction(SIGTTIN, &sa, nullptr);
+    sigaction(SIGTTOU, &sa, nullptr);
+    sigaction(SIGCHLD, &sa, nullptr);
   }
 
   // set the standard input/output channels of the new process
@@ -232,6 +237,12 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
 
   CmdSharedError *err = (CmdSharedError*)
       shmat(EnvShell::instance()->shmid(), 0, 0);
+  
+  if (err == (void*)-1) {
+    perror("shmat");
+    exit(-1);
+  }
+  
   err->error = false;
 
   Arguments glob_args(args);
@@ -239,6 +250,7 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
   if (cmd) {
     try {
       LaunchCmd(cmd, glob_args.args());
+      shmdt(err);  // Cleanup before exit
       exit(0);
     } catch (RunTimeError& e) {
       // set error on memory region
@@ -248,6 +260,8 @@ void Process::LaunchProcess(int infile, int outfile, int errfile, pid_t pgid,
       int len = e.msg().length();
       len = len >= SHPP_CMD_SIZE_MAX? SHPP_CMD_SIZE_MAX-1: len;
       memcpy(err->err_str, e.msg().c_str(), len);
+      err->err_str[len] = '\0';  // Ensure null termination
+      shmdt(err);
       exit(-1);
     }
   }
@@ -385,7 +399,11 @@ void Job::WaitForJob() {
 
   // return signal SIGCHLD for default action to get the result of
   // child process
-  signal(SIGCHLD, SIG_DFL);
+  struct sigaction sa;
+  sa.sa_handler = SIG_DFL;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART;
+  sigaction(SIGCHLD, &sa, nullptr);
 
   do {
     pid = waitpid (WAIT_ANY, &status, WUNTRACED);
@@ -417,17 +435,21 @@ void Job::WaitForJob() {
            && !JobIsStopped() && !JobIsCompleted());
 
   // ignore signal SIGCHLD to avoid any zombie process
-  signal(SIGCHLD, SIG_IGN);
+  struct sigaction sa_ign;
+  sa_ign.sa_handler = SIG_IGN;
+  sigemptyset(&sa_ign.sa_mask);
+  sa_ign.sa_flags = 0;
+  sigaction(SIGCHLD, &sa_ign, nullptr);
 }
 
 int Job::Status() {
-  int status = 0;
-
-  for (auto& p: process_) {
-    status |= p->status();
+  // For pipelines, return the exit status of the last command
+  // This matches bash behavior
+  if (!process_.empty()) {
+    return process_.back()->status();
   }
-
-  return status;
+  
+  return 0;
 }
 
 void Job::PutJobInForeground(int cont) {
@@ -535,8 +557,17 @@ void Job::LaunchJob(int foreground) {
       // this is the child process
       process_[i]->LaunchProcess(infile, outfile, stderr_, pgid_, foreground);
     } else if (pid < 0) {
-      // the fork failed
+      // the fork failed - cleanup resources before exiting
       perror ("fork");
+      
+      // Close any open file descriptors from previous iterations
+      if (infile != stdin_) {
+        close(infile);
+      }
+      if (outfile != stdout_ && i != (process_.size() - 1)) {
+        close(outfile);
+      }
+      
       exit (1);
     } else {
       // this is the parent process
@@ -567,6 +598,11 @@ void Job::LaunchJob(int foreground) {
     infile = mypipe[0];
   }
 
+  // Close the last pipe read end in parent
+  if (infile != stdin_) {
+    close(infile);
+  }
+
   int shell_is_interactive = isatty(shell_terminal);
 
   if (!shell_is_interactive) {
@@ -592,9 +628,15 @@ void Job::CheckCmdError() {
 
   shmdt(cmd_err);
   if (cpy_err.error) {
-        throw RunTimeError(RunTimeError::ErrorCode::INVALID_COMMAND,
-                           boost::format("%1%: %2%")%
-                           cpy_err.err_str %strerror(cpy_err.err_code));
+    // Only include strerror if err_code is non-zero
+    if (cpy_err.err_code != 0) {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_COMMAND,
+                         boost::format("%1%: %2%")%
+                         cpy_err.err_str %strerror(cpy_err.err_code));
+    } else {
+      throw RunTimeError(RunTimeError::ErrorCode::INVALID_COMMAND,
+                         boost::format("%1%")% cpy_err.err_str);
+    }
   }
 }
 

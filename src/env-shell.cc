@@ -73,6 +73,12 @@ void EnvShell::InitShell() {
 
   // starts the shared memory region
   shmid_ = shmget(IPC_PRIVATE, sizeof(CmdSharedError), 0640|IPC_CREAT);
+  
+  if (shmid_ < 0) {
+    perror("shmget failed");
+    fprintf(stderr, "Failed to create shared memory segment\n");
+    exit(1);
+  }
 
   // gets pid of shell main process
   shell_pid_ = getpid();
@@ -84,18 +90,19 @@ void EnvShell::InitShell() {
   std::cout.imbue(loc);
 
   if (shell_is_interactive_) {
-    // loop until we are in the foreground
-    while (tcgetpgrp(shell_terminal_) != (shell_pgid_ = getpgrp())) {
-      kill(- shell_pgid_, SIGTTIN);
-    }
-
-    // ignore interactive and job-control signals
+    // ignore interactive and job-control signals first
+    // This must be done BEFORE trying to grab terminal control
     signal(SIGINT, SIG_IGN);
     signal(SIGQUIT, SIG_IGN);
     signal(SIGTSTP, SIG_IGN);
     signal(SIGTTIN, SIG_IGN);
     signal(SIGTTOU, SIG_IGN);
     signal(SIGCHLD, SIG_IGN);
+
+    // loop until we are in the foreground
+    while (tcgetpgrp(shell_terminal_) != (shell_pgid_ = getpgrp())) {
+      kill(- shell_pgid_, SIGTTIN);
+    }
 
     // put ourselves in our own process group
     shell_pgid_ = getpid ();
