@@ -58,15 +58,15 @@ class Message {
     return *this;
   }
 
-  std::string msg() {
+  std::string msg() const {
     return msg_.str();
   }
 
-  uint line() {
+  uint line() const {
     return line_;
   }
 
-  uint pos() {
+  uint pos() const {
     return pos_;
   }
 

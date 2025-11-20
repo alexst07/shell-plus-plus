@@ -77,6 +77,10 @@ class Interpreter {
 
 std::vector<std::string> SplitFileLines(const std::string str_file);
 
+// Helper function to set source code information on errors
+void SetErrorSourceInfo(RunTimeError& e, const std::string& source_code, 
+                        const std::string& filename);
+
 }
 }
 

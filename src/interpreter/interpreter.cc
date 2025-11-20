@@ -179,6 +179,7 @@ void Interpreter::ExecInterative(
   RootExecutor executor(symbol_table_stack_);
   bool concat = false;
   std::string str_source;
+  std::vector<std::string> session_history;  // Track executed statements for error reporting
 
   while (true) {
     std::string line = func(&executor, concat);
@@ -201,7 +202,30 @@ void Interpreter::ExecInterative(
     if (p.nerrors() == 0) {
       concat = false;
       RegisterVars();
-      executor.Exec(stmt_list.get());
+      try {
+        executor.Exec(stmt_list.get());
+        // Add successfully executed source to session history
+        if (!str_source.empty()) {
+          session_history.push_back(str_source);
+        }
+      } catch (RunTimeError& e) {
+        // Build full source from session history
+        std::string full_source;
+        for (const auto& hist : session_history) {
+          if (!full_source.empty()) {
+            full_source += "\n";
+          }
+          full_source += hist;
+        }
+        if (!full_source.empty() && !str_source.empty()) {
+          full_source += "\n";
+        }
+        full_source += str_source;
+        
+        // Set source info and re-throw
+        SetErrorSourceInfo(e, full_source, "<stdin>");
+        throw;
+      }
     } else {
       if (p.StmtIncomplete()) {
         concat = true;
@@ -250,6 +274,34 @@ std::vector<std::string> SplitFileLines(const std::string str_file) {
   boost::split(strs, str_file, boost::is_any_of("\n"));
 
   return strs;
+}
+
+void SetErrorSourceInfo(RunTimeError& e, const std::string& source_code,
+                        const std::string& filename) {
+  // Split the source into lines
+  std::vector<std::string> file_lines = SplitFileLines(source_code);
+  
+  // Set filename
+  if (e.file().empty()) {
+    e.file(filename);
+  }
+  
+  // Set the line error text for the main error
+  if (e.pos().line > 0 && static_cast<size_t>(e.pos().line) <= file_lines.size()) {
+    e.line_error(file_lines[e.pos().line - 1]);
+  }
+  
+  // Set line error text for all messages in the stack
+  for (auto& msg : e.messages()) {
+    if (msg.file().empty()) {
+      msg.file(filename);
+    }
+    
+    if (e.err_code() != RunTimeError::ErrorCode::EVAL &&
+        msg.line() > 0 && msg.line() <= file_lines.size()) {
+      msg.line_error(file_lines[msg.line() - 1]);
+    }
+  }
 }
 
 }

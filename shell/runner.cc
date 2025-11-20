@@ -28,6 +28,7 @@
 #include "env-shell.h"
 #include "objects/str-object.h"
 #include "utils/dir.h"
+#include "error-formatter.h"
 
 namespace shpp {
 
@@ -57,19 +58,9 @@ void Runner::Exec(std::string name, std::vector<std::string>&& args) {
 
     interpreter_.Exec(file, std::move(args));
   } catch (RunTimeError& e) {
-    std::cout << "File: '" << e.file()  << "'"
-              << "\n  line: " << e.pos().line
-              << "  >> " << e.line_error() << "\n"
-              << "Error: " << e.what() << "\n\n";
-
-    for (auto& msg: e.messages()) {
-      std::cout << "File: '" << msg.file()  << "'"
-                << "\n  line: " << msg.line()
-                << "  >> " << msg.line_error() << "\n"
-                << "Error: " << msg.msg() << "\n\n";
-    }
+    std::cerr << internal::ErrorFormatter::FormatError(e) << "\n";
   } catch (std::invalid_argument& e) {
-    std::cout << "Error: " << e.what() << "\n\n";
+    std::cerr << "Error: " << e.what() << "\n\n";
   }
 }
 
@@ -139,13 +130,7 @@ void Runner::ExecInterative() {
         return str_source;
       });
     } catch (RunTimeError& e) {
-      std::cout << "Error: " << e.pos().line << ": " << e.pos().col
-                << ": " << e.what() << "\n\n";
-
-      for (auto& msg: e.messages()) {
-        std::cout << "Error: " << msg.line() << ": " << msg.pos()
-                  << ": " << msg.msg() << "\n";
-      }
+      std::cerr << internal::ErrorFormatter::FormatError(e) << "\n";
     }
   }
 }
