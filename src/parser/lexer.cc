@@ -125,7 +125,6 @@ std::string Lexer::ScanStringEscape() {
 }
 
 char Lexer::ScanWordEscape() {
-  start_pos_ = line_pos_;
   Advance();
 
   char c = c_;
@@ -156,7 +155,6 @@ char Lexer::ScanWordEscape() {
 
 Token Lexer::ScanString(char string_end_char) {
   std::string str = "";
-  start_pos_ = line_pos_;
 
   Advance();
 
@@ -188,7 +186,6 @@ Token Lexer::ScanString(char string_end_char) {
 
 Token Lexer::ScanIdentifier(bool varenv) {
   std::string id = "";
-  start_pos_ = line_pos_;
 
   if (IsIdentifierStart(c_)) {
     id += c_;
@@ -224,7 +221,6 @@ Token Lexer::ScanIdentifier(bool varenv) {
 Token Lexer::ScanNumber() {
   std::string str_num = "";
   size_t point_num = 0;
-  start_pos_ = line_pos_;
 
   if (IsDigit(c_)) {
     str_num += c_;
@@ -261,7 +257,6 @@ Token Lexer::ScanNumber() {
 
 Token Lexer::ScanWord(const std::string& prestr) {
   std::string word = prestr;
-  start_pos_ = line_pos_;
 
   while (IsSpecialChar(c_)) {
     if (c_ == '\\') {
