@@ -44,25 +44,44 @@ std::tuple<std::string, std::string> ReadPipe(int pipe_out, int pipe_err) {
   char buf[16 * PIPE_BUF];
   char buf_err[16 * PIPE_BUF];
 
-  int rd = 0;
-  int rd_err = 0;
-
   SetFdAsync(pipe_out);
   SetFdAsync(pipe_err);
 
   std::string str_out;
   std::string str_err;
 
-  int i = 0;
-  while ((rd = read(pipe_out, buf, 16 * PIPE_BUF)) > 0) {
-    std::cout << "loop: " << i++ << std::endl;
-    str_out.append(buf, rd);
-  }
+  fd_set read_fds;
+  int max_fd = std::max(pipe_out, pipe_err);
+  bool pipe_out_open = true;
+  bool pipe_err_open = true;
 
-  std::cout << "rd: " << rd << std::endl;
+  while (pipe_out_open || pipe_err_open) {
+    FD_ZERO(&read_fds);
+    
+    if (pipe_out_open) FD_SET(pipe_out, &read_fds);
+    if (pipe_err_open) FD_SET(pipe_err, &read_fds);
 
-  while ((rd_err = read(pipe_err, buf_err, PIPE_BUF)) > 0) {
-    str_err.append(buf_err, rd_err);
+    int ret = select(max_fd + 1, &read_fds, nullptr, nullptr, nullptr);
+    
+    if (ret < 0) break;  // Error in select
+
+    if (pipe_out_open && FD_ISSET(pipe_out, &read_fds)) {
+      int rd = read(pipe_out, buf, sizeof(buf));
+      if (rd > 0) {
+        str_out.append(buf, rd);
+      } else if (rd == 0 || (rd < 0 && errno != EAGAIN && errno != EWOULDBLOCK)) {
+        pipe_out_open = false;
+      }
+    }
+
+    if (pipe_err_open && FD_ISSET(pipe_err, &read_fds)) {
+      int rd_err = read(pipe_err, buf_err, sizeof(buf_err));
+      if (rd_err > 0) {
+        str_err.append(buf_err, rd_err);
+      } else if (rd_err == 0 || (rd_err < 0 && errno != EAGAIN && errno != EWOULDBLOCK)) {
+        pipe_err_open = false;
+      }
+    }
   }
 
   return std::tuple<std::string, std::string>(str_out, str_err);
@@ -262,7 +281,11 @@ CmdExprData CmdExecutor::ExecSimpleCmdWithResult(SimpleCmd* node) {
       .Stdin(STDIN_FILENO)
       .Stderr(pipe_err[WRITE])
       .AddProcess(std::move(p))
-      .LaunchJob(true);
+      .LaunchJob(false);  // Launch without waiting
+
+  // Close write ends in parent so EOF is detected when child closes them
+  close(pipettes[WRITE]);
+  close(pipe_err[WRITE]);
 
   std::string str_out;
   std::string str_err;
@@ -419,7 +442,11 @@ CmdExprData SubShellExecutor::Exec(SubShell* node) {
       .Stdin(STDIN_FILENO)
       .Stderr(pipe_err[WRITE])
       .AddProcess(std::move(p))
-      .LaunchJob(true);
+      .LaunchJob(false);  // Launch without waiting
+
+  // Close write ends in parent so EOF is detected when child closes them
+  close(pipettes[WRITE]);
+  close(pipe_err[WRITE]);
 
   std::string str_out;
   std::string str_err;
@@ -619,7 +646,11 @@ CmdExprData CmdIoRedirectListExecutor::Exec(CmdIoRedirectList* node) {
   job.Stderr(pipe_err[WRITE]).Stdout(pipettes[WRITE]).Stdin(STDIN_FILENO);
 
   PrepareData(job, node);
-  job.LaunchJob(true);
+  job.LaunchJob(false);  // Launch without waiting
+
+  // Close write ends in parent so EOF is detected when child closes them
+  close(pipettes[WRITE]);
+  close(pipe_err[WRITE]);
 
   std::string str_out, str_err;
 
@@ -705,7 +736,11 @@ CmdExprData CmdPipeSequenceExecutor::Exec(CmdPipeSequence* node) {
 
   job.Stderr(pipe_err[WRITE]).Stdout(pipettes[WRITE]);
 
-  job.LaunchJob(true);
+  job.LaunchJob(false);  // Launch without waiting
+
+  // Close write ends in parent so EOF is detected when child closes them
+  close(pipettes[WRITE]);
+  close(pipe_err[WRITE]);
 
   std::string str_out = "";
   std::string str_err = "";
