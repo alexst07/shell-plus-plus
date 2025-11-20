@@ -232,6 +232,11 @@ void AlocTypes(SymbolTableStack& symbol_table) {
   symbol_table.InsertSysEntry(static_cast<const FileType&>(*type_file).name(),
                               std::move(symbol_file));
 
+  ObjectPtr type_file_size = obj_factory.NewFileSizeType();
+  SymbolAttr symbol_file_size(type_file_size, true);
+  symbol_table.InsertSysEntry(static_cast<const FileSizeType&>(*type_file_size).name(),
+                              std::move(symbol_file_size));
+
   ObjectPtr type_module = obj_factory.NewModuleType();
   SymbolAttr symbol_module(type_module, true);
   symbol_table.InsertSysEntry(

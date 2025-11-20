@@ -27,6 +27,7 @@
 #include "decl-class-object.h"
 #include "exceptions-object.h"
 #include "file-object.h"
+#include "file-size-object.h"
 #include "glob-object.h"
 #include "interpreter/symbol-table.h"
 #include "map-object.h"
@@ -314,6 +315,11 @@ class ObjectFactory {
     return ObjectPtr(new FileObject(path, mode, obj_type, SymTableStack()));
   }
 
+  inline ObjectPtr NewFileSize(long long bytes, FileSizeObject::Unit unit = FileSizeObject::Unit::AUTO) {
+    auto obj_type = symbol_table_.LookupSys("file_size").SharedAccess();
+    return ObjectPtr(new FileSizeObject(bytes, unit, obj_type, SymTableStack()));
+  }
+
   inline ObjectPtr NewModule(const std::string& module_path) {
     auto obj_type = symbol_table_.LookupSys("module").SharedAccess();
     return ObjectPtr(
@@ -459,6 +465,11 @@ class ObjectFactory {
   inline ObjectPtr NewFileType() {
     auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
     return std::make_shared<FileType>(obj_type, SymTableStack());
+  }
+
+  inline ObjectPtr NewFileSizeType() {
+    auto obj_type = symbol_table_.LookupSys("type").SharedAccess();
+    return std::make_shared<FileSizeType>(obj_type, SymTableStack());
   }
 
   inline ObjectPtr NewModuleType() {
