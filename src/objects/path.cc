@@ -411,7 +411,7 @@ size_t PathSizeFunc::Size(const boost::filesystem::path& path, bool rec) {
       }
 
       return size;
-    } else if (fs::is_regular(path)) {
+    } else if (fs::is_regular_file(path)) {
       return fs::file_size(path);
     } else if (!fs::exists(path) && !rec) {
       throw RunTimeError(RunTimeError::ErrorCode::FILE,

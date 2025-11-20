@@ -15,6 +15,7 @@
 #include "cmd-exec.h"
 
 #include <cstring>
+#include <signal.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/types.h>

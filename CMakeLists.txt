@@ -71,8 +71,9 @@ endif()
 
 #
 # Boost support
+# Note: boost_system is header-only since Boost 1.69, no need to link it
 #
-find_package(Boost COMPONENTS system filesystem locale REQUIRED)
+find_package(Boost COMPONENTS filesystem locale REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 find_package(Threads REQUIRED)
 
