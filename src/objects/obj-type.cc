@@ -276,24 +276,34 @@ ObjectPtr RealType::Constructor(Executor*, Args&& params, KWArgs&&) {
 }
 
 ObjectPtr RangeIterType::Constructor(Executor*, Args&& params, KWArgs&&) {
-  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 2, range_iter)
+  SHPP_FUNC_CHECK_NUM_PARAMS_AT_LEAST(params, 1, range_iter)
   SHPP_FUNC_CHECK_NUM_PARAMS_UNTIL(params, 3, range_iter)
 
-  SHPP_FUNC_CHECK_PARAM_TYPE(params[0], range_iter, INT)
-  SHPP_FUNC_CHECK_PARAM_TYPE(params[1], range_iter, INT)
+  int start, end, step;
 
-  int step;
-  int start = static_cast<IntObject&>(*params[0]).value();
-  int end = static_cast<IntObject&>(*params[1]).value();
-
-  if (params.size() == 3) {
-    SHPP_FUNC_CHECK_PARAM_TYPE(params[2], range_iter, INT)
-    step = static_cast<IntObject&>(*params[2]).value();
+  if (params.size() == 1) {
+    // range(stop) - start from 0
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[0], range_iter, INT)
+    start = 0;
+    end = static_cast<IntObject&>(*params[0]).value();
+    step = (end > start) ? 1 : -1;
   } else {
-    if (end > start) {
-      step = 1;
+    // range(start, stop) or range(start, stop, step)
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[0], range_iter, INT)
+    SHPP_FUNC_CHECK_PARAM_TYPE(params[1], range_iter, INT)
+
+    start = static_cast<IntObject&>(*params[0]).value();
+    end = static_cast<IntObject&>(*params[1]).value();
+
+    if (params.size() == 3) {
+      SHPP_FUNC_CHECK_PARAM_TYPE(params[2], range_iter, INT)
+      step = static_cast<IntObject&>(*params[2]).value();
     } else {
-      step = -1;
+      if (end > start) {
+        step = 1;
+      } else {
+        step = -1;
+      }
     }
   }
 
