@@ -348,12 +348,12 @@ class ObjectFactory {
       const std::string& id, std::shared_ptr<Block> start_node,
       const SymbolTableStack& symbol_table, std::vector<std::string>&& params,
       std::unordered_map<std::string, ObjectPtr>&& default_values,
-      bool variadic, bool lambda, bool fstatic) {
+      bool variadic, bool kwargs, bool lambda, bool fstatic) {
     auto obj_type = symbol_table_.LookupSys("function").SharedAccess();
     return ObjectPtr(
         new FuncDeclObject(id, start_node, symbol_table, std::move(params),
-                           std::move(default_values), variadic, lambda, fstatic,
-                           obj_type, SymTableStack()));
+                           std::move(default_values), variadic, kwargs, lambda, 
+                           fstatic, obj_type, SymTableStack()));
   }
 
   inline ObjectPtr NewWrapperFunc(ObjectPtr func, ObjectPtr self) {

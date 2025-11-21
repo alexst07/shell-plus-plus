@@ -82,6 +82,14 @@ class Function {
     return params_.back()->variadic();
   }
 
+  bool kwargs() const noexcept {
+    if (params_.empty()) {
+      return false;
+    }
+
+    return params_.back()->kwargs();
+  }
+
   std::vector<FunctionParam*> children() noexcept {
     std::vector<FunctionParam*> vec;
 

@@ -200,10 +200,15 @@ Parser::ParserParamsList() {
     ValidToken();
 
     bool variadic = false;
+    bool kwargs = false;
     std::unique_ptr<AssignableValue> value_;
 
     if (token_ == TokenKind::ELLIPSIS) {
       variadic = true;
+      Advance();
+      ValidToken();
+    } else if (token_ == TokenKind::POW) {
+      kwargs = true;
       Advance();
       ValidToken();
     } else if (token_ == TokenKind::ASSIGN) {
@@ -213,7 +218,7 @@ Parser::ParserParamsList() {
     }
 
     std::unique_ptr<FunctionParam> param(
-        factory_.NewFunctionParam(std::move(id), std::move(value_), variadic));
+        factory_.NewFunctionParam(std::move(id), std::move(value_), variadic, kwargs));
     vec_params.push_back(std::move(param));
 
     // if the token is comma (,) goes to next parameter
@@ -1197,6 +1202,20 @@ ParserResult<Expression> Parser::ParserLambda() {
 }
 
 ParserResult<Expression> Parser::ParserArgument() {
+  // Check for **expr (map unpack)
+  if (token_.Is(TokenKind::POW)) {
+    // Advance past **
+    Advance();
+    ValidToken();
+    
+    // Parse the expression (should be a map)
+    ParserResult<AssignableValue> value(ParserAssignable());
+    
+    // Create argument with map_unpack flag
+    return ParserResult<Expression>(
+        factory_.NewArgument("", value.MoveAstNode(), true));
+  }
+  
   if (PeekAhead().Is(TokenKind::ASSIGN)) {
     // if is named parameter extract the key name and the argument
     if (!token_.Is(TokenKind::IDENTIFIER)) {

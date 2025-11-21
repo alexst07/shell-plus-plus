@@ -47,11 +47,12 @@ class FuncObject: public Object {
   FuncObject(ObjectPtr obj_type, SymbolTableStack&& sym_table,
       std::vector<std::string>&& params = std::vector<std::string>(),
       std::vector<std::string>&& default_params = std::vector<std::string>(),
-      bool variadic = false, bool declared = false)
+      bool variadic = false, bool kwargs = false, bool declared = false)
       : Object(ObjectType::FUNC, obj_type, std::move(sym_table))
       , params_(std::move(params))
       , default_params_(std::move(default_params))
       , variadic_(variadic)
+      , kwargs_(kwargs)
       , declared_(declared) {}
 
   virtual ~FuncObject() {}
@@ -61,6 +62,8 @@ class FuncObject: public Object {
   virtual ObjectPtr DefaultParams();
 
   virtual ObjectPtr Variadic();
+
+  virtual ObjectPtr Kwargs();
 
   virtual size_t NumParams() const noexcept {
     return params_.size();
@@ -82,6 +85,10 @@ class FuncObject: public Object {
     return variadic_;
   }
 
+  virtual bool IsKwargs() const noexcept {
+    return kwargs_;
+  }
+
   std::size_t Hash() override {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("func object has no hash method"));
@@ -99,6 +106,7 @@ class FuncObject: public Object {
   std::vector<std::string> params_;
   std::vector<std::string> default_params_;
   bool variadic_;
+  bool kwargs_;
   bool declared_;
 };
 
@@ -146,7 +154,7 @@ class FuncDeclObject: public FuncObject {
       const SymbolTableStack& symbol_table,
       std::vector<std::string>&& params,
       std::unordered_map<std::string, ObjectPtr>&& default_values,
-      bool variadic, bool lambda, bool fstatic, ObjectPtr obj_type,
+      bool variadic, bool kwargs, bool lambda, bool fstatic, ObjectPtr obj_type,
       SymbolTableStack&& sym_table);
 
   ObjectPtr Call(Executor* parent, Args&& params, KWArgs&& kw_params) override;
@@ -165,6 +173,10 @@ class FuncDeclObject: public FuncObject {
     return variadic_;
   }
 
+  bool IsKwargs() const noexcept override {
+    return kwargs_;
+  }
+
   bool IsStatic() const noexcept {
     return fstatic_;
   }
@@ -180,11 +192,17 @@ class FuncDeclObject: public FuncObject {
 
   ObjectPtr Variadic() override;
 
+  ObjectPtr Kwargs() override;
+
   void HandleArguments(Args&& params, KWArgs&& kw_params);
 
   void HandleSimpleArguments(Args&& params, KWArgs&& kw_params);
 
   void HandleVariadicArguments(Args&& params, KWArgs&& kw_params);
+
+  void HandleKwargsArguments(Args&& params, KWArgs&& kw_params);
+
+  void HandleVariadicAndKwargsArguments(Args&& params, KWArgs&& kw_params);
 
   bool CheckParamsInInterval(const std::string& param, size_t begin, size_t end);
 
@@ -207,6 +225,7 @@ class FuncDeclObject: public FuncObject {
   std::vector<std::string> params_;
   std::unordered_map<std::string, ObjectPtr> default_values_;
   bool variadic_;
+  bool kwargs_;
   bool lambda_;
   bool fstatic_;
 };

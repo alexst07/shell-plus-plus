@@ -145,9 +145,10 @@ class AstNodeFactory {
   }
 
   inline std::unique_ptr<Argument> NewArgument(
-      const std::string& key, std::unique_ptr<AssignableValue> arg) {
+      const std::string& key, std::unique_ptr<AssignableValue> arg,
+      bool is_map_unpack = false) {
     return std::unique_ptr<Argument>(
-        new Argument(key, std::move(arg), fn_pos_()));
+        new Argument(key, std::move(arg), is_map_unpack, fn_pos_()));
   }
 
   inline std::unique_ptr<ArgumentsList> NewArgumentsList(
@@ -296,9 +297,9 @@ class AstNodeFactory {
 
   inline std::unique_ptr<FunctionParam> NewFunctionParam(
       std::unique_ptr<Identifier> id, std::unique_ptr<AssignableValue> value,
-      bool variadic) {
+      bool variadic, bool kwargs = false) {
     return std::unique_ptr<FunctionParam>(new FunctionParam(
-        std::move(id), std::move(value), variadic, fn_pos_()));
+        std::move(id), std::move(value), variadic, kwargs, fn_pos_()));
   }
 
   inline std::unique_ptr<FunctionDeclaration> NewFunctionDeclaration(

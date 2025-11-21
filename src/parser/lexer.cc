@@ -393,10 +393,12 @@ TokenStream Lexer::Scanner() {
         break;
 
       case '*':
-        // * *=
+        // * *= **
         Advance();
         if (c_ == '=') {
           token = Select(TokenKind::ASSIGN_MUL);
+        } else if (c_ == '*') {
+          token = Select(TokenKind::POW);
         } else {
           token = GetToken(TokenKind::MUL);
         }

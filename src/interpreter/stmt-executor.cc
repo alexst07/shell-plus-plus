@@ -74,6 +74,7 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
   // Expression when it is needed
   auto vec = fdecl_node->children();
   size_t variadic_count = 0;
+  size_t kwargs_count = 0;
   std::vector<std::string> param_names;
   std::unordered_map<std::string, ObjectPtr> default_values;
 
@@ -91,8 +92,11 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
     if (param->variadic()) {
       variadic_count++;
     }
+    if (param->kwargs()) {
+      kwargs_count++;
+    }
 
-    if (!((variadic_count != 0) && param->has_value())) {
+    if (!((variadic_count != 0 || kwargs_count != 0) && param->has_value())) {
       param_names.push_back(param->id()->name());
     }
 
@@ -103,7 +107,7 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
       default_values.insert(std::pair<std::string, ObjectPtr>(
           param->id()->name(), obj_value));
     } else {
-      if (default_value) {
+      if (default_value && !param->variadic() && !param->kwargs()) {
         // error, only the param in the end can have default values
         throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                            boost::format("no default value can't appear "
@@ -113,21 +117,54 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
     }
   }
 
-  // only the last parameter can be variadic
+  // only the last parameter (or second-to-last if kwargs) can be variadic
   if (variadic_count > 1) {
     throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
         boost::format("not allowed more than 1 variadic parameter"),
         fdecl_node->pos());
   }
 
-  // if has variadic argument the last parameters has to have default values
+  // only the last parameter can be kwargs
+  if (kwargs_count > 1) {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+        boost::format("not allowed more than 1 kwargs parameter"),
+        fdecl_node->pos());
+  }
+
+  // Check parameter order: if both variadic and kwargs exist, kwargs must be last
+  if (variadic_count == 1 && kwargs_count == 1) {
+    // Find positions
+    size_t variadic_pos = 0;
+    size_t kwargs_pos = 0;
+    for (size_t i = 0; i < vec.size(); i++) {
+      if (vec[i]->variadic()) variadic_pos = i;
+      if (vec[i]->kwargs()) kwargs_pos = i;
+    }
+    
+    if (kwargs_pos < variadic_pos) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("kwargs parameter must come after variadic parameter"),
+          fdecl_node->pos());
+    }
+  }
+
+  // A parameter cannot be both variadic and kwargs
+  for (FunctionParam* param: vec) {
+    if (param->variadic() && param->kwargs()) {
+      throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+          boost::format("parameter cannot be both variadic (...) and kwargs (**)"),
+          param->pos());
+    }
+  }
+
+  // if has variadic argument the parameters after it (except kwargs) must have default values
   if (variadic_count == 1) {
     size_t i = vec.size() - 1;
 
     // iterate over all parameter after variadic and verify if all of them
-    // has default value
+    // has default value (except kwargs which is allowed)
     while (!vec[i]->variadic()) {
-      if (!vec[i]->has_value()) {
+      if (!vec[i]->has_value() && !vec[i]->kwargs()) {
         throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
                        boost::format("all parameters must have default values "
                           "after variadic parameter"), fdecl_node->pos());
@@ -157,8 +194,8 @@ ObjectPtr FuncDeclExecutor::FuncObjAux(T fdecl_node) {
   try {
     ObjectPtr fobj(obj_factory_.NewFuncDeclObject(func_name,
         fdecl_node->block(), std::move(st_stack), std::move(param_names),
-        std::move(default_values), variadic_count == 1?true:false, lambda_,
-        fstatic));
+        std::move(default_values), variadic_count == 1?true:false, 
+        kwargs_count == 1?true:false, lambda_, fstatic));
 
     return fobj;
   } catch (RunTimeError& e) {
@@ -198,10 +235,25 @@ void AnnotationExecutor::Exec(AstNode* node) {
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr decorator_obj = expr_exec.Exec(annotation_node->decorator_expr());
   
-  // Step 2: Create the target object (function or class) without registering it
+  // Step 2: Create/execute the target object
   ObjectPtr target_obj;
   
-  if (inner_decl->type() == AstNode::NodeType::kFunctionDeclaration) {
+  if (inner_decl->type() == AstNode::NodeType::kAnnotationDeclaration) {
+    // The inner declaration is another decorator!
+    // Execute it first to get the decorated result
+    AnnotationExecutor inner_annotation_exec(this, symbol_table_stack());
+    inner_annotation_exec.Exec(inner_decl);
+    
+    // The inner decorator will have registered the result
+    // We need to lookup and remove it temporarily
+    const std::string& name = annotation_node->get_original_id_name();
+    try {
+      target_obj = symbol_table_stack().Lookup(name, false).SharedAccess();
+      symbol_table_stack().Remove(name);
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+    }
+  } else if (inner_decl->type() == AstNode::NodeType::kFunctionDeclaration) {
     // Create function object
     FuncDeclExecutor func_exec(this, symbol_table_stack());
     target_obj = func_exec.FuncObj(inner_decl);
@@ -319,6 +371,65 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
         // Handle annotated declarations inside class
         AnnotationDeclaration* annotation_node = static_cast<AnnotationDeclaration*>(decl);
         Declaration* inner_decl = annotation_node->decl();
+        
+        // First, check if the inner declaration is also an annotation (decorator chaining)
+        if (inner_decl->type() == AstNode::NodeType::kAnnotationDeclaration) {
+          // Handle nested decorators recursively
+          AnnotationExecutor annotation_exec(this, symbol_table_stack());
+          // This will process the whole decorator chain
+          
+          // Execute inner annotation to get the decorated result
+          AnnotationDeclaration* inner_annotation = static_cast<AnnotationDeclaration*>(inner_decl);
+          Declaration* innermost_decl = inner_annotation->decl();
+          
+          // Find the innermost declaration (the actual function/class)
+          while (innermost_decl->type() == AstNode::NodeType::kAnnotationDeclaration) {
+            innermost_decl = static_cast<AnnotationDeclaration*>(innermost_decl)->decl();
+          }
+          
+          if (innermost_decl->type() == AstNode::NodeType::kFunctionDeclaration) {
+            // It's a method with multiple decorators
+            FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(innermost_decl);
+            
+            // Create the base method object
+            FuncDeclExecutor fexec(this, symbol_table_stack(), /*method=*/true,
+                /*lambda=*/false, /*fstatic=*/fdecl->fstatic());
+            
+            if (fdecl->has_block()) {
+              ObjectPtr method_obj = fexec.FuncObj(innermost_decl);
+              
+              // Now apply decorators from innermost to outermost
+              // We need to apply inner_decl decorators first, then the outer one
+              
+              // Execute the inner annotation chain
+              ExpressionExecutor expr_exec(this, symbol_table_stack());
+              ObjectPtr inner_decorator_obj = expr_exec.Exec(inner_annotation->decorator_expr());
+              
+              // Apply inner decorator (this might be a chain itself)
+              std::vector<ObjectPtr> args;
+              args.push_back(method_obj);
+              std::unordered_map<std::string, ObjectPtr> kw_args;
+              
+              ObjectPtr partially_decorated = inner_decorator_obj->Call(this, std::move(args), std::move(kw_args));
+              set_stop(StopFlag::kGo);
+              
+              // Now apply the outer decorator
+              ObjectPtr outer_decorator_obj = expr_exec.Exec(annotation_node->decorator_expr());
+              
+              std::vector<ObjectPtr> args2;
+              args2.push_back(partially_decorated);
+              std::unordered_map<std::string, ObjectPtr> kw_args2;
+              
+              ObjectPtr fully_decorated = outer_decorator_obj->Call(this, std::move(args2), std::move(kw_args2));
+              set_stop(StopFlag::kGo);
+              
+              // Register with original name
+              const std::string& original_name = annotation_node->get_original_id_name();
+              decl_class.RegiterMethod(original_name, fully_decorated);
+            }
+          }
+          continue;
+        }
         
         if (inner_decl->type() == AstNode::NodeType::kFunctionDeclaration) {
           // Handle annotated method

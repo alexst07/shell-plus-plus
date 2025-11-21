@@ -518,6 +518,8 @@ class FunctionParam : public AstNode {
 
   bool variadic() const noexcept { return variadic_; }
 
+  bool kwargs() const noexcept { return kwargs_; }
+
   Identifier* id() const noexcept { return id_.get(); }
 
   AssignableValue* value() const noexcept { return value_.get(); }
@@ -536,14 +538,16 @@ class FunctionParam : public AstNode {
   std::unique_ptr<Identifier> id_;
   std::unique_ptr<AssignableValue> value_;
   bool variadic_;
+  bool kwargs_;
 
   FunctionParam(std::unique_ptr<Identifier> id,
                 std::unique_ptr<AssignableValue> value, bool variadic,
-                Position position)
+                bool kwargs, Position position)
       : AstNode(NodeType::kFunctionParam, position),
         id_(std::move(id)),
         value_(std::move(value)),
-        variadic_(variadic) {}
+        variadic_(variadic),
+        kwargs_(kwargs) {}
 };
 
 class ReturnStatement : public Statement {
@@ -1799,17 +1803,21 @@ class Argument : public Expression {
 
   bool has_key() const noexcept { return !key_.empty(); }
 
+  bool is_map_unpack() const noexcept { return is_map_unpack_; }
+
  private:
   friend class AstNodeFactory;
 
   std::string key_;
   std::unique_ptr<AssignableValue> arg_;
+  bool is_map_unpack_;
 
   Argument(const std::string& key, std::unique_ptr<AssignableValue> arg,
-           Position position)
+           bool is_map_unpack, Position position)
       : Expression(NodeType::kArgument, position),
         key_(key),
-        arg_(std::move(arg)) {}
+        arg_(std::move(arg)),
+        is_map_unpack_(is_map_unpack) {}
 };
 
 class ArgumentsList : public AstNode, public AssignableInterface {

@@ -463,6 +463,52 @@ func make_and_print_tuple(t...) {
 tres = make_and_print_tuple(5, "test", true)
 
 ```
+
+### keyword arguments (kwargs)
+Functions can capture extra named arguments using the `**` syntax. The kwargs parameter receives a map containing all extra keyword arguments:
+
+```go
+func configure(name, opts**) {
+  print("Configuring:", name)
+  print("Options:", opts)
+}
+
+configure("server", host="localhost", port=8080, debug=true)
+# Output:
+# Configuring: server
+# Options: {"host": "localhost", "port": 8080, "debug": true}
+```
+
+Kwargs work with default parameters too:
+
+```go
+func setup(name, verbose=false, opts**) {
+  if verbose {
+    print("Setting up", name, "with options:", opts)
+  }
+}
+
+setup("database", verbose=true, host="db.example.com", user="admin")
+```
+
+### combining variadic and kwargs
+You can use both variadic (`...`) and kwargs (`**`) in the same function. The variadic parameter must come before the kwargs parameter:
+
+```go
+func process(action, items..., options**) {
+  print("Action:", action)
+  print("Items:", items)
+  print("Options:", options)
+}
+
+process("backup", "file1.txt", "file2.txt", "file3.txt", 
+        compress=true, destination="/backup")
+# Output:
+# Action: backup
+# Items: ("file1.txt", "file2.txt", "file3.txt")
+# Options: {"compress": true, "destination": "/backup"}
+```
+
 ### function as argument
 ```go
 func receiv_func(a, b) {

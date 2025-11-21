@@ -680,6 +680,46 @@ ArgumentsExecutor::Exec(ArgumentsList* args_list) {
   AssignableListExecutor assign_exec(this, symbol_table_stack());
 
   for (Argument* arg : args_list->children()) {
+    // Handle **map unpacking
+    if (arg->is_map_unpack()) {
+      found_kwarg = true;
+      
+      ObjectPtr map_obj = assign_exec.ExecAssignable(arg->arg());
+      
+      // Verify it's a map
+      if (map_obj->type() != Object::ObjectType::MAP) {
+        throw RunTimeError(
+            RunTimeError::ErrorCode::INVALID_ARGS,
+            boost::format("** requires a map object"));
+      }
+      
+      MapObject& map = static_cast<MapObject&>(*map_obj);
+      
+      // Extract all key-value pairs
+      for (auto& bucket : map.value()) {
+        for (auto& pair : bucket.second) {
+          // Key must be string
+          if (pair.first->type() != Object::ObjectType::STRING) {
+            throw RunTimeError(
+                RunTimeError::ErrorCode::INVALID_ARGS,
+                boost::format("Map keys must be strings for ** unpacking"));
+          }
+          
+          std::string key = static_cast<StringObject&>(*pair.first).value();
+          
+          // Check for duplicates
+          if (kw_args.find(key) != kw_args.end()) {
+            throw RunTimeError(
+                RunTimeError::ErrorCode::INVALID_ARGS,
+                boost::format("Duplicate keyword argument: '%1%'") % key);
+          }
+          
+          kw_args[key] = pair.second;
+        }
+      }
+      continue;
+    }
+    
     if (arg->has_key()) {
       found_kwarg = true;
 
