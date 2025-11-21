@@ -152,6 +152,11 @@ ParserResult<ClassBlock> Parser::ParserClassBlock() {
         decl_list.push_back(var.MoveAstNode());
       } break;
 
+      case TokenKind::AT_SIGN: {
+        ParserResult<Declaration> annotation(ParserAnnotation());
+        decl_list.push_back(annotation.MoveAstNode());
+      } break;
+
       default:
         ErrorMsg(boost::format("declaration expected, got %1%") %
                  TokenValueStr());
@@ -386,6 +391,10 @@ ParserResult<Declaration> Parser::ParserAnnotation() {
 
   if (token_ == TokenKind::KW_FUNC) {
     ParserResult<AstNode> func(ParserFunctionDeclaration(false));
+    decl_stmt = func.MoveAstNode<Statement>();
+  } else if (token_ == TokenKind::KW_STATIC) {
+    Advance();
+    ParserResult<AstNode> func(ParserFunctionDeclaration(false, false, true));
     decl_stmt = func.MoveAstNode<Statement>();
   } else if (token_ == TokenKind::KW_CLASS) {
     ParserResult<Declaration> class_decl(ParserClassDecl(false, false));

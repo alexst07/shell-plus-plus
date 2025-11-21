@@ -101,6 +101,16 @@ class FuncDeclExecutor: public Executor {
   bool fstatic_;
 };
 
+class AnnotationExecutor: public Executor {
+ public:
+  AnnotationExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)
+      : Executor(parent, symbol_table_stack) {}
+
+  void Exec(AstNode* node);
+
+  void set_stop(StopFlag flag) override;
+};
+
 class ClassDeclExecutor: public Executor {
  public:
   ClassDeclExecutor(Executor* parent, SymbolTableStack& symbol_table_stack)

@@ -15,21 +15,19 @@ const char* AstNodeStr(size_t i) { return ast_node_str[i]; }
 AnnotationDeclaration::AnnotationDeclaration(
     std::unique_ptr<Expression> decorator_expr,
     std::unique_ptr<Declaration> decl, Position position)
-    : Declaration(NodeType::kCmdDeclaration, position),
+    : Declaration(NodeType::kAnnotationDeclaration, position),
       decorator_expr_(std::move(decorator_expr)),
       decl_(std::move(decl)) {
   if (decl_->type() == NodeType::kFunctionDeclaration) {
     std::string name =
         reinterpret_cast<FunctionDeclaration*>(decl_.get())->name()->name();
     original_name_ = name;
-    reinterpret_cast<FunctionDeclaration*>(decl_.get())
-        ->SetName(std::string("@") + name);
+    // Don't rename - we'll handle decoration in the executor without registration
   } else if (decl_->type() == NodeType::kClassDeclaration) {
     std::string name =
         reinterpret_cast<ClassDeclaration*>(decl_.get())->name()->name();
     original_name_ = name;
-    reinterpret_cast<ClassDeclaration*>(decl_.get())
-        ->SetName(std::string("@") + name);
+    // Don't rename - we'll handle decoration in the executor without registration
   }
 }
 

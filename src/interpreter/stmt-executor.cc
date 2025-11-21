@@ -190,6 +190,79 @@ void FuncDeclExecutor::set_stop(StopFlag flag) {
   parent()->set_stop(flag);
 }
 
+void AnnotationExecutor::Exec(AstNode* node) {
+  AnnotationDeclaration* annotation_node = static_cast<AnnotationDeclaration*>(node);
+  Declaration* inner_decl = annotation_node->decl();
+  
+  // Step 1: Execute the decorator expression to get the decorator object
+  ExpressionExecutor expr_exec(this, symbol_table_stack());
+  ObjectPtr decorator_obj = expr_exec.Exec(annotation_node->decorator_expr());
+  
+  // Step 2: Create the target object (function or class) without registering it
+  ObjectPtr target_obj;
+  
+  if (inner_decl->type() == AstNode::NodeType::kFunctionDeclaration) {
+    // Create function object
+    FuncDeclExecutor func_exec(this, symbol_table_stack());
+    target_obj = func_exec.FuncObj(inner_decl);
+  } else if (inner_decl->type() == AstNode::NodeType::kClassDeclaration) {
+    // For classes, we need to execute to create the class object
+    // but we capture it before it's accessible
+    ClassDeclExecutor class_exec(this, symbol_table_stack());
+    class_exec.Exec(static_cast<ClassDeclaration*>(inner_decl));
+    
+    // Now lookup the class that was just registered
+    const std::string& class_name = annotation_node->get_original_id_name();
+    try {
+      target_obj = symbol_table_stack().Lookup(class_name, false).SharedAccess();
+      // Remove it temporarily
+      symbol_table_stack().Remove(class_name);
+    } catch (RunTimeError& e) {
+      throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+    }
+  } else {
+    throw RunTimeError(RunTimeError::ErrorCode::INCOMPATIBLE_TYPE,
+                       "Decorator can only be applied to functions or classes",
+                       node->pos());
+  }
+  
+  // Step 3: Call the decorator with the target object as argument
+  std::vector<ObjectPtr> args;
+  args.push_back(target_obj);
+  std::unordered_map<std::string, ObjectPtr> kw_args;
+  
+  ObjectPtr decorated_obj;
+  try {
+    decorated_obj = decorator_obj->Call(this, std::move(args), std::move(kw_args));
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+  }
+  
+  // Step 4: Register the decorated object with the original name
+  const std::string& original_name = annotation_node->get_original_id_name();
+  SymbolAttr entry(decorated_obj, true);
+  try {
+    symbol_table_stack().InsertEntry(original_name, std::move(entry));
+  } catch (RunTimeError& e) {
+    throw RunTimeError(e.err_code(), e.msg(), node->pos(), e.messages());
+  }
+}
+
+void AnnotationExecutor::set_stop(StopFlag flag) {
+  // Decorators should consume return flags from the decorator function
+  // Only propagate throw flags and other control flow
+  if (flag == StopFlag::kReturn) {
+    // Consume the return flag - decorators return values but don't affect control flow
+    return;
+  }
+  
+  if (parent() == nullptr) {
+    return;
+  }
+
+  parent()->set_stop(flag);
+}
+
 ObjectPtr ClassDeclExecutor::SuperClass(Expression* super) {
   ExpressionExecutor expr_exec(this, symbol_table_stack());
   ObjectPtr base_obj = expr_exec.Exec(super);
@@ -242,7 +315,76 @@ void ClassDeclExecutor::Exec(AstNode* node, bool inner,
 
   for (auto decl: decl_vec) {
     try {
-      if (decl->type() == AstNode::NodeType::kFunctionDeclaration) {
+      if (decl->type() == AstNode::NodeType::kAnnotationDeclaration) {
+        // Handle annotated declarations inside class
+        AnnotationDeclaration* annotation_node = static_cast<AnnotationDeclaration*>(decl);
+        Declaration* inner_decl = annotation_node->decl();
+        
+        if (inner_decl->type() == AstNode::NodeType::kFunctionDeclaration) {
+          // Handle annotated method
+          FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(inner_decl);
+          
+          // Create the method object with @ prefixed name
+          FuncDeclExecutor fexec(this, symbol_table_stack(), /*method=*/true,
+              /*lambda=*/false, /*fstatic=*/fdecl->fstatic());
+          
+          if (fdecl->has_block()) {
+            ObjectPtr method_obj = fexec.FuncObj(inner_decl);
+            
+            // Execute the decorator expression
+            ExpressionExecutor expr_exec(this, symbol_table_stack());
+            ObjectPtr decorator_obj = expr_exec.Exec(annotation_node->decorator_expr());
+            
+            // Call the decorator with the method object
+            std::vector<ObjectPtr> args;
+            args.push_back(method_obj);
+            std::unordered_map<std::string, ObjectPtr> kw_args;
+            
+            ObjectPtr decorated_method = decorator_obj->Call(this, std::move(args), std::move(kw_args));
+            
+            // Clear any return flag from the decorator call
+            set_stop(StopFlag::kGo);
+            
+            // Register with original name
+            const std::string& original_name = annotation_node->get_original_id_name();
+            decl_class.RegiterMethod(original_name, decorated_method);
+          }
+        } else if (inner_decl->type() == AstNode::NodeType::kClassDeclaration) {
+          // Handle annotated inner class
+          ClassDeclaration* class_decl = static_cast<ClassDeclaration*>(inner_decl);
+          
+          // Execute the inner class (registers with @ prefix)
+          ClassDeclExecutor class_exec(this, decl_class.GlobalSymTableStack());
+          class_exec.Exec(class_decl, true, type_obj);
+          
+          // Get the @ prefixed class
+          const std::string& original_name = annotation_node->get_original_id_name();
+          std::string temp_name = std::string("@") + original_name;
+          
+          ObjectPtr inner_class_obj = decl_class.SymTableStack().Lookup(temp_name, false).SharedAccess();
+          
+          // Execute the decorator expression
+          ExpressionExecutor expr_exec(this, symbol_table_stack());
+          ObjectPtr decorator_obj = expr_exec.Exec(annotation_node->decorator_expr());
+          
+          // Call the decorator
+          std::vector<ObjectPtr> args;
+          args.push_back(inner_class_obj);
+          std::unordered_map<std::string, ObjectPtr> kw_args;
+          
+          ObjectPtr decorated_class = decorator_obj->Call(this, std::move(args), std::move(kw_args));
+          
+          // Clear any return flag from the decorator call
+          set_stop(StopFlag::kGo);
+          
+          // Register with original name
+          SymbolAttr symbol_obj(decorated_class, true);
+          decl_class.SymTableStack().InsertEntry(original_name, std::move(symbol_obj));
+          
+          // Remove the temporary @ prefixed entry
+          decl_class.SymTableStack().Remove(temp_name);
+        }
+      } else if (decl->type() == AstNode::NodeType::kFunctionDeclaration) {
         // insert method on symbol table of class
         FunctionDeclaration* fdecl = static_cast<FunctionDeclaration*>(decl);
 
@@ -613,6 +755,11 @@ void StmtExecutor::Exec(AstNode* node) {
     case AstNode::NodeType::kGlobalAssignmentStatement: {
       GlobalAssignmentExecutor global_exec(this, symbol_table_stack());
       global_exec.Exec(static_cast<GlobalAssignmentStatement*>(node));
+    } break;
+
+    case AstNode::NodeType::kAnnotationDeclaration: {
+      AnnotationExecutor annotation_exec(this, symbol_table_stack());
+      annotation_exec.Exec(node);
     } break;
 
     default: {
