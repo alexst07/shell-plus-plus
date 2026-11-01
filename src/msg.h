@@ -133,7 +133,7 @@ inline std::ostream& operator<<(std::ostream& stream, Message& msg) {
       break;
 
     case Message::Severity::ERR:
-      severity = "info";
+      severity = "error";
       break;
   }
 
